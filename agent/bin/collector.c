@@ -1,0 +1,344 @@
+/*
+ * collector.c:
+ *
+ * Copyright (c) 2010-2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ */
+
+#include "pg_statsinfo.h"
+
+#include <time.h>
+
+/* read settings */
+#define SQL_SELECT_CUSTOM_SETTINGS "\
+SELECT \
+	t.name, \
+	s.setting \
+FROM \
+	(VALUES \
+		('log_directory'), \
+		('log_error_verbosity'), \
+		('syslog_facility'), \
+		('syslog_ident'), \
+		('" GUC_PREFIX ".syslog_min_messages'), \
+		('" GUC_PREFIX ".textlog_min_messages'), \
+		('" GUC_PREFIX ".textlog_filename'), \
+		('" GUC_PREFIX ".textlog_line_prefix'), \
+		('" GUC_PREFIX ".syslog_line_prefix'), \
+		('" GUC_PREFIX ".textlog_permission'), \
+		('" GUC_PREFIX ".excluded_dbnames'), \
+		('" GUC_PREFIX ".sampling_interval'), \
+		('" GUC_PREFIX ".snapshot_interval'), \
+		('" GUC_PREFIX ".repository_server'), \
+		('" GUC_PREFIX ".adjust_log_level'), \
+		('" GUC_PREFIX ".adjust_log_info'), \
+		('" GUC_PREFIX ".adjust_log_notice'), \
+		('" GUC_PREFIX ".adjust_log_warning'), \
+		('" GUC_PREFIX ".adjust_log_error'), \
+		('" GUC_PREFIX ".adjust_log_log'), \
+		('" GUC_PREFIX ".adjust_log_fatal'), \
+		('" GUC_PREFIX ".enable_maintenance'), \
+		('" GUC_PREFIX ".maintenance_time'), \
+		('" GUC_PREFIX ".repository_keepday')) AS t(name) \
+	LEFT JOIN pg_settings s \
+	ON t.name = s.name"
+
+pthread_mutex_t	reload_lock;
+pthread_mutex_t	maintenance_lock;
+volatile time_t	server_reload_time;
+volatile time_t	collector_reload_time;
+volatile char  *snapshot_requested;
+volatile char  *maintenance_requested;
+
+static PGconn  *collector_conn = NULL;
+
+static time_t get_next_time(time_t now, int interval);
+static bool reload_params(void);
+static void do_sample(void);
+static void do_snapshot(char *comment);
+static void get_server_encoding(void);
+
+void
+collector_init(void)
+{
+	pthread_mutex_init(&reload_lock, NULL);
+	pthread_mutex_init(&maintenance_lock, NULL);
+
+	collector_reload_time = server_reload_time = time(NULL);
+}
+
+/*
+ * collector_main
+ */
+void *
+collector_main(void *arg)
+{
+	time_t		now;
+	time_t		next_sample;
+	time_t		next_snapshot;
+
+	now = time(NULL);
+	next_sample = get_next_time(now, sampling_interval);
+	next_snapshot = get_next_time(now, snapshot_interval);
+
+	/* we set actual server encoding to libpq default params. */
+	get_server_encoding();
+
+	/* if already passed maintenance time, set one day after */
+	if (now >= maintenance_time)
+		maintenance_time = maintenance_time + (1 * SECS_PER_DAY);
+
+	while (shutdown_state < SHUTDOWN_REQUESTED)
+	{
+		time_t	reload_time;
+
+		now = time(NULL);
+
+		/*
+		 * Update settings if reloaded. Copy server_reload_time to the
+		 * local variable because the global variable could be updated
+		 * during reload. The value must be compared with now because
+		 * it could be a future time to wait for SIGHUP propagated.
+		 */
+		reload_time = server_reload_time;
+		if (collector_reload_time < reload_time && reload_time <= now)
+		{
+			elog(DEBUG2, "collector reloads setting parameters");
+			if (reload_params())
+				collector_reload_time = reload_time;
+			now = time(NULL);
+		}
+
+		/* sample */
+		if (now >= next_sample)
+		{
+			elog(DEBUG2, "sample (%d sec for next snapshot)", (int) (next_snapshot - now));
+			do_sample();
+			now = time(NULL);
+			next_sample = get_next_time(now, sampling_interval);
+		}
+
+		/* snapshot by manual */
+		if (snapshot_requested)
+		{
+			char *comment;
+
+			pthread_mutex_lock(&reload_lock);
+			comment = (char *) snapshot_requested;
+			snapshot_requested = NULL;
+			pthread_mutex_unlock(&reload_lock);
+
+			if (comment)
+				do_snapshot(comment);
+		}
+
+		/* snapshot by time */
+		if (now >= next_snapshot)
+		{
+			do_snapshot(NULL);
+			now = time(NULL);
+			next_snapshot = get_next_time(now, snapshot_interval);
+		}
+
+		/* maintenance by manual */
+		if (maintenance_requested)
+		{
+			time_t repository_keep_period;
+
+			pthread_mutex_lock(&reload_lock);
+			repository_keep_period = atol((char *) maintenance_requested);
+			maintenance_requested = NULL;
+			pthread_mutex_unlock(&reload_lock);
+
+			do_maintenance(repository_keep_period);
+		}
+
+		/* maintenance by time */
+		if (enable_maintenance && now >= maintenance_time)
+		{
+			time_t repository_keep_period;
+			struct tm *tm;
+
+			/* calculate retention period on the basis of today's 0:00 AM */
+			tm = localtime(&now);
+			tm->tm_hour = 0;
+			tm->tm_min = 0;
+			tm->tm_sec = 0;
+			repository_keep_period = mktime(tm) - ((time_t) repository_keepday * SECS_PER_DAY);
+
+			do_maintenance(repository_keep_period);
+			maintenance_time = maintenance_time + (1 * SECS_PER_DAY);
+		}
+
+		usleep(200 * 1000);	/* 200ms */
+	}
+
+	pgut_disconnect(collector_conn);
+	collector_conn = NULL;
+	shutdown_progress(COLLECTOR_SHUTDOWN);
+
+	return NULL;
+}
+
+static time_t
+get_next_time(time_t now, int interval)
+{
+	return (now / interval) * interval + interval;
+}
+
+static bool
+reload_params(void)
+{
+	PGconn	   *conn;
+	PGresult   *res;
+	int			retry;
+
+	for (retry = 0;
+		 shutdown_state < SHUTDOWN_REQUESTED && retry < DB_MAX_RETRY;
+		 delay(), retry++)
+	{
+		/* connect to postgres database and ensure functions are installed */
+		if ((conn = collector_connect(NULL)) == NULL)
+			continue;
+
+		res = pgut_execute(conn, SQL_SELECT_CUSTOM_SETTINGS, 0, NULL);
+		if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		{
+			PQclear(res);
+			continue;
+		}
+
+		pthread_mutex_lock(&reload_lock);
+		readopt_from_db(res);
+		pthread_mutex_unlock(&reload_lock);
+		PQclear(res);
+
+		/* if already passed maintenance time, set one day after */
+		if (time(NULL) >= maintenance_time)
+			maintenance_time = maintenance_time + (1 * SECS_PER_DAY);
+
+		return true;	/* reloaded */
+	}
+
+	return false;
+}
+
+static void
+do_sample(void)
+{
+	PGconn	   *conn;
+	int			retry;
+
+	for (retry = 0;
+		 shutdown_state < SHUTDOWN_REQUESTED && retry < DB_MAX_RETRY;
+		 delay(), retry++)
+	{
+		/* connect to postgres database and ensure functions are installed */
+		if ((conn = collector_connect(NULL)) == NULL)
+			continue;
+
+		pgut_command(conn, "SELECT statsinfo.sample()", 0, NULL);
+		break;	/* ok */
+	}
+}
+
+/*
+ * ownership of comment will be granted to snapshot item.
+ */
+static void
+do_snapshot(char *comment)
+{
+	QueueItem *snap;
+
+	/* exclusive control during snapshot and maintenance */
+	pthread_mutex_lock(&maintenance_lock);
+	snap = get_snapshot(comment);
+	pthread_mutex_unlock(&maintenance_lock);
+
+	if (snap != NULL)
+		writer_send(snap);
+	else
+		free(comment);
+}
+
+/*
+ * set server encoding
+ */
+static void
+get_server_encoding(void)
+{
+	PGconn		*conn;
+	int			 retry;
+	const char	*encode;
+
+	for (retry = 0;
+		 shutdown_state < SHUTDOWN_REQUESTED && retry < DB_MAX_RETRY;
+		 delay(), retry++)
+	{
+		/* connect postgres database */
+		if ((conn = collector_connect(NULL)) == NULL)
+			continue;
+
+		/* 
+		 * if we could not find the encodig-string, it's ok.
+		 * because PG_SQL_ASCII was already set.
+		 */ 
+		encode = PQparameterStatus(conn, "server_encoding");
+		if (encode != NULL)
+			pgut_putenv("PGCLIENTENCODING", encode);
+		elog(DEBUG2, "collector set client_encoding : %s", encode);
+		break;	/* ok */
+	}
+}
+
+PGconn *
+collector_connect(const char *db)
+{
+	char	   *pgdb;
+	char		info[1024];
+	const char *schema;
+
+	if (db == NULL)
+	{
+		/* default connect */
+		db = "postgres";
+		schema = "statsinfo";
+	}
+	else
+	{
+		/* no schema required */
+		schema = NULL;
+	}
+
+	/* disconnect if need to connect another database */
+	if (collector_conn)
+	{
+		pgdb = PQdb(collector_conn);
+		if (pgdb == NULL || strcmp(pgdb, db) != 0)
+		{
+			pgut_disconnect(collector_conn);
+			collector_conn = NULL;
+		}
+	}
+	else
+	{
+		ControlFileData	ctrl;
+
+		readControlFile(&ctrl, data_directory);
+
+		/* avoid connection fails during recovery and warm-standby */
+		switch (ctrl.state)
+		{
+			case DB_IN_PRODUCTION:
+#if PG_VERSION_NUM >= 90000
+			case DB_IN_ARCHIVE_RECOVERY:	/* hot-standby accepts connections */
+#endif
+				break;			/* ok, do connect */
+			default:
+				delay();
+				return NULL;	/* server is not ready for accepting connections */
+		}
+	}
+
+	snprintf(info, lengthof(info), "dbname=%s port=%s", db, postmaster_port);
+	return do_connect(&collector_conn, info, schema);
+}

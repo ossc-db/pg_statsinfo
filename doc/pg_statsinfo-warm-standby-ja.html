@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD html 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>pg_statsinfo: internal</title>
+<link rel="home" title="pg_statsinfo" href="index.html">
+<link rel="stylesheet" TYPE="text/css"href="style.css">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+
+<body>
+<h1 id="pg_statsinfo">pg_statsinfo: warm-standby</h1>
+<div class="navigation">
+  <a href="index_ja.html">Top</a> &gt;
+  <a href="pg_statsinfo-ja.html">pg_statsinfo</a> &gt;
+  <a href="pg_statsinfo-warm-standby-ja.html">warm-standby</a>
+<div>
+<hr />
+
+<p><a href="http://www.postgresql.jp/document/current/html/warm-standby.html">ウォームスタンバイ</a>構成で pg_statsinfo を利用する場合、大きく分けて2つの構成があります。
+</p>
+
+<ol>
+  <li>稼動系、待機系と独立したインスタンスにリポジトリを配置</li>
+  <li>稼動系、待機系それぞれのインスタンスにリポジトリを配置</li>
+</ol>
+
+<p>
+待機系でも pg_statsinfo デーモンは起動し、待機中に出力されたサーバログを処理しています。
+しかし、待機中のインスタンスにはログインできないため、スナップショットは取得しません。
+</p>
+
+</p>
+
+<h2>1. 稼動系、待機系と独立したインスタンスにリポジトリを配置</h2>
+
+<p>稼動系や待機系と独立した第3のインスタンスにリポジトリを配置すると、フェイルオーバの有無に関わらず、常に同じリポジトリでスナップショットを閲覧できます。</p>
+
+<h3>ウォームスタンバイ中</h3>
+<img src="image/warm-standby-with-repo-1.png" />
+
+<h3>フェイルオーバ後</h3>
+<img src="image/warm-standby-with-repo-2.png" />
+
+<h2>2. 稼動系、待機系それぞれのインスタンスにリポジトリを配置</h2>
+<p>稼動系、待機系それぞれで独立して同居構成を行います。
+待機系をレポジトリに指定してもスナップショットの保存はできませんが、同時に待機系からのスナップショットの取得や、チェックポイントや自動バキュームも行われないため、問題にはなりません。</p>
+<p>稼動系のスナップショットもレプリケーションされるため、フェイルオーバ後にも元稼動系のスナップショットは参照でき、停止した元稼動系の動作を解析できます。</p>
+
+<h3>ウォームスタンバイ中</h3>
+<img src="image/warm-standby-1.png" />
+
+<h3>フェイルオーバ後</h3>
+<img src="image/warm-standby-2.png" />
+
+<hr />
+<div class="navigation">
+  <a href="index_ja.html">Top</a> &gt;
+  <a href="pg_statsinfo-ja.html">pg_statsinfo</a> &gt;
+  <a href="pg_statsinfo-warm-standby-ja.html">warm-standby</a>
+<div>
+<p class="footer">Copyright (c) 2009-2010, NIPPON TELEGRAPH AND TELEPHONE CORPORATION</p>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try{
+var pageTracker = _gat._getTracker("UA-10244036-6");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+</body>
+</html>

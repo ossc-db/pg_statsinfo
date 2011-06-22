@@ -1,0 +1,418 @@
+\! sh ./sql/init.sh
+\! sh ./sql/test_function.sh
+--- FU-0001 (statsinfo.cpu, statsinfo.device [num of tablespace: 0]) ---
+SELECT statsinfo.snapshot('comment')
+ snapshot 
+----------
+ 
+(1 row)
+
+SELECT * FROM statsrepo.cpu
+snapid|cpu_id|cpu_user|cpu_system|cpu_idle|cpu_iowait
+1|cpu|xxx|xxx|xxx|xxx
+(1 row)
+SELECT * FROM statsrepo.device
+snapid|device_major|device_minor|device_name|device_readsector|device_readtime|device_writesector|device_writetime|device_ioqueue|device_iototaltime|device_tblspaces
+1|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global}
+(1 row)
+--- FU-0002 (statsinfo.cpu, statsinfo.device [num of tablespace: 1]) ---
+CREATE TABLESPACE
+SELECT statsinfo.snapshot('comment')
+ snapshot 
+----------
+ 
+(1 row)
+
+SELECT * FROM statsrepo.device
+snapid|device_major|device_minor|device_name|device_readsector|device_readtime|device_writesector|device_writetime|device_ioqueue|device_iototaltime|device_tblspaces
+1|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global}
+2|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global,tblspc01}
+(2 rows)
+--- FU-0003 (statsinfo.cpu, statsinfo.device [num of tablespace: 2]) ---
+CREATE TABLESPACE
+SELECT statsinfo.snapshot('comment')
+ snapshot 
+----------
+ 
+(1 row)
+
+SELECT * FROM statsrepo.device
+snapid|device_major|device_minor|device_name|device_readsector|device_readtime|device_writesector|device_writetime|device_ioqueue|device_iototaltime|device_tblspaces
+1|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global}
+2|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global,tblspc01}
+3|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global,tblspc01,tblspc02}
+(3 rows)
+--- FU-0004 (statsinfo.cpu, statsinfo.device [num of tablespace: 64]) ---
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+CREATE TABLESPACE
+SELECT statsinfo.snapshot('comment')
+ snapshot 
+----------
+ 
+(1 row)
+
+SELECT * FROM statsrepo.device
+snapid|device_major|device_minor|device_name|device_readsector|device_readtime|device_writesector|device_writetime|device_ioqueue|device_iototaltime|device_tblspaces
+1|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global}
+2|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global,tblspc01}
+3|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global,tblspc01,tblspc02}
+4|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global,tblspc01,tblspc02,tblspc03,tblspc04,tblspc05,tblspc06,tblspc07,tblspc08,tblspc09,tblspc10,tblspc11,tblspc12,tblspc13,tblspc14,tblspc15,tblspc16,tblspc17,tblspc18,tblspc19,tblspc20,tblspc21,tblspc22,tblspc23,tblspc24,tblspc25,tblspc26,tblspc27,tblspc28,tblspc29,tblspc30,tblspc31,tblspc32,tblspc33,tblspc34,tblspc35,tblspc36,tblspc37,tblspc38,tblspc39,tblspc40,tblspc41,tblspc42,tblspc43,tblspc44,tblspc45,tblspc46,tblspc47,tblspc48,tblspc49,tblspc50,tblspc51,tblspc52,tblspc53,tblspc54,tblspc55,tblspc56,tblspc57,tblspc58,tblspc59,tblspc60,tblspc61,tblspc62,tblspc63,tblspc64}
+(4 rows)
+--- FU-0012 (adjust log level [adjust_log_level = off]) ---
+server signaled
+SELECT * FROM aaa
+ERROR:  relation "aaa" does not exist
+LINE 1: SELECT * FROM aaa
+                      ^
+check text-log: 0
+--- FU-0013 (adjust log level [adjust_log_level is omitted]) ---
+server signaled
+SELECT * FROM bbb
+ERROR:  relation "bbb" does not exist
+LINE 1: SELECT * FROM bbb
+                      ^
+check text-log: 0
+--- FU-0014 (adjust log level [adjust_log_info = '42P01']) ---
+server signaled
+SELECT * FROM ccc
+ERROR:  relation "ccc" does not exist
+LINE 1: SELECT * FROM ccc
+                      ^
+check text-log: 0
+--- FU-0015 (adjust log level [adjust_log_notice = '42P01']) ---
+server signaled
+SELECT * FROM ddd
+ERROR:  relation "ddd" does not exist
+LINE 1: SELECT * FROM ddd
+                      ^
+check text-log: 0
+--- FU-0016 (adjust log level [adjust_log_warning = '42P01']) ---
+server signaled
+SELECT * FROM eee
+ERROR:  relation "eee" does not exist
+LINE 1: SELECT * FROM eee
+                      ^
+check text-log: 0
+--- FU-0017 (adjust log level [adjust_log_error = '00000']) ---
+server signaled
+SELECT statsinfo.sample()
+ sample 
+--------
+ 
+(1 row)
+
+check text-log: 0
+--- FU-0018 (adjust log level [adjust_log_log = '42P01']) ---
+server signaled
+SELECT * FROM fff
+ERROR:  relation "fff" does not exist
+LINE 1: SELECT * FROM fff
+                      ^
+check text-log: 0
+--- FU-0019 (adjust log level [adjust_log_fatal = '42P01']) ---
+server signaled
+SELECT * FROM ggg
+ERROR:  relation "ggg" does not exist
+LINE 1: SELECT * FROM ggg
+                      ^
+check text-log: 0
+--- FU-0020 (adjust log level [adjust_log_log = '']) ---
+server signaled
+SELECT * FROM hhh
+ERROR:  relation "hhh" does not exist
+LINE 1: SELECT * FROM hhh
+                      ^
+check text-log: 0
+--- FU-0021 (adjust log level [adjust_log_log = '42P01']) ---
+server signaled
+SELECT * FROM iii
+ERROR:  relation "iii" does not exist
+LINE 1: SELECT * FROM iii
+                      ^
+check text-log: 0
+--- FU-0022 (adjust log level [adjust_log_log = '42P01,42703']) ---
+server signaled
+SELECT * FROM jjj
+ERROR:  relation "jjj" does not exist
+LINE 1: SELECT * FROM jjj
+                      ^
+SELECT jjj FROM pg_class
+ERROR:  column "jjj" does not exist
+LINE 1: SELECT jjj FROM pg_class
+               ^
+check text-log(1): 0
+check text-log(2): 0
+--- FU-0023 (adjust log level [all parameters]) ---
+server signaled
+SELECT * FROM kkk
+ERROR:  relation "kkk" does not exist
+LINE 1: SELECT * FROM kkk
+                      ^
+SELECT kkk FROM pg_class
+ERROR:  column "kkk" does not exist
+LINE 1: SELECT kkk FROM pg_class
+               ^
+SELECT * kkk
+ERROR:  syntax error at or near "kkk"
+LINE 1: SELECT * kkk
+                 ^
+SELECT 'kkk'::integer
+ERROR:  invalid input syntax for integer: "kkk"
+LINE 1: SELECT 'kkk'::integer
+               ^
+SELECT kkk()
+ERROR:  function kkk() does not exist
+LINE 1: SELECT kkk()
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+SELECT 'kkk'
+ ?column? 
+----------
+ kkk
+(1 row)
+
+check text-log(1): 0
+check text-log(2): 0
+check text-log(3): 0
+check text-log(4): 0
+check text-log(5): 0
+check text-log(6): 0
+--- FU-0024 (adjust log level [duplicate SQL-STATE]) ---
+server signaled
+SELECT * FROM lll
+ERROR:  relation "lll" does not exist
+LINE 1: SELECT * FROM lll
+                      ^
+check text-log: 0
+--- FU-0025 (adjust log level [SQL-STATE does not exist]) ---
+server signaled
+SELECT * FROM mmm
+ERROR:  relation "mmm" does not exist
+LINE 1: SELECT * FROM mmm
+                      ^
+check text-log: 0
+--- FU-0026 (adjust log level [adjust_log_level = off ÅÀ on]) ---
+server signaled
+SELECT * FROM nnn
+ERROR:  relation "nnn" does not exist
+LINE 1: SELECT * FROM nnn
+                      ^
+check text-log(1): 0
+server signaled
+SELECT * FROM nnn
+ERROR:  relation "nnn" does not exist
+LINE 1: SELECT * FROM nnn
+                      ^
+check text-log(2): 0
+--- FU-0027 (adjust log level [adjust_log_level = on ÅÀ off]) ---
+server signaled
+SELECT * FROM ooo
+ERROR:  relation "ooo" does not exist
+LINE 1: SELECT * FROM ooo
+                      ^
+check text-log(1): 0
+server signaled
+SELECT * FROM ooo
+ERROR:  relation "ooo" does not exist
+LINE 1: SELECT * FROM ooo
+                      ^
+check text-log(2): 0
+--- FU-0028 (adjust log level [reload all parameters(1)]) ---
+server signaled
+SELECT * FROM ppp
+ERROR:  relation "ppp" does not exist
+LINE 1: SELECT * FROM ppp
+                      ^
+SELECT ppp FROM pg_class
+ERROR:  column "ppp" does not exist
+LINE 1: SELECT ppp FROM pg_class
+               ^
+SELECT * ppp
+ERROR:  syntax error at or near "ppp"
+LINE 1: SELECT * ppp
+                 ^
+SELECT 'ppp'::integer
+ERROR:  invalid input syntax for integer: "ppp"
+LINE 1: SELECT 'ppp'::integer
+               ^
+SELECT ppp()
+ERROR:  function ppp() does not exist
+LINE 1: SELECT ppp()
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+SELECT 'ppp'
+ ?column? 
+----------
+ ppp
+(1 row)
+
+check text-log(1): 0
+check text-log(2): 0
+check text-log(3): 0
+check text-log(4): 0
+check text-log(5): 0
+check text-log(6): 0
+server signaled
+SELECT * FROM ppp
+ERROR:  relation "ppp" does not exist
+LINE 1: SELECT * FROM ppp
+                      ^
+SELECT ppp FROM pg_class
+ERROR:  column "ppp" does not exist
+LINE 1: SELECT ppp FROM pg_class
+               ^
+SELECT * ppp
+ERROR:  syntax error at or near "ppp"
+LINE 1: SELECT * ppp
+                 ^
+SELECT 'ppp'::integer
+ERROR:  invalid input syntax for integer: "ppp"
+LINE 1: SELECT 'ppp'::integer
+               ^
+SELECT ppp()
+ERROR:  function ppp() does not exist
+LINE 1: SELECT ppp()
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+SELECT 'ppp'
+ ?column? 
+----------
+ ppp
+(1 row)
+
+check text-log(1): 0
+check text-log(2): 0
+check text-log(3): 0
+check text-log(4): 0
+check text-log(5): 0
+check text-log(6): 0
+--- FU-0029 (adjust log level [reload all parameters(2)]) ---
+server signaled
+SELECT * FROM qqq
+ERROR:  relation "qqq" does not exist
+LINE 1: SELECT * FROM qqq
+                      ^
+SELECT qqq FROM pg_class
+ERROR:  column "qqq" does not exist
+LINE 1: SELECT qqq FROM pg_class
+               ^
+SELECT * qqq
+ERROR:  syntax error at or near "qqq"
+LINE 1: SELECT * qqq
+                 ^
+SELECT 'qqq'::integer
+ERROR:  invalid input syntax for integer: "qqq"
+LINE 1: SELECT 'qqq'::integer
+               ^
+SELECT qqq()
+ERROR:  function qqq() does not exist
+LINE 1: SELECT qqq()
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+SELECT 'qqq'
+ ?column? 
+----------
+ qqq
+(1 row)
+
+check text-log(1): 0
+check text-log(2): 0
+check text-log(3): 0
+check text-log(4): 0
+check text-log(5): 0
+check text-log(6): 0
+server signaled
+SELECT * FROM qqq
+ERROR:  relation "qqq" does not exist
+LINE 1: SELECT * FROM qqq
+                      ^
+SELECT qqq FROM pg_class
+ERROR:  column "qqq" does not exist
+LINE 1: SELECT qqq FROM pg_class
+               ^
+SELECT * qqq
+ERROR:  syntax error at or near "qqq"
+LINE 1: SELECT * qqq
+                 ^
+SELECT 'qqq'::integer
+ERROR:  invalid input syntax for integer: "qqq"
+LINE 1: SELECT 'qqq'::integer
+               ^
+SELECT qqq()
+ERROR:  function qqq() does not exist
+LINE 1: SELECT qqq()
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+SELECT 'qqq'
+ ?column? 
+----------
+ qqq
+(1 row)
+
+check text-log(1): 0
+check text-log(2): 0
+check text-log(3): 0
+check text-log(4): 0
+check text-log(5): 0
+check text-log(6): 0
+\! sh ./sql/clean.sh
