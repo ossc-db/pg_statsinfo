@@ -4,7 +4,7 @@
  * Copyright (c) 2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
-#include "pg_statsinfo.h"
+#include "pg_statsinfod.h"
 
 #define SQL_MAINTENANCE_PERTITION	"SELECT statsrepo.del_snapshot2(CAST($1 AS TIMESTAMPTZ))"
 #define SQL_MAINTENANCE				"SELECT statsrepo.del_snapshot(CAST($1 AS TIMESTAMPTZ))"

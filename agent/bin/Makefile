@@ -4,7 +4,7 @@
 #    Copyright (c) 2010-2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
 #
 SRCS = \
-	pg_statsinfo.c \
+	pg_statsinfod.c \
 	autovacuum.c \
 	checkpoint.c \
 	collector.c \
@@ -21,7 +21,7 @@ SRCS = \
 
 OBJS = $(SRCS:.c=.o)
 DATA = pg_statsrepo.sql pg_statsrepo_partition.sql pg_statsrepo_alert.sql uninstall_pg_statsrepo.sql
-PROGRAM = pg_statsinfo
+PROGRAM = pg_statsinfod
 REGRESS = pg_statsinfo
 
 PG_CPPFLAGS = -I$(libpq_srcdir) -DFRONTEND -DPGUT_MULTI_THREADED -DPGUT_OVERRIDE_ELOG

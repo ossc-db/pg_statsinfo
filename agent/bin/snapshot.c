@@ -4,7 +4,7 @@
  * Copyright (c) 2010-2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
-#include "pg_statsinfo.h"
+#include "pg_statsinfod.h"
 
 /* XXX: should read SQLs from external files? */
 #include "collector_sql.h"

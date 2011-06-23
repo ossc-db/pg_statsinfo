@@ -4,7 +4,7 @@
  * Copyright (c) 2010, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
-#include "pg_statsinfo.h"
+#include "pg_statsinfod.h"
 
 #ifndef WIN32
 #include <sys/utsname.h>

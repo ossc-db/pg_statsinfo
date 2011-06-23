@@ -1,14 +1,14 @@
 /*-------------------------------------------------------------------------
  *
- * pg_statsinfo.h
+ * pg_statsinfod.h
  *
  * Copyright (c) 2010-2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  *
  *-------------------------------------------------------------------------
  */
 
-#ifndef PG_STATSINFO_H
-#define PG_STATSINFO_H
+#ifndef PG_STATSINFOD_H
+#define PG_STATSINFOD_H
 
 #include "postgres_fe.h"
 #include "pgut/pgut.h"
@@ -35,7 +35,7 @@ typedef enum ShutdownState
 	LOGGER_SHUTDOWN
 } ShutdownState;
 
-/* pg_statsinfo.c */
+/* pg_statsinfod.c */
 extern char		   *instance_id;
 extern char		   *postmaster_port;
 extern int			server_version_num;
@@ -181,7 +181,7 @@ extern void *writer_main(void *arg);
 extern void writer_send(QueueItem *item);
 extern void do_maintenance(time_t repository_keepday);
 
-/* pg_statsinfo.c */
+/* pg_statsinfod.c */
 extern bool postmaster_is_alive(void);
 extern PGconn *do_connect(PGconn **conn, const char *info, const char *schema);
 extern int str_to_elevel(const char *value);
@@ -191,4 +191,4 @@ extern void delay(void);
 extern char *getlocaltimestamp(void);
 extern int get_server_version(PGconn *conn);
 
-#endif   /* PG_STATSINFO_H */
+#endif   /* PG_STATSINFOD_H */

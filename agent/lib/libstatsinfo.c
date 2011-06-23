@@ -43,7 +43,7 @@
 /* #define ADJUST_NON_CRITICAL_SETTINGS */
 
 #ifndef WIN32
-#define PROGRAM_NAME		"pg_statsinfo"
+#define PROGRAM_NAME		"pg_statsinfod"
 #else
 #define PROGRAM_NAME		"pg_statsinfo.exe"
 #endif

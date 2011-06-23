@@ -1,10 +1,10 @@
 /*
- * pg_statsinfo.c
+ * pg_statsinfod.c
  *
  * Copyright (c) 2010-2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
-#include "pg_statsinfo.h"
+#include "pg_statsinfod.h"
 
 #include <signal.h>
 
@@ -267,8 +267,7 @@ help(void)
 	printf("%s %s (built with %s)\n",
 		PROGRAM_NAME, PROGRAM_VERSION, PACKAGE_STRING);
 	printf("  This program must be launched by PostgreSQL server.\n");
-	printf("  Add '%s' to shared_preload_libraries in postgresql.conf.\n",
-		PROGRAM_NAME);
+	printf("  Add 'pg_statsinfo' to shared_preload_libraries in postgresql.conf.\n");
 	printf("\n");
 	printf("Read the website for details. <%s>\n", PROGRAM_URL);
 	printf("Report bugs to <%s>.\n", PROGRAM_EMAIL);

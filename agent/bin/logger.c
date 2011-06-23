@@ -4,7 +4,7 @@
  * Copyright (c) 2010-2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
-#include "pg_statsinfo.h"
+#include "pg_statsinfod.h"
 
 #include <dirent.h>
 #include <fcntl.h>
