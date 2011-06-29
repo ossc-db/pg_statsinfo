@@ -39,14 +39,11 @@ static struct pgut_option options[] =
 	{ 0 }
 };
 
-static PGconn *connect_repository(PGconn *conn_info);
-
 int
 main(int argc, char *argv[])
 {
-	PGconn			*conn_info;
-	PGconn			*conn_repo;
-	StringInfoData	 buff;
+	PGconn			*conn;
+	StringInfoData	 conn_info;
 	int				 num_options;
 
 	num_options = pgut_getopt(argc, argv, options);
@@ -57,20 +54,6 @@ main(int argc, char *argv[])
 			(errcode(EINVAL),
 			 errmsg("too many argumetns")));
 
-	/* connect to database being monitored */
-	initStringInfo(&buff);
-	if (dbname && dbname[0])
-		appendStringInfo(&buff, "dbname=%s ", dbname);
-	if (host && host[0])
-		appendStringInfo(&buff, "host=%s ", host);
-	if (port && port[0])
-		appendStringInfo(&buff, "port=%s ", port);
-	if (username && username[0])
-		appendStringInfo(&buff, "user=%s ", username);
-
-	conn_info = pgut_connect(buff.data, prompt_password, ERROR);
-	termStringInfo(&buff);
-
 	/* can't specified the mode two or more */
 	if ((mode_list && (mode_size || mode_report || mode_snapshot || mode_delete)) ||
 		(mode_size && (mode_report || mode_snapshot || mode_delete)) ||
@@ -80,33 +63,38 @@ main(int argc, char *argv[])
 			(errcode(EINVAL),
 			 errmsg("can't specify two or more mode")));
 
+	/* connect to database */
+	initStringInfo(&conn_info);
+	if (dbname && dbname[0])
+		appendStringInfo(&conn_info, "dbname=%s ", dbname);
+	if (host && host[0])
+		appendStringInfo(&conn_info, "host=%s ", host);
+	if (port && port[0])
+		appendStringInfo(&conn_info, "port=%s ", port);
+	if (username && username[0])
+		appendStringInfo(&conn_info, "user=%s ", username);
+
+	conn = pgut_connect(conn_info.data, prompt_password, ERROR);
+	termStringInfo(&conn_info);
+
 	/* execute a specified operation */
 	if (mode_list)
-		do_list(conn_info, instid);
+		do_list(conn, instid);
 	else if (mode_size)
-		do_size(conn_info);
+		do_size(conn);
 	else if (mode_report)
-	{
-		/* connect to repository database */
-		conn_repo = connect_repository(conn_info);
-		do_report(conn_repo, mode_report, instid, beginid, endid, begindate, enddate, output);
-		pgut_disconnect(conn_repo);
-	}
+		do_report(conn, mode_report,
+			instid, beginid, endid, begindate, enddate, output);
 	else if (mode_snapshot)
-		do_snapshot(conn_info, mode_snapshot);
+		do_snapshot(conn, mode_snapshot);
 	else if (mode_delete)
-	{
-		/* connect to repository database */
-		conn_repo = connect_repository(conn_info);
-		do_delete(conn_repo, mode_delete);
-		pgut_disconnect(conn_repo);
-	}
+		do_delete(conn, mode_delete);
 	else
 		ereport(ERROR,
 			(errcode(EINVAL),
 			 errmsg("no operation specified")));
 
-	pgut_disconnect(conn_info);
+	pgut_disconnect(conn);
 	return 0;
 }
 
@@ -149,27 +137,4 @@ pgut_help(bool details)
 	printf("  -E, --enddate          end point of report scope (specify by timestamp)\n");
 	printf("\nOutput options:\n");
 	printf("  -o, --output=FILENAME  destination file path for report\n");
-}
-
-/*
- * connect to the repository database
- */
-static PGconn *
-connect_repository(PGconn *conn_info)
-{
-	PGconn		*conn_repo;
-	PGresult	*res;
-
-	/* obtain connection information */
-	res = pgut_execute(conn_info,
-		"SELECT setting FROM pg_settings WHERE name = 'pg_statsinfo.repository_server'", 0, NULL);
-	if (PQntuples(res) == 0)
-		ereport(ERROR,
-			(errmsg("pg_statsinfo is not working")));
-
-	/* connect to repository database */
-	conn_repo = pgut_connect(PQgetvalue(res, 0, 0), false, ERROR);
-	PQclear(res);
-
-	return conn_repo;
 }

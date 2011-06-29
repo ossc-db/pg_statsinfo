@@ -1,6 +1,8 @@
 /*
  * bin/pg_statsrepo_partition.sql
  *
+ * Create a repository schema for PostgreSQL 8.4 and later.
+ *
  * Copyright (c) 2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 

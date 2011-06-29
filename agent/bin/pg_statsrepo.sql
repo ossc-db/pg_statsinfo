@@ -1,6 +1,8 @@
 /*
  * bin/pg_statsrepo.sql
  *
+ * Create a repository schema for PostgreSQL 8.3.
+ *
  * Copyright (c) 2010-2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 

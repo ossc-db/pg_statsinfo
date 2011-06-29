@@ -64,6 +64,7 @@ do_list(PGconn *conn, const char *instid)
 			ereport(ERROR,
 				(errcode(EINVAL),
 				 errmsg("invalid instance ID (--instid) : '%s'", instid)));
+
 		/* get a list of the specified instances snapshot */
 		appendStringInfo(&query, "\nWHERE i.instid = $1");
 		appendStringInfo(&query, "\nORDER BY s.snapid");
