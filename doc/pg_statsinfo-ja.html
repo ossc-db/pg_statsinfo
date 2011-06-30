@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD html 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD html 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html><head>
 
 
@@ -39,7 +39,7 @@
 <li><a href="#restrictions">使用上の注意と制約</a></li>
 <li><a href="#details">詳細情報</a></li>
 <ol>
-  <li><a href="#alart">アラート関数</a></li>
+  <li><a href="#alert">アラートメッセージの出力</a></li>
   <li><a href="#warm-standby">ウォームスタンバイ</a></li>
   <li><a href="#internal">内部構成</a></li>
 </ol>
@@ -101,12 +101,13 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
 
 <p>
 スナップショットのサイズは、DB内のオブジェクト数に依存しますが、概ね1回のスナップショットで1DBあたり600 - 800KBを消費します。
-デフォルトの取得間隔（5分間隔）の場合、監視対象DB一つあたり1日で180 - 230MBを消費します。
+デフォルトの取得間隔（5分間隔）の場合、監視対象インスタンス一つあたり1日で180 - 230MBを消費します。
 </p>
 
 <h4>アラートメッセージの出力</h4>
-<p>スナップショット直後にアラート関数（イベントハンドラ関数）を呼び出すことで、過去のスナップショットと比較して異常値がある場合にアラートメッセージをログ出力することができます。
-アラート関数の設定方法は<a href='#alart'>こちら</a>を御覧ください。</p>
+<p>
+別途設定することで、スナップショット直後に、過去のスナップショットと比較して異常値がある場合にメッセージをサーバログに出力することができます。設定方法は<a href="#alert">こちら</a>をご覧ください。
+</p>
 
 <h3 id="features-log">サーバログ処理機能</h3>
 <ul>
@@ -142,7 +143,7 @@ $ su
 <h4>source</h4>
 <p>ソースコードからビルドするには、pgxs を使用します。
 なお、pg_statsinfo の登録スクリプト (sql) を手動でインストールする必要はありません。
-監視対象、リポジトリDB共に、初回起動時に必要に応じて pg_statsinfo がスキーマを自動的にインストールします。</p>
+監視対象インスタンス、リポジトリDB共に、初回起動時に必要に応じて pg_statsinfo がスキーマを自動的にインストールします。</p>
 <pre>
 $ tar xzvf pg_statsinfo.tar.gz
 $ cd pg_statsinfo
@@ -216,8 +217,8 @@ host    all             postgres        127.0.0.1/32            trust</pre>
 <br>
 <h4 id="pg_stat_statements">クエリの統計情報の取得設定</h4>
 <p>
-なお、PostgreSQL のバージョン 8.4 以上を使っている場合、監視対象インスタンスの postgres データベースに <a href="http://www.postgresql.jp/document/current/html/pgstatstatements.html">pg_stat_statements</a> をインストールすることで、クエリの統計情報もスナップショットとして収集できるようになります。
-利用する場合には、初回起動時に以下の手順で登録してください。
+なお、PostgreSQL のバージョン 8.4 以上を使っている場合、監視対象インスタンスの postgres データベースに <a href="http://www.postgresql.jp/document/current/html/pgstatstatements.html">pg_stat_statements</a> をインストールすることで、クエリの統計情報もスナップショットとして収集できるようになります。<br/>
+利用する場合には、postgresql.conf の shared_preload_libraries に pg_stat_statements を追加し、初回起動時に以下の手順で登録してください。 
 </p>
 <pre>$ psql -d postgres -f $PGSHARE/contrib/pg_stat_statements.sql</pre>
 
@@ -245,7 +246,8 @@ postgresql.confに以下の設定を記述することで自動取得を実行�
 <pre>pg_statsinfo.snapshot_interval = 30min </pre>
 
 <h4>手動取得</h4>
-<p>任意のタイミングでスナップショットを取得する場合は、監視対象インスタンスのpostgresデータベースに対し、関数 statsinfo.snapshot(text DEFAULT NULL) を実行して下さい。
+<p>任意のタイミングでスナップショットを取得する場合は、<font color="red">監視対象インスタンスが存在するDBクラスタ(いい文章が思い浮かばないため赤字で修正)</font>のpostgresデータベースに対し、関数 statsinfo.snapshot(text DEFAULT NULL) を実行して下さい。<br/>
+
 引数でスナップショット取得理由をコメントとして記録できます。</p>
 <p>例: 手動でスナップショットを取得します。コメントとして文字列 'comment' を付与します。</p>
 <pre>$ psql -d postgres -c "SELECT statsinfo.snapshot('comment')"</pre>
@@ -262,9 +264,6 @@ pg_statsinfo.maintenance_time = '00:00:00'      # リポジトリDBの自動メ�
 pg_statsinfo.repository_keepday = 7 	        # スナップショットの保持期間設定
 </pre>
 
-<p>例: 過去3日分のスナップショットがリポジトリDBに格納されている状態で、自動メンテナンスが '07:00:00' に実行される設定にします。
-このときのスナップショット保持期間設定を 1 (1日分) とします。
-自動メンテナンス実行後は、2日前、3日前のスナップショットは削除され、前日分と当日の '07:00:00' までのスナップショットが残ります。</p>
 <p>（注）自動メンテナンスを行わない場合、スナップショットは手動で削除しない限りリポジトリDBに残り続けます。
 不要となった古いスナップショットは定期的に削除して下さい。</p>
 
@@ -320,7 +319,7 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
   </tr>
   <tr>
     <td>log_min_messages</td>
-    <td>debug5 ? log</td>
+    <td>debug5 ~ log</td>
     <td>ログへ出力するメッセージレベル。
         'log', pg_statsinfo.syslog_min_messages, pg_statsinfo.textlog_min_messages のいずれの設定よりも、より多くを出力するレベルを設定する必要があります。</td>
   </tr>
@@ -348,7 +347,7 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
 <p>pg_statsinfo を利用するために確認が推奨されるパラメータは以下です。
 パラメータを後から変更するためには、再読み込み (pg_ctl reload) のみが必要です。</p>
 
-<p>また、PostgreSQL 8.3 で利用する場合には、独自パラメータ 'pg_statsinfo.*' は 'statsinfo.*' と読み替えてください。</p>
+<p>また、PostgreSQL 8.3 で利用する場合には、custom_variable_classes の設定値は 'statsinfo'、独自パラメータ 'pg_statsinfo.*' は 'statsinfo.*' と読み替えてください。</p>
 
 <table>
 <thead>
@@ -373,7 +372,7 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
   <tr>
     <td>log_autovacuum_min_duration</td>
     <td>-1</td>
-    <td>自動バキューム状況のサーバログ出力。0 ? 1min を推奨します。</td>
+    <td>自動バキューム状況のサーバログ出力。0 ~ 1min を推奨します。</td>
   </tr>
   <tr>
     <td>log_directory</td>
@@ -403,9 +402,9 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
   </tr>
   <tr>
     <td>custom_variable_classes</td>
-    <td>'pg_statsinfo'</td>
-    <td>独自変数クラス名の設定。
-        "pg_statsinfo." から始まるパラメータを設定するために必要です。</td>
+    <td>(空文字)</td>
+    <td>独自変数クラス名の設定。<br/>
+        "pg_statsinfo." から始まるパラメータを設定するためには、'pg_statsinfo' を指定する必要があります。</td>
   </tr>
   <tr>
     <td>pg_statsinfo.textlog_min_messages</td>
@@ -644,88 +643,77 @@ PostgreSQL はタイムゾーンを独自に管理しており、外部プログ
 <h2 id="details">詳細情報</h2>
 <p>より高度な利用方法や、内部構成について説明します。</p>
 
-<h3 id="alart">アラート関数</h3>
+<h3 id="alert">アラートメッセージの出力</h3>
 <p>
-新しいスナップショットを保存した直後、リポジトリDBにてアラート関数 statsrepo.alert() が呼ばれます。
-この関数のプロトタイプは <code>CREATE FUNCTION statsrepo.alert(snap_id bigint) RETURNS SETOF text</code> です。
-デフォルトではデータベースには登録されませんが、実用的なアラート関数の例が $PGSHARE/contrib/pg_statsrepo_alert.sql にインストールされています。
+アラート関数を<strong>リポジトリDB</strong>に登録することにより、新しいスナップショットを保存した直後に実行され、異常値があった場合にアラートメッセージをメッセージレベル"ALERT"としてログに出力します。<br/>
 </p>
 
-<p>
-アラート関数は<strong>リポジトリDB</strong>に登録する必要があります。
-この関数内でスナップショットの差分を計算し、異常値があればメッセージを text 型で返却します。
-返却結果はメッセージレベル "ALERT" の専用メッセージとしてログに記録されます。
-異常発生後できるだけ早く検知したい場合にはアラート関数を使用してください。
-過去の性能や稼働状況は pg_reporter のグラフィカル・レポートでも閲覧できますが、リアルタイム監視には向きません。
-</p>
+<h4>アラートメッセージ出力の設定手順</h4>
+<p>リポジトリDBにアラート関数を登録します。</p>
+<pre>
+$ psql -d postgres -f $PGSHARE/contrib/pg_statsrepo_alert.sql
+</pre>
 
-<pre>statsrepo.alert (snap_id bigint) : setof text</pre>
-<dl>
-  <dt>[引数] snap_id:</dt>
-  <dd>最新のスナップショットIDが渡されます。</dd>
-  <dt>[返値] setof text:</dt>
-  <dd>ALERT として出力したいメッセージを返却します。</dd>
-</dl>
+<h4>アラートメッセージ出力の停止手順</h4>
+<p>アラートメッセージの出力のみを停止したい場合は、リポジトリDBに登録したアラート関数を削除します。</p>
+<pre>
+$ psql -d postgres -c "DROP FUNCTION statsrepo.alert(bigint)"
+</pre>
 
-<p>
-簡単なサンプルを <a href="http://pgstatsinfo.projects.postgresql.org/alert-sample.sql">alert-sample.sql</a> に示します。
-付属の pg_statsrepo_alert.sql 関数はより高度なチェック機能を持ちます。
-以下のパラメータを<strong>リポジトリDB側</strong>のpostgresql.confに記述することで、アラートの閾値を調整できます。
-</p>
+<h4>アラート関数で監視する項目</h4>
+<p>アラート関数により監視する項目を以下に示します。パラメータを<strong>リポジトリDB</strong>のpostgresql.confに記述することで、アラートの閾値を変更することができます。パラメータを設定する場合には、custom_variable_classes に 'statsrepo' を追加する必要があります。</p>
 
 <table>
 <thead>
 <tr>
+  <th>監視対象項目</th>
+  <th>閾値</th>
   <th>変数名</th>
-  <th>デフォルト</th>
-  <th>アラート判定基準</th>
-</tr>
 </thead>
 <tbody>
 <tr>
-  <td>statsrepo.alert_rollbacks_per_second</td>
-  <td>100</td>
   <td>秒間のロールバック数</td>
-</tr><tr>
-</tr><tr>
-  <td>statsrepo.alert_transactions_per_second</td>
-  <td>1000</td>
+  <td align="right">100</td>
+  <td>statsrepo.alert_rollbacks_per_second(integer)</td>
+</tr>
+<tr>
   <td>秒間のコミット数 (tps)</td>
-</tr><tr>
-</tr><tr>
-  <td>statsrepo.alert_garbage_size</td>
-  <td>20GB</td>
+  <td align="right">1000</td>
+  <td>statsrepo.alert_transactions_per_second(integer)</td>
+</tr>
+<tr>
   <td>監視インスタンス中の不要領域のサイズ (byte)</td>
-</tr><tr>
-</tr><tr>
-  <td>statsrepo.alert_garbage_percent</td>
-  <td>30</td>
+  <td align="right">20GB</td>
+  <td>statsrepo.alert_garbage_size(integer)</td>
+</tr>
+<tr>
   <td>監視インスタンスに占める不要領域の割合 (%)</td>
-</tr><tr>
-</tr><tr>
-  <td>statsrepo.alert_garbage_percent_table</td>
-  <td>30</td>
+  <td align="right">30</td>
+  <td>statsrepo.alert_garbage_percent(integer)</td>
+</tr>
+<tr>
   <td>各テーブルに占める不要領域の割合 (%)</td>
-</tr><tr>
-</tr><tr>
-  <td>statsrepo.alert_response_average</td>
-  <td>10s</td>
+  <td align="right">30</td>
+  <td>statsrepo.alert_garbage_percent_table(integer)</td>
+</tr>
+<tr>
   <td>クエリの平均レスポンス時間 (秒)</td>
-</tr><tr>
-</tr><tr>
-  <td>statsrepo.alert_response_worst</td>
-  <td>60s</td>
+  <td align="right">10s</td>
+  <td>statsrepo.alert_response_average(integer)</td>
+</tr>
+<tr>
   <td>クエリの最悪レスポンス時間 (秒)</td>
-</tr><tr>
-</tr></tbody>
+  <td align="right">60s</td>
+  <td>statsrepo.alert_response_worst(integer)</td>
+</tr>
+</tbody>
 </table>
 
-<p>
-パラメータを設定する場合には、custom_variable_classes にも 'statsrepo' を追加する必要があります。
-</p>
+<p>例: 秒間コミット数の閾値を5000に変更します。</p>
 
 <pre>custom_variable_classes = 'statsrepo'
 statsrepo.alert_transactions_per_second = 5000</pre>
+
 
 <h3 id="warm-standby">ウォームスタンバイ</h3>
 <p>構成例として、<a href="http://www.postgresql.jp/document/current/html/warm-standby.html">ウォームスタンバイ</a>での構成を説明します。
@@ -747,7 +735,7 @@ pg_statsinfo は、この SystemTap が収集するプロファイリング情�
 </p>
 <h4>前提環境</h4>
 <ol>
-<li>OS は、RHEL6、Fedora13、CentOS6 以降が必要になります。<br>これらは、PostgreSQL のプロファイリングが実施可能な SystemTap のバージョンをデフォルトで持つディストリビューションです。</li>
+<li>OS は、RHEL6、Fedora13 以降が必要になります。<br>これらは、PostgreSQL のプロファイリングが実施可能な SystemTap のバージョンをデフォルトで持つディストリビューションです。</li>
 <li>systemtap、systemtap-runtime、systemtap-sdt-devel パッケージ(RPM) がインストール済みである必要があります。</li>
 <li>PostgreSQL は、--enable-debug、--enable-dtrace の configure オプションを有効にしてビルドされている必要があります。</li>
 </ol>
