@@ -246,7 +246,7 @@ postgresql.confに以下の設定を記述することで自動取得を実行�
 <pre>pg_statsinfo.snapshot_interval = 30min </pre>
 
 <h4>手動取得</h4>
-<p>任意のタイミングでスナップショットを取得する場合は、<font color="red">監視対象インスタンスが存在するDBクラスタ(いい文章が思い浮かばないため赤字で修正)</font>のpostgresデータベースに対し、関数 statsinfo.snapshot(text DEFAULT NULL) を実行して下さい。<br/>
+<p>任意のタイミングでスナップショットを取得する場合は、監視対象のインスタンスが存在するDBクラスタのpostgresデータベースに対し、関数 statsinfo.snapshot(text DEFAULT NULL) を実行して下さい。<br/>
 
 引数でスナップショット取得理由をコメントとして記録できます。</p>
 <p>例: 手動でスナップショットを取得します。コメントとして文字列 'comment' を付与します。</p>
