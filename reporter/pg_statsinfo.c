@@ -125,6 +125,7 @@ pgut_help(bool details)
 	printf("                          * QueryActivity\n");
 	printf("                          * SettingParameters\n");
 	printf("                          * SchemaInformation\n");
+	printf("                          * Profiles\n");
 	printf("                          * All\n");
 	printf("                         ---------------------------\n");
 	printf("                         (can prefix match. For example, \"su\" means 'Summary')\n");

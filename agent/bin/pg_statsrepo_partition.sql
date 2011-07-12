@@ -548,7 +548,7 @@ $$
 LANGUAGE sql;
 
 -- generate information that corresponds to 'Database Statistics'
-CREATE FUNCTION statsrepo.get_db_stats(
+CREATE FUNCTION statsrepo.get_dbstats(
 	IN snapid_begin			bigint,
 	IN snapid_end			bigint,
 	OUT datname				name,
@@ -599,6 +599,88 @@ $$
 $$
 LANGUAGE sql;
 
+-- generate information that corresponds to 'Transaction Statistics'
+CREATE FUNCTION statsrepo.get_xact_tendency(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT snapid			bigint,
+	OUT datname			name,
+	OUT commit_tps		double precision,
+	OUT rollback_tps	double precision
+) RETURNS SETOF record AS
+$$
+	SELECT
+		snapid,
+		name,
+		"commit/s",
+		"rollback/s"
+	FROM
+	(
+		SELECT
+			d.snapid,
+			d.name,
+			coalesce((xact_commit - lag(xact_commit) OVER w) / duration, 0) AS "commit/s",
+			coalesce((xact_rollback - lag(xact_rollback) OVER w) / duration, 0) AS "rollback/s"
+		FROM
+			(SELECT
+				d.snapid,
+				d.name,
+				sum(xact_commit) AS xact_commit,
+				sum(xact_rollback) AS xact_rollback
+			 FROM
+				statsrepo.database d,
+				statsrepo.snapshot s
+			 WHERE
+			 	d.snapid BETWEEN $1 AND $2
+				AND d.snapid = s.snapid
+				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			 GROUP BY
+			 	d.snapid, d.name) AS d,
+			(SELECT
+				snapid,
+				extract(epoch FROM time - lag(time) OVER (ORDER BY snapid))::float AS duration
+			 FROM
+				statsrepo.snapshot
+			 WHERE
+			 	instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)) AS s
+		WHERE
+			s.snapid = d.snapid
+		WINDOW w AS (PARTITION BY d.name ORDER BY s.snapid)
+		ORDER BY
+			s.snapid, d.name
+	) t
+	WHERE
+		snapid > $1;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Database Size'
+CREATE FUNCTION statsrepo.get_dbsize_tendency(
+	IN snapid_begin	bigint,
+	IN snapid_end	bigint,
+	OUT snapid		bigint,
+	OUT datname		name,
+	OUT size		numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		d.snapid,
+		d.name,
+		sum(size) / 1024 / 1024
+	FROM
+		statsrepo.database d,
+		statsrepo.snapshot s
+	WHERE
+		d.snapid BETWEEN $1 AND $2
+		AND d.snapid = s.snapid
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+	GROUP BY
+		d.snapid, d.name
+	ORDER BY
+		d.snapid, d.name;
+$$
+LANGUAGE sql;
+
 -- generate information that corresponds to 'Instance Processes ratio'
 CREATE FUNCTION statsrepo.get_proc_ratio(
 	IN snapid_begin		bigint,
@@ -628,6 +710,36 @@ $$
 		a.snapid BETWEEN $1 AND $2
 		AND a.snapid = s.snapid
 		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Instance Processes'
+CREATE FUNCTION statsrepo.get_proc_tendency(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT snapid			bigint,
+	OUT idle			double precision,
+	OUT idle_in_xact	double precision,
+	OUT waiting			double precision,
+	OUT running			double precision
+) RETURNS SETOF record AS
+$$
+	SELECT
+		a.snapid,
+		idle, 
+		idle_in_xact,
+		waiting,
+		running
+	FROM
+		statsrepo.activity a,
+		statsrepo.snapshot s
+	WHERE
+		a.snapid BETWEEN $1 AND $2
+		AND a.snapid = s.snapid
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+		AND idle IS NOT NULL
+	ORDER BY
+		a.snapid;
 $$
 LANGUAGE sql;
 
@@ -673,6 +785,49 @@ $$
 	WHERE
 		a.snapid = s.snapid
 		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2);
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'CPU Usage'
+CREATE FUNCTION statsrepo.get_cpu_usage_tendency(
+	IN snapid_begin	bigint,
+	IN snapid_end	bigint,
+	OUT snapid		bigint,
+	OUT "user"		numeric,
+	OUT system		numeric,
+	OUT idle		numeric,
+	OUT iowait		numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		t.snapid,
+		(100 * statsrepo.div(t.user, t.total))::numeric(5,2),
+		(100 * statsrepo.div(t.system, t.total))::numeric(5,2),
+		(100 * statsrepo.div(t.idle, t.total))::numeric(5,2),
+		(100 * statsrepo.div(t.iowait, t.total))::numeric(5,2)
+	FROM
+	(
+		SELECT
+			c.snapid,
+			(cpu_user - lag(cpu_user) OVER w) AS user,
+			(cpu_system - lag(cpu_system) OVER w) AS system,
+			(cpu_idle - lag(cpu_idle) OVER w) AS idle,
+			(cpu_iowait - lag(cpu_iowait) OVER w) AS iowait,
+			(cpu_user + cpu_system + cpu_idle + cpu_iowait) -
+				(lag(cpu_user) OVER w + lag(cpu_system) OVER w + lag(cpu_idle) OVER w + lag(cpu_iowait) OVER w ) AS total
+		FROM
+			statsrepo.cpu c,
+			statsrepo.snapshot s
+		WHERE
+			c.snapid BETWEEN $1 AND $2
+			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			AND s.snapid = c.snapid
+		WINDOW w AS (PARTITION BY s.instid ORDER BY c.snapid)
+		ORDER BY
+			c.snapid
+	) t
+	WHERE
+		snapid > $1;
 $$
 LANGUAGE sql;
 
@@ -733,6 +888,67 @@ $$
 		a.snapid = s.snapid
 		AND a.device_name = b.device_name
 		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2);
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'IO Usage'
+CREATE FUNCTION statsrepo.get_io_usage_tendency(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT snapid			bigint,
+	OUT device_name		text,
+	OUT read_size_tps	numeric,
+	OUT write_size_tps	numeric,
+	OUT read_time_tps	numeric,
+	OUT write_time_tps	numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		snapid,
+		dev_name,
+		read_size_tps,
+		write_size_tps
+	FROM
+	(
+		SELECT
+			d.snapid,
+			dev_name,
+			coalesce((rs - lag(rs) OVER w) / 2 / duration, 0)::numeric(1000,2) AS read_size_tps,
+			coalesce((ws - lag(ws) OVER w) / 2 / duration, 0)::numeric(1000,2) AS write_size_tps,
+			coalesce((rt - lag(rt) OVER w) / duration, 0)::numeric(1000,2) AS read_time_tps,
+			coalesce((wt - lag(wt) OVER w) / duration, 0)::numeric(1000,2) AS write_time_tps
+		FROM
+			(SELECT
+				d.snapid,
+				d.device_name as dev_name,
+				sum(device_readsector) AS rs,
+				sum(device_writesector) AS ws,
+				sum(device_readtime) AS rt,
+				sum(device_writetime) AS wt
+			 FROM
+				statsrepo.device d,
+				statsrepo.snapshot s
+			 WHERE
+				d.snapid BETWEEN $1 AND $2
+				AND d.snapid = s.snapid
+				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			 GROUP BY
+				d.snapid, d.device_name) AS d,
+			(SELECT
+				snapid,
+				extract(epoch FROM time - lag(time) OVER (ORDER BY snapid))::float AS duration
+			 FROM
+			 	statsrepo.snapshot
+			 WHERE
+			 	instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)) AS s
+		WHERE
+			s.snapid = d.snapid
+		WINDOW w AS (PARTITION BY d.dev_name ORDER BY d.snapid)
+		ORDER BY
+			d.snapid, d.dev_name
+	) t
+	WHERE
+		snapid > $1;
 $$
 LANGUAGE sql;
 
