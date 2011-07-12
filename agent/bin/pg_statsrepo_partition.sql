@@ -907,7 +907,9 @@ $$
 		snapid,
 		dev_name,
 		read_size_tps,
-		write_size_tps
+		write_size_tps,
+		read_time_tps,
+		write_time_tps
 	FROM
 	(
 		SELECT
