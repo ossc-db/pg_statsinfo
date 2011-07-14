@@ -89,12 +89,12 @@ static bool has_statsrepo_alert(PGconn *conn);
 QueueItem *
 get_snapshot(char *comment)
 {
-	PGconn	   *conn = NULL;
-	PGresult   *activity = NULL;
-	Snap	   *snap;
-	int			r;
-	int			rows;
-	int			retry;
+	PGconn		*conn = NULL;
+	PGresult	*activity = NULL;
+	Snap		*snap;
+	int			 r;
+	int			 rows;
+	int			 retry;
 
 	/* allocate a new Snap object */
 	snap = pgut_new(Snap);

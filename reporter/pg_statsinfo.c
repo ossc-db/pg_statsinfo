@@ -92,7 +92,7 @@ main(int argc, char *argv[])
 	else
 		ereport(ERROR,
 			(errcode(EINVAL),
-			 errmsg("no operation specified")));
+			 errmsg("please specify operation option (-l, -s, -r, -S, -D)")));
 
 	pgut_disconnect(conn);
 	return 0;

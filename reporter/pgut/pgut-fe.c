@@ -22,11 +22,12 @@ char	   *port = NULL;
 char	   *username = NULL;
 char	   *password = NULL;
 YesNo		prompt_password = DEFAULT;
+bool		show_help = false;
+bool		show_version = false;
 
 PGconn	   *connection = NULL;
 
 static bool parse_pair(const char buffer[], char key[], char value[]);
-static char *get_username(void);
 
 /*
  * the result is also available with the global variable 'connection'.
@@ -477,6 +478,8 @@ static pgut_option default_options[] =
 	{ 's', 'U', "username"		, &username },
 	{ 'Y', 'w', "no-password"	, &prompt_password },
 	{ 'y', 'W', "password"		, &prompt_password },
+	{ 'b', '?', "help"			, &show_help },
+	{ 'b', 'V', "version"		, &show_version },
 	{ 0 }
 };
 
@@ -501,39 +504,6 @@ option_find(int c, pgut_option opts1[], pgut_option opts2[])
 			return &opts2[i];
 
 	return NULL;	/* not found */
-}
-
-/*
- * Returns the current user name.
- */
-static char *
-get_username(void)
-{
-	char *ret;
-
-#ifndef WIN32
-	struct passwd *pw;
-
-	pw = getpwuid(geteuid());
-	ret = (pw ? pw->pw_name : NULL);
-#else
-	static char username[128];	/* remains after function execute */
-	DWORD		len = sizeof(username) - 1;
-
-	if (GetUserNameA(username, &len))
-		ret = username;
-	else
-	{
-		_dosmaperr(GetLastError());
-		ret = NULL;
-	}
-#endif
-
-	if (ret == NULL)
-		ereport(ERROR,
-			(errcode_errno(),
-			 errmsg("could not get current user name: ")));
-	return ret;
 }
 
 static int
@@ -616,21 +586,6 @@ pgut_getopt(int argc, char **argv, pgut_option options[])
 
 	pgut_init(argc, argv);
 
-	/* Help message and version are handled at first. */
-	if (argc > 1)
-	{
-		if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-?") == 0)
-		{
-			help(true);
-			exit(1);
-		}
-		if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-V") == 0)
-		{
-			fprintf(stderr, "%s %s\n", PROGRAM_NAME, PROGRAM_VERSION);
-			exit(1);
-		}
-	}
-
 	/* Merge default and user options. */
 	longopts = option_merge(default_options, options);
 	optstring = longopts_to_optstring(longopts);
@@ -644,10 +599,20 @@ pgut_getopt(int argc, char **argv, pgut_option options[])
 
 	/* Read environment variables */
 	option_from_env(options);
-	(void) (dbname ||
-	(dbname = getenv("PGDATABASE")) ||
-	(dbname = getenv("PGUSER")) ||
-	(dbname = get_username()));
+
+	/* Show help message */
+	if (show_help)
+	{
+		help(true);
+		exit(1);
+	}
+
+	/* Show version information */
+	if (show_version)
+	{
+		fprintf(stderr, "%s %s\n", PROGRAM_NAME, PROGRAM_VERSION);
+		exit(1);
+	}
 
 	return optind;
 }

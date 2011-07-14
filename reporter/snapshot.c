@@ -57,6 +57,7 @@ do_list(PGconn *conn, const char *instid)
 	initStringInfo(&query);
 	appendStringInfo(&query, SQL_SELECT_SNAPSHOT_LIST);
 
+	/* get the snapshot list */
 	if (instid)
 	{
 		/* validate value of instance ID */

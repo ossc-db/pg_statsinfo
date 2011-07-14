@@ -229,7 +229,7 @@ report_summary(PGconn *conn, ReportScope *scope, FILE *out)
 	const char	*params[] = { scope->beginid, scope->endid };
 
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "Summary\n");
+	fprintf(out, "/* Summary */\n");
 	fprintf(out, "----------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_SUMMARY, lengthof(params), params);
@@ -259,7 +259,7 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 	int			 i;
 
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "Database Statistics\n");
+	fprintf(out, "/* Database Statistics */\n");
 	fprintf(out, "----------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_DBSTATS, lengthof(params), params);
@@ -277,7 +277,7 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 	}
 	PQclear(res);
 
-	fprintf(out, "Transaction Statistics\n");
+	fprintf(out, "/** Transaction Statistics **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%10s  %-16s  %12s  %12s\n",
 		"SnapshotID", "Database", "Commit/s", "Rollback/s");
@@ -295,7 +295,7 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-	fprintf(out, "Database Size\n");
+	fprintf(out, "/** Database Size **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%10s  %-16s  %13s\n",
 		"SnapshotID", "Database", "Size");
@@ -324,10 +324,10 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	int			 i;
 
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "Instance Activity\n");
+	fprintf(out, "/* Instance Activity */\n");
 	fprintf(out, "----------------------------------------\n\n");
 
-	fprintf(out, "Instance Processes Ratio\n");
+	fprintf(out, "/** Instance Processes Ratio **/\n");
 	fprintf(out, "-----------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_INSTANCE_PROC_RATIO, lengthof(params), params);
@@ -339,7 +339,7 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "Back-end Running Ratio       : %s %%\n\n", PQgetvalue(res, 0, 3));
 	PQclear(res);
 
-	fprintf(out, "Instance Processes\n");
+	fprintf(out, "/** Instance Processes **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%10s  %12s  %12s  %12s  %12s\n",
 		"SnapshotID", "Idle", "Idle In Xact", "Waiting", "Running");
@@ -370,10 +370,10 @@ report_resource_usage(PGconn *conn, ReportScope *scope, FILE *out)
 	int			 i;
 
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "OS Resource Usage\n");
+	fprintf(out, "/* OS Resource Usage */\n");
 	fprintf(out, "----------------------------------------\n\n");
 
-	fprintf(out, "CPU Usage\n");
+	fprintf(out, "/** CPU Usage **/\n");
 	fprintf(out, "-----------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_CPU_USAGE, lengthof(params), params);
@@ -403,7 +403,7 @@ report_resource_usage(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-	fprintf(out, "IO Usage\n");
+	fprintf(out, "/** IO Usage **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-12s  %-24s  %11s  %11s  %17s  %17s  %16s  %15s\n",
 		"Device", "Including TabelSpaces", "Total Read", "Total Write",
@@ -457,10 +457,10 @@ report_disk_usage(PGconn *conn, ReportScope *scope, FILE *out)
 	int			 i;
 
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "Disk Usage\n");
+	fprintf(out, "/* Disk Usage */\n");
 	fprintf(out, "----------------------------------------\n\n");
 
-	fprintf(out, "Disk Usage per Tablespace\n");
+	fprintf(out, "/** Disk Usage per Tablespace **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %-32s  %-12s  %11s  %11s  %10s\n",
 		"Tablespace", "Location", "Device", "Used", "Avail", "Remain");
@@ -480,7 +480,7 @@ report_disk_usage(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-	fprintf(out, "Disk Usage per Table\n");
+	fprintf(out, "/** Disk Usage per Table **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %-16s  %-16s  %11s  %12s  %12s  %12s\n",
 		"Database", "Schema", "Table", "Size", "Table Reads", "Index Reads", "Toast Reads");
@@ -513,7 +513,7 @@ report_long_transactions(PGconn *conn, ReportScope *scope, FILE *out)
 	int			 i;
 
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "Long Transactions\n");
+	fprintf(out, "/* Long Transactions */\n");
 	fprintf(out, "----------------------------------------\n");
 	fprintf(out, "%-8s  %-15s  %20s  %10s  %-32s\n",
 		"PID", "Client Address", "When To Start", "Duration", "Query");
@@ -544,10 +544,10 @@ report_notable_tables(PGconn *conn, ReportScope *scope, FILE *out)
 	int			 i;
 
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "Notable Tables\n");
+	fprintf(out, "/* Notable Tables */\n");
 	fprintf(out, "----------------------------------------\n\n");
 
-	fprintf(out, "Heavily Updated Tables\n");
+	fprintf(out, "/** Heavily Updated Tables **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %-16s  %-16s  %12s  %12s  %12s  %12s  %10s\n",
 		"Database", "Schema", "Table", "INSERT Rows", "UPDATE Rows", "DELETE Rows",
@@ -570,7 +570,7 @@ report_notable_tables(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-	fprintf(out, "Heavily Accessed Tables\n");
+	fprintf(out, "/** Heavily Accessed Tables **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %-16s  %-16s  %12s  %12s  %14s  %17s\n",
 		"Database", "Schema", "Table", "Seq Scans", "Read Rows", "Read Rows/Scan",
@@ -592,7 +592,7 @@ report_notable_tables(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-	fprintf(out, "Low Density Tables\n");
+	fprintf(out, "/** Low Density Tables **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %-16s  %-16s  %12s  %14s  %14s  %20s\n",
 		"Database", "Schema", "Table", "Live Tuples", "Logical Pages", "Physical Pages",
@@ -614,7 +614,7 @@ report_notable_tables(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-	fprintf(out, "Fragmented Tables\n");
+	fprintf(out, "/** Fragmented Tables **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %-16s  %-16s  %-16s  %12s\n",
 		"Database", "Schema", "Table", "Column", "Correlation");
@@ -644,7 +644,7 @@ report_checkpoint_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	const char	*params[] = { scope->beginid, scope->endid };
 
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "Checkpoint Activity\n");
+	fprintf(out, "/* Checkpoint Activity */\n");
 	fprintf(out, "----------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_CHECKPOINT_ACTIVITY, lengthof(params), params);
@@ -671,7 +671,7 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	int			 i;
 
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "Autovacuum Activity\n");
+	fprintf(out, "/* Autovacuum Activity */\n");
 	fprintf(out, "----------------------------------------\n");
 	fprintf(out, "%-16s  %-16s  %-16s  %8s  %16s  %17s  %16s  %15s  %15s\n",
 		"Database", "Schema", "Table", "Count", "Index Scans(Avg)",
@@ -707,10 +707,10 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	int			 i;
 
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "Query Activity\n");
+	fprintf(out, "/* Query Activity */\n");
 	fprintf(out, "----------------------------------------\n\n");
 
-	fprintf(out, "Functions\n");
+	fprintf(out, "/** Functions **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-8s  %-16s  %-16s  %-16s  %8s  %13s  %12s  %12s\n",
 		"OID", "Database", "Schema", "Function", "Calls", "Total Time",
@@ -733,7 +733,7 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-	fprintf(out, "Statements\n");
+	fprintf(out, "/** Statements **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %-16s  %8s  %13s  %12s  %-s\n",
 		"User", "Database", "Calls", "Total Time", "Time/Call", "Query");
@@ -765,7 +765,7 @@ report_setting_parameters(PGconn *conn, ReportScope *scope, FILE *out)
 	int			 i;
 
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "Setting Parameters\n");
+	fprintf(out, "/* Setting Parameters */\n");
 	fprintf(out, "----------------------------------------\n");
 	fprintf(out, "%-32s  %-32s  %-s\n",
 		"Name", "Setting", "Source");
@@ -794,10 +794,10 @@ report_schema_information(PGconn *conn, ReportScope *scope, FILE *out)
 	int			 i;
 
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "Schema Information\n");
+	fprintf(out, "/* Schema Information */\n");
 	fprintf(out, "----------------------------------------\n\n");
 
-	fprintf(out, "Tables\n");
+	fprintf(out, "/** Tables **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %-16s  %-16s  %8s  %14s  %9s  %12s  %11s  %11s\n",
 		"Database", "Schema", "Table", "Columns", "Row Width", "Size",
@@ -821,7 +821,7 @@ report_schema_information(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-	fprintf(out, "Indexes\n");
+	fprintf(out, "/** Indexes **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %-16s  %-16s  %-16s  %9s  %12s  %11s  %9s  %10s  %11s  %-s\n",
 		"Database", "Schema", "Index", "Table", "Size", "Size Incr",
@@ -859,7 +859,7 @@ report_profiles(PGconn *conn, ReportScope *scope, FILE *out)
 	int			 i;
 
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "Profiles\n");
+	fprintf(out, "/* Profiles */\n");
 	fprintf(out, "----------------------------------------\n");
 	fprintf(out, "%-32s  %8s\n",
 		"Processing", "Executes");
