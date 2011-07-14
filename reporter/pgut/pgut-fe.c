@@ -22,8 +22,6 @@ char	   *port = NULL;
 char	   *username = NULL;
 char	   *password = NULL;
 YesNo		prompt_password = DEFAULT;
-bool		show_help = false;
-bool		show_version = false;
 
 PGconn	   *connection = NULL;
 
@@ -478,8 +476,8 @@ static pgut_option default_options[] =
 	{ 's', 'U', "username"		, &username },
 	{ 'Y', 'w', "no-password"	, &prompt_password },
 	{ 'y', 'W', "password"		, &prompt_password },
-	{ 'b', '?', "help"			, &show_help },
-	{ 'b', 'V', "version"		, &show_version },
+	{ 'b', '?', "help"			, NULL },
+	{ 'b', 'V', "version"		, NULL },
 	{ 0 }
 };
 
@@ -593,26 +591,38 @@ pgut_getopt(int argc, char **argv, pgut_option options[])
 	/* Assign named options */
 	while ((c = getopt_long(argc, argv, optstring, longopts, &optindex)) != -1)
 	{
+		/* Show help message if are specified '-?, --help' */
+		if (c == '?')
+		{
+			/* Actual help option given */
+			if (strcmp(argv[optind - 1], "-?") == 0 ||
+				strcmp(argv[optind - 1], "--help") == 0)
+			{
+				help(true);
+				exit(1);
+			}
+			/* unknown option reported by getopt */
+			else
+			{
+				fprintf(stderr, "Try \"%s --help\" for more information.\n",
+					PROGRAM_NAME);
+				exit(EINVAL);
+			}
+		}
+
+		/* Show version information if are specified '-V, --version' */
+		if (c == 'V')
+		{
+			fprintf(stderr, "%s %s\n", PROGRAM_NAME, PROGRAM_VERSION);
+			exit(1);
+		}
+
 		opt = option_find(c, default_options, options);
 		pgut_setopt(opt, optarg, SOURCE_CMDLINE);
 	}
 
 	/* Read environment variables */
 	option_from_env(options);
-
-	/* Show help message */
-	if (show_help)
-	{
-		help(true);
-		exit(1);
-	}
-
-	/* Show version information */
-	if (show_version)
-	{
-		fprintf(stderr, "%s %s\n", PROGRAM_NAME, PROGRAM_VERSION);
-		exit(1);
-	}
 
 	return optind;
 }
