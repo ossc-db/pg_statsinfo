@@ -584,6 +584,21 @@ pgut_getopt(int argc, char **argv, pgut_option options[])
 
 	pgut_init(argc, argv);
 
+	/* Help message and version are handled at first. */
+	if (argc > 1)
+	{
+		if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-?") == 0)
+		{
+			help(true);
+			exit(1);
+		}
+		if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-V") == 0)
+		{
+			fprintf(stderr, "%s %s\n", PROGRAM_NAME, PROGRAM_VERSION);
+			exit(1);
+		}
+	}
+
 	/* Merge default and user options. */
 	longopts = option_merge(default_options, options);
 	optstring = longopts_to_optstring(longopts);
