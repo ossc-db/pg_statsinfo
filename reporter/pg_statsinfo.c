@@ -101,9 +101,14 @@ main(int argc, char *argv[])
 void
 pgut_help(bool details)
 {
-	printf("%s reports a PostgreSQL database.\n\n", PROGRAM_NAME);
+	printf("pg_statsinfo reports a PostgreSQL database.\n\n");
 	printf("Usage:\n");
-	printf("  %s [OPTIONS]\n", PROGRAM_NAME);
+	printf("  pg_statsinfo -r REPORTID [-i INSTANCEID] [-b SNAPID] [-e SNAPID] [-B DATE] [-E DATE]\n");
+	printf("                           [-o FILENAME] [connection-options]\n");
+	printf("  pg_statsinfo -l          [-i INSTANCEID] [connection-options]\n");
+	printf("  pg_statsinfo -s          [connection-options]\n");
+	printf("  pg_statsinfo -S COMMENT  [connection-options]\n");
+	printf("  pg_statsinfo -D SNAPID   [connection-options]\n");
 
 	if (!details)
 		return;
