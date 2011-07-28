@@ -912,7 +912,10 @@ parse_reportid(const char *value)
 
 	/* skip blank */
 	while (IsSpace(*v)) { v++; }
-	len = strlen(v);
+	if ((len = strlen(v)) == 0)
+		ereport(ERROR,
+			(errcode(EINVAL),
+			 errmsg("invalid report ID: '%s'", value)));
 
 	/* Do a prefix match. For example, "su" means 'Summary' */
 	if (pg_strncasecmp(REPORTID_SUMMARY, v, len) == 0)
