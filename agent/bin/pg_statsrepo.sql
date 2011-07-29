@@ -708,10 +708,14 @@ CREATE FUNCTION statsrepo.get_proc_ratio(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		(100 * sum(idle)::float / sum(total)::float4)::numeric(5,2),
-		(100 * sum(idle_in_xact)::float / sum(total)::float4)::numeric(5,2),
-		(100 * sum(waiting)::float / sum(total)::float4)::numeric(5,2),
-		(100 * sum(running)::float / sum(total)::float4)::numeric(5,2)
+		CASE WHEN sum(total)::float4 = 0 THEN 0
+			ELSE (100 * sum(idle)::float / sum(total)::float4)::numeric(5,2) END,
+		CASE WHEN sum(total)::float4 = 0 THEN 0
+			ELSE (100 * sum(idle_in_xact)::float / sum(total)::float4)::numeric(5,2) END,
+		CASE WHEN sum(total)::float4 = 0 THEN 0
+			ELSE (100 * sum(waiting)::float / sum(total)::float4)::numeric(5,2) END,
+		CASE WHEN sum(total)::float4 = 0 THEN 0
+			ELSE (100 * sum(running)::float / sum(total)::float4)::numeric(5,2) END
 	FROM 
 		(SELECT
 			snapid,
