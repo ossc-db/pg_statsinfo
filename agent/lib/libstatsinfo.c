@@ -30,6 +30,9 @@
 #include "utils/tqual.h"
 #include "utils/lsyscache.h"
 
+#if PG_VERSION_NUM >= 90100
+#include "catalog/pg_collation.h"
+#endif
 
 #include "pgut/pgut-be.h"
 #include "pgut/pgut-spi.h"
@@ -83,10 +86,18 @@
 	"checkpoint starting:%s%s%s%s%s%s%s"
 
 /* log_checkpoints: complete */
+#if PG_VERSION_NUM >= 90100
+#define MSG_CHECKPOINT_COMPLETE \
+	"checkpoint complete: wrote %d buffers (%.1f%%); " \
+	"%d transaction log file(s) added, %d removed, %d recycled; " \
+	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
+	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s"
+#else
 #define MSG_CHECKPOINT_COMPLETE \
 	"checkpoint complete: wrote %d buffers (%.1f%%); " \
 	"%d transaction log file(s) added, %d removed, %d recycled; " \
 	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s"
+#endif
 
 PG_MODULE_MAGIC;
 
@@ -193,8 +204,15 @@ static int get_log_min_messages(void);
 static pid_t get_postmaster_pid(void);
 static bool verify_log_filename(const char *filename);
 static bool verify_timestr(const char *timestr);
+
+#if PG_VERSION_NUM >= 90100
+static bool check_textlog_filename(char **newval, void **extra, GucSource source);
+static bool check_maintenance_time(char **newval, void **extra, GucSource source);
+#else
 static const char *assign_textlog_filename(const char *newval, bool doit, GucSource source);
 static const char *assign_maintenance_time(const char *newval, bool doit, GucSource source);
+#endif
+
 static int exec_grep(const char *filename, const char *regex, List **records);
 static int exec_split(const char *rawstring, const char *regex, List **fields);
 static bool parse_int64(const char *value, int64 *result);
@@ -490,6 +508,9 @@ _PG_init(void)
 							 elevel_options,
 							 PGC_SIGHUP,
 							 0,
+#if PG_VERSION_NUM >= 90100
+							 NULL,
+#endif
 							 NULL,
 							 NULL);
 
@@ -501,6 +522,9 @@ _PG_init(void)
 							 elevel_options,
 							 PGC_SIGHUP,
 							 0,
+#if PG_VERSION_NUM >= 90100
+							 NULL,
+#endif
 							 NULL,
 							 NULL);
 #else
@@ -532,7 +556,12 @@ _PG_init(void)
 							   "postgresql.log",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
-							   assign_textlog_filename,
+#if PG_VERSION_NUM >= 90100
+							   check_textlog_filename,
+							   NULL,
+#else
+						       assign_textlog_filename,
+#endif
 							   NULL);
 
 	DefineCustomStringVariable(GUC_PREFIX ".textlog_line_prefix",
@@ -542,6 +571,9 @@ _PG_init(void)
 							   "%t %p ",
 							   PGC_SIGHUP,
 							   0,
+#if PG_VERSION_NUM >= 90100
+							   NULL,
+#endif
 							   NULL,
 							   NULL);
 
@@ -552,6 +584,9 @@ _PG_init(void)
 							   "%t %p ",
 							   PGC_SIGHUP,
 							   0,
+#if PG_VERSION_NUM >= 90100
+							   NULL,
+#endif
 							   NULL,
 							   NULL);
 
@@ -564,6 +599,9 @@ _PG_init(void)
 							0666,
 							PGC_SIGHUP,
 							0,
+#if PG_VERSION_NUM >= 90100
+							NULL,
+#endif
 							NULL,
 							NULL);
 
@@ -574,6 +612,9 @@ _PG_init(void)
 							   "template0, template1",
 							   PGC_SIGHUP,
 							   0,
+#if PG_VERSION_NUM >= 90100
+							   NULL,
+#endif
 							   NULL,
 							   NULL);
 
@@ -586,6 +627,9 @@ _PG_init(void)
 							INT_MAX,
 							PGC_SIGHUP,
 							GUC_UNIT_S,
+#if PG_VERSION_NUM >= 90100
+							NULL,
+#endif
 							NULL,
 							NULL);
 
@@ -598,6 +642,9 @@ _PG_init(void)
 							INT_MAX,
 							PGC_SIGHUP,
 							GUC_UNIT_S,
+#if PG_VERSION_NUM >= 90100
+							NULL,
+#endif
 							NULL,
 							NULL);
 
@@ -608,6 +655,9 @@ _PG_init(void)
 							   default_repository_server,
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
+#if PG_VERSION_NUM >= 90100
+							   NULL,
+#endif
 							   NULL,
 							   NULL);
 
@@ -618,6 +668,9 @@ _PG_init(void)
 							 false,
 							 PGC_SIGHUP,
 							 GUC_SUPERUSER_ONLY,
+#if PG_VERSION_NUM >= 90100
+							 NULL,
+#endif
 							 NULL,
 							 NULL);
 
@@ -628,6 +681,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
+#if PG_VERSION_NUM >= 90100
+							   NULL,
+#endif
 							   NULL,
 							   NULL);
 
@@ -638,6 +694,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
+#if PG_VERSION_NUM >= 90100
+							   NULL,
+#endif
 							   NULL,
 							   NULL);
 
@@ -648,6 +707,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
+#if PG_VERSION_NUM >= 90100
+							   NULL,
+#endif
 							   NULL,
 							   NULL);
 
@@ -658,6 +720,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
+#if PG_VERSION_NUM >= 90100
+							   NULL,
+#endif
 							   NULL,
 							   NULL);
 
@@ -668,6 +733,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
+#if PG_VERSION_NUM >= 90100
+							   NULL,
+#endif
 							   NULL,
 							   NULL);
 
@@ -678,6 +746,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
+#if PG_VERSION_NUM >= 90100
+							   NULL,
+#endif
 							   NULL,
 							   NULL);
 
@@ -688,6 +759,9 @@ _PG_init(void)
 							 false,
 							 PGC_SIGHUP,
 							 GUC_SUPERUSER_ONLY,
+#if PG_VERSION_NUM >= 90100
+							 NULL,
+#endif
 							 NULL,
 							 NULL);
 
@@ -698,7 +772,12 @@ _PG_init(void)
 							   DEFAULT_MAINTENANCE_TIME,
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
-							   assign_maintenance_time,
+#if PG_VERSION_NUM >= 90100
+							   check_maintenance_time,
+							   NULL,
+#else
+						       assign_maintenance_time,
+#endif
 							   NULL);
 
 	DefineCustomIntVariable(GUC_PREFIX ".repository_keepday",
@@ -710,6 +789,9 @@ _PG_init(void)
 							3650,
 							PGC_SIGHUP,
 							0,
+#if PG_VERSION_NUM >= 90100
+							NULL,
+#endif
 							NULL,
 							NULL);
 
@@ -1774,6 +1856,47 @@ verify_log_filename(const char *filename)
 	return true;	/* ok */
 }
 
+#if PG_VERSION_NUM >= 90100
+/* forbid empty filename and reserved characters */
+static bool
+check_textlog_filename(char **newval, void **extra, GucSource source)
+{
+	if (!*newval[0])
+	{
+		GUC_check_errdetail(GUC_PREFIX ".textlog_filename must not be emtpy");
+		return false;
+	}
+
+	if (strpbrk(*newval, "/\\?*:|\"<>"))
+	{
+		GUC_check_errdetail(GUC_PREFIX ".textlog_filename must not contain reserved characters: %s",
+			*newval);
+		return false;
+	}
+	return true;
+}
+
+/* forbid empty and invalid time format */
+static bool
+check_maintenance_time(char **newval, void **extra, GucSource source)
+{
+	if (!*newval[0])
+	{
+		GUC_check_errdetail(GUC_PREFIX ".maintenance_time must not be emtpy, use default (\"%s\")",
+			DEFAULT_MAINTENANCE_TIME);
+		return false;
+	}
+
+	if (!verify_timestr(*newval))
+	{
+		GUC_check_errdetail(GUC_PREFIX ".maintenance_time invalid syntax for time: %s, use default (\"%s\")",
+			*newval, DEFAULT_MAINTENANCE_TIME);
+		GUC_check_errhint("format should be [hh:mm:ss]");
+		return false;
+	}
+	return true;
+}
+#else
 /* forbid empty filename and reserved characters */
 static const char *
 assign_textlog_filename(const char *newval, bool doit, GucSource source)
@@ -1820,6 +1943,7 @@ assign_maintenance_time(const char *newval, bool doit, GucSource source)
 
 	return newval;
 }
+#endif
 
 /* verify time format string (HH:MM:SS) */
 static bool
@@ -1922,7 +2046,11 @@ exec_grep(const char *filename, const char *regex, List **records)
 	pattern = (pg_wchar *) palloc((strlen(regex) + 1) * sizeof(pg_wchar));
 	pattern_len = pg_mb2wchar_with_len(regex, pattern, strlen(regex));
 
+#if PG_VERSION_NUM >= 90100
+	ret = pg_regcomp(&reg_t, pattern, pattern_len, REG_ADVANCED, DEFAULT_COLLATION_OID);
+#else
 	ret = pg_regcomp(&reg_t, pattern, pattern_len, REG_ADVANCED);
+#endif
 	if (ret)
 	{
 		pg_regerror(ret, &reg_t, errstr, sizeof(errstr));
@@ -2013,7 +2141,11 @@ exec_split(const char *rawstring, const char *regex, List **fields)
 	pattern = (pg_wchar *) palloc((strlen(regex) + 1) * sizeof(pg_wchar));
 	pattern_len = pg_mb2wchar_with_len(regex, pattern, strlen(regex));
 
+#if PG_VERSION_NUM >= 90100
+	ret = pg_regcomp(&reg_t, pattern, pattern_len, REG_ADVANCED, DEFAULT_COLLATION_OID);
+#else
 	ret = pg_regcomp(&reg_t, pattern, pattern_len, REG_ADVANCED);
+#endif
 	if (ret)
 	{
 		pg_regerror(ret, &reg_t, errstr, sizeof(errstr));

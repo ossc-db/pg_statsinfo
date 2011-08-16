@@ -10,7 +10,11 @@
 INSERT INTO statsrepo.checkpoint VALUES \
 ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
 
+#if PG_VERSION_NUM >= 90100
+#define NUM_CHECKPOINT_COMPLETE		16
+#else
 #define NUM_CHECKPOINT_COMPLETE		11
+#endif
 
 /* checkpoint log data */
 typedef struct CheckpointLog
