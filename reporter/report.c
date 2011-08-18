@@ -93,7 +93,7 @@
 		statsrepo.snapshot s \
 		LEFT JOIN statsrepo.instance i ON s.instid = i.instid \
 	WHERE \
-		s.time BETWEEN $1 AND $2 \
+		s.time::timestamp(0) BETWEEN $1 AND $2 \
 	GROUP BY \
 		i.instid, \
 		i.hostname, \
