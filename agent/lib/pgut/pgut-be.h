@@ -151,6 +151,11 @@ extern void tuplestore_putvalues(Tuplestorestate *state, TupleDesc tdesc,
 
 #endif
 
+#if PG_VERSION_NUM >= 90100
+#define GetConfigOption(name, restrict_superuser) \
+	GetConfigOption((name), false, (restrict_superuser))
+#endif
+
 #if PG_VERSION_NUM < 80300
 #define RelationSetNewRelfilenode(rel, xid) \
 	setNewRelfilenode((rel))
