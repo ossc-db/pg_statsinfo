@@ -185,6 +185,9 @@ do_report(PGconn *conn,
 			(errcode_errno(),
 			 errmsg("could not open file : '%s'", filename)));
 
+	/* isolate transaction to insure the contents of report */
+	pgut_command(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE", 0, NULL);
+
 	/* get the report scope of each instance */
 	if (beginid || endid)
 		scope_list = select_scope_by_snapid(conn, beginid, endid);
@@ -212,6 +215,7 @@ do_report(PGconn *conn,
 
 		reporter(conn, scope, out);
 	}
+	pgut_command(conn, "END", 0, NULL);
 
 	/* cleanup */
 	list_destroy(scope_list, destroy_report_scope);
