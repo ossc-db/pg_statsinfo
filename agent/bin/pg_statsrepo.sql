@@ -872,7 +872,6 @@ $$
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 				AND s.snapid = c.snapid) AS cs
 		WHERE
---			cs.snapid + 1 = ce.snapid
 			cs.snapid = ce.prev_snapid
 			AND cs.instid = ce.instid
 		ORDER BY
@@ -1015,7 +1014,6 @@ $$
 			 GROUP BY
 				d.snapid, d.device_name, s.time, s.instid) AS ds
 		WHERE
---			ds.snapid + 1 = de.snapid
 			ds.snapid = de.prev_snapid
 			AND ds.dev_name = de.dev_name
 		ORDER BY
