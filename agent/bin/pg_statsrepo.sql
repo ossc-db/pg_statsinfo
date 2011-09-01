@@ -633,8 +633,10 @@ $$
 				d.snapid,
 				d.name,
 				s.time,
+				s.instid,
 				sum(xact_commit) AS xact_commit,
-				sum(xact_rollback) AS xact_rollback
+				sum(xact_rollback) AS xact_rollback,
+				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < d.snapid AND instid = s.instid) AS prev_snapid
 			 FROM
 			 	statsrepo.database d,
 				statsrepo.snapshot s
@@ -643,13 +645,15 @@ $$
 				AND d.snapid = s.snapid
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 			 GROUP BY
-			 	d.snapid, d.name, s.time) AS de,
+			 	d.snapid, d.name, s.time, s.instid) AS de,
 			(SELECT
 				d.snapid,
 				d.name,
 				s.time,
+				s.instid,
 				sum(xact_commit) AS xact_commit,
-				sum(xact_rollback) AS xact_rollback
+				sum(xact_rollback) AS xact_rollback,
+				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > d.snapid AND instid = s.instid) AS next_snapid
 			 FROM
 			 	statsrepo.database d,
 				statsrepo.snapshot s
@@ -658,9 +662,10 @@ $$
 				AND d.snapid = s.snapid
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 			 GROUP BY
-			 	d.snapid, d.name, s.time) AS ds
+			 	d.snapid, d.name, s.time, s.instid) AS ds
 		WHERE
-			ds.snapid + 1 = de.snapid
+			ds.snapid = de.prev_snapid
+			AND de.snapid = ds.next_snapid
 			AND ds.name = de.name
 		ORDER BY
 			de.snapid, de.name
@@ -842,7 +847,8 @@ $$
 				c.cpu_user,
 				c.cpu_system,
 				c.cpu_idle,
-				c.cpu_iowait
+				c.cpu_iowait,
+				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < s.snapid AND instid = s.instid) AS prev_snapid
 			 FROM
 				statsrepo.cpu c,
 				statsrepo.snapshot s
@@ -856,7 +862,8 @@ $$
 				c.cpu_user,
 				c.cpu_system,
 				c.cpu_idle,
-				c.cpu_iowait
+				c.cpu_iowait,
+				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > s.snapid AND instid = s.instid) AS next_snapid
 			 FROM
 				statsrepo.cpu c,
 				statsrepo.snapshot s
@@ -865,7 +872,8 @@ $$
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 				AND s.snapid = c.snapid) AS cs
 		WHERE
-			cs.snapid + 1 = ce.snapid
+--			cs.snapid + 1 = ce.snapid
+			cs.snapid = ce.prev_snapid
 			AND cs.instid = ce.instid
 		ORDER BY
 			ce.snapid
@@ -975,7 +983,9 @@ $$
 				sum(d.device_writesector) AS ws,
 				sum(d.device_readtime) AS rt,
 				sum(d.device_writetime) AS wt,
-				s.time
+				s.time,
+				s.instid,
+				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < d.snapid AND instid = s.instid) AS prev_snapid
 			 FROM
 				statsrepo.device d,
 				statsrepo.snapshot s
@@ -984,7 +994,7 @@ $$
 				AND d.snapid = s.snapid
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 			 GROUP BY
-				d.snapid, d.device_name, s.time) AS de,
+				d.snapid, d.device_name, s.time, s.instid) AS de,
 			(SELECT
 				d.snapid,
 				d.device_name as dev_name,
@@ -992,7 +1002,9 @@ $$
 				sum(d.device_writesector) AS ws,
 				sum(d.device_readtime) AS rt,
 				sum(d.device_writetime) AS wt,
-				s.time
+				s.time,
+				s.instid,
+				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > d.snapid AND instid = s.instid) AS next_snapid
 			 FROM
 				statsrepo.device d,
 				statsrepo.snapshot s
@@ -1001,9 +1013,10 @@ $$
 				AND d.snapid = s.snapid
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 			 GROUP BY
-				d.snapid, d.device_name, s.time) AS ds
+				d.snapid, d.device_name, s.time, s.instid) AS ds
 		WHERE
-			ds.snapid + 1 = de.snapid
+--			ds.snapid + 1 = de.snapid
+			ds.snapid = de.prev_snapid
 			AND ds.dev_name = de.dev_name
 		ORDER BY
 			de.snapid, de.dev_name
