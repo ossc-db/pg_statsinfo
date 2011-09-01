@@ -13,6 +13,7 @@ SRCS = \
 
 OBJS = $(SRCS:.c=.o)
 PROGRAM = pg_statsinfo
+REGRESS = pg_statsinfo
 
 PG_CPPFLAGS = -I$(libpq_srcdir)
 PG_LIBS = $(libpq)
