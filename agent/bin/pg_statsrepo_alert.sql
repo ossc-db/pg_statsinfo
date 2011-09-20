@@ -1,5 +1,49 @@
-CREATE LANGUAGE plpgsql;
+/*
+ * bin/pg_statsrepo_alert.sql
+ *
+ * Setup of an alert function.
+ *
+ * Copyright (c) 2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ */
 
+-- Adjust this setting to control where the objects get created.
+SET search_path = public;
+
+BEGIN;
+
+SET LOCAL client_min_messages = WARNING;
+
+-- table to save the alert settings
+CREATE TABLE statsrepo.alert
+(
+	instid					bigint,
+	rollback_tps			bigint	NOT NULL DEFAULT 100,
+	commit_tps				bigint	NOT NULL DEFAULT 1000,
+	garbage_size			bigint	NOT NULL DEFAULT 20000,
+	garbage_percent			integer	NOT NULL DEFAULT 30,
+	garbage_percent_table	integer	NOT NULL DEFAULT 30,
+	response_avg			bigint	NOT NULL DEFAULT 10,
+	response_worst			bigint	NOT NULL DEFAULT 60,
+	enable_alert			boolean	NOT NULL DEFAULT TRUE,
+	PRIMARY KEY (instid),
+	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid)
+);
+
+-- add alert settings when adding a new instance
+CREATE FUNCTION statsrepo.regist_alert() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+	INSERT INTO statsrepo.alert VALUES (NEW.instid);
+	RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- trigger registration for alert
+CREATE TRIGGER regist_alert AFTER INSERT ON statsrepo.instance FOR EACH ROW
+EXECUTE PROCEDURE statsrepo.regist_alert();
+
+-- alert function
 CREATE OR REPLACE FUNCTION statsrepo.alert(snap_id bigint) RETURNS SETOF text AS
 $$
 DECLARE
@@ -37,47 +81,26 @@ BEGIN
   END IF;
 
   -- retrieve threshold from current-settings
-  -- rollbacks. default '100'
-  BEGIN
-    SELECT current_setting('statsrepo.alert_rollbacks_per_second')::float8 INTO th_rollback;
-  EXCEPTION WHEN OTHERS THEN
-    SELECT 100::float8 INTO th_rollback;
-  END;
-
-  -- commits. default '1000'
-  BEGIN
-    SELECT current_setting('statsrepo.alert_transactions_per_second')::float8 INTO th_tps;
-  EXCEPTION WHEN OTHERS THEN
-    SELECT 1000::float8 INTO th_tps;
-  END;
-
-  -- garbage size. default '20GB'
-  BEGIN
-    SELECT current_setting('statsrepo.alert_garbage_size')::float8 INTO th_gb_size;
-  EXCEPTION WHEN OTHERS THEN
-    SELECT (20*1024*1024*1024::float8) INTO th_gb_size;
-  END;
-
-  -- garbage percentage. default '30'
-  BEGIN
-    SELECT current_setting('statsrepo.alert_garbage_percent')::float8 INTO th_gb_pct;
-  EXCEPTION WHEN OTHERS THEN
-    SELECT 30::float8 INTO th_gb_pct;
-  END;
-
-  -- garbage percentage for each tables. default '30'
-  BEGIN
-    SELECT current_setting('statsrepo.alert_garbage_percent_table')::float8 INTO th_gb_pct_table;
-  EXCEPTION WHEN OTHERS THEN
-    SELECT 30::float8 INTO th_gb_pct_table;
-  END;
-
-  -- query response average. default '10s'
-  BEGIN
-    SELECT current_setting('statsrepo.alert_response_average')::float8 INTO th_res_avg;
-  EXCEPTION WHEN OTHERS THEN
-    SELECT 10::float8 INTO th_res_avg;
-  END;
+  SELECT
+    rollback_tps::float8,
+    commit_tps::float8,
+    (garbage_size*1024*1024::float8),
+    garbage_percent::float8,
+    garbage_percent_table::float8,
+    response_avg::float8,
+    response_worst::float8
+  INTO
+    th_rollback,
+    th_tps,
+    th_gb_size,
+    th_gb_pct,
+    th_gb_pct_table,
+    th_res_avg,
+    th_res_max
+  FROM statsrepo.alert WHERE instid = curr.instid AND enable_alert = true;
+  IF NOT FOUND THEN
+    RETURN; -- alert is disabled
+  END IF;
 
   -- query response worst. default '60s'
   BEGIN
@@ -99,8 +122,9 @@ BEGIN
             FROM statsrepo.database
            WHERE snapid = prev.snapid) AS p;
   IF val_rollback > th_rollback THEN
-     RETURN NEXT 'too many rollbacks in snapshots between ' ||
-     prev.snapid || ' and ' || curr.snapid  ||' Rollbacks(/sec): ' || val_rollback::numeric(10,2);
+     RETURN NEXT 'too many rollbacks in snapshots between ''' ||
+     prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
+     ''' --- ' || val_rollback::numeric(10,2) || ' Rollbacks/sec';
   END IF;
 
 
@@ -113,13 +137,14 @@ BEGIN
             FROM statsrepo.database
            WHERE snapid = prev.snapid) AS p;
   IF val_tps > th_tps THEN
-     RETURN NEXT 'too many transactions in snapshots between ' ||
-     prev.snapid || ' and ' || curr.snapid  ||' Transactions(/sec): ' || val_tps::numeric(10,2);
+     RETURN NEXT 'too many transactions in snapshots between ''' ||
+     prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
+     ''' --- ' || val_tps::numeric(10,2) || ' Transactions/sec';
   END IF;
 
 
   -- alert if garbage(ratio or size) is higher than th_gb_pct/th_ga_size.
-  SELECT sum(c.garbage_size), 100 * sum(c.garbage_size)/sum(size) INTO val_gb_size, val_gb_pct
+  SELECT sum(c.garbage_size)/1024/1024, 100 * sum(c.garbage_size)/sum(size) INTO val_gb_size, val_gb_pct
     FROM
       (SELECT 
          CASE WHEN n_live_tup=0 THEN 0 
@@ -128,12 +153,14 @@ BEGIN
          size
        FROM statsrepo.tables WHERE snapid=curr.snapid) AS c;
   IF val_gb_size > th_gb_size THEN
-     RETURN NEXT 'garbage size exceeds threashold in snapshots between ' ||
-     prev.snapid || ' and ' || curr.snapid ||' Garbage(byte): ' || val_gb_size::numeric(14,2);
+     RETURN NEXT 'garbage size exceeds threashold in snapshots between ''' ||
+     prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
+     ''' --- ' || val_gb_size::numeric(8,2) || ' MB';
   END IF;
   IF val_gb_pct > th_gb_pct THEN
-     RETURN NEXT 'garbage ratio exceeds threashold in snapshots between ' ||
-     prev.snapid || ' and ' || curr.snapid ||' Garbage(%): ' || val_gb_pct::numeric(5,2);
+     RETURN NEXT 'garbage ratio exceeds threashold in snapshots between ''' ||
+     prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
+     ''' --- ' || val_gb_pct::numeric(5,2) || ' %';
   END IF;
 
 
@@ -146,8 +173,9 @@ BEGIN
       FROM statsrepo.tables WHERE relpages > 1000 AND snapid=curr.snapid
   LOOP
     IF val_gb_pct_table.gb_pct > th_gb_pct_table THEN
-       RETURN NEXT 'garbage ratio in ' || val_gb_pct_table.relname || ' exceeds threashold in snapshots between ' ||
-       prev.snapid || ' and ' || curr.snapid ||' Garbage(%): ' || val_gb_pct_table.gb_pct::numeric(5,2);
+       RETURN NEXT 'garbage ratio in ' || val_gb_pct_table.relname || ' exceeds threashold in snapshots between ''' ||
+       prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
+       ''' --- ' || val_gb_pct_table.gb_pct::numeric(5,2) || ' %';
     END IF;
   END LOOP;
 
@@ -165,15 +193,19 @@ BEGIN
     WHERE c.calls <> coalesce(p.calls,0);
     
   IF val_res_avg > th_res_avg THEN
-     RETURN NEXT 'Query average response exceeds threshold in snapshots between ' ||
-     prev.snapid || ' and ' || curr.snapid ||' Time(sec): ' || val_res_avg::numeric(10,2);
+     RETURN NEXT 'Query average response exceeds threshold in snapshots between ''' ||
+     prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
+     ''' --- ' || val_res_avg::numeric(10,2) || ' sec';
   END IF;
   IF val_res_max > th_res_max THEN
-     RETURN NEXT 'Query worst response exceeds threshold in snapshots between ' ||
-     prev.snapid || ' and ' || curr.snapid ||' Time(sec): ' || val_res_max::numeric(10,2);
+     RETURN NEXT 'Query worst response exceeds threshold in snapshots between ''' ||
+     prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
+     ''' --- ' || val_res_max::numeric(10,2) || ' sec';
   END IF;
 
 
 END;
 $$
 LANGUAGE plpgsql VOLATILE;
+
+COMMIT;

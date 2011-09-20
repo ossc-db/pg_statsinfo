@@ -348,18 +348,6 @@ CREATE TABLE statsrepo.profile
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
-------------------------------------------------------------------------------
--- alert function
-------------------------------------------------------------------------------
-
---
--- CREATE FUNCTION statsrepo.alert(snap_id bigint) RETURNS SETOF text AS ...
---
-
-------------------------------------------------------------------------------
--- alert function
-------------------------------------------------------------------------------
-
 -- del_snapshot(snapid) - delete the specified snapshot.
 CREATE FUNCTION statsrepo.del_snapshot(bigint) RETURNS void AS
 $$

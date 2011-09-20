@@ -101,6 +101,7 @@ static bool assign_time(const char *value, void *var);
 static void after_readopt(void);
 static bool decode_time(const char *field, int *hour, int *min, int *sec);
 static int strtoi(const char *nptr, char **endptr, int base);
+static bool execute_script(PGconn *conn, const char *script_file);
 
 /* parameters */
 static struct ParamMap PARAM_MAP[] =
@@ -410,8 +411,6 @@ ensure_schema(PGconn *conn, const char *schema)
 	PGresult	   *res;
 	bool			ok;
 	char			path[MAXPGPATH];
-	StringInfoData	buf;
-	FILE		   *fp;
 
 	if (!schema || !schema[0])
 		return true;	/* no schema required */
@@ -465,37 +464,20 @@ ensure_schema(PGconn *conn, const char *schema)
 		}
 	}
 
-	/* read $PGSHARE/contrib/pg_{schema}.sql into buffer. */
+	/* execute script $PGSHARE/contrib/pg_{schema}.sql */
 	snprintf(path, MAXPGPATH, "%s/contrib/pg_%s.sql", share_path, schema);
-	if ((fp = pgut_fopen(path, "rt")) == NULL)
+	elog(LOG, "installing schema: %s", schema);
+	if (!execute_script(conn, path))
 		return false;
-	initStringInfo(&buf);
-	if ((errno = appendStringInfoFile(&buf, fp)) == 0)
+	
+	/* execute script $PGSHARE/contrib/pg_statsrepo.alert.sql */
+	if (strstr(schema, "statsrepo") != NULL)
 	{
-		/* execute the read script contents. */
-		elog(LOG, "installing schema: %s", schema);
-		switch (pgut_command(conn, buf.data, 0, NULL))
-		{
-			case PGRES_COMMAND_OK:
-			case PGRES_TUPLES_OK:
-				ok = true;
-				break;
-			default:
-				ok = false;
-				break;
-		}
+		snprintf(path, MAXPGPATH, "%s/contrib/pg_statsrepo_alert.sql", share_path);
+		if (!execute_script(conn, path))
+			return false;
 	}
-	else
-	{
-		ereport(ERROR,
-			(errcode_errno(),
-			 errmsg("could not read file \"%s\": ", path)));
-		ok = false;
-	}
-
-	fclose(fp);
-	termStringInfo(&buf);
-	return ok;
+	return true;
 }
 
 /*
@@ -827,4 +809,42 @@ strtoi(const char *nptr, char **endptr, int base)
 		errno = ERANGE;
 #endif
 	return (int) val;
+}
+
+static bool
+execute_script(PGconn *conn, const char *script_file)
+{
+	FILE		   *fp;
+	StringInfoData	buf;
+	bool			ok;
+
+	/* read script into buffer. */
+	if ((fp = pgut_fopen(script_file, "rt")) == NULL)
+		return false;
+	initStringInfo(&buf);
+	if ((errno = appendStringInfoFile(&buf, fp)) == 0)
+	{
+		/* execute the read script contents. */
+		switch (pgut_command(conn, buf.data, 0, NULL))
+		{
+			case PGRES_COMMAND_OK:
+			case PGRES_TUPLES_OK:
+				ok = true;
+				break;
+			default:
+				ok = false;
+				break;
+		}
+	}
+	else
+	{
+		ereport(ERROR,
+			(errcode_errno(),
+			 errmsg("could not read file \"%s\": ", script_file)));
+		ok = false;
+	}
+
+	fclose(fp);
+	termStringInfo(&buf);
+	return ok;
 }
