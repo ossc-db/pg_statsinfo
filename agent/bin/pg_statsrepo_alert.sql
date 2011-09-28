@@ -102,13 +102,6 @@ BEGIN
     RETURN; -- alert is disabled
   END IF;
 
-  -- query response worst. default '60s'
-  BEGIN
-    SELECT current_setting('statsrepo.alert_response_worst')::float8 INTO th_res_max;
-  EXCEPTION WHEN OTHERS THEN
-    SELECT 60::float8 INTO th_res_max;
-  END;
-
   -- calculate duration for the two shapshots in sec.
   duration_in_sec :=
     extract(epoch FROM curr.time) - extract(epoch FROM prev.time);
@@ -144,7 +137,7 @@ BEGIN
 
 
   -- alert if garbage(ratio or size) is higher than th_gb_pct/th_ga_size.
-  SELECT sum(c.garbage_size)/1024/1024, 100 * sum(c.garbage_size)/sum(size) INTO val_gb_size, val_gb_pct
+  SELECT sum(c.garbage_size), 100 * sum(c.garbage_size)/sum(size) INTO val_gb_size, val_gb_pct
     FROM
       (SELECT 
          CASE WHEN n_live_tup=0 THEN 0 
@@ -153,12 +146,12 @@ BEGIN
          size
        FROM statsrepo.tables WHERE snapid=curr.snapid) AS c;
   IF val_gb_size > th_gb_size THEN
-     RETURN NEXT 'garbage size exceeds threashold in snapshots between ''' ||
+     RETURN NEXT 'dead tuple size exceeds threashold in snapshots between ''' ||
      prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
      ''' --- ' || val_gb_size::numeric(8,2) || ' MB';
   END IF;
   IF val_gb_pct > th_gb_pct THEN
-     RETURN NEXT 'garbage ratio exceeds threashold in snapshots between ''' ||
+     RETURN NEXT 'dead tuple ratio exceeds threashold in snapshots between ''' ||
      prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
      ''' --- ' || val_gb_pct::numeric(5,2) || ' %';
   END IF;
@@ -173,7 +166,7 @@ BEGIN
       FROM statsrepo.tables WHERE relpages > 1000 AND snapid=curr.snapid
   LOOP
     IF val_gb_pct_table.gb_pct > th_gb_pct_table THEN
-       RETURN NEXT 'garbage ratio in ' || val_gb_pct_table.relname || ' exceeds threashold in snapshots between ''' ||
+       RETURN NEXT 'dead tuple ratio in ' || val_gb_pct_table.relname || ' exceeds threashold in snapshots between ''' ||
        prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
        ''' --- ' || val_gb_pct_table.gb_pct::numeric(5,2) || ' %';
     END IF;
