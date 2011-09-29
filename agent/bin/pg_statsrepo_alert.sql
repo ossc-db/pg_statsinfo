@@ -148,7 +148,7 @@ BEGIN
   IF val_gb_size > th_gb_size THEN
      RETURN NEXT 'dead tuple size exceeds threashold in snapshots between ''' ||
      prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
-     ''' --- ' || val_gb_size::numeric(8,2) || ' MB';
+     ''' --- ' || (val_gb_size/1024/1024)::numeric(8,2) || ' MB';
   END IF;
   IF val_gb_pct > th_gb_pct THEN
      RETURN NEXT 'dead tuple ratio exceeds threashold in snapshots between ''' ||
