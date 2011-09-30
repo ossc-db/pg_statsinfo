@@ -441,26 +441,24 @@ ensure_schema(PGconn *conn, const char *schema)
 		if (server_version < 0)
 			return false;
 		else if (server_version >= 80400)
-		{
 			/* sets repository schema for partitioning */
 			schema = "statsrepo_partition";
 
-			/* create language 'PL/pgSQL' */
-			res = pgut_execute(conn,
-				"SELECT 1 FROM pg_language WHERE lanname = 'plpgsql'", 0, NULL);
-			if (PQresultStatus(res) != PGRES_TUPLES_OK)
-			{
-				PQclear(res);
-				return false;
-			}
-			installed = (PQntuples(res) > 0);
+		/* create language 'PL/pgSQL' */
+		res = pgut_execute(conn,
+			"SELECT 1 FROM pg_language WHERE lanname = 'plpgsql'", 0, NULL);
+		if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		{
 			PQclear(res);
-			if (!installed)
-			{
-				if (pgut_command(conn,
-					"CREATE LANGUAGE plpgsql", 0, NULL) != PGRES_COMMAND_OK)
-					return false;
-			}
+			return false;
+		}
+		installed = (PQntuples(res) > 0);
+		PQclear(res);
+		if (!installed)
+		{
+			if (pgut_command(conn,
+				"CREATE LANGUAGE plpgsql", 0, NULL) != PGRES_COMMAND_OK)
+				return false;
 		}
 	}
 
@@ -469,7 +467,7 @@ ensure_schema(PGconn *conn, const char *schema)
 	elog(LOG, "installing schema: %s", schema);
 	if (!execute_script(conn, path))
 		return false;
-	
+
 	/* execute script $PGSHARE/contrib/pg_statsrepo.alert.sql */
 	if (strstr(schema, "statsrepo") != NULL)
 	{
