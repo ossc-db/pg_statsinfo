@@ -84,7 +84,7 @@ BEGIN
   SELECT
     rollback_tps::float8,
     commit_tps::float8,
-    (garbage_size*1024*1024::float8),
+    (garbage_size::float8),
     garbage_percent::float8,
     garbage_percent_table::float8,
     response_avg::float8,
@@ -137,7 +137,7 @@ BEGIN
 
 
   -- alert if garbage(ratio or size) is higher than th_gb_pct/th_ga_size.
-  SELECT sum(c.garbage_size), 100 * sum(c.garbage_size)/sum(size) INTO val_gb_size, val_gb_pct
+  SELECT sum(c.garbage_size)/1024/1024, 100 * sum(c.garbage_size)/sum(size) INTO val_gb_size, val_gb_pct
     FROM
       (SELECT 
          CASE WHEN n_live_tup=0 THEN 0 
@@ -148,7 +148,7 @@ BEGIN
   IF val_gb_size > th_gb_size THEN
      RETURN NEXT 'dead tuple size exceeds threashold in snapshots between ''' ||
      prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
-     ''' --- ' || (val_gb_size/1024/1024)::numeric(8,2) || ' MB';
+     ''' --- ' || (val_gb_size)::numeric(8,2) || ' MB';
   END IF;
   IF val_gb_pct > th_gb_pct THEN
      RETURN NEXT 'dead tuple ratio exceeds threashold in snapshots between ''' ||
