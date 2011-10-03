@@ -35,6 +35,14 @@ typedef enum ShutdownState
 	LOGGER_SHUTDOWN
 } ShutdownState;
 
+/* writer queue type */
+typedef enum WriterQueueType
+{
+	QUEUE_SNAPSHOT,
+	QUEUE_CHECKPOINT,
+	QUEUE_AUTOVACUUM
+} WriterQueueType;
+
 /* pg_statsinfod.c */
 extern char		   *instance_id;
 extern char		   *postmaster_port;
@@ -116,6 +124,7 @@ struct QueueItem
 {
 	QueueItemFree	free;
 	QueueItemExec	exec;
+	int				type;	/* queue type */
 	int				retry;	/* retry count */
 };
 
@@ -179,6 +188,7 @@ extern bool check_maintenance(const char *message);
 extern void writer_init(void);
 extern void *writer_main(void *arg);
 extern void writer_send(QueueItem *item);
+extern bool writer_has_queue(WriterQueueType type);
 extern void do_maintenance(time_t repository_keepday);
 
 /* pg_statsinfod.c */

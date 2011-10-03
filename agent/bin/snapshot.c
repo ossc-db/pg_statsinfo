@@ -194,6 +194,7 @@ get_snapshot(char *comment)
 	}
 
 	/* ok, fill other fields. */
+	snap->base.type = QUEUE_SNAPSHOT;
 	snap->base.free = (QueueItemFree) Snap_free;
 	snap->base.exec = (QueueItemExec) Snap_exec;
 	snap->comment = comment;

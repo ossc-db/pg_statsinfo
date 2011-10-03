@@ -88,6 +88,7 @@ parse_checkpoint(const char *message, const char *timestamp)
 
 		/* send checkpoint log to writer */
 		ckpt->params = params;
+		ckpt->base.type = QUEUE_CHECKPOINT;
 		ckpt->base.free = (QueueItemFree) Checkpoint_free;
 		ckpt->base.exec = (QueueItemExec) Checkpoint_exec;
 		writer_send((QueueItem *) ckpt);

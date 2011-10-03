@@ -247,7 +247,15 @@ do_sample(void)
 static void
 do_snapshot(char *comment)
 {
-	QueueItem *snap;
+	QueueItem	*snap = NULL;
+
+	/* skip current snapshot if previous snapshot still not complete */
+	if (writer_has_queue(QUEUE_SNAPSHOT))
+	{
+		elog(WARNING, "previous snapshot is not complete, so current snapshot was skipped");
+		free(comment);
+		return;
+	}
 
 	/* exclusive control during snapshot and maintenance */
 	pthread_mutex_lock(&maintenance_lock);

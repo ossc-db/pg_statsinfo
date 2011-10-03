@@ -68,6 +68,7 @@ parse_autovacuum(const char *message, const char *timestamp)
 	}
 
 	av = pgut_new(AutovacuumLog);
+	av->base.type = QUEUE_AUTOVACUUM;
 	av->base.free = (QueueItemFree) Autovacuum_free;
 	av->base.exec = exec;
 	strlcpy(av->finish, timestamp, lengthof(av->finish));

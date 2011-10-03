@@ -30,6 +30,7 @@ static int recv_writer_queue(void);
 static PGconn *writer_connect(void);
 static char *get_instid(PGconn *conn);
 static const char *get_nodename(void);
+static void destroy_writer_queue(QueueItem *item);
 
 
 void
@@ -105,6 +106,30 @@ writer_send(QueueItem *item)
 }
 
 /*
+ * check whether contains the specified type on the writer queue
+ */
+bool
+writer_has_queue(WriterQueueType type)
+{
+	ListCell	*cell;
+
+	pthread_mutex_lock(&writer_queue_lock);
+	foreach(cell, writer_queue)
+	{
+		if (((QueueItem *) lfirst(cell))->type == type)
+		{
+			pthread_mutex_unlock(&writer_queue_lock);
+			return true;
+		}
+	}
+	pthread_mutex_unlock(&writer_queue_lock);
+
+	return false;
+}
+
+
+
+/*
  * load guc variables
  */
 static void
@@ -134,10 +159,25 @@ recv_writer_queue(void)
 	writer_queue = NIL;
 	pthread_mutex_unlock(&writer_queue_lock);
 
+	if (list_length(queue) == 0)
+		return 0;
+
 	/* install writer schema */
-	if (list_length(queue) > 0 &&
-		(conn = writer_connect()) != NULL &&
-		(instid = get_instid(conn)) != NULL)
+	if ((conn = writer_connect()) == NULL)
+	{
+		elog(ERROR, "could not connect to repository");
+
+		/* discard current queue if can't connect to repository */
+		if (list_length(queue) > 0)
+		{
+			elog(WARNING, "writer discards %d items", list_length(queue));
+			list_destroy(queue, destroy_writer_queue);
+		}
+		return 0;
+	}
+
+	/* do the writer queue process */
+	if ((instid = get_instid(conn)) != NULL)
 	{
 		connection_used = true;
 
@@ -296,4 +336,10 @@ get_nodename(void)
 
 	return nodename;
 #endif
+}
+
+static void
+destroy_writer_queue(QueueItem *item)
+{
+	item->free(item);
 }
