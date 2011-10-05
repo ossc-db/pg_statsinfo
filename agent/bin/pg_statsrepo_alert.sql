@@ -17,13 +17,13 @@ SET LOCAL client_min_messages = WARNING;
 CREATE TABLE statsrepo.alert
 (
 	instid					bigint,
-	rollback_tps			bigint	NOT NULL DEFAULT 100,
-	commit_tps				bigint	NOT NULL DEFAULT 1000,
-	garbage_size			bigint	NOT NULL DEFAULT 20000,
-	garbage_percent			integer	NOT NULL DEFAULT 30,
-	garbage_percent_table	integer	NOT NULL DEFAULT 30,
-	response_avg			bigint	NOT NULL DEFAULT 10,
-	response_worst			bigint	NOT NULL DEFAULT 60,
+	rollback_tps			bigint	NOT NULL DEFAULT 100   CHECK (rollback_tps >= 0),
+	commit_tps				bigint	NOT NULL DEFAULT 1000  CHECK (commit_tps >= 0),
+	garbage_size			bigint	NOT NULL DEFAULT 20000 CHECK (garbage_size >= 0),
+	garbage_percent			integer	NOT NULL DEFAULT 30    CHECK (garbage_percent >= 0 AND garbage_percent <= 100),
+	garbage_percent_table	integer	NOT NULL DEFAULT 30    CHECK (garbage_percent_table >= 0 AND garbage_percent_table <= 100),
+	response_avg			bigint	NOT NULL DEFAULT 10    CHECK (response_avg >= 0),
+	response_worst			bigint	NOT NULL DEFAULT 60    CHECK (response_worst >= 0),
 	enable_alert			boolean	NOT NULL DEFAULT TRUE,
 	PRIMARY KEY (instid),
 	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid)
