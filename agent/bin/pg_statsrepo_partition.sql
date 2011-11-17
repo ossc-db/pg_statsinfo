@@ -54,20 +54,25 @@ CREATE TABLE statsrepo.tablespace
 
 CREATE TABLE statsrepo.database
 (
-	snapid			bigint,
-	dbid			oid,
-	name			name,
-	size			bigint,
-	age				integer,
-	xact_commit		bigint,
-	xact_rollback	bigint,
-	blks_read		bigint,
-	blks_hit		bigint,
-	tup_returned	bigint,
-	tup_fetched		bigint,
-	tup_inserted	bigint,
-	tup_updated		bigint,
-	tup_deleted		bigint,
+	snapid				bigint,
+	dbid				oid,
+	name				name,
+	size				bigint,
+	age					integer,
+	xact_commit			bigint,
+	xact_rollback		bigint,
+	blks_read			bigint,
+	blks_hit			bigint,
+	tup_returned		bigint,
+	tup_fetched			bigint,
+	tup_inserted		bigint,
+	tup_updated			bigint,
+	tup_deleted			bigint,
+	confl_tablespace	bigint,
+	confl_lock			bigint,
+	confl_snapshot		bigint,
+	confl_bufferpin		bigint,
+	confl_deadlock		bigint,
 	PRIMARY KEY (snapid, dbid),
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
@@ -346,6 +351,46 @@ CREATE TABLE statsrepo.profile
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
+CREATE TABLE statsrepo.lock
+(
+	snapid				bigint,
+	datname				name,
+	nspname				name,
+	relname				name,
+	blocker_appname		text,
+	blocker_addr		inet,
+	blocker_hostname	text,
+	blocker_port		integer,
+	blockee_pid			integer,
+	blocker_pid			integer,
+	duration			interval,
+	blockee_query		text,
+	blocker_query		text,
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
+CREATE TABLE statsrepo.replication
+(
+	snapid				bigint,
+	procpid				integer,
+	usesysid			oid,
+	usename				name,
+	application_name	text,
+	client_addr			inet,
+	client_hostname		text,
+	client_port			integer,
+	backend_start		timestamptz,
+	state				text,
+	current_location	text,
+	sent_location		text,
+	write_location		text,
+	flush_location		text,
+	replay_location		text,
+	sync_priority		integer,
+	sync_state			text,
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
 -- del_snapshot(snapid) - delete the specified snapshot.
 CREATE FUNCTION statsrepo.del_snapshot(bigint) RETURNS void AS
 $$
@@ -485,6 +530,242 @@ SELECT CASE $2
        WHEN 2742 THEN 100 -- gin
        END
 LIMIT 1;
+$$
+LANGUAGE sql STABLE;
+
+-- repository database information
+CREATE FUNCTION statsrepo.get_information(
+	IN  host_in		text,
+	IN  port_in		text,
+	OUT host		text,
+	OUT port		text,
+	OUT "database"	name,
+	OUT encoding	name,
+	OUT collation	name,
+	OUT start		timestamp(0),
+	OUT reload		timestamp(0),
+	OUT version		text
+) RETURNS record AS
+$$
+	SELECT
+		$1,
+		$2,
+		datname,
+		pg_encoding_to_char(encoding),
+		datcollate,
+		pg_postmaster_start_time()::timestamp(0),
+		pg_conf_load_time()::timestamp(0),
+		version()
+	FROM
+		pg_catalog.pg_database
+	WHERE
+		datname = current_database();
+$$
+LANGUAGE sql;
+
+-- repository database setting parameters
+CREATE FUNCTION statsrepo.get_repositorydb_setting(
+	OUT name	text,
+	OUT setting	text,
+	OUT unit	text,
+	OUT source	text
+) RETURNS SETOF record AS
+$$
+	SELECT
+		name,
+		setting,
+		unit,
+		source
+	FROM
+		pg_catalog.pg_settings
+	WHERE
+		source NOT IN ('default', 'session', 'override')
+		AND setting <> boot_val
+	ORDER BY lower(name);
+$$
+LANGUAGE sql;
+
+-- table options
+CREATE FUNCTION statsrepo.get_table_option(
+	IN  name	text,
+	OUT option	text
+) RETURNS text AS
+$$
+	SELECT
+		pg_catalog.array_to_string(c.reloptions || array(SELECT 'toast.' || x FROM pg_catalog.unnest(tc.reloptions) x), ', ')
+	FROM
+		pg_catalog.pg_class c
+		LEFT JOIN pg_catalog.pg_class tc ON (c.reltoastrelid = tc.oid)
+	WHERE
+		c.oid = $1::regclass;
+$$
+LANGUAGE sql;
+
+-- snapshot list
+CREATE FUNCTION statsrepo.get_snapshot_list(
+	IN  instid		bigint,
+	OUT snapid		bigint,
+	OUT "笨錀"		xml,
+	OUT "timestamp"	timestamp(0),
+	OUT size		numeric,
+	OUT diff_size	numeric,
+	OUT commits		numeric(1000,3),
+	OUT	rollbacks	numeric(1000,3),
+	OUT comment		text
+) RETURNS SETOF record AS
+$$
+	SELECT
+		e.snapid,
+		xmlelement(	name input,
+					xmlattributes(	'checkbox' AS  type,
+									to_char(e.snapid, '00000') AS pos,
+									e.snapid AS value)
+					),
+		time::timestamp(0),
+		round(ed.size / 1024 / 1024, 0),
+		round((ed.size - sd.size) / 1024 / 1024, 0),
+		statsrepo.tps(ed.commits - sd.commits, time - time0),
+		statsrepo.tps(ed.rollbacks - sd.rollbacks, time - time0),
+		comment
+	FROM
+		(SELECT	*,
+				lag(snapid) OVER (ORDER BY snapid) AS snapid0,
+				lag(time) OVER (ORDER BY snapid) AS time0
+		FROM statsrepo.snapshot
+		WHERE instid = $1) e
+		LEFT JOIN
+			(SELECT	snapid,
+					sum(size) AS size,
+					sum(xact_commit) AS commits,
+					sum(xact_rollback) AS rollbacks
+			FROM statsrepo.database GROUP BY snapid) AS ed
+			ON ed.snapid = e.snapid
+		LEFT JOIN
+			(SELECT snapid,
+					sum(size) AS size,
+					sum(xact_commit) AS commits,
+					sum(xact_rollback) AS rollbacks
+			FROM statsrepo.database GROUP BY snapid) AS sd
+			ON sd.snapid = e.snapid0;
+$$
+LANGUAGE sql;
+
+-- refine snapshot list
+CREATE FUNCTION statsrepo.get_snapshot_list_refine(
+	IN  begin_snapid	bigint,
+	OUT snapid			bigint,
+	OUT "笨錀"		xml,
+	OUT "timestamp"		timestamp(0),
+	OUT size			numeric,
+	OUT diff_size		numeric,
+	OUT commits			numeric(1000,3),
+	OUT	rollbacks		numeric(1000,3),
+	OUT comment			text
+) RETURNS SETOF record AS
+$$
+	SELECT
+		e.snapid,
+		xmlelement(	name input,
+					xmlattributes(	'checkbox' AS  type,
+									to_char(e.snapid, '00000') AS pos,
+									e.snapid AS value)
+					),
+		time::timestamp(0),
+		round(ed.size / 1024 / 1024, 0),
+		round((ed.size - sd.size) / 1024 / 1024, 0),
+		statsrepo.tps(ed.commits - sd.commits, time - time0),
+		statsrepo.tps(ed.rollbacks - sd.rollbacks, time - time0),
+		comment
+	FROM
+		(SELECT	*,
+				lag(snapid) OVER (ORDER BY snapid) AS snapid0,
+				lag(time) OVER (ORDER BY snapid) AS time0
+		FROM statsrepo.snapshot
+		WHERE instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $1)) e
+		LEFT JOIN
+			(SELECT	snapid,
+					sum(size) AS size,
+					sum(xact_commit) AS commits,
+					sum(xact_rollback) AS rollbacks
+			FROM statsrepo.database GROUP BY snapid) AS ed
+			ON ed.snapid = e.snapid
+		LEFT JOIN
+			(SELECT snapid,
+					sum(size) AS size,
+					sum(xact_commit) AS commits,
+					sum(xact_rollback) AS rollbacks
+			FROM statsrepo.database GROUP BY snapid) AS sd
+			ON sd.snapid = e.snapid0;
+$$
+LANGUAGE sql;
+
+-- get min snapshot id from date
+CREATE FUNCTION statsrepo.get_min_snapid(
+	IN  m_host text,
+	IN  m_port text,
+	IN  b_date timestamp(0),
+	IN  e_date timestamp(0),
+	OUT snapid bigint
+) RETURNS bigint AS
+$$
+	SELECT
+		min(snapid)
+	FROM statsrepo.snapshot s
+		LEFT JOIN  statsrepo.instance i ON i.instid = s.instid
+	WHERE i.hostname = $1 AND i.port = $2::integer
+		AND time >= $3 AND time <= $4
+$$
+LANGUAGE sql STABLE;
+
+-- get max snapshot id from date
+CREATE FUNCTION statsrepo.get_max_snapid(
+	IN  m_host text,
+	IN  m_port text,
+	IN  b_date timestamp(0),
+	IN  e_date timestamp(0),
+	OUT snapid bigint
+) RETURNS bigint AS
+$$
+	SELECT
+		max(snapid)
+	FROM statsrepo.snapshot s
+		LEFT JOIN  statsrepo.instance i ON i.instid = s.instid
+	WHERE i.hostname = $1 AND i.port = $2::integer
+		AND time >= $3 AND time <= $4
+$$
+LANGUAGE sql STABLE;
+
+-- get min snapshot id from date
+CREATE FUNCTION statsrepo.get_min_snapid2(
+	IN  instid text,
+	IN  b_date timestamp(0),
+	IN  e_date timestamp(0),
+	OUT snapid bigint
+) RETURNS bigint AS
+$$
+	SELECT
+		min(snapid)
+	FROM statsrepo.snapshot s
+		LEFT JOIN  statsrepo.instance i ON i.instid = s.instid
+	WHERE i.instid = $1::integer
+		AND time >= $2 AND time <= $3
+$$
+LANGUAGE sql STABLE;
+
+-- get max snapshot id from date
+CREATE FUNCTION statsrepo.get_max_snapid2(
+	IN  instid text,
+	IN  b_date timestamp(0),
+	IN  e_date timestamp(0),
+	OUT snapid bigint
+) RETURNS bigint AS
+$$
+	SELECT
+		max(snapid)
+	FROM statsrepo.snapshot s
+		LEFT JOIN  statsrepo.instance i ON i.instid = s.instid
+	WHERE i.instid = $1::integer
+		AND time >= $2 AND time <= $3
 $$
 LANGUAGE sql STABLE;
 
@@ -666,6 +947,39 @@ $$
 		d.snapid, d.name
 	ORDER BY
 		d.snapid, d.name;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Recovery Conflicts'
+CREATE FUNCTION statsrepo.get_recovery_conflicts(
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT datname				name,
+	OUT confl_tablespace	bigint,
+	OUT confl_lock			bigint,
+	OUT confl_snapshot		bigint,
+	OUT confl_bufferpin		bigint,
+	OUT confl_deadlock		bigint
+) RETURNS SETOF record AS
+$$
+	SELECT
+		de.name,
+		statsrepo.sub(de.confl_tablespace, db.confl_tablespace),
+		statsrepo.sub(de.confl_lock, db.confl_lock),
+		statsrepo.sub(de.confl_snapshot, db.confl_snapshot),
+		statsrepo.sub(de.confl_bufferpin, db.confl_bufferpin),
+		statsrepo.sub(de.confl_deadlock, db.confl_deadlock)
+	FROM
+		statsrepo.database de LEFT JOIN statsrepo.database db
+			ON db.dbid = de.dbid AND db.snapid = $1
+	WHERE
+		de.snapid = $2
+	ORDER BY
+		statsrepo.sub(de.confl_tablespace, db.confl_tablespace) +
+			statsrepo.sub(de.confl_lock, db.confl_lock) +
+			statsrepo.sub(de.confl_snapshot, db.confl_snapshot) +
+			statsrepo.sub(de.confl_bufferpin, db.confl_bufferpin) +
+			statsrepo.sub(de.confl_deadlock, db.confl_deadlock) DESC;
 $$
 LANGUAGE sql;
 
@@ -1370,6 +1684,83 @@ $$
 	ORDER BY
 		5 DESC,
 		4 DESC;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Lock Activity'
+CREATE FUNCTION statsrepo.get_lock_activity(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT datname			name,
+	OUT nspname			name,
+	OUT relname			name,
+	OUT blockee_pid		integer,
+	OUT blocker_pid		integer,
+	OUT duration		interval,
+	OUT blockee_query	text,
+	OUT blocker_query	text
+) RETURNS SETOF record AS
+$$
+	SELECT
+		l.datname,
+		l.nspname,
+		l.relname,
+		l.blockee_pid,
+		l.blocker_pid,
+		l.duration,
+		l.blockee_query,
+		l.blocker_query
+	FROM
+		statsrepo.lock l,
+		statsrepo.snapshot s
+	WHERE
+		l.snapid BETWEEN $1 AND $2
+		AND l.snapid = s.snapid
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+	ORDER BY
+		l.duration DESC;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Replication Activity'
+CREATE FUNCTION statsrepo.get_replication_activity(
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT usename				name,
+	OUT application_name	text,
+	OUT client_addr			inet,
+	OUT client_hostname		text,
+	OUT client_port			integer,
+	OUT backend_start		timestamptz,
+	OUT state				text,
+	OUT current_location	text,
+	OUT sent_location		text,
+	OUT write_location		text,
+	OUT flush_location		text,
+	OUT replay_location		text,
+	OUT sync_priority		integer,
+	OUT sync_state			text
+) RETURNS SETOF record AS
+$$
+	SELECT
+		usename,
+		application_name,
+		client_addr,
+		client_hostname,
+		client_port,
+		backend_start,
+		state,
+		current_location || ' (' || pg_xlogfile_name(current_location) || ')',
+		sent_location    || ' (' || pg_xlogfile_name(sent_location)    || ')',
+		write_location   || ' (' || pg_xlogfile_name(write_location)   || ')',
+		flush_location   || ' (' || pg_xlogfile_name(flush_location)   || ')',
+		replay_location  || ' (' || pg_xlogfile_name(replay_location)  || ')',
+		sync_priority,
+		sync_state
+	FROM
+		statsrepo.replication
+	WHERE
+		snapid = $2
 $$
 LANGUAGE sql;
 

@@ -129,4 +129,18 @@ RETURNS SETOF record
 AS 'MODULE_PATHNAME', 'statsinfo_profile'
 LANGUAGE C STRICT;
 
+--
+-- statsinfo.last_xact_activity()
+--
+CREATE FUNCTION statsinfo.last_xact_activity
+(
+	OUT pid		int,
+	OUT xid		xid,
+	OUT in_xact	bool,
+	OUT queries	text
+)
+RETURNS SETOF record
+AS 'MODULE_PATHNAME', 'statsinfo_last_xact_activity'
+LANGUAGE C STRICT;
+
 COMMIT;

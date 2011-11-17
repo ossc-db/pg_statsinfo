@@ -13,7 +13,7 @@
  */
 
 /* database */
-#if PG_VERSION_NUM >= 90000
+#if PG_VERSION_NUM >= 90100
 #define SQL_SELECT_DATABASE "\
 SELECT \
 	d.oid AS dbid, \
@@ -28,7 +28,38 @@ SELECT \
 	pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
 	pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
 	pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
-	pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted \
+	pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
+	pg_stat_get_db_conflict_tablespace(d.oid) AS confl_tablespace, \
+	pg_stat_get_db_conflict_lock(d.oid) AS confl_lock, \
+	pg_stat_get_db_conflict_snapshot(d.oid) AS confl_snapshot, \
+	pg_stat_get_db_conflict_bufferpin(d.oid) AS confl_bufferpin, \
+	pg_stat_get_db_conflict_startup_deadlock(d.oid) AS confl_deadlock \
+FROM \
+	pg_database d \
+WHERE datallowconn \
+  AND datname <> ALL (('{' || $1 || '}')::text[]) \
+ORDER BY 1"
+#elif PG_VERSION_NUM >= 90000
+#define SQL_SELECT_DATABASE "\
+SELECT \
+	d.oid AS dbid, \
+	d.datname, \
+	pg_database_size(d.oid), \
+	CASE WHEN pg_is_in_recovery() THEN 0 ELSE age(d.datfrozenxid) END, \
+	pg_stat_get_db_xact_commit(d.oid) AS xact_commit, \
+	pg_stat_get_db_xact_rollback(d.oid) AS xact_rollback, \
+	pg_stat_get_db_blocks_fetched(d.oid) - pg_stat_get_db_blocks_hit(d.oid) AS blks_read, \
+	pg_stat_get_db_blocks_hit(d.oid) AS blks_hit, \
+	pg_stat_get_db_tuples_returned(d.oid) AS tup_returned, \
+	pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
+	pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
+	pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
+	pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
+	NULL::bigint AS confl_tablespace, \
+	NULL::bigint AS confl_lock, \
+	NULL::bigint AS confl_snapshot, \
+	NULL::bigint AS confl_bufferpin, \
+	NULL::bigint AS confl_deadlock \
 FROM \
 	pg_database d \
 WHERE datallowconn \
@@ -49,7 +80,12 @@ SELECT \
 	pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
 	pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
 	pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
-	pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted \
+	pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
+	NULL::bigint AS confl_tablespace, \
+	NULL::bigint AS confl_lock, \
+	NULL::bigint AS confl_snapshot, \
+	NULL::bigint AS confl_bufferpin, \
+	NULL::bigint AS confl_deadlock \
 FROM \
 	pg_database d \
 WHERE datallowconn \
@@ -143,8 +179,79 @@ ORDER BY total_time DESC LIMIT 30"
 
 #endif
 
+/* lock */
+#if PG_VERSION_NUM >= 80400
+#define SQL_SELECT_LOCK_XID_CAST			"transactionid"
+#define SQL_SELECT_LOCK_BLOCKER_QUERY		"lx.queries"
+#else
+#define SQL_SELECT_LOCK_XID_CAST			"CAST(transactionid AS text)"
+#define SQL_SELECT_LOCK_BLOCKER_QUERY		"'(N/A)'"
+#endif
+#if PG_VERSION_NUM >= 90000
+#define SQL_SELECT_LOCK_APPNAME				"sa.application_name"
+#else
+#define SQL_SELECT_LOCK_APPNAME				"'(N/A)'"
+#endif
+#if PG_VERSION_NUM >= 90100
+#define SQL_SELECT_LOCK_CLIENT_HOSTNAME		"sa.client_hostname"
+#else
+#define SQL_SELECT_LOCK_CLIENT_HOSTNAME		"'(N/A)'"
+#endif
+
+#define SQL_SELECT_LOCK "\
+SELECT \
+	db.datname, \
+	nb.nspname, \
+	cb.relname, \
+	" SQL_SELECT_LOCK_APPNAME ", \
+	sa.client_addr, \
+	" SQL_SELECT_LOCK_CLIENT_HOSTNAME ", \
+	sa.client_port, \
+	lb.pid AS blockee_pid, \
+	la.pid AS blocker_pid, \
+	(statement_timestamp() - sb.query_start)::interval(0), \
+	sb.current_query, \
+	" SQL_SELECT_LOCK_BLOCKER_QUERY " \
+FROM \
+	(SELECT DISTINCT pid, relation, " SQL_SELECT_LOCK_XID_CAST " \
+	 FROM pg_locks WHERE granted = true) la LEFT JOIN \
+	 statsinfo.last_xact_activity() lx ON la.pid = lx.pid LEFT JOIN \
+	 pg_stat_activity sa ON la.pid = sa.procpid, \
+	(SELECT DISTINCT pid, relation, " SQL_SELECT_LOCK_XID_CAST " \
+	 FROM pg_locks WHERE granted = false) lb LEFT JOIN \
+	 pg_stat_activity sb ON lb.pid = sb.procpid LEFT JOIN \
+	 pg_database db ON sb.datid = db.oid LEFT JOIN \
+	 pg_class cb ON lb.relation = cb.oid LEFT JOIN \
+	 pg_namespace nb ON cb.relnamespace = nb.oid \
+WHERE \
+	(la.transactionid = lb.transactionid OR la.relation = lb.relation) AND \
+	sb.query_start < statement_timestamp() - current_setting('" GUC_PREFIX ".long_lock_threashold')::interval"
+
+/* replication */
+#define SQL_SELECT_REPLICATION "\
+SELECT \
+	procpid, \
+	usesysid, \
+	usename, \
+	application_name, \
+	client_addr, \
+	client_hostname, \
+	client_port, \
+	backend_start, \
+	state, \
+	pg_current_xlog_location(), \
+	sent_location, \
+	write_location, \
+	flush_location, \
+	replay_location, \
+	sync_priority, \
+	sync_state \
+FROM \
+	pg_stat_replication"
+
 /* cpu */
-#define SQL_SELECT_CPU		"SELECT * FROM statsinfo.cpustats()"
+#define SQL_SELECT_CPU "\
+SELECT * FROM statsinfo.cpustats()"
 
 /* device */
 #define SQL_SELECT_DEVICE	"SELECT * FROM statsinfo.devicestats()"

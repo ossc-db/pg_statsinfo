@@ -443,6 +443,8 @@ ensure_schema(PGconn *conn, const char *schema)
 		else if (server_version >= 80400)
 			/* sets repository schema for partitioning */
 			schema = "statsrepo_partition";
+		else
+			schema = "statsrepo83";
 
 		/* create language 'PL/pgSQL' */
 		res = pgut_execute(conn,

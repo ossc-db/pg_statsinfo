@@ -109,6 +109,7 @@ PG_MODULE_MAGIC;
 #define DEFAULT_TEXTLOG_LEVEL			WARNING
 #define DEFAULT_MAINTENANCE_TIME		"00:00:00"
 #define DEFAULT_REPOSITORY_KEEPDAY		7		/* day */
+#define DEFAULT_LONG_LOCK_THREASHOLD	30		/* sec */
 #define LONG_TRANSACTION_THRESHOLD		1.0		/* sec */
 
 static const struct config_enum_entry elevel_options[] =
@@ -165,6 +166,7 @@ static char	   *adjust_log_fatal = NULL;
 static bool		enable_maintenance = false;
 static char	   *maintenance_time = NULL;
 static int		repository_keepday = DEFAULT_REPOSITORY_KEEPDAY;
+static int		long_lock_threashold = DEFAULT_LONG_LOCK_THREASHOLD;
 
 /*---- Function declarations ----*/
 
@@ -189,6 +191,9 @@ extern Datum PGUT_EXPORT statsinfo_devicestats(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_profile(PG_FUNCTION_ARGS);
 
 extern PGUT_EXPORT void	_PG_init(void);
+extern PGUT_EXPORT void	_PG_fini(void);
+extern PGUT_EXPORT void	init_last_xact_activity(void);
+extern PGUT_EXPORT void	fini_last_xact_activity(void);
 
 /*----  Internal declarations ----*/
 
@@ -795,6 +800,21 @@ _PG_init(void)
 							NULL,
 							NULL);
 
+	DefineCustomIntVariable(GUC_PREFIX ".long_lock_threashold",
+							"Sets the threshold of lock wait time.",
+							NULL,
+							&long_lock_threashold,
+							DEFAULT_LONG_LOCK_THREASHOLD,
+							0,
+							INT_MAX,
+							PGC_SIGHUP,
+							0,
+#if PG_VERSION_NUM >= 90100
+							NULL,
+#endif
+							NULL,
+							NULL);
+
 	EmitWarningsOnPlaceholders("pg_statsinfo");
 
 	if (IsUnderPostmaster)
@@ -845,6 +865,11 @@ _PG_init(void)
 #endif
 #endif /* ADJUST_NON_CRITICAL_SETTINGS */
 
+#if PG_VERSION_NUM >= 80400
+	/* Install xact_last_activity */
+	init_last_xact_activity();
+#endif
+
 	/* spawn daemon process if the first call */
 	if (!IsUnderPostmaster)
 	{
@@ -852,6 +877,18 @@ _PG_init(void)
 
 		exec_background_process(cmd);
 	}
+}
+
+/*
+ * Module unload callback
+ */
+void
+_PG_fini(void)
+{
+#if PG_VERSION_NUM >= 80400
+	/* Uninstall xact_last_activity */
+	fini_last_xact_activity();
+#endif
 }
 
 /*

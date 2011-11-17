@@ -20,7 +20,7 @@ SRCS = \
 	pgut/pgut-pthread.c
 
 OBJS = $(SRCS:.c=.o)
-DATA = pg_statsrepo.sql pg_statsrepo_partition.sql pg_statsrepo_alert.sql uninstall_pg_statsrepo.sql
+DATA = pg_statsrepo83.sql pg_statsrepo_partition.sql pg_statsrepo_alert.sql uninstall_pg_statsrepo.sql
 PROGRAM = pg_statsinfod
 REGRESS = pg_statsinfo
 
