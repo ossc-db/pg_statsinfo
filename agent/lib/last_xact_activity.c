@@ -69,6 +69,9 @@ static char *query_buffer = NULL;
 static int query_length_limit = 100;
 static bool record_xact_commands = false;
 static bool free_localdata_on_execend = false;
+#if PG_VERSION_NUM >= 90000
+static bool immediate_exit_xact = false;
+#endif
 #endif
 
 /* Module callbacks */
@@ -96,6 +99,9 @@ static statEntry *get_snapshot_entry(int beid);
 static Size buffer_size(int nbackends);
 #if PG_VERSION_NUM >= 90000
 static void myProcessUtility(Node *parsetree,
+			   const char *queryString, ParamListInfo params, bool isTopLevel,
+			   DestReceiver *dest, char *completionTag);
+static void myProcessUtility0(Node *parsetree,
 			   const char *queryString, ParamListInfo params, bool isTopLevel,
 			   DestReceiver *dest, char *completionTag);
 #endif
@@ -131,9 +137,6 @@ static void myProcessUtility(Node *parsetree,
 void
 init_last_xact_activity(void)
 {
-	if (!process_shared_preload_libraries_in_progress)
-		return;
-
 	/* Custom GUC variables */
 	DefineCustomIntVariable(GUC_PREFIX ".buffer_size",
 							"Sets the query buffer size per backend.",
@@ -303,24 +306,62 @@ myExecutorEnd(QueryDesc * queryDesc)
 
 #if PG_VERSION_NUM >= 90000
 /*
+ * Erase in-transaction flag if needed.
+ */
+static void
+exit_transaction_if_needed()
+{
+	if (immediate_exit_xact)
+	{
+		statEntry *entry = get_stat_entry(MyBackendId);
+		
+		entry->inxact = false;
+		immediate_exit_xact = false;
+	}
+}
+
+/*
  * myProcessUtility() -
  *
  * Processing transaction state change.
  */
 static void
 myProcessUtility(Node *parsetree, const char *queryString,
+				 ParamListInfo params, bool isTopLevel,
+				 DestReceiver *dest, char *completionTag)
+{
+	/*
+	 * Do my process before other hook runs.
+	 */
+	myProcessUtility0(parsetree, queryString, params, isTopLevel, dest,
+					  completionTag);
+
+	PG_TRY();
+	{
+		if (prev_ProcessUtility_hook)
+			prev_ProcessUtility_hook(parsetree, queryString, params,
+									 isTopLevel, dest, completionTag);
+		else
+			standard_ProcessUtility(parsetree, queryString, params,
+									isTopLevel, dest, completionTag);
+	}
+	PG_CATCH();
+	{
+		exit_transaction_if_needed();
+		PG_RE_THROW();
+	}
+	PG_END_TRY();
+
+	exit_transaction_if_needed();
+}
+
+static void
+myProcessUtility0(Node *parsetree, const char *queryString,
 					ParamListInfo params, bool isTopLevel,
 					DestReceiver *dest, char *completionTag)
 {
 	statEntry *entry;
 	TransactionStmt *stmt;
-
-	if (prev_ProcessUtility_hook)
-		prev_ProcessUtility_hook(parsetree, queryString, params,
-							isTopLevel, dest, completionTag);
-	else
-		standard_ProcessUtility(parsetree, queryString, params,
-								isTopLevel, dest, completionTag);
 
 	entry = get_stat_entry(MyBackendId);
 
@@ -356,7 +397,7 @@ myProcessUtility(Node *parsetree, const char *queryString,
 					break;
 				default:
 					return;
-			}				
+			}
 			if (record_xact_commands)
 				append_query(entry, queryString);
 			break;
@@ -373,7 +414,19 @@ myProcessUtility(Node *parsetree, const char *queryString,
 			 * These statements are simplly recorded.
 			 */
 			entry->change_count++;
+
+			/*
+			 * Single query executed when not in transaction.
+			 */
+			if (!entry->inxact)
+			{
+				immediate_exit_xact = true;
+				init_entry(MyBackendId, GetSessionUserId());
+				entry->inxact = true;
+			}
+
 			append_query(entry, queryString);
+
 			break;
 
 		default:
