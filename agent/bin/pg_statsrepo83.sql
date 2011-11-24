@@ -365,6 +365,7 @@ CREATE TABLE statsrepo.lock
 	blocker_port		integer,
 	blockee_pid			integer,
 	blocker_pid			integer,
+	blocker_gid			text,
 	duration			interval,
 	blockee_query		text,
 	blocker_query		text,
@@ -601,7 +602,7 @@ LANGUAGE sql;
 CREATE FUNCTION statsrepo.get_snapshot_list(
 	IN  instid		bigint,
 	OUT snapid		bigint,
-	OUT "笨錀"		xml,
+	OUT check_box	xml,
 	OUT "timestamp"	timestamp(0),
 	OUT size		numeric,
 	OUT diff_size	numeric,
@@ -658,7 +659,7 @@ LANGUAGE sql;
 CREATE FUNCTION statsrepo.get_snapshot_list_refine(
 	IN  begin_snapid		bigint,
 	OUT snapid		bigint,
-	OUT "笨錀"		xml,
+	OUT check_box	xml,
 	OUT "timestamp"	timestamp(0),
 	OUT size		numeric,
 	OUT diff_size	numeric,
@@ -1770,9 +1771,10 @@ CREATE FUNCTION statsrepo.get_lock_activity(
 	OUT datname			name,
 	OUT nspname			name,
 	OUT relname			name,
+	OUT duration		interval,
 	OUT blockee_pid		integer,
 	OUT blocker_pid		integer,
-	OUT duration		interval,
+	OUT blocker_gid		text,
 	OUT blockee_query	text,
 	OUT blocker_query	text
 ) RETURNS SETOF record AS
@@ -1781,9 +1783,10 @@ $$
 		l.datname,
 		l.nspname,
 		l.relname,
+		l.duration,
 		l.blockee_pid,
 		l.blocker_pid,
-		l.duration,
+		l.blocker_gid,
 		l.blockee_query,
 		l.blocker_query
 	FROM

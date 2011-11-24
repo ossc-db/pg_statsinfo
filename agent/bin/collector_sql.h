@@ -182,7 +182,12 @@ ORDER BY total_time DESC LIMIT 30"
 /* lock */
 #if PG_VERSION_NUM >= 80400
 #define SQL_SELECT_LOCK_XID_CAST			"transactionid"
-#define SQL_SELECT_LOCK_BLOCKER_QUERY		"lx.queries"
+#define SQL_SELECT_LOCK_BLOCKER_QUERY "\
+CASE \
+	WHEN la.gid IS NOT NULL THEN '(xact is detached from session)' \
+	WHEN la.queries is null THEN '(library might not have been loaded)' \
+	ELSE la.queries \
+END"
 #else
 #define SQL_SELECT_LOCK_XID_CAST			"CAST(transactionid AS text)"
 #define SQL_SELECT_LOCK_BLOCKER_QUERY		"'(N/A)'"
@@ -209,20 +214,29 @@ SELECT \
 	sa.client_port, \
 	lb.pid AS blockee_pid, \
 	la.pid AS blocker_pid, \
+	la.gid AS blocker_gid, \
 	(statement_timestamp() - sb.query_start)::interval(0), \
 	sb.current_query, \
 	" SQL_SELECT_LOCK_BLOCKER_QUERY " \
 FROM \
+	(SELECT DISTINCT l0.pid, l0.relation, " SQL_SELECT_LOCK_XID_CAST ", la.gid, lx.queries \
+	 FROM pg_locks l0 \
+		LEFT JOIN \
+			(SELECT l1.virtualtransaction, pp.gid \
+			 FROM pg_prepared_xacts pp \
+				LEFT JOIN pg_locks l1 ON l1.transactionid = pp.transaction) la \
+			ON l0.virtualtransaction = la.virtualtransaction \
+		LEFT JOIN statsinfo.last_xact_activity() lx ON l0.pid = lx.pid \
+	 WHERE l0.granted = true AND \
+		(la.gid IS NULL OR l0.relation IS NOT NULL)) la \
+	 LEFT JOIN pg_stat_activity sa ON la.pid = sa.procpid, \
 	(SELECT DISTINCT pid, relation, " SQL_SELECT_LOCK_XID_CAST " \
-	 FROM pg_locks WHERE granted = true) la LEFT JOIN \
-	 statsinfo.last_xact_activity() lx ON la.pid = lx.pid LEFT JOIN \
-	 pg_stat_activity sa ON la.pid = sa.procpid, \
-	(SELECT DISTINCT pid, relation, " SQL_SELECT_LOCK_XID_CAST " \
-	 FROM pg_locks WHERE granted = false) lb LEFT JOIN \
-	 pg_stat_activity sb ON lb.pid = sb.procpid LEFT JOIN \
-	 pg_database db ON sb.datid = db.oid LEFT JOIN \
-	 pg_class cb ON lb.relation = cb.oid LEFT JOIN \
-	 pg_namespace nb ON cb.relnamespace = nb.oid \
+	 FROM pg_locks \
+	 WHERE granted = false) lb \
+	 LEFT JOIN pg_stat_activity sb ON lb.pid = sb.procpid \
+	 LEFT JOIN pg_database db ON sb.datid = db.oid \
+	 LEFT JOIN pg_class cb ON lb.relation = cb.oid \
+	 LEFT JOIN pg_namespace nb ON cb.relnamespace = nb.oid \
 WHERE \
 	(la.transactionid = lb.transactionid OR la.relation = lb.relation) AND \
 	sb.query_start < statement_timestamp() - current_setting('" GUC_PREFIX ".long_lock_threashold')::interval"

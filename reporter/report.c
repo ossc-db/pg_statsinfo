@@ -797,15 +797,15 @@ report_lock_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "----------------------------------------\n");
 	fprintf(out, "/* Lock Activity */\n");
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %-16s  %11s  %11s  %-8s\n%-s\n%-s\n",
-		"Database", "Schema", "Relation", "Blockee PID", "Blocker PID", "Duration",
+	fprintf(out, "%-16s  %-16s  %-16s  %-8s  %11s  %11s  %-16s\n%-s\n%-s\n",
+		"Database", "Schema", "Relation", "Duration", "Blockee PID", "Blocker PID", "Blocker GID",
 		"Blockee Query", "Blocker Query");
-	fprintf(out, "-------------------------------------------------------------------------------------------\n");
+	fprintf(out, "--------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_LOCK_ACTIVITY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-16s  %-16s  %11s  %11s  %-8s\n%-s\n%-s\n",
+		fprintf(out, "%-16s  %-16s  %-16s  %-8s  %11s  %11s  %-16s\n%-s\n%-s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
@@ -813,7 +813,8 @@ report_lock_activity(PGconn *conn, ReportScope *scope, FILE *out)
 			PQgetvalue(res, i, 4),
 			PQgetvalue(res, i, 5),
 			PQgetvalue(res, i, 6),
-			PQgetvalue(res, i, 7));
+			PQgetvalue(res, i, 7),
+			PQgetvalue(res, i, 8));
 	}
 	fprintf(out, "\n");
 	PQclear(res);
