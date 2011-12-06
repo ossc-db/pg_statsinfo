@@ -10,12 +10,15 @@ rm -fr ${PGDATA}
 initdb --no-locale -U ${PGUSER} > ${BASE_PATH}/results/initdb.log 2>&1
 cat << EOF >> ${PGDATA}/postgresql.conf
 shared_preload_libraries = 'pg_statsinfo'
-custom_variable_classes = 'statsinfo'
-log_destination = csvlog
-logging_collector = on
+autovacuum = off
+max_prepared_transactions = 10
 log_autovacuum_min_duration = 0
+
+custom_variable_classes = 'statsinfo'
+statsinfo.textlog_min_messages = info
+statsinfo.syslog_min_messages = info
 statsinfo.snapshot_interval = 8640000
-statsinfo.enable_maintenance = off
+statsinfo.long_lock_threashold = 0
 EOF
 
 # start PostgreSQL

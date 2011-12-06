@@ -1,5 +1,5 @@
 \! sh ./sql/init.sh
-\! sh ./sql/test_function.sh
+\! sh ./sql/test_function_v2.1.sh
 --- FU-0001 (statsinfo.cpu, statsinfo.device [num of tablespace: 0]) ---
 SELECT statsinfo.snapshot('comment')
  snapshot 
@@ -415,4 +415,305 @@ check text-log(3): 0
 check text-log(4): 0
 check text-log(5): 0
 check text-log(6): 0
+\! sh ./sql/test_function_v2.2.sh
+--- FU-0001 (lock conflict [blocker query: SELECT]) ---
+-[ RECORD 1 ]----+--------------------------------------
+snapid           | 6
+datname          | postgres
+nspname          | statsinfo
+relname          | xxx
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | LOCK TABLE xxx;
+blocker_query    | SELECT * FROM xxx;SELECT pg_sleep(2);
+
+--- FU-0002 (lock conflict [blocker query: SELECT FOR UPDATE]) ---
+-[ RECORD 1 ]----+-------------------------------------------------
+snapid           | 8
+datname          | postgres
+nspname          | 
+relname          | 
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | DELETE FROM xxx;
+blocker_query    | SELECT * FROM xxx FOR UPDATE;SELECT pg_sleep(2);
+
+--- FU-0003 (lock conflict [blocker query: SELECT FOR SHARE]) ---
+-[ RECORD 1 ]----+------------------------------------------------
+snapid           | 9
+datname          | postgres
+nspname          | 
+relname          | 
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | DELETE FROM xxx;
+blocker_query    | SELECT * FROM xxx FOR SHARE;SELECT pg_sleep(2);
+
+--- FU-0004 (lock conflict [blocker query: INSERT]) ---
+-[ RECORD 1 ]----+-----------------------------------------------
+snapid           | 10
+datname          | postgres
+nspname          | statsinfo
+relname          | xxx
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | LOCK TABLE xxx;
+blocker_query    | INSERT INTO xxx VALUES (1);SELECT pg_sleep(2);
+
+--- FU-0005 (lock conflict [blocker query: UPDATE]) ---
+-[ RECORD 1 ]----+-------------------------------------------
+snapid           | 11
+datname          | postgres
+nspname          | statsinfo
+relname          | xxx
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | LOCK TABLE xxx;
+blocker_query    | UPDATE xxx SET col = 0;SELECT pg_sleep(2);
+
+--- FU-0006 (lock conflict [blocker query: DELETE]) ---
+-[ RECORD 1 ]----+------------------------------------
+snapid           | 12
+datname          | postgres
+nspname          | statsinfo
+relname          | xxx
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | LOCK TABLE xxx;
+blocker_query    | DELETE FROM xxx;SELECT pg_sleep(2);
+
+--- FU-0007 (lock conflict [blocker query: CREATE INDEX]) ---
+-[ RECORD 1 ]----+--------------------------------------------------
+snapid           | 13
+datname          | postgres
+nspname          | statsinfo
+relname          | xxx
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | LOCK TABLE xxx;
+blocker_query    | CREATE INDEX idx ON xxx (col);SELECT pg_sleep(2);
+
+--- FU-0009 (lock conflict [blocker query: CLUSTER]) ---
+-[ RECORD 1 ]----+----------------------------------------------
+snapid           | 14
+datname          | postgres
+nspname          | statsinfo
+relname          | xxx
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | LOCK TABLE xxx;
+blocker_query    | CLUSTER xxx USING idx_xxx;SELECT pg_sleep(2);
+
+--- FU-0010 (lock conflict [blocker query: ANALYZE]) ---
+-[ RECORD 1 ]----+--------------------------------
+snapid           | 15
+datname          | postgres
+nspname          | statsinfo
+relname          | xxx
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | LOCK TABLE xxx;
+blocker_query    | ANALYZE xxx;SELECT pg_sleep(2);
+
+--- FU-0011 (lock conflict [blocker query: REINDEX]) ---
+-[ RECORD 1 ]----+--------------------------------------
+snapid           | 16
+datname          | postgres
+nspname          | statsinfo
+relname          | xxx
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | LOCK TABLE xxx;
+blocker_query    | REINDEX TABLE xxx;SELECT pg_sleep(2);
+
+--- FU-0012 (lock conflict [blocker query: ALTER TABLE]) ---
+-[ RECORD 1 ]----+---------------------------------------------------------
+snapid           | 17
+datname          | postgres
+nspname          | statsinfo
+relname          | xxx
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | LOCK TABLE xxx;
+blocker_query    | ALTER TABLE xxx ADD COLUMN name text;SELECT pg_sleep(2);
+
+--- FU-0013 (lock conflict [blocker query: TRUNCATE]) ---
+-[ RECORD 1 ]----+---------------------------------
+snapid           | 18
+datname          | postgres
+nspname          | statsinfo
+relname          | xxx
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | LOCK TABLE xxx;
+blocker_query    | TRUNCATE xxx;SELECT pg_sleep(2);
+
+--- FU-0014 (lock conflict [blocker query: DROP TABLE]) ---
+-[ RECORD 1 ]----+-----------------------------------
+snapid           | 19
+datname          | postgres
+nspname          | statsinfo
+relname          | xxx
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | LOCK TABLE xxx;
+blocker_query    | DROP TABLE xxx;SELECT pg_sleep(2);
+
+--- FU-0017 (lock conflict [blocker query: PREPARE]) ---
+-[ RECORD 1 ]----+-----------------------------------------------------
+snapid           | 20
+datname          | postgres
+nspname          | statsinfo
+relname          | xxx
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | LOCK TABLE xxx;
+blocker_query    | PREPARE block AS DELETE FROM xxx;SELECT pg_sleep(2);
+
+--- FU-0018 (lock conflict [blocker query: PREPARE TRANSACTION]) ---
+-[ RECORD 1 ]----+--------------------------------
+snapid           | 21
+datname          | postgres
+nspname          | statsinfo
+relname          | xxx
+blocker_appname  | 
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | 
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | block
+duration         | <Duration>
+blockee_query    | LOCK TABLE xxx;
+blocker_query    | (xact is detached from session)
+
+--- FU-0019 (lock conflict [blocker query: STORED PROCEDURE]) ---
+-[ RECORD 1 ]----+-------------------------------------------------------------------
+snapid           | 22
+datname          | postgres
+nspname          | statsinfo
+relname          | xxx
+blocker_appname  | psql
+blocker_addr     | 
+blocker_hostname | 
+blocker_port     | -1
+blockee          | Blockee PID is correct.
+blocker          | Blocker PID is correct.
+blocker_gid      | 
+duration         | <Duration>
+blockee_query    | LOCK TABLE xxx;
+blocker_query    | SELECT block_proc();INSERT INTO xxx VALUES (1);SELECT pg_sleep(2);
+
+--- FU-0030 (recovery conflict [DB: 1]) ---
+-[ RECORD 1 ]----+---------
+snapid           | 23
+name             | postgres
+confl_tablespace | 0
+confl_lock       | 0
+confl_snapshot   | 0
+confl_bufferpin  | 0
+confl_deadlock   | 0
+
+--- FU-0031 (recovery conflict [DB: 2]) ---
+-[ RECORD 1 ]----+---------
+snapid           | 24
+name             | postgres
+confl_tablespace | 0
+confl_lock       | 0
+confl_snapshot   | 0
+confl_bufferpin  | 0
+confl_deadlock   | 0
+-[ RECORD 2 ]----+---------
+snapid           | 24
+name             | testdb
+confl_tablespace | 0
+confl_lock       | 0
+confl_snapshot   | 0
+confl_bufferpin  | 0
+confl_deadlock   | 0
+
 \! sh ./sql/clean.sh
