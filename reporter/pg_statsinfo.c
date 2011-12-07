@@ -128,6 +128,8 @@ pgut_help(bool details)
 	printf("                          * CheckpointActivity\n");
 	printf("                          * AutovacuumActivity\n");
 	printf("                          * QueryActivity\n");
+	printf("                          * LockActivity\n");
+	printf("                          * ReplicationActivity\n");
 	printf("                          * SettingParameters\n");
 	printf("                          * SchemaInformation\n");
 	printf("                          * Profiles\n");
