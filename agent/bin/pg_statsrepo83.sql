@@ -425,7 +425,7 @@ LANGUAGE sql IMMUTABLE STRICT;
 
 -- div() - NULL-safe operator /
 CREATE FUNCTION statsrepo.div(numeric, numeric) RETURNS numeric AS
-'SELECT (CASE WHEN $2 > 0 THEN $1 / $2 END)::numeric(1000, 3)'
+'SELECT (CASE WHEN $2 > 0 THEN $1 / $2 ELSE 0 END)::numeric(1000, 3)'
 LANGUAGE sql IMMUTABLE STRICT;
 
 -- sub() - NULL-safe operator -

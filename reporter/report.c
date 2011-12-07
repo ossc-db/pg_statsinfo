@@ -579,15 +579,15 @@ report_notable_tables(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Heavily Updated Tables **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %-16s  %12s  %12s  %12s  %12s  %10s\n",
+	fprintf(out, "%-16s  %-16s  %-16s  %12s  %12s  %12s  %12s  %12s\n",
 		"Database", "Schema", "Table", "INSERT Rows", "UPDATE Rows", "DELETE Rows",
-		"Total Rows", "HOT Ratio");
-	fprintf(out, "---------------------------------------------------------------------------------------------------------------------------\n");
+		"Total Rows", "HOT Ratio(%)");
+	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_HEAVILY_UPDATED_TABLES, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-16s  %-16s  %12s  %12s  %12s  %12s  %8s %%\n",
+		fprintf(out, "%-16s  %-16s  %-16s  %12s  %12s  %12s  %12s  %12s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
@@ -602,15 +602,15 @@ report_notable_tables(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Heavily Accessed Tables **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %-16s  %12s  %12s  %14s  %17s\n",
+	fprintf(out, "%-16s  %-16s  %-16s  %12s  %12s  %14s  %18s\n",
 		"Database", "Schema", "Table", "Seq Scans", "Read Rows", "Read Rows/Scan",
-		"Cache Hit Ratio");
-	fprintf(out, "----------------------------------------------------------------------------------------------------------------------\n");
+		"Cache Hit Ratio(%)");
+	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_HEAVILY_ACCESSED_TABLES, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-16s  %-16s  %12s  %12s  %14s  %15s %%\n",
+		fprintf(out, "%-16s  %-16s  %-16s  %12s  %12s  %14s  %18s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
@@ -624,15 +624,15 @@ report_notable_tables(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Low Density Tables **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %-16s  %12s  %14s  %14s  %20s\n",
+	fprintf(out, "%-16s  %-16s  %-16s  %12s  %14s  %14s  %21s\n",
 		"Database", "Schema", "Table", "Live Tuples", "Logical Pages", "Physical Pages",
-		"Logical Page Ratio");
-	fprintf(out, "---------------------------------------------------------------------------------------------------------------------------\n");
+		"Logical Page Ratio(%)");
+	fprintf(out, "----------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_LOW_DENSITY_TABLES, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-16s  %-16s  %12s  %14s  %14s  %18s %%\n",
+		fprintf(out, "%-16s  %-16s  %-16s  %12s  %14s  %14s  %21s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
