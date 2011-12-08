@@ -1092,17 +1092,17 @@ CREATE FUNCTION statsrepo.get_cpu_usage(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		(100 * statsrepo.sub(a.cpu_user, b.cpu_user)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(5,2),
-		(100 * statsrepo.sub(a.cpu_system, b.cpu_system)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(5,2),
-		(100 * statsrepo.sub(a.cpu_idle, b.cpu_idle)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(5,2),
-		(100 * statsrepo.sub(a.cpu_iowait, b.cpu_iowait)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(5,2)
+		(100 * statsrepo.sub(CASE WHEN b.cpu_user > a.cpu_user THEN a.cpu_user + 4294967295 ELSE a.cpu_user END, b.cpu_user)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(1000,2),
+		(100 * statsrepo.sub(CASE WHEN b.cpu_system > a.cpu_system THEN a.cpu_system + 4294967295 ELSE a.cpu_system END, b.cpu_system)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(1000,2),
+		(100 * statsrepo.sub(CASE WHEN b.cpu_idle > a.cpu_idle THEN a.cpu_idle + 4294967295 ELSE a.cpu_idle END, b.cpu_idle)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(1000,2),
+		(100 * statsrepo.sub(CASE WHEN b.cpu_iowait > a.cpu_iowait THEN a.cpu_iowait + 4294967295 ELSE a.cpu_iowait END, b.cpu_iowait)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(1000,2)
 	FROM
 		(SELECT
 			snapid,
 			cpu_user,
 			cpu_system,
 			cpu_idle,
-			cpu_iowait, 
+			cpu_iowait,
 			cpu_user + cpu_system + cpu_idle + cpu_iowait AS total
 		 FROM
 		 	statsrepo.cpu
@@ -1113,8 +1113,15 @@ $$
 			cpu_user,
 			cpu_system,
 			cpu_idle,
-			cpu_iowait, 
-			cpu_user + cpu_system + cpu_idle + cpu_iowait AS total
+			cpu_iowait,
+			CASE WHEN cpu_user < (SELECT cpu_user FROM statsrepo.cpu WHERE snapid = $1) THEN cpu_user + 4294967295
+				ELSE cpu_user END +
+			CASE WHEN cpu_system < (SELECT cpu_system FROM statsrepo.cpu WHERE snapid = $1) THEN cpu_system + 4294967295
+				ELSE cpu_system END +
+			CASE WHEN cpu_idle < (SELECT cpu_idle FROM statsrepo.cpu WHERE snapid = $1) THEN cpu_idle + 4294967295
+				ELSE cpu_idle END +
+			CASE WHEN cpu_iowait < (SELECT cpu_iowait FROM statsrepo.cpu WHERE snapid = $1) THEN cpu_iowait + 4294967295
+				ELSE cpu_iowait END AS total
 		 FROM
 		 	statsrepo.cpu
 		 WHERE
@@ -1139,20 +1146,23 @@ CREATE FUNCTION statsrepo.get_cpu_usage_tendency(
 $$
 	SELECT
 		t.snapid,
-		(100 * statsrepo.div(t.user, t.total))::numeric(5,2),
-		(100 * statsrepo.div(t.system, t.total))::numeric(5,2),
-		(100 * statsrepo.div(t.idle, t.total))::numeric(5,2),
-		(100 * statsrepo.div(t.iowait, t.total))::numeric(5,2)
+		(100 * statsrepo.div(t.user, t.total))::numeric(1000,2),
+		(100 * statsrepo.div(t.system, t.total))::numeric(1000,2),
+		(100 * statsrepo.div(t.idle, t.total))::numeric(1000,2),
+		(100 * statsrepo.div(t.iowait, t.total))::numeric(1000,2)
 	FROM
 	(
 		SELECT
 			ce.snapid,
-			ce.cpu_user - cs.cpu_user AS user,
-			ce.cpu_system - cs.cpu_system AS system,
-			ce.cpu_idle - cs.cpu_idle AS idle,
-			ce.cpu_iowait - cs.cpu_iowait AS iowait,
-			(ce.cpu_user + ce.cpu_system + ce.cpu_idle + ce.cpu_iowait) -
-				(cs.cpu_user + cs.cpu_system + cs.cpu_idle + cs.cpu_iowait) AS total
+			CASE WHEN cs.cpu_user > ce.cpu_user THEN ce.cpu_user + 4294967295 ELSE ce.cpu_user END - cs.cpu_user AS user,
+			CASE WHEN cs.cpu_system > ce.cpu_system THEN ce.cpu_system + 4294967295 ELSE ce.cpu_system END - cs.cpu_system AS system,
+			CASE WHEN cs.cpu_idle > ce.cpu_idle THEN ce.cpu_idle + 4294967295 ELSE ce.cpu_idle END - cs.cpu_idle AS idle,
+			CASE WHEN cs.cpu_iowait > ce.cpu_iowait THEN ce.cpu_iowait + 4294967295 ELSE ce.cpu_iowait END - cs.cpu_iowait AS iowait,
+			(CASE WHEN cs.cpu_user > ce.cpu_user THEN ce.cpu_user + 4294967295 ELSE ce.cpu_user END +
+			 CASE WHEN cs.cpu_system > ce.cpu_system THEN ce.cpu_system + 4294967295 ELSE ce.cpu_system END +
+			 CASE WHEN cs.cpu_idle > ce.cpu_idle THEN ce.cpu_idle + 4294967295 ELSE ce.cpu_idle END +
+			 CASE WHEN cs.cpu_iowait > ce.cpu_iowait THEN ce.cpu_iowait + 4294967295 ELSE ce.cpu_iowait END) -
+			(cs.cpu_user + cs.cpu_system + cs.cpu_idle + cs.cpu_iowait) AS total
 		FROM
 			(SELECT
 				s.snapid,
@@ -1212,12 +1222,12 @@ $$
 	SELECT
 		a.device_name,
 		a.device_tblspaces,
-		statsrepo.sub(a.drs, b.drs) / 2 / 1024,
-		statsrepo.sub(a.dws, b.dws) / 2 / 1024,
-		statsrepo.sub(a.drt, b.drt),
-		statsrepo.sub(a.dwt, b.dwt),
-		statsrepo.sub(a.diq, b.diq),
-		statsrepo.sub(a.dit, b.dit)
+		statsrepo.sub(CASE WHEN b.drs > a.drs THEN a.drs + 4294967295 ELSE a.drs END, b.drs) / 2 / 1024,
+		statsrepo.sub(CASE WHEN b.dws > a.dws THEN a.dws + 4294967295 ELSE a.dws END, b.dws) / 2 / 1024,
+		statsrepo.sub(CASE WHEN b.drt > a.drt THEN a.drt + 4294967295 ELSE a.drt END, b.drt),
+		statsrepo.sub(CASE WHEN b.dwt > a.dwt THEN a.dwt + 4294967295 ELSE a.dwt END, b.dwt),
+		statsrepo.sub(CASE WHEN b.diq > a.diq THEN a.diq + 4294967295 ELSE a.diq END, b.diq),
+		statsrepo.sub(CASE WHEN b.dit > a.dit THEN a.dit + 4294967295 ELSE a.dit END, b.dit)
 	FROM
 		(SELECT
 			snapid,
@@ -1279,13 +1289,13 @@ $$
 		SELECT
 			de.snapid,
 			de.dev_name,
-			coalesce((de.rs - ds.rs) / 2 /
+			coalesce((CASE WHEN ds.rs > de.rs THEN de.rs + 4294967295 ELSE de.rs END - ds.rs) / 2 /
 				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS read_size_tps,
-			coalesce((de.ws - ds.ws) / 2 /
+			coalesce((CASE WHEN ds.ws > de.ws THEN de.ws + 4294967295 ELSE de.ws END - ds.ws) / 2 /
 				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS write_size_tps,
-			coalesce((de.rt - ds.rt) /
+			coalesce((CASE WHEN ds.rt > de.rt THEN de.rt + 4294967295 ELSE de.rt END - ds.rt) /
 				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS read_time_tps,
-			coalesce((de.wt - ds.wt) /
+			coalesce((CASE WHEN ds.wt > de.wt THEN de.wt + 4294967295 ELSE de.wt END - ds.wt) /
 				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS write_time_tps
 		FROM
 			(SELECT

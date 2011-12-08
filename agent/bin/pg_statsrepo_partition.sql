@@ -1061,17 +1061,17 @@ CREATE FUNCTION statsrepo.get_cpu_usage(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		(100 * statsrepo.sub(a.cpu_user, b.cpu_user)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(5,2),
-		(100 * statsrepo.sub(a.cpu_system, b.cpu_system)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(5,2),
-		(100 * statsrepo.sub(a.cpu_idle, b.cpu_idle)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(5,2),
-		(100 * statsrepo.sub(a.cpu_iowait, b.cpu_iowait)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(5,2)
+		(100 * statsrepo.sub(CASE WHEN b.cpu_user > a.cpu_user THEN a.cpu_user + 4294967295 ELSE a.cpu_user END, b.cpu_user)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(1000,2),
+		(100 * statsrepo.sub(CASE WHEN b.cpu_system > a.cpu_system THEN a.cpu_system + 4294967295 ELSE a.cpu_system END, b.cpu_system)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(1000,2),
+		(100 * statsrepo.sub(CASE WHEN b.cpu_idle > a.cpu_idle THEN a.cpu_idle + 4294967295 ELSE a.cpu_idle END, b.cpu_idle)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(1000,2),
+		(100 * statsrepo.sub(CASE WHEN b.cpu_iowait > a.cpu_iowait THEN a.cpu_iowait + 4294967295 ELSE a.cpu_iowait END, b.cpu_iowait)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(1000,2)
 	FROM
 		(SELECT
 			snapid,
 			cpu_user,
 			cpu_system,
 			cpu_idle,
-			cpu_iowait, 
+			cpu_iowait,
 			cpu_user + cpu_system + cpu_idle + cpu_iowait AS total
 		 FROM
 		 	statsrepo.cpu
@@ -1082,8 +1082,15 @@ $$
 			cpu_user,
 			cpu_system,
 			cpu_idle,
-			cpu_iowait, 
-			cpu_user + cpu_system + cpu_idle + cpu_iowait AS total
+			cpu_iowait,
+			CASE WHEN cpu_user < (SELECT cpu_user FROM statsrepo.cpu WHERE snapid = $1) THEN cpu_user + 4294967295
+				ELSE cpu_user END +
+			CASE WHEN cpu_system < (SELECT cpu_system FROM statsrepo.cpu WHERE snapid = $1) THEN cpu_system + 4294967295
+				ELSE cpu_system END +
+			CASE WHEN cpu_idle < (SELECT cpu_idle FROM statsrepo.cpu WHERE snapid = $1) THEN cpu_idle + 4294967295
+				ELSE cpu_idle END +
+			CASE WHEN cpu_iowait < (SELECT cpu_iowait FROM statsrepo.cpu WHERE snapid = $1) THEN cpu_iowait + 4294967295
+				ELSE cpu_iowait END AS total
 		 FROM
 		 	statsrepo.cpu
 		 WHERE
@@ -1108,20 +1115,23 @@ CREATE FUNCTION statsrepo.get_cpu_usage_tendency(
 $$
 	SELECT
 		t.snapid,
-		(100 * statsrepo.div(t.user, t.total))::numeric(5,2),
-		(100 * statsrepo.div(t.system, t.total))::numeric(5,2),
-		(100 * statsrepo.div(t.idle, t.total))::numeric(5,2),
-		(100 * statsrepo.div(t.iowait, t.total))::numeric(5,2)
+		(100 * statsrepo.div(t.user, t.total))::numeric(1000,2),
+		(100 * statsrepo.div(t.system, t.total))::numeric(1000,2),
+		(100 * statsrepo.div(t.idle, t.total))::numeric(1000,2),
+		(100 * statsrepo.div(t.iowait, t.total))::numeric(1000,2)
 	FROM
 	(
 		SELECT
 			c.snapid,
-			(cpu_user - lag(cpu_user) OVER w) AS user,
-			(cpu_system - lag(cpu_system) OVER w) AS system,
-			(cpu_idle - lag(cpu_idle) OVER w) AS idle,
-			(cpu_iowait - lag(cpu_iowait) OVER w) AS iowait,
-			(cpu_user + cpu_system + cpu_idle + cpu_iowait) -
-				(lag(cpu_user) OVER w + lag(cpu_system) OVER w + lag(cpu_idle) OVER w + lag(cpu_iowait) OVER w ) AS total
+			(CASE WHEN lag(cpu_user) OVER w > cpu_user THEN cpu_user + 4294967295 ELSE cpu_user END - lag(cpu_user) OVER w) AS user,
+			(CASE WHEN lag(cpu_system) OVER w > cpu_system THEN cpu_system + 4294967295 ELSE cpu_system END - lag(cpu_system) OVER w) AS system,
+			(CASE WHEN lag(cpu_idle) OVER w > cpu_idle THEN cpu_idle + 4294967295 ELSE cpu_idle END - lag(cpu_idle) OVER w) AS idle,
+			(CASE WHEN lag(cpu_iowait) OVER w > cpu_iowait THEN cpu_iowait + 4294967295 ELSE cpu_iowait END - lag(cpu_iowait) OVER w) AS iowait,
+			(CASE WHEN lag(cpu_user) OVER w > cpu_user THEN cpu_user + 4294967295 ELSE cpu_user END +
+			 CASE WHEN lag(cpu_system) OVER w > cpu_system THEN cpu_system + 4294967295 ELSE cpu_system END +
+			 CASE WHEN lag(cpu_idle) OVER w > cpu_idle THEN cpu_idle + 4294967295 ELSE cpu_idle END +
+			 CASE WHEN lag(cpu_iowait) OVER w > cpu_iowait THEN cpu_iowait + 4294967295 ELSE cpu_iowait END) -
+			(lag(cpu_user) OVER w + lag(cpu_system) OVER w + lag(cpu_idle) OVER w + lag(cpu_iowait) OVER w ) AS total
 		FROM
 			statsrepo.cpu c,
 			statsrepo.snapshot s
@@ -1155,12 +1165,12 @@ $$
 	SELECT
 		a.device_name,
 		a.device_tblspaces,
-		statsrepo.sub(a.drs, b.drs) / 2 / 1024,
-		statsrepo.sub(a.dws, b.dws) / 2 / 1024,
-		statsrepo.sub(a.drt, b.drt),
-		statsrepo.sub(a.dwt, b.dwt),
-		statsrepo.sub(a.diq, b.diq),
-		statsrepo.sub(a.dit, b.dit)
+		statsrepo.sub(CASE WHEN b.drs > a.drs THEN a.drs + 4294967295 ELSE a.drs END, b.drs) / 2 / 1024,
+		statsrepo.sub(CASE WHEN b.dws > a.dws THEN a.dws + 4294967295 ELSE a.dws END, b.dws) / 2 / 1024,
+		statsrepo.sub(CASE WHEN b.drt > a.drt THEN a.drt + 4294967295 ELSE a.drt END, b.drt),
+		statsrepo.sub(CASE WHEN b.dwt > a.dwt THEN a.dwt + 4294967295 ELSE a.dwt END, b.dwt),
+		statsrepo.sub(CASE WHEN b.diq > a.diq THEN a.diq + 4294967295 ELSE a.diq END, b.diq),
+		statsrepo.sub(CASE WHEN b.dit > a.dit THEN a.dit + 4294967295 ELSE a.dit END, b.dit)
 	FROM
 		(SELECT
 			snapid,
@@ -1222,10 +1232,10 @@ $$
 		SELECT
 			d.snapid,
 			dev_name,
-			coalesce((rs - lag(rs) OVER w) / 2 / duration, 0)::numeric(1000,2) AS read_size_tps,
-			coalesce((ws - lag(ws) OVER w) / 2 / duration, 0)::numeric(1000,2) AS write_size_tps,
-			coalesce((rt - lag(rt) OVER w) / duration, 0)::numeric(1000,2) AS read_time_tps,
-			coalesce((wt - lag(wt) OVER w) / duration, 0)::numeric(1000,2) AS write_time_tps
+			coalesce((CASE WHEN lag(rs) OVER w > rs THEN rs + 4294967295 ELSE rs END - lag(rs) OVER w) / 2 / duration, 0)::numeric(1000,2) AS read_size_tps,
+			coalesce((CASE WHEN lag(ws) OVER w > rs THEN ws + 4294967295 ELSE ws END - lag(ws) OVER w) / 2 / duration, 0)::numeric(1000,2) AS write_size_tps,
+			coalesce((CASE WHEN lag(rt) OVER w > rt THEN rt + 4294967295 ELSE rt END - lag(rt) OVER w) / duration, 0)::numeric(1000,2) AS read_time_tps,
+			coalesce((CASE WHEN lag(wt) OVER w > wt THEN wt + 4294967295 ELSE wt END - lag(wt) OVER w) / duration, 0)::numeric(1000,2) AS write_time_tps
 		FROM
 			(SELECT
 				d.snapid,
