@@ -6,7 +6,7 @@
 
 #include "pg_statsinfo.h"
 
-const char *PROGRAM_VERSION	= "1.0.0";
+const char *PROGRAM_VERSION	= "2.2.0";
 const char *PROGRAM_URL		= "http://pgstatsinfo.projects.postgresql.org/";
 const char *PROGRAM_EMAIL	= "pgstatsinfo-general@pgfoundry.org";
 
