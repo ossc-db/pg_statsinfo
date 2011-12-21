@@ -1,7 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD html 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html><head>
 
-
 <title>pg_statsinfo</title>
 <link rel="home" title="pg_statsinfo" href="http://pgstatsinfo.projects.postgresql.org/index.html">
 <link rel="stylesheet" type="text/css" href="style.css">
@@ -32,11 +31,13 @@
 <ol>
   <li><a href="#start_or_stop">起動と終了</a></li>
   <li><a href="#snapshot">スナップショットの取得・削除</a></li>
+  <li><a href="#log">ログファイルの出力について</a></li>
   <li><a href="#configuration">設定ファイル</a></li>
   <li><a href="#user-operations">運用上必要となる作業</a></li>
 </ol>
 <li><a href="#uninstall">アンインストール</a></li>
 <li><a href="#restrictions">使用上の注意と制約</a></li>
+<li><a href="#QA">よくあるQ&A</a></li>
 <li><a href="#details">詳細情報</a></li>
 <ol>
   <li><a href="#alert">アラートメッセージの出力</a></li>
@@ -177,6 +178,8 @@ track_activities = 'on'                         # セッションで実行中の
 
 <pre>
 #推奨追加設定
+custom_variable_classes = 'pg_statsinfo'        # pg_statsinfoのパラメータ指定するために必要
+
 pg_statsinfo.snapshot_interval = 30min          # スナップショットの取得間隔
 pg_statsinfo.enable_maintenance = 'on'          # リポジトリDBの自動メンテナンス設定
 pg_statsinfo.maintenance_time = '00:00:00'      # リポジトリDBの自動メンテナンス実行時刻設定
@@ -192,8 +195,6 @@ pg_statsinfo.syslog_line_prefix = '%t %p %c-%l %x %q(%u, %d, %r, %a) '
 track_functions = 'all'                         # ストアドプロシージャの呼び出しに関する統計情報を収集する
 log_checkpoints = on                            # チェックポイントを記録
 log_autovacuum_min_duration = 0                 # 自動バキュームを記録
-
-custom_variable_classes = 'pg_statsinfo'        # pg_statsinfoのパラメータ指定するために必要
 </pre>
 
 <h4>pg_hba.confの設定</h4>
@@ -229,8 +230,8 @@ host    all             postgres        127.0.0.1/32            trust</pre>
 
 <h3 id="start_or_stop">起動と終了</h3>
 
-<p>起動は、単に PostgreSQL サーバの起動するだけです。
-サーバ連動して pg_statsinfo も自動的に起動します。
+<p>起動は、通常通りPostgreSQLを起動するだけです。
+PostgreSQL の起動と連動して pg_statsinfo も自動的に起動します。
 pg_statsinfo を実行ファイル単体で起動することはできません。</p>
 <pre>$ pg_ctl start [OPTIONS]</pre>
 
@@ -273,6 +274,33 @@ pg_statsinfo.repository_keepday = 7 	        # スナップショットの保持
 
 <p>例: 取得日時が 2011-02-01 07:00:00 より古いスナップショットを削除します。</p>
 <pre>$ psql -d &lt;repository&gt; -c "SELECT statsinfo.maintenance('2010-02-01 07:00:00'::timestamptz);"</pre>
+
+<h3 id="log">ログファイルの出力について</h3>
+<p>
+pg_statsinfo にはログを加工する機能があります。
+以下では、出力されるログの種類を説明します。
+</p>
+
+<h4>postgresql.log</h4>
+<p>
+本ログは、pg_statsinfo がフィルタリングして出力した最新のログです。
+フィルタリングレベル(pg_statsinfo.textlog_min_messages)を指定していない場合は、warning 以上のログレベルのみが出力されます。
+pg_statsinfo が出力するログは、１日間隔でログローテートされますので、本ログは本日の最新のログということになります。
+postgresql.conf に pg_statsinfo.textlog_filename を指定していた場合は、postgresql.log ではなく、指定されたファイル名で出力されます。
+</p>
+
+<h4>postgresql-2011-12-01_000000.log</h4>
+<p>
+本ログは、上記で述べた postgresq.log がローテートされたログになります。
+起動時には、下記で述べる csv ログファイルと拡張子以外同一の名前の空のファイルが作成されますが、正常な動作です。
+</p>
+
+<h4>postgresql-2011-12-01_000000.csv</h4>
+<p>
+本ログは、PostgreSQL が出力する生のログになります。
+pg_statsinfo は、本ログに出力された情報を基に、加工したログ出力を行いますが、
+本ログに関しては全く加工を行いません。
+</p>
 
 
 <h3 id="configuration">設定ファイル</h3>
@@ -527,6 +555,7 @@ log_line_prefix の値そのものは無視されることに注意して下さ�
 <dt>*3 : 時間指定</dt>
 <dd>単位として d(日)、h(時)、min(分)、s(秒) を指定できます。
 指定無しの場合は秒単位とみなします。</dd>
+<dd>PostgreSQL 8.3時間を指定する場合は、秒数のみしか指定できませんのでご注意ください。(例：3minとしたい場合は180と指定する)<dd>
 
 <dt>*4 : 接続文字列</dt>
 <dd>
@@ -639,6 +668,47 @@ PostgreSQL はタイムゾーンを独自に管理しており、外部プログ
 エラーが発生した場合、スナップショット取得はリトライされます。</dd>
 
 </dl>
+
+<h2 id="QA">よくあるQ&A</h2>
+<h4>Q1. pg_statsinfo が正常に動作しているかの確認方法をお教えください。</h4>
+<p>pg_statsinfo が取得した情報は、statsrepo スキーマに格納されています。
+コマンドライン上で以下の SQL を実行し、確認することができます。</p>
+<pre>
+$psql -d postgres -c "SELECT statsinfo.snapshot('test')"
+$psql -d postgres -c "SELECT * FROM statsrepo.snapshot WHERE COMMENT = 'test'"
+</pre>
+<p>2回目のコマンドで、テスト実行した snapshot の情報が確認されれば、正常に動作しています。</p>
+
+<h4>Q2. 取得した snapshot はどのように使えばいいの？</h4>
+<p>
+pg_statsinfo の snapshot 取得機能は、その時点の統計情報を snapshot として定期的に取得する機能のみになります。
+取得した統計情報から、有益な情報を見たい場合は <a href='http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html'>pg_repoter</a> をお使いください。<a href='http://pgstatsinfo.projects.postgresql.org/files/details.html'>ビジュアルな形式</a>でレポートを作成できます。
+また、作成されるレポートの情報の見方は、<a href='http://pgstatsinfo.projects.postgresql.org/files/pg_statsinfo_v2.1_report_infomation.xls'>こちら</a>を確認ください。
+</p>
+
+<h4>Q3. 自動メンテナンス機能が動作しません。</h4>
+<p>
+まずは、自動メンテナンスの設定が、postgresql.conf に適切に記述されているかのご確認をお願いします。
+その他の事象としては、pg_statsinfo をソースコードからインストールし、その後誤ってpg_statsrepo.sql を実行した場合、もしくは make オプションに USE_PGXS=1 を指定しなかった場合に、本事象が発生します。
+その場合、statsrepo スキーマを破棄して、その後 PostgreSQL を再起動してください。
+pg_statsrepo.sql は PG8.3 用のスキーマですので、PG8.4 以降をお使いの場合は、実行しないでください。
+</p>
+
+<h4>Q4. log_statement=all と設定して運用した場合、pg_statsinfo が実行するSQLが大量に出力されてしまいログの可視性が下がります。pg_statsinfo のログを出力しない方法は？</h4>
+<p>下記の運用手順によって対処が可能です。</p>
+<pre>
+1. 監視対象DBに pg_statsinfo 専用のユーザを作成する
+# CREATE ROLE statsinfo WITH LOGIN SUPERUSER;
+
+2. pg_statsinfo 専用のユーザに log_statement = 'none' を設定する
+# ALTER ROLE statsinfo SET log_statement = 'none'
+
+3. 環境変数 PGUSER に pg_statsinfo 専用のユーザを設定する
+$ export PGUSER=statsinfo
+
+4. データベースを再起動する
+$ pg_ctl restart
+</pre>
 
 <h2 id="details">詳細情報</h2>
 <p>より高度な利用方法や、内部構成について説明します。</p>
@@ -758,8 +828,6 @@ pg_statsinfo は、この SystemTap が収集するプロファイリング情�
 ライブラリはロード直後に呼ばれるフック関数からデーモンを起動するため、ユーザがデーモンを明示的に起動することはありません。
 詳細は "<a href="http://pgstatsinfo.projects.postgresql.org/pg_statsinfo-internal-ja.html">pg_statsinfo: internal</a>" を参照してください。
 </p>
-
-
 
 <h2 id="seealso">関連項目</h2>
 <h3 id="postgresql_document">外部サイト</h3>
