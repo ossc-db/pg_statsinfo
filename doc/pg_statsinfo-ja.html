@@ -6,7 +6,7 @@
 <link rel="stylesheet" type="text/css" href="style.css">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head><body>
-<h1 id="pg_statsinfo">pg_statsinfo 2.1.0</h1>
+<h1 id="pg_statsinfo">pg_statsinfo 2.2.0</h1>
 <div class="navigation">
   <a href="http://pgstatsinfo.projects.postgresql.org/index_ja.html">Top</a> &gt;
   <a href="http://pgstatsinfo.projects.postgresql.org/pg_statsinfo-ja.html">pg_statsinfo</a>
@@ -20,6 +20,8 @@
 <ol>
   <li><a href="#features-snapshot">統計情報の取得機能</a></li>
   <li><a href="#features-log">サーバログ処理機能</a></li>
+  <li><a href="#features-alert">アラート機能</a></li>
+  <li><a href="#features-report">簡易レポート機能</a></li>
 </ol>
 <li><a href="#install">インストール</a>
 <ol>
@@ -32,6 +34,8 @@
   <li><a href="#start_or_stop">起動と終了</a></li>
   <li><a href="#snapshot">スナップショットの取得・削除</a></li>
   <li><a href="#log">ログファイルの出力について</a></li>
+  <li><a href="#usage-alert">アラート機能の使い方</a></li>
+  <li><a href="#usage-report">簡易レポート機能の使い方</a></li>
   <li><a href="#configuration">設定ファイル</a></li>
   <li><a href="#user-operations">運用上必要となる作業</a></li>
 </ol>
@@ -53,11 +57,13 @@
 
 <h2 id="description">機能概要</h2>
 <p>pg_statsinfo は、PostgreSQL サーバの統計情報や活動状況を一定の時間間隔毎に定期的に収集し蓄積する機能と、
-PostgreSQLの出力するサーバログを解析することでSQLの性能情報を取得する機能やログ出力を加工する機能があります。</p>
+PostgreSQLの出力するサーバログを解析することでSQLの性能情報を取得する機能やログ出力を加工する機能があります。
+また、蓄積した情報を元にテキスト形式のレポートを出力するコマンドを提供します。
+</p>
 
 <p>
 また、pg_statsinfo で収集した情報は <a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_reporter</a> 
-を用いることでグライフィカルな形で解析・出力することがきます。（pg_reporterの出力例は<a href ="http://pgstatsinfo.projects.postgresql.org/files/details.html">こちら</a>）</p>
+を用いることでグラフィカルな形で解析・出力することがきます。（pg_reporterの出力例は<a href ="http://pgstatsinfo.projects.postgresql.org/files/details.html">こちら</a>）</p>
 
 <p>
 pg_statsinfo の動作概要のイメージ図を以下に示します。
@@ -97,17 +103,15 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
   <li>実行回数、累積実行時間の多いSQLと関数。</li>
   <li>PostgreSQLの設定パラメータ。</li>
   <li>OS リソース情報 (CPU 使用量、ディスク I/O)。</li>
+  <li>ロック競合情報</li>
+  <li>リカバリとの競合によるクエリのキャンセル数</li>
+  <li>walsenderの活動状況</li>
   <li>SystemTap を使用したプロファイリング情報 (実験的扱いの機能)。</li>
 </ul>
 
 <p>
 スナップショットのサイズは、DB内のオブジェクト数に依存しますが、概ね1回のスナップショットで1DBあたり600 - 800KBを消費します。
 デフォルトの取得間隔（5分間隔）の場合、監視対象インスタンス一つあたり1日で180 - 230MBを消費します。
-</p>
-
-<h4>アラートメッセージの出力</h4>
-<p>
-別途設定することで、スナップショット直後に、過去のスナップショットと比較して異常値がある場合にメッセージをサーバログに出力することができます。設定方法は<a href="#alert">こちら</a>をご覧ください。
 </p>
 
 <h3 id="features-log">サーバログ処理機能</h3>
@@ -120,15 +124,63 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
 
 <p>古いサーバログは自動的には削除されないため、ユーザ操作で定期的に削除して下さい。</p>
 
+<h3 id="features-alert">アラート機能</h3>
+<p>
+監視対象インスタンスの状態を定期的 (スナップショット取得時) にチェックし、問題を検知した場合にアラートメッセージをサーバログに出力します。<br>
+アラートメッセージは、メッセージレベル"ALERT"で出力されます。
+</p>
+
+<p>
+アラート機能で判定する項目は以下のとおりです。<br>
+監視対象インスタンス毎に、アラート機能の有効／無効とアラート条件(閾値)を設定することができます。<br>
+</p>
+
+<ul>
+  <li>秒間のロールバック数</li>
+  <li>秒間のコミット数</li>
+  <li>監視インスタンス中の不要領域のサイズ (MB)</li>
+  <li>監視インスタンス中の不要領域の割合 (%)</li>
+  <li>各テーブルに占める不要領域の割合 (%)</li>
+  <li>クエリの平均レスポンス時間 (秒)</li>
+  <li>クエリの最長レスポンス時間 (秒)</li>
+</ul>
+
+<p>
+アラート機能の設定方法は<a href="#usage-alert">こちら</a>をご覧ください。
+</p>
+
+<h3 id="features-report">簡易レポート機能</h3>
+<p>
+リポジトリDBに保存されたスナップショットから任意の期間のレポートをテキスト形式で出力するコマンドを提供します。<br>
+また、レポートの出力以外に以下の操作を行うことができます。
+</p>
+
+<ul>
+  <li>スナップショットの一覧の表示</li>
+  <li>スナップショットの合計サイズの表示</li>
+  <li>スナップショットの取得</li>
+  <li>スナップショットの削除</li>
+</ul>
+
+<p>
+簡易レポート機能が出力するレポートの項目については<a href="files/pg_statsinfo_v2.2_report_infomation.xls">こちら</a>をご覧ください。<br>
+なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_reporter</a> と同等です。<br>
+グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_reporter</a> を使用してください。
+</p>
+
+<p>
+簡易レポート機能の使用方法は<a href="#usage-report">こちら</a>をご覧ください。
+</p>
+
 <h2 id="install">インストール</h2>
 <p>pg_statsinfo のインストール方法について説明します。各インストールパッケージは<a href="http://pgfoundry.org/frs/?group_id=1000422">こちら</a>からダウンロードして下さい</p>
 
 <h3 id="requirement">動作環境</h3>
 <dl>
 <dt>PostgreSQL</dt>
-<dd>バージョン 8.3, 8.4, 9.0</dd>
+<dd>バージョン 8.3, 8.4, 9.0, 9.1</dd>
 <dt>動作検証済みOS</dt>
-<dd>RHEL 5.3, RHEL 6.0, CentOS 5.3, Windows XP</dd>
+<dd>RHEL 5.x, RHEL 6.x, CentOS 5.x, CentOS 6.x</dd>
 </dl>
 <h3 id="linux">Linux</h3>
 
@@ -138,8 +190,6 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
 $ su
 # rpm -ivh pg_statsinfo-2.0.1-1.pg84.rhel5.x86_64.rpm
 </pre>
-
-</p>
 
 <h4>source</h4>
 <p>ソースコードからビルドするには、pgxs を使用します。
@@ -152,12 +202,12 @@ $ make USE_PGXS=1
 $ su
 # make USE_PGXS=1 install
 </pre>
-pgxsを使用しない場合、contrib配下にpg_statsinfoのフォルダを配置し、make make installを実施してください。
+pgxsを使用しない場合、contrib配下にpg_statsinfoのフォルダを配置し、make, make installを実施してください。
 
 <p>
 contrib/pg_statsinfo.sql、contrib/pg_statsrepo.sqlは自動的にインストールされるため、手動での実行は不要です。</p>
 
-<h3 id="install">設定ファイル（UNIX、Windows共通）</h3>
+<h3 id="install">設定ファイル</h3>
 
 <h4 id="install">postgresql.confの設定</h4>
 
@@ -168,16 +218,12 @@ contrib/pg_statsinfo.sql、contrib/pg_statsrepo.sqlは自動的にインスト�
 <pre>
 #最小設定
 shared_preload_libraries = 'pg_statsinfo'       # 事前ロードを行う
-log_destination = 'csvlog'                      # pg_statsinfoにはCSV形式のログが必要なため
-logging_collector = 'on'                        # 標準エラー出力経由でログファイルの記録有無を指定する。
-log_directory = 'pg_log'                        # ログディレクトリを指定する
 log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log' # ログファイル名を指定する
-track_counts = 'on'                             # データベース活動に関する統計情報
-track_activities = 'on'                         # セッションで実行中のコマンドに関する情報の収集
 </pre>
 
 <pre>
-#推奨追加設定
+#推奨設定
+shared_preload_libraries = 'pg_statsinfo'       # 事前ロードを行う
 custom_variable_classes = 'pg_statsinfo'        # pg_statsinfoのパラメータ指定するために必要
 
 pg_statsinfo.snapshot_interval = 30min          # スナップショットの取得間隔
@@ -185,6 +231,7 @@ pg_statsinfo.enable_maintenance = 'on'          # リポジトリDBの自動メ�
 pg_statsinfo.maintenance_time = '00:00:00'      # リポジトリDBの自動メンテナンス実行時刻設定
 pg_statsinfo.repository_keepday = 7 	        # スナップショットの保持期間設定
 
+log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log' # ログファイル名を指定する
 log_min_messages = 'log'                        # ログへ出力するメッセージレベル。 
 pg_statsinfo.syslog_min_messages = 'error'      # syslogに出力するログレベルを指定する。
 pg_statsinfo.textlog_line_prefix = '%t %p %c-%l %x %q(%u, %d, %r, %a) '
@@ -195,7 +242,19 @@ pg_statsinfo.syslog_line_prefix = '%t %p %c-%l %x %q(%u, %d, %r, %a) '
 track_functions = 'all'                         # ストアドプロシージャの呼び出しに関する統計情報を収集する
 log_checkpoints = on                            # チェックポイントを記録
 log_autovacuum_min_duration = 0                 # 自動バキュームを記録
+#pg_statsinfo.long_lock_threashold = 30s        # ロック競合情報に記録する対象の条件(閾値)を指定する
 </pre>
+
+<p>pg_statsinfo は以下の設定を強制的に上書きすることに注意してください。</p>
+
+<dl>
+  <dt>log_destination</dt>
+  <dd>'csvlog'が追加され、'stderr'は除去されます。</dd>
+  <dt>logging_collector</dt>
+  <dd>'on' に設定されます。</dd>
+<dl>
+
+<br>
 
 <h4>pg_hba.confの設定</h4>
 <p>
@@ -206,16 +265,11 @@ PostgreSQL 起動ユーザでの localhost からのアクセスではパスワ�
 UNIX 環境では TYPE=local の ident 認証を使うのが手軽です。
 </p>
 
-<pre># TYPE  DATABASE        USER            CIDR-ADDRESS            METHOD [for UNIX]
-local   all             postgres                                ident</pre>
+<pre>
+# TYPE  DATABASE        USER            CIDR-ADDRESS            METHOD [for UNIX]
+local   all             postgres                                ident
+</pre>
 
-<p>一方、Windows では上記の認証方式を利用できないため、ローカルホストからの接続に trust を設定します。
-もし trust 認証がセキュリティ上問題であれば、他の <a href="http://www.postgresql.jp/document/current/html/auth-methods.html">認証方式</a> や <a href="http://www.postgresql.jp/document/current/html/libpq-pgpass.html">.pgpass</a> ファイルを使い、接続時にパスワードを要求されないように設定して下さい。</p>
-
-<pre># TYPE  DATABASE        USER            CIDR-ADDRESS            METHOD [for Windows]
-host    all             postgres        127.0.0.1/32            trust</pre>
-
-<br>
 <h4 id="pg_stat_statements">クエリの統計情報の取得設定</h4>
 <p>
 なお、PostgreSQL のバージョン 8.4 以上を使っている場合、監視対象インスタンスの postgres データベースに <a href="http://www.postgresql.jp/document/current/html/pgstatstatements.html">pg_stat_statements</a> をインストールすることで、クエリの統計情報もスナップショットとして収集できるようになります。<br/>
@@ -302,6 +356,293 @@ pg_statsinfo は、本ログに出力された情報を基に、加工したロ�
 本ログに関しては全く加工を行いません。
 </p>
 
+<h3 id="usage-alert">アラート機能の使い方</h3>
+<p>
+アラート機能は初回スナップショットが完了した監視対象インスタンスに対して自動的に有効になります。<br>
+初期状態のアラート条件(閾値)は、アラート設定テーブルのデフォルト値が適用されます。
+<p>
+
+<h4>アラート設定の変更</h4>
+<p>
+監視対象インスタンス毎に、アラート機能の有効／無効およびアラート条件(閾値)を変更することができます。<br>
+アラート設定を変更するには、アラート設定テーブルから変更したいアラート項目のカラムの値を変更してください。<br>
+なお、アラート設定の変更を行うには、アラート設定を変更する監視対象インスタンスの初回スナップショットが完了している必要があることに注意してください。
+</p>
+
+設定例: 秒間ロールバック数の閾値を「3000」に変更する場合
+<pre>
+# UPDATE statsrepo.alert SET commit_tps = 3000 WHERE instid = <変更対象の監視対象インスタンスID>
+</pre>
+
+設定例: アラート機能を無効にする場合
+<pre>
+# UPDATE statsrepo.alert SET enable_alert = false WHERE instid = <変更対象の監視対象インスタンスID>
+</pre>
+
+<p>
+監視対象インスタンスIDとは監視対象インスタンス毎に割り当てられた識別子です。<br>
+監視対象インスタンスIDは、リポジトリDBに対して以下の SQL を実行することで確認できます。
+</p>
+
+<pre>
+# SELECT * FROM statsrepo.instance;
+</pre>
+
+<h4>アラート設定テーブル</h4>
+<p>
+アラート設定テーブルとはアラート機能の有効／無効および各種アラート条件(閾値)の設定を保存するテーブルです。<br>
+アラート設定テーブルは、リポジトリDBの「statsrepo.alert」テーブルです。<br>
+アラート設定テーブルのスキーマ構成は以下のとおりです。<br>
+</p>
+
+<table>
+<thead>
+  <tr>
+    <th>カラム名</th>
+    <th>データ型</th>
+    <th>デフォルト値</th>
+    <th>説明</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>instid</td>
+    <td>bigint</td>
+    <td>－</td>
+    <td>監視対象インスタンスID</td>
+  </tr>
+  <tr>
+    <td>rollback_tps</td>
+    <td>bigint</td>
+    <td>100</td>
+    <td>秒間のロールバック数</td>
+  </tr>
+  <tr>
+    <td>commit_tps</td>
+    <td>bigint</td>
+    <td>1000</td>
+    <td>秒間のコミット数</td>
+  </tr>
+  <tr>
+    <td>garbage_size</td>
+    <td>bigint</td>
+    <td>20000</td>
+    <td>監視インスタンス中の不要領域のサイズ(MB)</td>
+  </tr>
+  <tr>
+    <td>garbage_percent</td>
+    <td>integer</td>
+    <td>30</td>
+    <td>監視インスタンスに占める不要領域の割合(%)</td>
+  </tr>
+  <tr>
+    <td>garbage_percent_table</td>
+    <td>integer</td>
+    <td>30</td>
+    <td>各テーブルに占める不要領域の割合(%)</td>
+  </tr>
+  <tr>
+    <td>response_avg</td>
+    <td>bigint</td>
+    <td>10</td>
+    <td>クエリの平均レスポンス時間(秒)</td>
+  </tr>
+  <tr>
+    <td>response_worst</td>
+    <td>bigint</td>
+    <td>60</td>
+    <td>クエリの最長レスポンス時間(秒)</td>
+  </tr>
+  <tr>
+    <td>enable_alert</td>
+    <td>boolean</td>
+    <td>true</td>
+    <td>アラート対象判定フラグ(TRUE: 有効、FALSE: 無効)
+</td>
+  </tr>
+</tbody>
+</table>
+
+<p>
+アラート設定テーブルのタプルを削除しないでください。<br>
+タプルを削除した場合、削除したタプルに該当する監視対象インスタンスの設定ができなくなります。
+</p>
+
+<h3 id="usage-report">簡易レポート機能の使い方</h3>
+
+<h4>レポート生成モード</h4>
+<pre>
+$ pg_statsinfo -r REPORTID [-i INSTANCEID] [-b SNAPID] [-e SNAPID] [-B DATE] [-E DATE] [-o FILENAME] [connection-options]
+</pre>
+
+<pre>
+[コマンド例]
+$ pg_statsinfo -h localhost -d statsrepo -p 5432 -U postgres -r All
+</pre>
+
+<dl>
+  <dt>-r, --report=REPORTID</dt>
+  <dd>レポート種別IDを指定します。</dd>
+  <dd>レポート種別IDに指定できる値は以下のとおりです。</dd>
+  <dd>レポート種別IDとレポートの内容についての対応は<a href="files/pg_statsinfo_v2.2_report_infomation.xls">こちら</a>をご覧ください。</dd>
+  <dd>
+    <ul>
+      <li>Summary</li>
+      <li>DatabaseStatistics</li>
+      <li>InstanceActivity</li>
+      <li>OSResourceUsage</li>
+      <li>DiskUsage</li>
+      <li>LongTransactions</li>
+      <li>NotableTables</li>
+      <li>CheckpointActivity</li>
+      <li>AutovacuumActivity</li>
+      <li>QueryActivity</li>
+      <li>LockActivity</li>
+      <li>ReplicationActivity</li>
+      <li>SettingParameters</li>
+      <li>SchemaInformation</li>
+      <li>Profiles</li>
+      <li>All</li>
+    </ul>
+  </dd>
+  <dd>レポート種別IDは、頭文字からの最短一致での指定を許容し、大文字と小文字を区別しません。</dd>
+  
+  <dt>-i, --instid=INSTANCEID</dt>
+  <dd>レポート対象とする監視対象インスタンスの識別子を指定します。</dd>
+  <dd>本オプションは省略可能です。省略時は全ての監視対象インスタンスがレポート対象です。</dd>
+  
+  <dt>-b, --beginid=SNAPID</dt>
+  <dd>レポート範囲の開始点とするスナップショットをスナップショットIDで指定します。</dd>
+  <dd>本オプションは省略可能です。省略時は最初のスナップショットを開始点とします。</dd>
+  <dd>本オプションと「--B, --begindate」または「-E, --enddate」を同時に指定することはできません。</dd>
+  
+  <dt>-e, --endid=SNAPID</dt>
+  <dd>レポート範囲の終了点とするスナップショットをスナップショットIDで指定します。</dd>
+  <dd>本オプションは省略可能です。省略時は最後のスナップショットを終了点とします。</dd>
+  <dd>本オプションと「--B, --begindate」または「-E, --enddate」を同時に指定することはできません。</dd>
+  
+  <dt>-B, --begindate=DATE</dt>
+  <dd>レポート範囲の開始点とするスナップショットを日時 (YYYY-MM-DD HH:MI:SS形式) を指定します。</dd>
+  <dd>本オプションは省略可能です。省略時は最初のスナップショットを開始点とします。</dd>
+  <dd>本オプションと「--b, --beginid」または「-e, --endid」を同時に指定することはできません。</dd>
+  
+  <dt>-E, --enddate=DATE</dt>
+  <dd>レポート範囲の終了点とするスナップショットを日時 (YYYY-MM-DD HH:MI:SS形式) を指定します。</dd>
+  <dd>本オプションは省略可能です。省略時は最後のスナップショットを終了点とします。</dd>
+  <dd>本オプションと「--b, --beginid」または「-e, --endid」を同時に指定することはできません。</dd>
+  
+  <dt>-o, --output=FILENAME</dt>
+  <dd>レポートの出力先ファイル名を指定します。</dd>
+  <dd>本オプションは省略可能です。省略時はレポートを標準出力に出力します。</dd>
+  <dd>指定したファイルが既に存在する場合は上書きします。</dd>
+</dl>
+
+<br>
+
+<h4>スナップショット一覧表示モード</h4>
+<pre>
+$ pg_statsinfo -l [-i INSTANCEID] [connection-options]
+</pre>
+
+<pre>
+[コマンド例]
+$ pg_statsinfo -h localhost -d statsrepo -p 5432 -U postgres -l
+</pre>
+
+<dl>
+  <dt>-l, --list</dt>
+  <dd>本オプションが指定された場合はスナップショット一覧の表示を行います。</dd>
+  
+  <dt>-i, --instid=INSTANCEID</dt>
+  <dd>スナップショット一覧を表示する監視対象インスタンスの識別子を指定します。</dd>
+  <dd>本オプションは省略可能です。省略時は全ての監視対象インスタンスのスナップショット一覧を表示します。</dd>
+</dl>
+
+<br>
+
+<h4>スナップショットサイズ表示モード</h4>
+<pre>
+$ pg_statsinfo -s [connection-options]
+</pre>
+
+<pre>
+[コマンド例]
+$ pg_statsinfo -h localhost -d statsrepo -p 5432 -U postgres -s
+</pre>
+
+<dl>
+  <dt>-s, --size</dt>
+  <dd>本オプションが指定された場合はスナップショットサイズの表示を行います。</dd>
+</dl>
+
+<br>
+
+<h4>スナップショット取得モード</h4>
+<pre>
+$ pg_statsinfo -S COMMENT [connection-options]
+</pre>
+
+<pre>
+[コマンド例]
+$ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -S 'xxx'
+</pre>
+
+<dl>
+  <dt>-S, --snapshot=COMMENT</dt>
+  <dd>本オプションが指定された場合はスナップショットの取得を行います。</dd>
+  <dd>オプション引数にはスナップショットに付与するコメントを指定します。</dd>
+</dl>
+
+<br>
+
+<h4>スナップショット削除モード</h4>
+<pre>
+$ pg_statsinfo -D SNAPID [connection-options]
+</pre>
+
+<pre>
+[コマンド例]
+$ pg_statsinfo -h localhost -d statsrepo -p 5432 -U postgres -D 123
+</pre>
+
+<dl>
+  <dt>-D, --delete=SNAPID</dt>
+  <dd>本オプションが指定された場合はスナップショットの削除を行います。</dd>
+  <dd>オプション引数には削除対象のスナップショットのスナップショットIDを指定します。</dd>
+</dl>
+
+<br>
+
+<h4>共通オプション (connection-options)</h4>
+<p>
+データベース接続に関するオプションです。<br>
+スナップショット取得モードを実行する場合は監視対象インスタンス、それ以外はリポジトリDBへの接続情報を指定します。
+</p>
+
+<dl>
+  <dt>-d, --dbname=DBNAME</dt>
+  <dd>接続するデータベース名を指定します。</dd>
+  <dd>本オプションが指定されていない場合は環境変数「PGDATABASE」の値が使用されます。<dd>
+  <dd>環境変数も設定されていない場合は、接続時に指定したユーザ名が使用されます。</dd>
+  
+  <dt>-h, --host=HOSTNAME</dt>
+  <dd>サーバが稼働しているマシンのホスト名を指定します。</dd>
+  <dd>ホスト名がスラッシュから始まる場合、Unixドメインソケット用のディレクトリとして使用されます。</dd>
+  
+  <dt>-p, --port=PORT</dt>
+  <dd>サーバが接続を監視するTCPポートもしくはUnixドメインソケットファイルの拡張子を指定します。</dd>
+  
+  <dt>-U, --username=USERNAME</dt>
+  <dd>接続するユーザ名を指定します。</dd>
+  
+  <dt>-w, --no-password</dt>
+  <dd>パスワードの入力を促しません。サーバがパスワード認証を必要とし、かつ、.pgpassファイルなどの他の方法が利用できない場合、接続試行は失敗します。</dd>
+  
+  <dt>-W, --password</dt>
+  <dd>データベースに接続する前に、強制的にパスワード入力を促します。</dd>
+</dl>
+
+<br>
 
 <h3 id="configuration">設定ファイル</h3>
 
@@ -442,7 +783,7 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
   <tr>
     <td>pg_statsinfo.syslog_min_messages</td>
     <td>disable</td>
-    <td>syslog へ出力する最小メッセージレベル (*1)。Windows 環境ではイベントログに出力されます。</td>
+    <td>syslog へ出力する最小メッセージレベル (*1)。</td>
   </tr>
   <tr>
     <td>pg_statsinfo.textlog_filename</td>
@@ -535,6 +876,11 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
     <td>pg_statsinfo.repository_keepday</td>
     <td>7</td>
     <td>スナップショットの保持期間設定</td>
+  </tr>
+  <tr>
+    <td>pg_statsinfo.long_lock_threashold</td>
+    <td>30s</td>
+    <td>ロック競合情報の収集対象とする条件(閾値)。スナップショットの時点で発生しているロック競合の内、ロック待ちの経過時間(秒)が閾値を越えているものが収集対象となります。</t
   </tr>
 </tbody>
 </table>
@@ -679,20 +1025,32 @@ $psql -d postgres -c "SELECT * FROM statsrepo.snapshot WHERE COMMENT = 'test'"
 </pre>
 <p>2回目のコマンドで、テスト実行した snapshot の情報が確認されれば、正常に動作しています。</p>
 
-<h4>Q2. 取得した snapshot はどのように使えばいいの？</h4>
+<h4>Q2. 取得したスナップショットはどのように使えばいいの？</h4>
 <p>
-pg_statsinfo の snapshot 取得機能は、その時点の統計情報を snapshot として定期的に取得する機能のみになります。
-取得した統計情報から、有益な情報を見たい場合は <a href='http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html'>pg_repoter</a> をお使いください。<a href='http://pgstatsinfo.projects.postgresql.org/files/details.html'>ビジュアルな形式</a>でレポートを作成できます。
-また、作成されるレポートの情報の見方は、<a href='http://pgstatsinfo.projects.postgresql.org/files/pg_statsinfo_v2.1_report_infomation.xls'>こちら</a>を確認ください。
+pg_statsinfo の統計情報の取得機能は、その時点の統計情報をスナップショットとして定期的に取得する機能のみになります。
+取得した統計情報から、有益な情報を見たい場合は <a href="#features-report">簡易レポート機能</a> を利用するか、<a href='http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html'>pg_repoter</a> をお使いください。
 </p>
 
 <h4>Q3. 自動メンテナンス機能が動作しません。</h4>
 <p>
-まずは、自動メンテナンスの設定が、postgresql.conf に適切に記述されているかのご確認をお願いします。
-その他の事象としては、pg_statsinfo をソースコードからインストールし、その後誤ってpg_statsrepo.sql を実行した場合、もしくは make オプションに USE_PGXS=1 を指定しなかった場合に、本事象が発生します。
-その場合、statsrepo スキーマを破棄して、その後 PostgreSQL を再起動してください。
-pg_statsrepo.sql は PG8.3 用のスキーマですので、PG8.4 以降をお使いの場合は、実行しないでください。
+自動メンテナンスの設定が有効になっていないか、リポジトリDBの statsrepo スキーマの版がリポジトリDBの PostgreSQL のバージョンと一致していないことが考えれられます。
+以下の事項を点検してください。
 </p>
+
+<dl>
+  <dt>自動メンテナンスの設定が、postgresql.conf に適切に記述されているか</dt>
+  <dd>postgresql.conf に以下の設定項目が存在するか確認してください。
+    <ul><li>pg_statsinfo.enable_maintenance = 'on'</li></ul></dd>
+  
+  <dt>リポジトリDBの statsrepo スキーマのバージョンが正しいか</dt>
+  <dd>リポジトリDBの statsrepo スキーマに del_snapshot2 関数が存在するか以下の SQL をリポジトリDBで実行して確認してください。
+    <pre># SELECT n.nspname, p.proname FROM pg_proc p LEFT JOIN pg_namespace n ON p.pronamespace = n.oid WHERE p.proname = 'del_snapshot2' AND n.nspname = 'statsrepo';</pre>
+  </dd>
+  <dd>del_snapshot2 関数が存在しない場合は PostgreSQL 8.3用の statsrepo スキーマです。存在する場合は PostgreSQL 8.4以降用の statsrepo スキーマです。</dd>
+  <dd>statsrepo スキーマのバージョンがリポジトリDBの PostgreSQL のバージョンと一致していない場合は、現在の statsrepo スキーマを破棄し、その後 PostgreSQL を再起動してください。</dd>
+</dl>
+
+<br>
 
 <h4>Q4. log_statement=all と設定して運用した場合、pg_statsinfo が実行するSQLが大量に出力されてしまいログの可視性が下がります。pg_statsinfo のログを出力しない方法は？</h4>
 <p>下記の運用手順によって対処が可能です。</p>
@@ -710,80 +1068,25 @@ $ export PGUSER=statsinfo
 $ pg_ctl restart
 </pre>
 
-<h2 id="details">詳細情報</h2>
-<p>より高度な利用方法や、内部構成について説明します。</p>
-
-<h3 id="alert">アラートメッセージの出力</h3>
+<h4>Q5. アラート機能が正常に動作しているかの確認方法を教えてください。</h4>
 <p>
-アラート関数を<strong>リポジトリDB</strong>に登録することにより、新しいスナップショットを保存した直後に実行され、異常値があった場合にアラートメッセージをメッセージレベル"ALERT"としてログに出力します。<br/>
+アラート機能を有効に設定、かつ秒間コミット数のアラート条件(閾値)を「0」に設定した状態でスナップショットを取得してください。<br>
+スナップショットの取得時に、サーバログにアラートメッセージが出力されていればアラート機能が正常に動作しています。
 </p>
 
-<h4>アラートメッセージ出力の設定手順</h4>
-<p>リポジトリDBにアラート関数を登録します。</p>
+<p>
+アラート機能を有効、かつ秒間のコミット数のアラート条件(閾値)を「0」に設定するには以下の SQL をリポジトリDBに対して実行します。
+</p>
 <pre>
-$ psql -d postgres -f $PGSHARE/contrib/pg_statsrepo_alert.sql
+# UPDATE statsrepo.alert SET enable_alert = true, commit_tps = 0;
 </pre>
 
-<h4>アラートメッセージ出力の停止手順</h4>
-<p>アラートメッセージの出力のみを停止したい場合は、リポジトリDBに登録したアラート関数を削除します。</p>
-<pre>
-$ psql -d postgres -c "DROP FUNCTION statsrepo.alert(bigint)"
-</pre>
+<p>
+アラート機能が正常に動作したことを確認した後は、秒間のコミット数のアラート条件(閾値)を元に戻してください。
+</p>
 
-<h4>アラート関数で監視する項目</h4>
-<p>アラート関数により監視する項目を以下に示します。パラメータを<strong>リポジトリDB</strong>のpostgresql.confに記述することで、アラートの閾値を変更することができます。パラメータを設定する場合には、custom_variable_classes に 'statsrepo' を追加する必要があります。</p>
-
-<table>
-<thead>
-<tr>
-  <th>監視対象項目</th>
-  <th>閾値</th>
-  <th>変数名</th>
-</thead>
-<tbody>
-<tr>
-  <td>秒間のロールバック数</td>
-  <td align="right">100</td>
-  <td>statsrepo.alert_rollbacks_per_second(integer)</td>
-</tr>
-<tr>
-  <td>秒間のコミット数 (tps)</td>
-  <td align="right">1000</td>
-  <td>statsrepo.alert_transactions_per_second(integer)</td>
-</tr>
-<tr>
-  <td>監視インスタンス中の不要領域のサイズ (byte)</td>
-  <td align="right">20GB</td>
-  <td>statsrepo.alert_garbage_size(integer)</td>
-</tr>
-<tr>
-  <td>監視インスタンスに占める不要領域の割合 (%)</td>
-  <td align="right">30</td>
-  <td>statsrepo.alert_garbage_percent(integer)</td>
-</tr>
-<tr>
-  <td>各テーブルに占める不要領域の割合 (%)</td>
-  <td align="right">30</td>
-  <td>statsrepo.alert_garbage_percent_table(integer)</td>
-</tr>
-<tr>
-  <td>クエリの平均レスポンス時間 (秒)</td>
-  <td align="right">10s</td>
-  <td>statsrepo.alert_response_average(integer)</td>
-</tr>
-<tr>
-  <td>クエリの最悪レスポンス時間 (秒)</td>
-  <td align="right">60s</td>
-  <td>statsrepo.alert_response_worst(integer)</td>
-</tr>
-</tbody>
-</table>
-
-<p>例: 秒間コミット数の閾値を5000に変更します。</p>
-
-<pre>custom_variable_classes = 'statsrepo'
-statsrepo.alert_transactions_per_second = 5000</pre>
-
+<h2 id="details">詳細情報</h2>
+<p>より高度な利用方法や、内部構成について説明します。</p>
 
 <h3 id="warm-standby">ウォームスタンバイ</h3>
 <p>構成例として、<a href="http://www.postgresql.jp/document/current/html/warm-standby.html">ウォームスタンバイ</a>での構成を説明します。
