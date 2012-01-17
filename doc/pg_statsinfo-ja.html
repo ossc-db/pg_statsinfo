@@ -10,7 +10,7 @@
 <div class="navigation">
   <a href="http://pgstatsinfo.projects.postgresql.org/index_ja.html">Top</a> &gt;
   <a href="http://pgstatsinfo.projects.postgresql.org/pg_statsinfo-ja.html">pg_statsinfo</a>
-<div>
+</div>
 <hr>
 
 <div class="index">
@@ -44,7 +44,7 @@
 <li><a href="#QA">よくあるQ&A</a></li>
 <li><a href="#details">詳細情報</a></li>
 <ol>
-  <li><a href="#alert">アラートメッセージの出力</a></li>
+  <li><a href="#many-instances">複数の監視対象インスタンス</a></li>
   <li><a href="#warm-standby">ウォームスタンバイ</a></li>
   <li><a href="#internal">内部構成</a></li>
 </ol>
@@ -323,11 +323,11 @@ pg_statsinfo.repository_keepday = 7 	        # スナップショットの保持
 不要となった古いスナップショットは定期的に削除して下さい。</p>
 
 <h4>手動削除</h4>
-<p>スナップショットの手動削除はリポジトリDBに対して、関数 statsinfo.maintenance(timestamptz) を実行して下さい。
+<p>スナップショットの手動削除は監視対象インスタンスに対して、関数 statsinfo.maintenance(timestamptz) を実行して下さい。
 引数で指定した時刻より古いスナップショットが削除されます。</p>
 
 <p>例: 取得日時が 2011-02-01 07:00:00 より古いスナップショットを削除します。</p>
-<pre>$ psql -d &lt;repository&gt; -c "SELECT statsinfo.maintenance('2010-02-01 07:00:00'::timestamptz);"</pre>
+<pre>$ psql -d postgres -c "SELECT statsinfo.maintenance('2010-02-01 07:00:00'::timestamptz);"</pre>
 
 <h3 id="log">ログファイルの出力について</h3>
 <p>
@@ -369,6 +369,12 @@ pg_statsinfo は、本ログに出力された情報を基に、加工したロ�
 なお、アラート設定の変更を行うには、アラート設定を変更する監視対象インスタンスの初回スナップショットが完了している必要があることに注意してください。
 </p>
 
+<p>
+アラート設定を変更する際、監視対象インスタンスを選択するためにカラム「instid」を使用します。<br>
+当該カラムには監視対象インスタンス毎に割り当てられた識別子 (監視対象インスタンスID) を指定します。<br>
+監視対象インスタンスIDは、簡易レポート機能のスナップショットサイズ表示モードを実行することで確認できます。
+</p>
+
 設定例: 秒間ロールバック数の閾値を「3000」に変更する場合
 <pre>
 # UPDATE statsrepo.alert SET commit_tps = 3000 WHERE instid = <変更対象の監視対象インスタンスID>
@@ -377,15 +383,6 @@ pg_statsinfo は、本ログに出力された情報を基に、加工したロ�
 設定例: アラート機能を無効にする場合
 <pre>
 # UPDATE statsrepo.alert SET enable_alert = false WHERE instid = <変更対象の監視対象インスタンスID>
-</pre>
-
-<p>
-監視対象インスタンスIDとは監視対象インスタンス毎に割り当てられた識別子です。<br>
-監視対象インスタンスIDは、リポジトリDBに対して以下の SQL を実行することで確認できます。
-</p>
-
-<pre>
-# SELECT * FROM statsrepo.instance;
 </pre>
 
 <h4>アラート設定テーブル</h4>
@@ -475,9 +472,19 @@ pg_statsinfo は、本ログに出力された情報を基に、加工したロ�
 $ pg_statsinfo -r REPORTID [-i INSTANCEID] [-b SNAPID] [-e SNAPID] [-B DATE] [-E DATE] [-o FILENAME] [connection-options]
 </pre>
 
+<p>
+以下にコマンド例を示します。<br>
+以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動しているリポジトリDBに対して、postgres データベースに、postgres ユーザで接続し、以下の条件のレポートを出力します。
+</p>
+<ul>
+  <li>レポート種別IDが All のレポート</li>
+  <li>レポート範囲は最初のスナップショットから最後のスナップショット</li>
+  <li>レポート対象は全ての監視対象インスタンス</li>
+  <li>レポートの出力先は標準出力</li>
+</ul>
+
 <pre>
-[コマンド例]
-$ pg_statsinfo -h localhost -d statsrepo -p 5432 -U postgres -r All
+$ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -r All
 </pre>
 
 <dl>
@@ -544,9 +551,13 @@ $ pg_statsinfo -h localhost -d statsrepo -p 5432 -U postgres -r All
 $ pg_statsinfo -l [-i INSTANCEID] [connection-options]
 </pre>
 
+<p>
+以下にコマンド例を示します。<br>
+以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動しているリポジトリDBに対して、postgres データベースに、postgres ユーザで接続し、当該リポジトリDBに蓄積されているスナップショットの一覧を表示します。
+</p>
+
 <pre>
-[コマンド例]
-$ pg_statsinfo -h localhost -d statsrepo -p 5432 -U postgres -l
+$ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -l
 </pre>
 
 <dl>
@@ -565,9 +576,13 @@ $ pg_statsinfo -h localhost -d statsrepo -p 5432 -U postgres -l
 $ pg_statsinfo -s [connection-options]
 </pre>
 
+<p>
+以下にコマンド例を示します。<br>
+以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動しているリポジトリDBに対して、postgres データベースに、postgres ユーザで接続し、当該リポジトリDBに蓄積されているスナップショットのサイズを表示します。
+</p>
+
 <pre>
-[コマンド例]
-$ pg_statsinfo -h localhost -d statsrepo -p 5432 -U postgres -s
+$ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -s
 </pre>
 
 <dl>
@@ -582,9 +597,13 @@ $ pg_statsinfo -h localhost -d statsrepo -p 5432 -U postgres -s
 $ pg_statsinfo -S COMMENT [connection-options]
 </pre>
 
+<p>
+以下にコマンド例を示します。<br>
+以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動している監視対象インスタンスに対して、postgres データベースに、postgres ユーザで接続し、'COMMENT'をコメントとして付与したスナップショットを取得します。
+</p>
+
 <pre>
-[コマンド例]
-$ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -S 'xxx'
+$ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -S 'COMMENT'
 </pre>
 
 <dl>
@@ -600,9 +619,13 @@ $ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -S 'xxx'
 $ pg_statsinfo -D SNAPID [connection-options]
 </pre>
 
+<p>
+以下にコマンド例を示します。<br>
+以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動しているリポジトリDBに対して、postgres データベースに、postgres ユーザで接続し、当該リポジトリDBに蓄積されているスナップショットIDが 123 のスナップショットを削除します。
+</p>
+
 <pre>
-[コマンド例]
-$ pg_statsinfo -h localhost -d statsrepo -p 5432 -U postgres -D 123
+$ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -D 123
 </pre>
 
 <dl>
@@ -1016,7 +1039,7 @@ PostgreSQL はタイムゾーンを独自に管理しており、外部プログ
 </dl>
 
 <h2 id="QA">よくあるQ&A</h2>
-<h4>Q1. pg_statsinfo が正常に動作しているかの確認方法をお教えください。</h4>
+<h4>Q1. pg_statsinfo が正常に動作しているかの確認方法を教えてください。</h4>
 <p>pg_statsinfo が取得した情報は、statsrepo スキーマに格納されています。
 コマンドライン上で以下の SQL を実行し、確認することができます。</p>
 <pre>
@@ -1085,8 +1108,79 @@ $ pg_ctl restart
 アラート機能が正常に動作したことを確認した後は、秒間のコミット数のアラート条件(閾値)を元に戻してください。
 </p>
 
+<h4>Q6. 古いバージョン(2.x)からアップグレードする方法を教えてください。</h4>
+<p>
+古いバージョンをアンインストールした後、新しいバージョンをインストールしてください。<br>
+また、古いバージョンで取得済みのスナップショットは新しいバージョンでは利用できません。<br>
+<a href="#uninstall">アンインストール</a> の手順に従い、リポジトリDBのスナップショットを全て削除してください。<br><br>
+上記の操作を行った後、監視対象インスタンスを再起動してください。
+</p>
+
+<h4>Q7. 簡易レポート機能のレポート生成モードを実行したところ、一部のレポート項目が表示されません。</h4>
+<dl>
+  <dt>Query Activity (Functions)</dt>
+  <dd>設定ファイルの「track_functions」が「none」に設定されている可能性があります。</dd>
+  <dd>この場合、当該レポート項目に必要な情報がスナップショットに含まれません。</dd>
+  <dd>当該レポート項目を表示するには「track_functions」を「none」以外に設定してください。</dd>
+  
+  <dt>Query Activity (Statements)</dt>
+  <dd>pg_stat_statements がインストールされていない可能性があります。</dd>
+  <dd>この場合、当該レポート項目に必要な情報がスナップショットに含まれません。</dd>
+  <dd>当該レポート項目を表示するには pg_stat_statements をインストールしてください。</dd>
+  
+  <dt>Autovacuum Activity</dt>
+  <dd>設定ファイルの「log_autovacuum_min_duration」が「-1」に設定されている可能性があります。</dd>
+  <dd>この場合、当該レポート項目に必要な情報がスナップショットに含まれません。</dd>
+  <dd>当該レポート項目を表示するには「log_autovacuum_min_duration」を「-1」以外に設定してください。</dd>
+  
+  <dt>Checkpoint Activity</dt>
+  <dd>設定ファイルの「log_checkpoints」が「off」に設定されている可能性があります。</dd>
+  <dd>この場合、当該レポート項目に必要な情報がスナップショットに含まれません。</dd>
+  <dd>当該レポート項目を表示するには「log_checkpoints」を「on」に設定してください。</dd>
+  
+  <dt>Long Transactions</dt>
+  <dd>レポート対象となる該当が存在しない可能性があります。</dd>
+  
+  <dt>Notable Tables</dt>
+  <dd>レポート対象となる該当が存在しない可能性があります。</dd>
+  
+  <dt>Lock Activity</dt>
+  <dd>レポート対象となる該当が存在しない可能性があります。</dd>
+  
+  <dt>Replication Activity</dt>
+  <dd>レポート対象となる該当が存在しない可能性があります。</dd>
+  
+  <dt>Schema Information</dt>
+  <dd>一部のデータベースのスキーマ情報が含まれてない場合は、該当のデータベースに接続できる設定になっているか <a href="http://www.postgresql.jp/document/current/html/client-authentication.html">クライアント認証</a> などを確認してください。</dd>
+</dl>
+
+<br>
+
 <h2 id="details">詳細情報</h2>
 <p>より高度な利用方法や、内部構成について説明します。</p>
+
+<h3 id="many-instances">複数の監視対象インスタンス</h3>
+<p>
+複数の監視対象インスタンスが存在する場合の構成として、監視対象インスタンス毎にリポジトリDBを用意して各個にスナップショットを蓄積する構成と、各監視対象インスタンスで共通のリポジトリDBを用意してスナップショットを蓄積する構成があります。<br>
+ここでは、後者の単一リポジトリに複数の監視対象インスタンスのスナップショットを蓄積する構成について説明します。
+</p>
+
+<h4>設定手順</h4>
+<p>
+各監視対象インスタンスの設定ファイルに、同一のリポジトリDBを参照する内容で「pg_statsinfo.repository_server」を設定します。<br>
+以下に設定例を示します。
+<p>
+<pre>pg_statsinfo.repository_server = 'hostaddr=192.168.0.32 port=5432 user=postgres dbname=postgres'</pre>
+
+<p>
+リポジトリDBは各監視対象インスタンスから上記で設定したデータベースにパスワード入力なしに接続できる必要があります。<br>
+各監視対象インスタンスからリポジトリDBにパスワード入力なしに接続できるよう <a href="http://www.postgresql.jp/document/current/html/client-authentication.html">クライアント認証</a> を設定してください。
+</p>
+
+<h4>注意事項</h4>
+<ul>
+  <li>リポジトリDBの自動メンテナンスを行う場合は、いずれか1つの監視対象インスタンスにのみ設定してください。</li>
+</ul>
 
 <h3 id="warm-standby">ウォームスタンバイ</h3>
 <p>構成例として、<a href="http://www.postgresql.jp/document/current/html/warm-standby.html">ウォームスタンバイ</a>での構成を説明します。
