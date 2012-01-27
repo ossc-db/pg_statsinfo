@@ -6,17 +6,21 @@
 
 #include "pg_statsinfod.h"
 
-static bool badcsv(int column);
+static bool badcsv(int column, const char *message);
 static int MatchText(const char *t, size_t tlen,
 					 const char *p, size_t plen, List **params);
 
 /*
  * logger_next
  */
+
+#define CSV_READ_RETRY_MAX				3
+
 bool
 read_csv(FILE *fp, StringInfo buf, int ncolumns, size_t *columns)
 {
 	int			column;
+	int			retry_count;
 	size_t		read_len;
 	size_t		restart;
 
@@ -26,6 +30,7 @@ read_csv(FILE *fp, StringInfo buf, int ncolumns, size_t *columns)
 		resetStringInfo(buf);
 	memset(columns, 0, ncolumns * sizeof(size_t));
 	column = 0;
+	retry_count = 0
 	restart = 0;
 
 retry:
@@ -53,8 +58,16 @@ retry:
 		return false;
 
 	if (read_len == 0 || buf->data[buf->len - 1] != '\n')
-		return badcsv(column + 1);
-
+	{
+		if (retry_count < CSV_READ_RETRY_MAX)
+		{
+			usleep(100 * 1000);	/* 100ms */
+			retry_count++;
+			goto retry;
+		}	
+		return badcsv(column + 1, buf->data);
+	}
+	
 	/* split log with comma */
 	while (column < ncolumns)
 	{
@@ -100,7 +113,7 @@ retry:
 				}
 				else
 				{
-					return badcsv(column + 1);
+					return badcsv(column + 1, buf->data);
 				}
 			}
 		}
@@ -110,7 +123,7 @@ retry:
 			next = strpbrk(buffer, ",\n");
 			if (next == NULL)
 			{
-				return badcsv(column + 1);
+				return badcsv(column + 1, buf->data);
 			}
 			else
 			{
@@ -122,7 +135,7 @@ retry:
 
 	/* throw an error if column number does not reach a necessary number. */
 	if (column < ncolumns)
-		return badcsv(column + 1);
+		return badcsv(column + 1, buf->data);
 
 	return true;
 }
@@ -131,10 +144,9 @@ retry:
  * badcsv - always return false.
  */
 static bool
-badcsv(int column)
+badcsv(int column, const char *message)
 {
-	/* FIXME: message should include text of the line */
-	elog(WARNING, "cannot parse csvlog line %d", column);
+	elog(WARNING, "cannot parse csvlog column %d: %s", column, message);
 	return false;
 }
 
