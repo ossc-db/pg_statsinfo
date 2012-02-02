@@ -30,7 +30,7 @@ read_csv(FILE *fp, StringInfo buf, int ncolumns, size_t *columns)
 		resetStringInfo(buf);
 	memset(columns, 0, ncolumns * sizeof(size_t));
 	column = 0;
-	retry_count = 0
+	retry_count = 0;
 	restart = 0;
 
 retry:
