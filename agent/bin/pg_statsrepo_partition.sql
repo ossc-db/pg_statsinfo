@@ -314,12 +314,16 @@ CREATE INDEX statsrepo_checkpoint_idx ON statsrepo.checkpoint(instid, start);
 
 CREATE TABLE statsrepo.cpu
 (
-	snapid			bigint,
-	cpu_id			text,
-	cpu_user		bigint,
-	cpu_system		bigint,
-	cpu_idle		bigint,
-	cpu_iowait		bigint,
+	snapid				bigint,
+	cpu_id				text,
+	cpu_user			bigint,
+	cpu_system			bigint,
+	cpu_idle			bigint,
+	cpu_iowait			bigint,
+	overflow_user		smallint,
+	overflow_system		smallint,
+	overflow_idle		smallint,
+	overflow_iowait		smallint,
 	PRIMARY KEY (snapid, cpu_id),
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
@@ -336,6 +340,11 @@ CREATE TABLE statsrepo.device
 	device_writetime	bigint,
 	device_ioqueue		bigint,
 	device_iototaltime	bigint,
+	overflow_drs		smallint,
+	overflow_drt		smallint,
+	overflow_dws		smallint,
+	overflow_dwt		smallint,
+	overflow_dit		smallint,
 	device_tblspaces	name[],
 	PRIMARY KEY (snapid, device_major, device_minor),
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
@@ -1061,17 +1070,17 @@ CREATE FUNCTION statsrepo.get_cpu_usage(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		(100 * statsrepo.sub(CASE WHEN b.cpu_user > a.cpu_user THEN a.cpu_user + 4294967295 ELSE a.cpu_user END, b.cpu_user)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(1000,2),
-		(100 * statsrepo.sub(CASE WHEN b.cpu_system > a.cpu_system THEN a.cpu_system + 4294967295 ELSE a.cpu_system END, b.cpu_system)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(1000,2),
-		(100 * statsrepo.sub(CASE WHEN b.cpu_idle > a.cpu_idle THEN a.cpu_idle + 4294967295 ELSE a.cpu_idle END, b.cpu_idle)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(1000,2),
-		(100 * statsrepo.sub(CASE WHEN b.cpu_iowait > a.cpu_iowait THEN a.cpu_iowait + 4294967295 ELSE a.cpu_iowait END, b.cpu_iowait)::float / statsrepo.sub(a.total, b.total)::float4)::numeric(1000,2)
+		(100 * statsrepo.sub(a.cpu_user + o.cpu_user_add, b.cpu_user)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,2),
+		(100 * statsrepo.sub(a.cpu_system + o.cpu_system_add, b.cpu_system)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,2),
+		(100 * statsrepo.sub(a.cpu_idle + o.cpu_idle_add, b.cpu_idle)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,2),
+		(100 * statsrepo.sub(a.cpu_iowait + o.cpu_iowait_add, b.cpu_iowait)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,2)
 	FROM
 		(SELECT
 			snapid,
 			cpu_user,
 			cpu_system,
 			cpu_idle,
-			cpu_iowait,
+			cpu_iowait, 
 			cpu_user + cpu_system + cpu_idle + cpu_iowait AS total
 		 FROM
 		 	statsrepo.cpu
@@ -1083,18 +1092,23 @@ $$
 			cpu_system,
 			cpu_idle,
 			cpu_iowait,
-			CASE WHEN cpu_user < (SELECT cpu_user FROM statsrepo.cpu WHERE snapid = $1) THEN cpu_user + 4294967295
-				ELSE cpu_user END +
-			CASE WHEN cpu_system < (SELECT cpu_system FROM statsrepo.cpu WHERE snapid = $1) THEN cpu_system + 4294967295
-				ELSE cpu_system END +
-			CASE WHEN cpu_idle < (SELECT cpu_idle FROM statsrepo.cpu WHERE snapid = $1) THEN cpu_idle + 4294967295
-				ELSE cpu_idle END +
-			CASE WHEN cpu_iowait < (SELECT cpu_iowait FROM statsrepo.cpu WHERE snapid = $1) THEN cpu_iowait + 4294967295
-				ELSE cpu_iowait END AS total
+			cpu_user + cpu_system + cpu_idle + cpu_iowait AS total
 		 FROM
 		 	statsrepo.cpu
 		 WHERE
 		 	snapid = $2) a,
+		(SELECT
+			(sum(overflow_user) * 4294967296)::bigint AS cpu_user_add,
+			(sum(overflow_system) * 4294967296)::bigint AS cpu_system_add,
+			(sum(overflow_idle) * 4294967296)::bigint AS cpu_idle_add,
+			(sum(overflow_iowait) * 4294967296)::bigint AS cpu_iowait_add,
+			((sum(overflow_user) + sum(overflow_system) + sum(overflow_idle) + sum(overflow_iowait)) * 4294967296)::bigint AS total_add
+		 FROM
+			statsrepo.cpu c
+			LEFT JOIN statsrepo.snapshot s ON s.snapid = c.snapid
+		 WHERE
+			s.snapid > $1 AND s.snapid <= $2
+			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)) o,
 		statsrepo.snapshot s
 	WHERE
 		a.snapid = s.snapid
@@ -1115,23 +1129,23 @@ CREATE FUNCTION statsrepo.get_cpu_usage_tendency(
 $$
 	SELECT
 		t.snapid,
-		(100 * statsrepo.div(t.user, t.total))::numeric(1000,2),
-		(100 * statsrepo.div(t.system, t.total))::numeric(1000,2),
-		(100 * statsrepo.div(t.idle, t.total))::numeric(1000,2),
-		(100 * statsrepo.div(t.iowait, t.total))::numeric(1000,2)
+		(100 * statsrepo.div(t.user, t.total))::numeric(5,2),
+		(100 * statsrepo.div(t.system, t.total))::numeric(5,2),
+		(100 * statsrepo.div(t.idle, t.total))::numeric(5,2),
+		(100 * statsrepo.div(t.iowait, t.total))::numeric(5,2)
 	FROM
 	(
 		SELECT
 			c.snapid,
-			(CASE WHEN lag(cpu_user) OVER w > cpu_user THEN cpu_user + 4294967295 ELSE cpu_user END - lag(cpu_user) OVER w) AS user,
-			(CASE WHEN lag(cpu_system) OVER w > cpu_system THEN cpu_system + 4294967295 ELSE cpu_system END - lag(cpu_system) OVER w) AS system,
-			(CASE WHEN lag(cpu_idle) OVER w > cpu_idle THEN cpu_idle + 4294967295 ELSE cpu_idle END - lag(cpu_idle) OVER w) AS idle,
-			(CASE WHEN lag(cpu_iowait) OVER w > cpu_iowait THEN cpu_iowait + 4294967295 ELSE cpu_iowait END - lag(cpu_iowait) OVER w) AS iowait,
-			(CASE WHEN lag(cpu_user) OVER w > cpu_user THEN cpu_user + 4294967295 ELSE cpu_user END +
-			 CASE WHEN lag(cpu_system) OVER w > cpu_system THEN cpu_system + 4294967295 ELSE cpu_system END +
-			 CASE WHEN lag(cpu_idle) OVER w > cpu_idle THEN cpu_idle + 4294967295 ELSE cpu_idle END +
-			 CASE WHEN lag(cpu_iowait) OVER w > cpu_iowait THEN cpu_iowait + 4294967295 ELSE cpu_iowait END) -
-			(lag(cpu_user) OVER w + lag(cpu_system) OVER w + lag(cpu_idle) OVER w + lag(cpu_iowait) OVER w ) AS total
+			(CASE WHEN overflow_user = 1 THEN cpu_user + 4294967296 ELSE cpu_user END - lag(cpu_user) OVER w) AS user,
+			(CASE WHEN overflow_system = 1 THEN cpu_system + 4294967296 ELSE cpu_system END - lag(cpu_system) OVER w) AS system,
+			(CASE WHEN overflow_idle = 1 THEN cpu_idle + 4294967296 ELSE cpu_idle END - lag(cpu_idle) OVER w) AS idle,
+			(CASE WHEN overflow_iowait = 1 THEN cpu_iowait + 4294967296 ELSE cpu_iowait END - lag(cpu_iowait) OVER w) AS iowait,
+			(CASE WHEN overflow_user = 1 THEN cpu_user + 4294967296 ELSE cpu_user END +
+			 CASE WHEN overflow_system = 1 THEN cpu_system + 4294967296 ELSE cpu_system END +
+			 CASE WHEN overflow_idle = 1 THEN cpu_idle + 4294967296 ELSE cpu_idle END +
+			 CASE WHEN overflow_iowait = 1 THEN cpu_iowait + 4294967296 ELSE cpu_iowait END) -
+			(lag(cpu_user) OVER w + lag(cpu_system) OVER w + lag(cpu_idle) OVER w + lag(cpu_iowait) OVER w) AS total
 		FROM
 			statsrepo.cpu c,
 			statsrepo.snapshot s
@@ -1158,19 +1172,19 @@ CREATE FUNCTION statsrepo.get_io_usage(
 	OUT total_write			bigint,
 	OUT total_read_time		bigint,
 	OUT total_write_time	bigint,
-	OUT io_queue			bigint,
+	OUT io_queue			numeric,
 	OUT total_io_time		bigint
 ) RETURNS SETOF record AS
 $$
 	SELECT
 		a.device_name,
 		a.device_tblspaces,
-		statsrepo.sub(CASE WHEN b.drs > a.drs THEN a.drs + 4294967295 ELSE a.drs END, b.drs) / 2 / 1024,
-		statsrepo.sub(CASE WHEN b.dws > a.dws THEN a.dws + 4294967295 ELSE a.dws END, b.dws) / 2 / 1024,
-		statsrepo.sub(CASE WHEN b.drt > a.drt THEN a.drt + 4294967295 ELSE a.drt END, b.drt),
-		statsrepo.sub(CASE WHEN b.dwt > a.dwt THEN a.dwt + 4294967295 ELSE a.dwt END, b.dwt),
-		statsrepo.sub(CASE WHEN b.diq > a.diq THEN a.diq + 4294967295 ELSE a.diq END, b.diq),
-		statsrepo.sub(CASE WHEN b.dit > a.dit THEN a.dit + 4294967295 ELSE a.dit END, b.dit)
+		statsrepo.sub(a.drs + o.drs_add, b.drs) / 2 / 1024,
+		statsrepo.sub(a.dws + o.dws_add, b.dws) / 2 / 1024,
+		statsrepo.sub(a.drt + o.drt_add, b.drt),
+		statsrepo.sub(a.dwt + o.dwt_add, b.dwt),
+		round((o.diq + b.diq) / (o.cnt + 1), 3),
+		statsrepo.sub(a.dit + o.dit_add, b.dit)
 	FROM
 		(SELECT
 			snapid,
@@ -1200,10 +1214,28 @@ $$
 		 	statsrepo.device
 		 WHERE
 		 	snapid = $2) a,
+		(SELECT
+			d.device_name,
+			(sum(d.overflow_drs) * 4294967296)::bigint AS drs_add,
+			(sum(d.overflow_drt) * 4294967296)::bigint AS drt_add,
+			(sum(d.overflow_dws) * 4294967296)::bigint AS dws_add,
+			(sum(d.overflow_dwt) * 4294967296)::bigint AS dwt_add,
+			(sum(d.overflow_dit) * 4294967296)::bigint AS dit_add,
+			sum(d.device_ioqueue) AS diq,
+			count(*) AS cnt
+		 FROM
+			statsrepo.device d
+			LEFT JOIN statsrepo.snapshot s ON s.snapid = d.snapid
+		 WHERE
+			s.snapid > $1 AND s.snapid <= $2
+			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+		 GROUP BY
+		 	d.device_name) o,
 		statsrepo.snapshot s
 	WHERE
 		a.snapid = s.snapid
 		AND a.device_name = b.device_name
+		AND a.device_name = o.device_name
 		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2);
 $$
 LANGUAGE sql;
@@ -1232,10 +1264,10 @@ $$
 		SELECT
 			d.snapid,
 			dev_name,
-			coalesce((CASE WHEN lag(rs) OVER w > rs THEN rs + 4294967295 ELSE rs END - lag(rs) OVER w) / 2 / duration, 0)::numeric(1000,2) AS read_size_tps,
-			coalesce((CASE WHEN lag(ws) OVER w > rs THEN ws + 4294967295 ELSE ws END - lag(ws) OVER w) / 2 / duration, 0)::numeric(1000,2) AS write_size_tps,
-			coalesce((CASE WHEN lag(rt) OVER w > rt THEN rt + 4294967295 ELSE rt END - lag(rt) OVER w) / duration, 0)::numeric(1000,2) AS read_time_tps,
-			coalesce((CASE WHEN lag(wt) OVER w > wt THEN wt + 4294967295 ELSE wt END - lag(wt) OVER w) / duration, 0)::numeric(1000,2) AS write_time_tps
+			coalesce((CASE WHEN overflow_drs = 1 THEN rs + 4294967296 ELSE rs END - lag(rs) OVER w) / 2 / duration, 0)::numeric(1000,2) AS read_size_tps,
+			coalesce((CASE WHEN overflow_dws = 1 THEN ws + 4294967296 ELSE ws END - lag(ws) OVER w) / 2 / duration, 0)::numeric(1000,2) AS write_size_tps,
+			coalesce((CASE WHEN overflow_drt = 1 THEN rt + 4294967296 ELSE rt END - lag(rt) OVER w) / duration, 0)::numeric(1000,2) AS read_time_tps,
+			coalesce((CASE WHEN overflow_dwt = 1 THEN wt + 4294967296 ELSE wt END - lag(wt) OVER w) / duration, 0)::numeric(1000,2) AS write_time_tps
 		FROM
 			(SELECT
 				d.snapid,
@@ -1243,7 +1275,11 @@ $$
 				sum(device_readsector) AS rs,
 				sum(device_writesector) AS ws,
 				sum(device_readtime) AS rt,
-				sum(device_writetime) AS wt
+				sum(device_writetime) AS wt,
+				sum(overflow_drs) AS overflow_drs,
+				sum(overflow_dws) AS overflow_dws,
+				sum(overflow_drt) AS overflow_drt,
+				sum(overflow_dwt) AS overflow_dwt
 			 FROM
 				statsrepo.device d,
 				statsrepo.snapshot s

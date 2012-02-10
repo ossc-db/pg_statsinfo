@@ -316,12 +316,16 @@ CREATE INDEX statsrepo_checkpoint_idx ON statsrepo.checkpoint(instid, start);
 
 CREATE TABLE statsrepo.cpu
 (
-	snapid			bigint,
-	cpu_id			text,
-	cpu_user		bigint,
-	cpu_system		bigint,
-	cpu_idle		bigint,
-	cpu_iowait		bigint,
+	snapid				bigint,
+	cpu_id				text,
+	cpu_user			bigint,
+	cpu_system			bigint,
+	cpu_idle			bigint,
+	cpu_iowait			bigint,
+	overflow_user		smallint,
+	overflow_system		smallint,
+	overflow_idle		smallint,
+	overflow_iowait		smallint,
 	PRIMARY KEY (snapid, cpu_id),
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
@@ -338,6 +342,11 @@ CREATE TABLE statsrepo.device
 	device_writetime	bigint,
 	device_ioqueue		bigint,
 	device_iototaltime	bigint,
+	overflow_drs		smallint,
+	overflow_drt		smallint,
+	overflow_dws		smallint,
+	overflow_dwt		smallint,
+	overflow_dit		smallint,
 	device_tblspaces	name[],
 	PRIMARY KEY (snapid, device_major, device_minor),
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE

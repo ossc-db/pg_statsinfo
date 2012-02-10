@@ -47,10 +47,11 @@ INSERT INTO statsrepo.setting VALUES ($1, $2, $3, $4)"
 INSERT INTO statsrepo.role VALUES ($1, $2, $3)"
 
 #define SQL_INSERT_CPU "\
-INSERT INTO statsrepo.cpu VALUES ($1, $2, $3, $4, $5, $6)"
+INSERT INTO statsrepo.cpu VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
 
 #define SQL_INSERT_DEVICE "\
-INSERT INTO statsrepo.device VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"
+INSERT INTO statsrepo.device VALUES \
+($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)"
 
 #define SQL_INSERT_PROFILE "\
 INSERT INTO statsrepo.profile VALUES ($1, $2, $3, $4)"

@@ -941,7 +941,7 @@ statsinfo_restart(PG_FUNCTION_ARGS)
 }
 
 #define FILE_CPUSTAT		"/proc/stat"
-#define NUM_CPUSTATS_COLS	5
+#define NUM_CPUSTATS_COLS	9
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
 #define NUM_STAT_FIELDS		9
@@ -1009,13 +1009,25 @@ statsinfo_cpustats(PG_FUNCTION_ARGS)
 	parse_int64(list_nth(fields, 5), &val);
 	values[i++] = Int64GetDatum(val);
 
+	/* overflow_user */
+	values[i++] = Int16GetDatum(0);
+
+	/* overflow_system */
+	values[i++] = Int16GetDatum(0);
+
+	/* overflow_idle */
+	values[i++] = Int16GetDatum(0);
+
+	/* overflow_iowait */
+	values[i++] = Int16GetDatum(0);
+
 	tuple = heap_form_tuple(tupdesc, values, nulls);
 
 	PG_RETURN_DATUM(HeapTupleGetDatum(tuple));
 }
 
 #define FILE_DISKSTATS					"/proc/diskstats"
-#define NUM_DEVICESTATS_COLS			10
+#define NUM_DEVICESTATS_COLS			15
 #define TYPE_DEVICE_TABLESPACES			TEXTOID
 #define NUM_DISKSTATS_FIELDS			14
 #define NUM_DISKSTATS_PARTITION_FIELDS	7
@@ -1165,6 +1177,21 @@ statsinfo_devicestats(PG_FUNCTION_ARGS)
 			/* device_iototaltime */
 			parse_int64(list_nth(fields, 13), &val);
 			values[i++] = Int64GetDatum(val);
+
+			/* overflow_drs */
+			values[i++] = Int16GetDatum(0);
+
+			/* overflow_drt */
+			values[i++] = Int16GetDatum(0);
+
+			/* overflow_dws */
+			values[i++] = Int16GetDatum(0);
+
+			/* overflow_dwt */
+			values[i++] = Int16GetDatum(0);
+
+			/* overflow_dit */
+			values[i++] = Int16GetDatum(0);
 		}
 		else if (nfield == NUM_DISKSTATS_PARTITION_FIELDS)
 		{
@@ -1196,6 +1223,21 @@ statsinfo_devicestats(PG_FUNCTION_ARGS)
 
 			/* device_iototaltime */
 			nulls[i++] = true;
+			
+			/* overflow_drs */
+			values[i++] = Int16GetDatum(0);
+
+			/* overflow_drt */
+			values[i++] = Int16GetDatum(0);
+
+			/* overflow_dws */
+			values[i++] = Int16GetDatum(0);
+
+			/* overflow_dwt */
+			values[i++] = Int16GetDatum(0);
+
+			/* overflow_dit */
+			values[i++] = Int16GetDatum(0);
 		}
 		else
 			ereport(ERROR,
