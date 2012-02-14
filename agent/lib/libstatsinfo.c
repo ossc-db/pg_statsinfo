@@ -104,10 +104,11 @@ PG_MODULE_MAGIC;
 /*---- GUC variables ----*/
 
 #define DEFAULT_SAMPLING_INTERVAL		5		/* sec */
-#define DEFAULT_SNAPSHOT_INTERVAL		300		/* sec */
+#define DEFAULT_SNAPSHOT_INTERVAL		600		/* sec */
 #define DEFAULT_SYSLOG_LEVEL			DISABLE
 #define DEFAULT_TEXTLOG_LEVEL			WARNING
-#define DEFAULT_MAINTENANCE_TIME		"00:00:00"
+#define DEFAULT_ENABLE_MAINTENANCE		true
+#define DEFAULT_MAINTENANCE_TIME		"00:02:00"
 #define DEFAULT_REPOSITORY_KEEPDAY		7		/* day */
 #define DEFAULT_LONG_LOCK_THREASHOLD	30		/* sec */
 #define LONG_TRANSACTION_THRESHOLD		1.0		/* sec */
@@ -163,7 +164,7 @@ static char	   *adjust_log_warning = NULL;
 static char	   *adjust_log_error = NULL;
 static char	   *adjust_log_log = NULL;
 static char	   *adjust_log_fatal = NULL;
-static bool		enable_maintenance = false;
+static bool		enable_maintenance = DEFAULT_ENABLE_MAINTENANCE;
 static char	   *maintenance_time = NULL;
 static int		repository_keepday = DEFAULT_REPOSITORY_KEEPDAY;
 static int		long_lock_threashold = DEFAULT_LONG_LOCK_THREASHOLD;
@@ -761,7 +762,7 @@ _PG_init(void)
 							 "Enable the maintenance.",
 							 NULL,
 							 &enable_maintenance,
-							 false,
+							 DEFAULT_ENABLE_MAINTENANCE,
 							 PGC_SIGHUP,
 							 GUC_SUPERUSER_ONLY,
 #if PG_VERSION_NUM >= 90100
