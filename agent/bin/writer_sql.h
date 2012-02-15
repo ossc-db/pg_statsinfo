@@ -13,7 +13,7 @@
 
 #define SQL_NEW_SNAPSHOT "\
 INSERT INTO statsrepo.snapshot(instid, time, comment) VALUES \
-($1, current_timestamp, $2) RETURNING snapid"
+($1, $2, $3) RETURNING snapid"
 
 #define SQL_INSERT_DATABASE "\
 INSERT INTO statsrepo.database VALUES \
@@ -90,5 +90,8 @@ SET \
 								WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'statsrepo')) - $4) \
 WHERE \
 	snapid = $1"
+
+#define SQL_CREATE_PARTITION "\
+SELECT statsrepo.create_partition($1)"
 
 #endif

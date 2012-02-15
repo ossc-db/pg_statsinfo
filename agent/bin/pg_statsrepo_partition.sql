@@ -1080,7 +1080,7 @@ $$
 			cpu_user,
 			cpu_system,
 			cpu_idle,
-			cpu_iowait, 
+			cpu_iowait,
 			cpu_user + cpu_system + cpu_idle + cpu_iowait AS total
 		 FROM
 		 	statsrepo.cpu
@@ -2035,16 +2035,17 @@ $$
 LANGUAGE plpgsql;
 
 -- function to create partition-tables
-CREATE FUNCTION statsrepo.partition_create() RETURNS TRIGGER AS
+CREATE FUNCTION statsrepo.create_partition(timestamptz) RETURNS void AS
 $$
 DECLARE
 BEGIN
+	LOCK TABLE statsrepo.snapshot IN SHARE UPDATE EXCLUSIVE MODE;
+
 	SET client_min_messages = warning;
-	PERFORM statsrepo.partition_new('statsrepo.table'::regclass, CAST(new.time AS DATE));
-	PERFORM statsrepo.partition_new('statsrepo.index'::regclass, CAST(new.time AS DATE));
-	PERFORM statsrepo.partition_new('statsrepo.column'::regclass, CAST(new.time AS DATE));
+	PERFORM statsrepo.partition_new('statsrepo.table'::regclass, CAST($1 AS DATE));
+	PERFORM statsrepo.partition_new('statsrepo.index'::regclass, CAST($1 AS DATE));
+	PERFORM statsrepo.partition_new('statsrepo.column'::regclass, CAST($1 AS DATE));
 	RESET client_min_messages;
-	RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -2060,7 +2061,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- trigger registration for partitioning
-CREATE TRIGGER partition_create_snapshot AFTER INSERT ON statsrepo.snapshot FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_create();
 CREATE TRIGGER partition_insert_table BEFORE INSERT ON statsrepo.table FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_insert();
 CREATE TRIGGER partition_insert_index BEFORE INSERT ON statsrepo.index FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_insert();
 CREATE TRIGGER partition_insert_column BEFORE INSERT ON statsrepo.column FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_insert();
@@ -2068,6 +2068,8 @@ CREATE TRIGGER partition_insert_column BEFORE INSERT ON statsrepo.column FOR EAC
 -- del_snapshot2(time) - delete snapshots before the specified time.
 CREATE FUNCTION statsrepo.del_snapshot2(timestamptz) RETURNS void AS
 $$
+	LOCK TABLE statsrepo.snapshot IN SHARE UPDATE EXCLUSIVE MODE;
+
 	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.table'::regclass);
 	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.index'::regclass);
 	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.column'::regclass);

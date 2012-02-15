@@ -365,6 +365,17 @@ Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 
 	elog(DEBUG2, "write (snapshot)");
 
+	if (pgut_command(conn, "BEGIN", 0, NULL) != PGRES_COMMAND_OK)
+		goto error;
+
+#if PG_VERSION_NUM >= 80400
+	/*
+	 * create partition tables
+	 */
+	params[0] = snap->start;
+	if (pgut_command(conn, SQL_CREATE_PARTITION, 1, params) != PGRES_TUPLES_OK)
+		goto error;
+#endif
 	/*
 	 * get statsrepo schema relation total size
 	 */
@@ -372,12 +383,16 @@ Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 	if (repo_size == NULL)
 		goto error;
 
+	if (!pgut_commit(conn))
+		goto error;
+
 	if (pgut_command(conn, "BEGIN", 0, NULL) != PGRES_COMMAND_OK)
 		goto error;
 
 	params[0] = instid;
-	params[1] = snap->comment;
-	snapid_res = pgut_execute(conn, SQL_NEW_SNAPSHOT, 2, params);
+	params[1] = snap->start;
+	params[2] = snap->comment;
+	snapid_res = pgut_execute(conn, SQL_NEW_SNAPSHOT, 3, params);
 	if (PQntuples(snapid_res) == 0)
 		goto error;
 
