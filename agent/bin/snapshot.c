@@ -22,6 +22,16 @@ typedef struct Snap
 	char	   *start;		/* start timestamp */
 } Snap;
 
+/* cpustats data */
+typedef struct CPUstats
+{
+	int64	 user;
+	int64	 system;
+	int64	 idle;
+	int64	 iowait;
+} CPUstats;
+
+/* diskstats data */
 typedef struct Diskstats
 {
 	char	 device[256];
@@ -32,10 +42,7 @@ typedef struct Diskstats
 	int64	 iototaltime;
 } Diskstats;
 
-static int64	 prev_cpu_user = 0;
-static int64	 prev_cpu_system = 0;
-static int64	 prev_cpu_idle = 0;
-static int64	 prev_cpu_iowait = 0;
+static CPUstats	 prev_cpustats = {0, 0, 0, 0};
 static List		*prev_diskstats_list = NIL;
 
 static const char *instance_gets[] =
@@ -109,7 +116,6 @@ static bool do_put(PGconn *conn, const char *sql, PGresult *src,
 				   const char *snapid, const char *dbid);
 static bool has_pg_stat_statements(PGconn *conn);
 static bool has_statsrepo_alert(PGconn *conn);
-static Diskstats *diskstats_search(List *list, const char *device);
 
 QueueItem *
 get_snapshot(char *comment)
@@ -165,7 +171,17 @@ get_snapshot(char *comment)
 		/* query cpuinfo as a separated transaction. */
 		if (cpuinfo == NULL)
 		{
-			cpuinfo = do_get(conn, SQL_SELECT_CPU, 0, NULL);
+			const char *params[1];
+			char buf[1024];
+
+			snprintf(buf, sizeof(buf), "(%ld,%ld,%ld,%ld)",
+				prev_cpustats.user,
+				prev_cpustats.system,
+				prev_cpustats.idle,
+				prev_cpustats.iowait);
+
+			params[0] = buf;
+			cpuinfo = do_get(conn, SQL_SELECT_CPU, 1, params);
 			if (cpuinfo == NULL)
 				continue;
 
@@ -173,36 +189,62 @@ get_snapshot(char *comment)
 			parse_int64(PQgetvalue(cpuinfo, 0, 2), &cpu_system);
 			parse_int64(PQgetvalue(cpuinfo, 0, 3), &cpu_idle);
 			parse_int64(PQgetvalue(cpuinfo, 0, 4), &cpu_iowait);
-
-			/* set the overflow flag if value is smaller than previous value */
-			if (cpu_user < prev_cpu_user)
-				PQsetvalue(cpuinfo, 0, 5, "1", 1);
-			if (cpu_system < prev_cpu_system)
-				PQsetvalue(cpuinfo, 0, 6, "1", 1);
-			if (cpu_idle < prev_cpu_idle)
-				PQsetvalue(cpuinfo, 0, 7, "1", 1);
-			if (cpu_iowait < prev_cpu_iowait)
-				PQsetvalue(cpuinfo, 0, 8, "1", 1);
 		}
 
 		/* query deviceinfo as a separated transaction. */
 		if (deviceinfo == NULL)
 		{
-			char	*device;
-			int64	 readsector;
-			int64	 readtime;
-			int64	 writesector;
-			int64	 writetime;
-			int64	 iototaltime;
-			int		 i;
+			const char *params[1];
+			int i;
 
-			deviceinfo = do_get(conn, SQL_SELECT_DEVICE, 0, NULL);
+			if (prev_diskstats_list)
+			{
+				StringInfoData buf;
+				int len = list_length(prev_diskstats_list);
+				int j;
+
+				initStringInfo(&buf);
+				appendStringInfo(&buf, "{");
+
+				for (j = 0; j < len; j++)
+				{
+					Diskstats *prev_diskstats = list_nth(prev_diskstats_list, j);
+
+					appendStringInfo(&buf, "\"(\\\"%s\\\",%ld,%ld,%ld,%ld,%ld)\"",
+						prev_diskstats->device,
+						prev_diskstats->readsector,
+						prev_diskstats->readtime,
+						prev_diskstats->writesector,
+						prev_diskstats->writetime,
+						prev_diskstats->iototaltime);
+
+					if (j < len - 1)
+						appendStringInfo(&buf, ",");
+				}
+				appendStringInfo(&buf, "}");
+
+				params[0] = buf.data;
+				deviceinfo = do_get(conn, SQL_SELECT_DEVICE, 1, params);
+				termStringInfo(&buf);
+			}
+			else
+			{
+				params[0] = NULL;
+				deviceinfo = do_get(conn, SQL_SELECT_DEVICE, 1, params);
+			}
+
 			if (deviceinfo == NULL)
 				continue;
 
 			for (i = 0; i < PQntuples(deviceinfo); i++)
 			{
 				Diskstats	*diskstats;
+				char		*device;
+				int64		 readsector;
+				int64		 readtime;
+				int64		 writesector;
+				int64		 writetime;
+				int64		 iototaltime;
 
 				device = PQgetvalue(deviceinfo, i, 2); /* device name */
 				parse_int64(PQgetvalue(deviceinfo, i, 3), &readsector);  /* read sector */
@@ -210,22 +252,6 @@ get_snapshot(char *comment)
 				parse_int64(PQgetvalue(deviceinfo, i, 5), &writesector); /* write sector */
 				parse_int64(PQgetvalue(deviceinfo, i, 6), &writetime);   /* write time */
 				parse_int64(PQgetvalue(deviceinfo, i, 8), &iototaltime); /* io total time */
-
-				diskstats = diskstats_search(prev_diskstats_list, device);
-				if (diskstats)
-				{
-					/* set the overflow flag if value is smaller than previous value */
-					if (readsector < diskstats->readsector)
-						PQsetvalue(deviceinfo, i, 9, "1", 1);
-					if (readtime < diskstats->readtime)
-						PQsetvalue(deviceinfo, i, 10, "1", 1);
-					if (writesector < diskstats->writesector)
-						PQsetvalue(deviceinfo, i, 11, "1", 1);
-					if (writetime < diskstats->writetime)
-						PQsetvalue(deviceinfo, i, 12, "1", 1);
-					if (iototaltime < diskstats->iototaltime)
-						PQsetvalue(deviceinfo, i, 13, "1", 1);
-				}
 
 				diskstats = (Diskstats *) pgut_malloc(sizeof(Diskstats));
 				strncpy(diskstats->device, device, sizeof(diskstats->device));
@@ -315,10 +341,10 @@ get_snapshot(char *comment)
 	snap->comment = comment;
 
 	/* update previous values */
-	prev_cpu_user = cpu_user;
-	prev_cpu_system = cpu_system;
-	prev_cpu_idle = cpu_idle;
-	prev_cpu_iowait = cpu_iowait;
+	prev_cpustats.user = cpu_user;
+	prev_cpustats.system = cpu_system;
+	prev_cpustats.idle = cpu_idle;
+	prev_cpustats.iowait = cpu_iowait;
 
 	list_destroy(prev_diskstats_list, free);
 	prev_diskstats_list = diskstats_list;
@@ -625,21 +651,4 @@ has_statsrepo_alert(PGconn *conn)
 	PQclear(res);
 
 	return result;
-}
-
-static Diskstats *
-diskstats_search(List *list, const char *device)
-{
-	Diskstats	*diskstats;
-	ListCell	*cell;
-
-	foreach(cell, list)
-	{
-		diskstats = (Diskstats *) lfirst(cell);
-
-		if (strcmp(diskstats->device, device) == 0)
-			return diskstats;
-	}
-	/* not found */
-	return NULL;
 }

@@ -178,7 +178,9 @@ PG_FUNCTION_INFO_V1(statsinfo_maintenance);
 PG_FUNCTION_INFO_V1(statsinfo_tablespaces);
 PG_FUNCTION_INFO_V1(statsinfo_restart);
 PG_FUNCTION_INFO_V1(statsinfo_cpustats);
+PG_FUNCTION_INFO_V1(statsinfo_cpustats_noarg);
 PG_FUNCTION_INFO_V1(statsinfo_devicestats);
+PG_FUNCTION_INFO_V1(statsinfo_devicestats_noarg);
 PG_FUNCTION_INFO_V1(statsinfo_profile);
 
 extern Datum PGUT_EXPORT statsinfo_sample(PG_FUNCTION_ARGS);
@@ -188,7 +190,9 @@ extern Datum PGUT_EXPORT statsinfo_maintenance(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_tablespaces(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_restart(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_cpustats(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_cpustats_noarg(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_devicestats(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_devicestats_noarg(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_profile(PG_FUNCTION_ARGS);
 
 extern PGUT_EXPORT void	_PG_init(void);
@@ -219,6 +223,9 @@ static const char *assign_textlog_filename(const char *newval, bool doit, GucSou
 static const char *assign_maintenance_time(const char *newval, bool doit, GucSource source);
 #endif
 
+static Datum get_cpustats(FunctionCallInfo fcinfo,
+	int64 prev_cpu_user, int64 prev_cpu_system, int64 prev_cpu_idle, int64 prev_cpu_iowait);
+static Datum get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats);
 static int exec_grep(const char *filename, const char *regex, List **records);
 static int exec_split(const char *rawstring, const char *regex, List **fields);
 static bool parse_int64(const char *value, int64 *result);
@@ -226,6 +233,7 @@ static bool parse_float8(const char *value, double *result);
 static char *b_trim(char *str);
 static Datum BuildArrayType(List *values, Oid elmtype, Datum(*convert)(void *));
 static Datum _CStringGetTextDatum(void *ptr);
+static HeapTupleHeader search_devicestats(ArrayType *devicestats, const char *device_name);
 
 #if PG_VERSION_NUM < 80400 || defined(WIN32)
 static int str_to_elevel(const char *name, const char *str,
@@ -956,15 +964,55 @@ statsinfo_restart(PG_FUNCTION_ARGS)
 Datum
 statsinfo_cpustats(PG_FUNCTION_ARGS)
 {
-	List		*records = NIL;
-	List		*fields = NIL;
-	TupleDesc	 tupdesc;
-	HeapTuple	 tuple;
-	Datum		 values[NUM_CPUSTATS_COLS];
-	bool		 nulls[NUM_CPUSTATS_COLS];
-	char		*record;
-	int64		 val;
-	int			 i;
+	HeapTupleHeader	cpustats = PG_GETARG_HEAPTUPLEHEADER(0);
+	int64			prev_cpu_user;
+	int64			prev_cpu_system;
+	int64			prev_cpu_idle;
+	int64			prev_cpu_iowait;
+	bool			isnull;
+
+	/* previous cpustats */
+	prev_cpu_user = DatumGetInt64(
+		GetAttributeByNum(cpustats, 1, &isnull)); /* cpu_user */
+	prev_cpu_system = DatumGetInt64(
+		GetAttributeByNum(cpustats, 2, &isnull)); /* cpu_system */
+	prev_cpu_idle = DatumGetInt64(
+		GetAttributeByNum(cpustats, 3, &isnull)); /* cpu_idle */
+	prev_cpu_iowait = DatumGetInt64(
+		GetAttributeByNum(cpustats, 4, &isnull)); /* cpu_iowait */
+
+	PG_RETURN_DATUM(get_cpustats(fcinfo,
+		prev_cpu_user, prev_cpu_system, prev_cpu_idle, prev_cpu_iowait));
+}
+
+/*
+ * statsinfo_cpustats - get cpu information
+ * (remains of the old interface)
+ */
+Datum
+statsinfo_cpustats_noarg(PG_FUNCTION_ARGS)
+{
+	PG_RETURN_DATUM(get_cpustats(fcinfo, 0, 0, 0, 0));
+}
+
+static Datum
+get_cpustats(FunctionCallInfo fcinfo,
+			 int64 prev_cpu_user,
+			 int64 prev_cpu_system,
+			 int64 prev_cpu_idle,
+			 int64 prev_cpu_iowait)
+{
+	TupleDesc		 tupdesc;
+	int64			 cpu_user;
+	int64			 cpu_system;
+	int64			 cpu_idle;
+	int64			 cpu_iowait;
+	List			*records = NIL;
+	List			*fields = NIL;
+	HeapTuple		 tuple;
+	Datum			 values[NUM_CPUSTATS_COLS];
+	bool			 nulls[NUM_CPUSTATS_COLS];
+	char			*record;
 
 	must_be_superuser();
 
@@ -990,41 +1038,70 @@ statsinfo_cpustats(PG_FUNCTION_ARGS)
 	memset(nulls, 0, sizeof(nulls));
 	memset(values, 0, sizeof(values));
 
-	i = 0;
 	/* cpu_id */
-	values[i++] = CStringGetTextDatum((char *) list_nth(fields, 0));
+	values[0] = CStringGetTextDatum((char *) list_nth(fields, 0));
 
 	/* cpu_user */
-	parse_int64(list_nth(fields, 1), &val);
-	values[i++] = Int64GetDatum(val);
+	parse_int64(list_nth(fields, 1), &cpu_user);
+	values[1] = Int64GetDatum(cpu_user);
 
 	/* cpu_system */
-	parse_int64(list_nth(fields, 3), &val);
-	values[i++] = Int64GetDatum(val);
+	parse_int64(list_nth(fields, 3), &cpu_system);
+	values[2] = Int64GetDatum(cpu_system);
 
 	/* cpu_idle */
-	parse_int64(list_nth(fields, 4), &val);
-	values[i++] = Int64GetDatum(val);
+	parse_int64(list_nth(fields, 4), &cpu_idle);
+	values[3] = Int64GetDatum(cpu_idle);
 
 	/* cpu_iowait */
-	parse_int64(list_nth(fields, 5), &val);
-	values[i++] = Int64GetDatum(val);
+	parse_int64(list_nth(fields, 5), &cpu_iowait);
+	values[4] = Int64GetDatum(cpu_iowait);
 
-	/* overflow_user */
-	values[i++] = Int16GetDatum(0);
-
-	/* overflow_system */
-	values[i++] = Int16GetDatum(0);
-
-	/* overflow_idle */
-	values[i++] = Int16GetDatum(0);
-
-	/* overflow_iowait */
-	values[i++] = Int16GetDatum(0);
+	/* set the overflow flag if value is smaller than previous value */
+	if (cpu_user < prev_cpu_user)
+		values[5] = Int16GetDatum(1); /* overflow_user */
+	else
+		values[5] = Int16GetDatum(0);
+	if (cpu_system < prev_cpu_system)
+		values[6] = Int16GetDatum(1); /* overflow_system */
+	else
+		values[6] = Int16GetDatum(0);
+	if (cpu_idle < prev_cpu_idle)
+		values[7] = Int16GetDatum(1); /* overflow_idle */
+	else
+		values[7] = Int16GetDatum(0);
+	if (cpu_iowait < prev_cpu_iowait)
+		values[8] = Int16GetDatum(1); /* overflow_iowait */
+	else
+		values[8] = Int16GetDatum(0);
 
 	tuple = heap_form_tuple(tupdesc, values, nulls);
 
-	PG_RETURN_DATUM(HeapTupleGetDatum(tuple));
+	return HeapTupleGetDatum(tuple);
+}
+
+/*
+ * statsinfo_devicestats - get device information
+ */
+Datum
+statsinfo_devicestats(PG_FUNCTION_ARGS)
+{
+	ArrayType	*devicestats = NULL;
+
+	if (!PG_ARGISNULL(0))
+		devicestats = PG_GETARG_ARRAYTYPE_P(0);
+
+	PG_RETURN_DATUM(get_devicestats(fcinfo, devicestats));
+}
+
+/*
+ * statsinfo_devicestats - get device information 
+ * (remains of the old interface)
+ */
+Datum
+statsinfo_devicestats_noarg(PG_FUNCTION_ARGS)
+{
+	PG_RETURN_DATUM(get_devicestats(fcinfo, NULL));
 }
 
 #define FILE_DISKSTATS					"/proc/diskstats"
@@ -1041,11 +1118,14 @@ WHERE \
 	device IS NOT NULL \
 ORDER BY device"
 
+#define ARRNELEMS(x)	ArrayGetNItems(ARR_NDIM(x), ARR_DIMS(x))
+#define ARRPTR(x)		((HeapTupleHeader) ARR_DATA_PTR(x))
+
 /*
  * statsinfo_devicestats - get device information
  */
-Datum
-statsinfo_devicestats(PG_FUNCTION_ARGS)
+static Datum
+get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 {
 	ReturnSetInfo	*rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	TupleDesc		 tupdesc;
@@ -1055,11 +1135,9 @@ statsinfo_devicestats(PG_FUNCTION_ARGS)
 	SPITupleTable	*tuptable;
 	Datum			 values[NUM_DEVICESTATS_COLS];
 	bool			 nulls[NUM_DEVICESTATS_COLS];
-	int64			 val;
 	List			*spclist = NIL;
 	char			*prev_device = NULL;
 	int				 row;
-	int				 i = 0;
 
 	/* check to see if caller supports us returning a tuplestore */
 	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
@@ -1095,10 +1173,18 @@ statsinfo_devicestats(PG_FUNCTION_ARGS)
 
 	for (row = 0; row < SPI_processed; row++)
 	{
+		HeapTupleHeader prev_devicestats;
 		char *device;
 		char *spcname;
 		char *dev_major;
 		char *dev_minor;
+		char *dev_name = NULL;
+		int64 readsector;
+		int64 readtime;
+		int64 writesector;
+		int64 writetime;
+		int64 ioqueue;
+		int64 iototaltime;
 		char *record;
 		char  regex[64];
 		List *devicenum = NIL;
@@ -1117,7 +1203,7 @@ statsinfo_devicestats(PG_FUNCTION_ARGS)
 				continue;
 			}
 			/* device_tblspaces */
-			values[i++] = BuildArrayType(spclist, TYPE_DEVICE_TABLESPACES, _CStringGetTextDatum);
+			values[14] = BuildArrayType(spclist, TYPE_DEVICE_TABLESPACES, _CStringGetTextDatum);
 			tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 		}
 
@@ -1142,109 +1228,146 @@ statsinfo_devicestats(PG_FUNCTION_ARGS)
 		memset(nulls, 0, sizeof(nulls));
 		memset(values, 0, sizeof(values));
 		spclist = list_truncate(spclist, 0);
-		i = 0;
 
 		if (nfield  == NUM_DISKSTATS_FIELDS)
 		{
 			/* device_major */
-			values[i++] = CStringGetTextDatum(dev_major);
+			values[0] = CStringGetTextDatum(dev_major);
 
 			/* device_minor */
-			values[i++] = CStringGetTextDatum(dev_minor);
+			values[1] = CStringGetTextDatum(dev_minor);
 
 			/* device_name */
-			values[i++] = CStringGetTextDatum(list_nth(fields, 2));
+			dev_name = list_nth(fields, 2);
+			values[2] = CStringGetTextDatum(dev_name);
 
 			/* device_readsector */
-			parse_int64(list_nth(fields, 5), &val);
-			values[i++] = Int64GetDatum(val);
+			parse_int64(list_nth(fields, 5), &readsector);
+			values[3] = Int64GetDatum(readsector);
 
 			/* device_readtime */
-			parse_int64(list_nth(fields, 6), &val);
-			values[i++] = Int64GetDatum(val);
+			parse_int64(list_nth(fields, 6), &readtime);
+			values[4] = Int64GetDatum(readtime);
 
 			/* device_writesector */
-			parse_int64(list_nth(fields, 9), &val);
-			values[i++] = Int64GetDatum(val);
+			parse_int64(list_nth(fields, 9), &writesector);
+			values[5] = Int64GetDatum(writesector);
 
 			/* device_writetime */
-			parse_int64(list_nth(fields, 10), &val);
-			values[i++] = Int64GetDatum(val);
+			parse_int64(list_nth(fields, 10), &writetime);
+			values[6] = Int64GetDatum(writetime);
 
 			/* device_queue */
-			parse_int64(list_nth(fields, 11), &val);
-			values[i++] = Int64GetDatum(val);
+			parse_int64(list_nth(fields, 11), &ioqueue);
+			values[7] = Int64GetDatum(ioqueue);
 
 			/* device_iototaltime */
-			parse_int64(list_nth(fields, 13), &val);
-			values[i++] = Int64GetDatum(val);
-
-			/* overflow_drs */
-			values[i++] = Int16GetDatum(0);
-
-			/* overflow_drt */
-			values[i++] = Int16GetDatum(0);
-
-			/* overflow_dws */
-			values[i++] = Int16GetDatum(0);
-
-			/* overflow_dwt */
-			values[i++] = Int16GetDatum(0);
-
-			/* overflow_dit */
-			values[i++] = Int16GetDatum(0);
+			parse_int64(list_nth(fields, 13), &iototaltime);
+			values[8] = Int64GetDatum(iototaltime);
 		}
 		else if (nfield == NUM_DISKSTATS_PARTITION_FIELDS)
 		{
 			/* device_major */
-			values[i++] = CStringGetTextDatum(dev_major);
+			values[0] = CStringGetTextDatum(dev_major);
 
 			/* device_minor */
-			values[i++] = CStringGetTextDatum(dev_minor);
+			values[1] = CStringGetTextDatum(dev_minor);
 
 			/* device_name */
-			values[i++] = CStringGetTextDatum(list_nth(fields, 2));
+			dev_name = list_nth(fields, 2);
+			values[2] = CStringGetTextDatum(dev_name);
 
 			/* device_readsector */
-			parse_int64(list_nth(fields, 4), &val);
-			values[i++] = Int64GetDatum(val);
+			parse_int64(list_nth(fields, 4), &readsector);
+			values[3] = Int64GetDatum(readsector);
 
 			/* device_readtime */
-			nulls[i++] = true;
+			nulls[4] = true;
 
 			/* device_writesector */
-			parse_int64(list_nth(fields, 6), &val);
-			values[i++] = Int64GetDatum(val);
+			parse_int64(list_nth(fields, 6), &writesector);
+			values[5] = Int64GetDatum(writesector);
 
 			/* device_writetime */
-			nulls[i++] = true;
+			nulls[6] = true;
 
 			/* device_queue */
-			nulls[i++] = true;
+			nulls[7] = true;
 
 			/* device_iototaltime */
-			nulls[i++] = true;
-			
-			/* overflow_drs */
-			values[i++] = Int16GetDatum(0);
-
-			/* overflow_drt */
-			values[i++] = Int16GetDatum(0);
-
-			/* overflow_dws */
-			values[i++] = Int16GetDatum(0);
-
-			/* overflow_dwt */
-			values[i++] = Int16GetDatum(0);
-
-			/* overflow_dit */
-			values[i++] = Int16GetDatum(0);
+			nulls[8] = true;
 		}
 		else
 			ereport(ERROR,
 				(errcode(ERRCODE_DATA_EXCEPTION),
 				 errmsg("unexpected file format: \"%s\"", FILE_DISKSTATS),
 				 errdetail("number of fields is not corresponding")));
+
+		/* set the overflow flag if value is smaller than previous value */
+		prev_devicestats = search_devicestats(devicestats, dev_name);
+
+		if (prev_devicestats)
+		{
+			int64 prev_readsector;
+			int64 prev_readtime;
+			int64 prev_writesector;
+			int64 prev_writetime;
+			int64 prev_iototaltime;
+			bool isnull;
+
+			prev_readsector = DatumGetInt64(GetAttributeByNum(prev_devicestats, 2, &isnull));
+			prev_readtime = DatumGetInt64(GetAttributeByNum(prev_devicestats, 3, &isnull));
+			prev_writesector = DatumGetInt64(GetAttributeByNum(prev_devicestats, 4, &isnull));
+			prev_writetime = DatumGetInt64(GetAttributeByNum(prev_devicestats, 5, &isnull));
+			prev_iototaltime = DatumGetInt64(GetAttributeByNum(prev_devicestats, 6, &isnull));
+
+			/* overflow_drs */
+			if (readsector < prev_readsector)
+				values[9] = Int16GetDatum(1);
+			else
+				values[9] = Int16GetDatum(0);
+
+			/* overflow_drt */
+			if (nfield  == NUM_DISKSTATS_FIELDS && readtime < prev_readtime)
+				values[10] = Int16GetDatum(1);
+			else
+				values[10] = Int16GetDatum(0);
+
+			/* overflow_dws */
+			if (writesector < prev_writesector)
+				values[11] = Int16GetDatum(1);
+			else
+				values[11] = Int16GetDatum(0);
+
+			/* overflow_dwt */
+			if (nfield  == NUM_DISKSTATS_FIELDS && writetime < prev_writetime)
+				values[12] = Int16GetDatum(1);
+			else
+				values[12] = Int16GetDatum(0);
+
+			/* overflow_dit */
+			if (nfield  == NUM_DISKSTATS_FIELDS && iototaltime < prev_iototaltime)
+				values[13] = Int16GetDatum(1);
+			else
+				values[13] = Int16GetDatum(0);
+		}
+		else
+		{
+			/* overflow_drs */
+			values[9] = Int16GetDatum(0);
+
+			/* overflow_drt */
+			values[10] = Int16GetDatum(0);
+
+			/* overflow_dws */
+			values[11] = Int16GetDatum(0);
+
+			/* overflow_dwt */
+			values[12] = Int16GetDatum(0);
+
+			/* overflow_dit */
+			values[13] = Int16GetDatum(0);
+		}
 
 		spclist = lappend(spclist, spcname);
 		prev_device = device;
@@ -1254,7 +1377,7 @@ statsinfo_devicestats(PG_FUNCTION_ARGS)
 	if (list_length(spclist) > 0)
 	{
 		/* device_tblspaces */
-		values[i++] = BuildArrayType(spclist, TYPE_DEVICE_TABLESPACES, _CStringGetTextDatum);
+		values[14] = BuildArrayType(spclist, TYPE_DEVICE_TABLESPACES, _CStringGetTextDatum);
 		tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 	}
 
@@ -1409,7 +1532,7 @@ static void
 send_str(int fd, const char *key, const char *value)
 {
 	uint32	size;
-	
+
 	/* key */
 	size = strlen(key);
 	checked_write(fd, &size, sizeof(size));
@@ -2409,4 +2532,38 @@ static Datum
 _CStringGetTextDatum(void *ptr)
 {
 	return CStringGetTextDatum((char *) ptr);
+}
+
+static HeapTupleHeader
+search_devicestats(ArrayType *devicestats, const char *device_name)
+{
+	int16	 elmlen;
+	bool	 elmbyval;
+	char	 elmalign;
+	Datum	*elems;
+	bool	*elemnulls;
+	int		 nelems;
+	int		 i;
+
+	if (devicestats == NULL || device_name == NULL)
+		return NULL;
+
+	get_typlenbyvalalign(
+		ARR_ELEMTYPE(devicestats), &elmlen, &elmbyval, &elmalign);
+
+	deconstruct_array(devicestats, ARR_ELEMTYPE(devicestats),
+			elmlen, elmbyval, elmalign, &elems, &elemnulls, &nelems);
+
+	for (i = 0; i < nelems; i++)
+	{
+		HeapTupleHeader tuple = (HeapTupleHeader) elems[i];
+		char *dev_name;
+		bool isnull;
+
+		dev_name = TextDatumGetCString(GetAttributeByNum(tuple, 1, &isnull));
+		if (strcmp(device_name, dev_name) == 0)
+			return tuple;
+	}
+	/* not found */
+	return NULL;
 }

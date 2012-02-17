@@ -265,10 +265,11 @@ FROM \
 
 /* cpu */
 #define SQL_SELECT_CPU "\
-SELECT * FROM statsinfo.cpustats()"
+SELECT * FROM statsinfo.cpustats($1)"
 
 /* device */
-#define SQL_SELECT_DEVICE	"SELECT * FROM statsinfo.devicestats()"
+#define SQL_SELECT_DEVICE "\
+SELECT * FROM statsinfo.devicestats($1)"
 
 /* profile */
 #define SQL_SELECT_PROFILE	"SELECT * FROM statsinfo.profile()"
