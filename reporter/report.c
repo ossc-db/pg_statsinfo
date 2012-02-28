@@ -193,6 +193,9 @@ do_report(PGconn *conn,
 	/* isolate transaction to insure the contents of report */
 	pgut_command(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE", 0, NULL);
 
+	/* exclusive control for don't run concurrently with the maintenance */
+	pgut_command(conn, "LOCK TABLE statsrepo.instance IN SHARE MODE", 0, NULL);
+
 	/* get the report scope of each instance */
 	if (beginid || endid)
 		scope_list = select_scope_by_snapid(conn, beginid, endid);

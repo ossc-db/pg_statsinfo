@@ -2039,7 +2039,7 @@ CREATE FUNCTION statsrepo.create_partition(timestamptz) RETURNS void AS
 $$
 DECLARE
 BEGIN
-	LOCK TABLE statsrepo.snapshot IN SHARE UPDATE EXCLUSIVE MODE;
+	LOCK TABLE statsrepo.instance IN SHARE UPDATE EXCLUSIVE MODE;
 
 	SET client_min_messages = warning;
 	PERFORM statsrepo.partition_new('statsrepo.table'::regclass, CAST($1 AS DATE));
@@ -2068,7 +2068,7 @@ CREATE TRIGGER partition_insert_column BEFORE INSERT ON statsrepo.column FOR EAC
 -- del_snapshot2(time) - delete snapshots before the specified time.
 CREATE FUNCTION statsrepo.del_snapshot2(timestamptz) RETURNS void AS
 $$
-	LOCK TABLE statsrepo.snapshot IN SHARE UPDATE EXCLUSIVE MODE;
+	LOCK TABLE statsrepo.instance IN SHARE UPDATE EXCLUSIVE MODE;
 
 	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.table'::regclass);
 	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.index'::regclass);

@@ -70,6 +70,9 @@ DECLARE
   val_gb_pct_table record; -- relname and garbage-ratio
 
 BEGIN
+  -- exclusive control for don't run concurrently with the maintenance
+  LOCK TABLE statsrepo.instance IN SHARE MODE;
+
   -- retrieve latest snapshot
   SELECT * INTO curr FROM statsrepo.snapshot WHERE snapid = snap_id;
 
