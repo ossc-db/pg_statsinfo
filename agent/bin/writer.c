@@ -229,11 +229,15 @@ recv_writer_queue(void)
 static PGconn *
 writer_connect(void)
 {
+	char	info[1024];
 	int		retry = 0;
+
+	snprintf(info, lengthof(info),
+		"%s options='-c log_statement=none'", my_repository_server);
 
 	do
 	{
-		if (do_connect(&writer_conn, my_repository_server, "statsrepo"))
+		if (do_connect(&writer_conn, info, "statsrepo"))
 			return writer_conn;
 		delay();
 	} while(shutdown_state < SHUTDOWN_REQUESTED && ++retry < DB_MAX_RETRY);
