@@ -10,6 +10,22 @@
 #include "collector_sql.h"
 #include "writer_sql.h"
 
+/* printf format specifiers for 64-bit integer */
+#ifdef HAVE_LONG_INT_64
+#ifndef HAVE_INT64
+#define PARAMS_FORMAT_CPUSTATS		"(%ld,%ld,%ld,%ld)"
+#define PARAMS_FORMAT_DEVICESTATS	"\"(\\\"%s\\\",%ld,%ld,%ld,%ld,%ld)\""
+#endif
+#elif defined(HAVE_LONG_LONG_INT_64)
+#ifndef HAVE_INT64
+#define PARAMS_FORMAT_CPUSTATS		"(%lld,%lld,%lld,%lld)"
+#define PARAMS_FORMAT_DEVICESTATS	"\"(\\\"%s\\\",%lld,%lld,%lld,%lld,%lld)\""
+#endif
+#else
+/* neither HAVE_LONG_INT_64 nor HAVE_LONG_LONG_INT_64 */
+#error must have a working 64-bit integer datatype
+#endif
+
 /* snapshot data */
 typedef struct Snap
 {
@@ -174,7 +190,7 @@ get_snapshot(char *comment)
 			const char *params[1];
 			char buf[1024];
 
-			snprintf(buf, sizeof(buf), "(%ld,%ld,%ld,%ld)",
+			snprintf(buf, sizeof(buf), PARAMS_FORMAT_CPUSTATS,
 				prev_cpustats.user,
 				prev_cpustats.system,
 				prev_cpustats.idle,
@@ -210,7 +226,7 @@ get_snapshot(char *comment)
 				{
 					Diskstats *prev_diskstats = list_nth(prev_diskstats_list, j);
 
-					appendStringInfo(&buf, "\"(\\\"%s\\\",%ld,%ld,%ld,%ld,%ld)\"",
+					appendStringInfo(&buf, PARAMS_FORMAT_DEVICESTATS,
 						prev_diskstats->device,
 						prev_diskstats->readsector,
 						prev_diskstats->readtime,
