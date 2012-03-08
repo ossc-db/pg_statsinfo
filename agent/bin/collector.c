@@ -26,6 +26,7 @@ FROM \
 		('" GUC_PREFIX ".syslog_line_prefix'), \
 		('" GUC_PREFIX ".textlog_permission'), \
 		('" GUC_PREFIX ".excluded_dbnames'), \
+		('" GUC_PREFIX ".excluded_schemas'), \
 		('" GUC_PREFIX ".sampling_interval'), \
 		('" GUC_PREFIX ".snapshot_interval'), \
 		('" GUC_PREFIX ".repository_server'), \

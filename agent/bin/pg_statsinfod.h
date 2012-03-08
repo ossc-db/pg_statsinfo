@@ -53,6 +53,7 @@ extern char		   *log_timezone_name;
 /*---- GUC variables (collector) -------*/
 extern char		   *data_directory;
 extern char		   *excluded_dbnames;
+extern char		   *excluded_schemas;
 extern int			sampling_interval;
 extern int			snapshot_interval;
 /*---- GUC variables (logger) ----------*/

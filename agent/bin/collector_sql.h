@@ -294,7 +294,9 @@ SELECT \
 	oid AS nspid, \
 	nspname \
 FROM \
-	pg_namespace"
+	pg_namespace \
+WHERE \
+	nspname <> ALL (('{' || $1 || '}')::text[])"
 
 /* table */
 #define SQL_SELECT_TABLE "\
@@ -341,8 +343,11 @@ FROM  \
 	pg_class c LEFT JOIN \
 	pg_index i ON c.oid = i.indrelid LEFT JOIN \
 	pg_class t ON c.reltoastrelid = t.oid LEFT JOIN \
-	pg_class x ON t.reltoastidxid = x.oid \
-WHERE c.relkind IN ('r', 't') \
+	pg_class x ON t.reltoastidxid = x.oid LEFT JOIN \
+	pg_namespace n ON c.relnamespace = n.oid \
+WHERE \
+	c.relkind IN ('r', 't') AND \
+	n.nspname <> ALL (('{' || $1 || '}')::text[]) \
 GROUP BY \
     c.oid, \
     c.relnamespace, \
@@ -391,10 +396,14 @@ FROM \
 		a.attnum = s.staattnum \
 	AND \
 		a.attrelid = s.starelid " SQL_SELECT_COLUMN_WHERE "\
+	LEFT JOIN pg_namespace n ON \
+		c.relnamespace = n.oid \
 WHERE \
 	a.attnum > 0 \
 AND \
-	c.relkind IN ('r', 't')"
+	c.relkind IN ('r', 't') \
+AND \
+	n.nspname <> ALL (('{' || $1 || '}')::text[])"
 
 /* index */
 #define SQL_SELECT_INDEX "\
@@ -423,17 +432,24 @@ SELECT \
 FROM \
     pg_class c JOIN \
     pg_index x ON c.oid = x.indrelid JOIN \
-    pg_class i ON i.oid = x.indexrelid \
-WHERE c.relkind IN ('r', 't')"
+    pg_class i ON i.oid = x.indexrelid JOIN \
+    pg_namespace n ON n.oid = c.relnamespace \
+WHERE \
+	c.relkind IN ('r', 't') AND \
+	n.nspname <> ALL (('{' || $1 || '}')::text[])"
 
 /* inherits */
 #define SQL_SELECT_INHERITS "\
 SELECT \
-	inhrelid, \
-	inhparent, \
-	inhseqno \
+	i.inhrelid, \
+	i.inhparent, \
+	i.inhseqno \
 FROM \
-	pg_inherits"
+	pg_inherits i JOIN \
+	pg_class c ON i.inhrelid = c.oid JOIN \
+	pg_namespace n ON c.relnamespace = n.oid \
+WHERE \
+	n.nspname <> ALL (('{' || $1 || '}')::text[])"
 
 /* function */
 #define SQL_SELECT_FUNCTION "\
@@ -446,8 +462,9 @@ SELECT \
 	s.total_time, \
 	s.self_time \
 FROM \
-	pg_stat_user_functions s, \
-	pg_namespace n \
-WHERE s.schemaname = n.nspname"
+	pg_stat_user_functions s JOIN \
+	pg_namespace n ON s.schemaname = n.nspname \
+WHERE \
+	n.nspname <> ALL (('{' || $1 || '}')::text[])"
 
 #endif

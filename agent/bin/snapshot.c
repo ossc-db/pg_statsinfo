@@ -123,7 +123,8 @@ static const char *database_puts[] =
 
 static void Snap_free(Snap *snap);
 static bool Snap_exec(Snap *snap, PGconn *conn, const char *instid);
-static List *do_gets(PGconn *conn, const char *sql[]);
+static List *do_gets(PGconn *conn, const char *sql[],
+					 int nParams, const char **params);
 static PGresult *do_get(PGconn *conn, const char *sql,
 						int nParams, const char **params);
 static bool do_puts(PGconn *conn, const char *sql[], List *src,
@@ -292,7 +293,7 @@ get_snapshot(char *comment)
 		}
 
 		/* query other instance-level statistics */
-		snap->instance = do_gets(conn, instance_gets);
+		snap->instance = do_gets(conn, instance_gets, 0, NULL);
 		if (snap->instance == NIL)
 			continue;
 
@@ -334,6 +335,7 @@ get_snapshot(char *comment)
 	{
 		const char *db = PQgetvalue(snap->dbnames, r, 1);
 		List	   *dbsnap = NIL;
+		const char *params[] = {excluded_schemas};
 
 		elog(DEBUG2, "snapshot (database=%s)", db);
 		for (retry = 0;
@@ -341,7 +343,7 @@ get_snapshot(char *comment)
 			 delay(), retry++)
 		{
 			if ((conn = collector_connect(db)) == NULL ||
-				(dbsnap = do_gets(conn, database_gets)) == NIL)
+				(dbsnap = do_gets(conn, database_gets, 1, params)) == NIL)
 				continue;
 
 			break;	/* ok */
@@ -512,7 +514,7 @@ error:
  * 'sql' must have a NULL sentinel at the end.
  */
 static List *
-do_gets(PGconn *conn, const char *sql[])
+do_gets(PGconn *conn, const char *sql[], int nParams, const char **params)
 {
 	int		i;
 	List   *result = NIL;
@@ -524,7 +526,7 @@ do_gets(PGconn *conn, const char *sql[])
 	{
 		PGresult   *res;
 
-		if ((res = do_get(conn, sql[i], 0, NULL)) == NULL)
+		if ((res = do_get(conn, sql[i], nParams, params)) == NULL)
 			goto error;
 		result = lappend(result, res);
 	}

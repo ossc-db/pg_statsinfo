@@ -148,6 +148,7 @@ static const struct config_enum_entry server_message_level_options[] = {
 #endif
 
 static char	   *excluded_dbnames = NULL;
+static char	   *excluded_schemas = NULL;
 static char	   *repository_server = NULL;
 static int		sampling_interval = DEFAULT_SAMPLING_INTERVAL;
 static int		snapshot_interval = DEFAULT_SNAPSHOT_INTERVAL;
@@ -624,6 +625,19 @@ _PG_init(void)
 							   NULL,
 							   &excluded_dbnames,
 							   "template0, template1",
+							   PGC_SIGHUP,
+							   0,
+#if PG_VERSION_NUM >= 90100
+							   NULL,
+#endif
+							   NULL,
+							   NULL);
+
+	DefineCustomStringVariable(GUC_PREFIX ".excluded_schemas",
+							   "Selects which schema are excluded by pg_statinfo.",
+							   NULL,
+							   &excluded_schemas,
+							   "pg_catalog,pg_toast,information_schema",
 							   PGC_SIGHUP,
 							   0,
 #if PG_VERSION_NUM >= 90100
@@ -1634,6 +1648,7 @@ exec_background_process(char cmd[])
 	send_str(fd, GUC_PREFIX ".syslog_line_prefix", syslog_line_prefix);
 	send_i32(fd, GUC_PREFIX ".textlog_permission", textlog_permission);
 	send_str(fd, GUC_PREFIX ".excluded_dbnames", excluded_dbnames);
+	send_str(fd, GUC_PREFIX ".excluded_schemas", excluded_schemas);
 	send_i32(fd, GUC_PREFIX ".sampling_interval", sampling_interval);
 	send_i32(fd, GUC_PREFIX ".snapshot_interval", snapshot_interval);
 	send_str(fd, GUC_PREFIX ".repository_server", repository_server);
