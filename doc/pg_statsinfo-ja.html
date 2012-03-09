@@ -858,6 +858,11 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
     <td>監視対象から除外するデータベース名</td>
   </tr>
   <tr>
+    <td>pg_statsinfo.excluded_schemas</td>
+    <td>'pg_catalog, pg_toast, information_schema'</td>
+    <td>監視対象から除外するスキーマ名</td>
+  </tr>
+  <tr>
     <td>pg_statsinfo.repository_server</td>
     <td>'dbname=postgres'</td>
     <td>リポジトリDBへの接続文字列 (*4)。パスワードの入力待ちは避ける。</td>
