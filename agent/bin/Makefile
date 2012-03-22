@@ -24,7 +24,7 @@ DATA = pg_statsrepo83.sql pg_statsrepo_partition.sql pg_statsrepo_alert.sql unin
 PROGRAM = pg_statsinfod
 REGRESS = pg_statsinfo
 
-PG_CPPFLAGS = -I$(libpq_srcdir) -DFRONTEND -DPGUT_MULTI_THREADED -DPGUT_OVERRIDE_ELOG
+PG_CPPFLAGS = -I$(libpq_srcdir) -DFRONTEND -DPGUT_MULTI_THREADED -DPGUT_OVERRIDE_ELOG -DUSE_DAEMON
 PG_LIBS = $(libpq) -lpthread
 
 ifndef USE_PGXS
