@@ -984,12 +984,11 @@ CSVログ、テキストログは手動で削除しない限り残り続けま�
 <pre>$ psql -d postgres -c "SELECT pg_rotate_logfile()"</pre>
 
 <h4 id="on-abort">異常終了時の対処</h4>
-<p>pg_statsinfo のみが異常終了しても、PostgreSQL インスタンスには影響はありません。
-しかし、pg_statsinfo の機能は停止したままになってしまうため、PostgreSQL インスタンスを再起動するか、以下のコマンドで pg_statsinfo を再起動して下さい。</p>
-<pre>$ psql -d postgres -c "SELECT statsinfo.restart()"</pre>
-<p>ただし、pg_statsinfo のみが異常終了から再起動までの間にサーバログがローテートされていた場合、最新のサーバログを除いては解析されません。
-pg_statsinfo の停止中に出力されたサーバログについては、直接CSVログファイルを閲覧して下さい。</p>
-
+<p>pg_statsinfo のみが異常終了しても、PostgreSQL インスタンスには影響はありませんが、pg_statsinfo の機能は停止したままになってしまいます。
+pg_statsinfo を再起動するには PostgreSQL インスタンスを再起動してください。
+なお、pg_statsinfo のみが異常終了してから再起動までの間にサーバログがローテートされていた場合、最新のサーバログを除いては解析されません。
+pg_statsinfo の停止中に出力されたサーバログについては、直接CSVログファイルを閲覧して下さい。
+</p>
 
 <h2 id="uninstall">アンインストール</h2>
 <p>pg_statsinfo をアンインストールするには、PostgreSQL インスタンスの再起動が必要です。
