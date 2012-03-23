@@ -17,7 +17,7 @@ log_autovacuum_min_duration = 0
 custom_variable_classes = 'pg_statsinfo'
 pg_statsinfo.textlog_min_messages = info
 pg_statsinfo.syslog_min_messages = info
-pg_statsinfo.snapshot_interval = 1h
+pg_statsinfo.snapshot_interval = 1d
 pg_statsinfo.long_lock_threashold = 0
 EOF
 

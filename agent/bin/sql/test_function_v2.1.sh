@@ -10,7 +10,7 @@ touch ${PGCONFIG_EXT}
 echo "--- FU-0001 (statsinfo.cpu, statsinfo.device [num of tablespace: 0]) ---"
 psql -ac "SELECT statsinfo.snapshot('comment')"
 sleep 5
-psql -aAc "SELECT * FROM statsrepo.cpu" | sed 's#\(|[0-9]\+\)\{4\}$#|xxx|xxx|xxx|xxx#'
+psql -aAc "SELECT * FROM statsrepo.cpu" | sed 's#\(|[0-9]\+\)\{4\}#|xxx|xxx|xxx|xxx#'
 psql -aAc "SELECT * FROM statsrepo.device" | sed 's#\(|[0-9]\+\)\{2\}|[^|]\+\(|[0-9]\+\)\{6\}#|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx#'
 
 echo "--- FU-0002 (statsinfo.cpu, statsinfo.device [num of tablespace: 1]) ---"

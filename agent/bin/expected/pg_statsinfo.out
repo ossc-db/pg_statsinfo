@@ -8,12 +8,12 @@ SELECT statsinfo.snapshot('comment')
 (1 row)
 
 SELECT * FROM statsrepo.cpu
-snapid|cpu_id|cpu_user|cpu_system|cpu_idle|cpu_iowait
-1|cpu|xxx|xxx|xxx|xxx
+snapid|cpu_id|cpu_user|cpu_system|cpu_idle|cpu_iowait|overflow_user|overflow_system|overflow_idle|overflow_iowait
+1|cpu|xxx|xxx|xxx|xxx|0|0|0|0
 (1 row)
 SELECT * FROM statsrepo.device
-snapid|device_major|device_minor|device_name|device_readsector|device_readtime|device_writesector|device_writetime|device_ioqueue|device_iototaltime|device_tblspaces
-1|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global}
+snapid|device_major|device_minor|device_name|device_readsector|device_readtime|device_writesector|device_writetime|device_ioqueue|device_iototaltime|overflow_drs|overflow_drt|overflow_dws|overflow_dwt|overflow_dit|device_tblspaces
+1|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|0|0|0|0|0|{pg_default,pg_global}
 (1 row)
 --- FU-0002 (statsinfo.cpu, statsinfo.device [num of tablespace: 1]) ---
 CREATE TABLESPACE
@@ -24,9 +24,9 @@ SELECT statsinfo.snapshot('comment')
 (1 row)
 
 SELECT * FROM statsrepo.device
-snapid|device_major|device_minor|device_name|device_readsector|device_readtime|device_writesector|device_writetime|device_ioqueue|device_iototaltime|device_tblspaces
-1|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global}
-2|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global,tblspc01}
+snapid|device_major|device_minor|device_name|device_readsector|device_readtime|device_writesector|device_writetime|device_ioqueue|device_iototaltime|overflow_drs|overflow_drt|overflow_dws|overflow_dwt|overflow_dit|device_tblspaces
+1|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|0|0|0|0|0|{pg_default,pg_global}
+2|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|0|0|0|0|0|{pg_default,pg_global,tblspc01}
 (2 rows)
 --- FU-0003 (statsinfo.cpu, statsinfo.device [num of tablespace: 2]) ---
 CREATE TABLESPACE
@@ -37,10 +37,10 @@ SELECT statsinfo.snapshot('comment')
 (1 row)
 
 SELECT * FROM statsrepo.device
-snapid|device_major|device_minor|device_name|device_readsector|device_readtime|device_writesector|device_writetime|device_ioqueue|device_iototaltime|device_tblspaces
-1|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global}
-2|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global,tblspc01}
-3|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global,tblspc01,tblspc02}
+snapid|device_major|device_minor|device_name|device_readsector|device_readtime|device_writesector|device_writetime|device_ioqueue|device_iototaltime|overflow_drs|overflow_drt|overflow_dws|overflow_dwt|overflow_dit|device_tblspaces
+1|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|0|0|0|0|0|{pg_default,pg_global}
+2|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|0|0|0|0|0|{pg_default,pg_global,tblspc01}
+3|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|0|0|0|0|0|{pg_default,pg_global,tblspc01,tblspc02}
 (3 rows)
 --- FU-0004 (statsinfo.cpu, statsinfo.device [num of tablespace: 64]) ---
 CREATE TABLESPACE
@@ -112,11 +112,11 @@ SELECT statsinfo.snapshot('comment')
 (1 row)
 
 SELECT * FROM statsrepo.device
-snapid|device_major|device_minor|device_name|device_readsector|device_readtime|device_writesector|device_writetime|device_ioqueue|device_iototaltime|device_tblspaces
-1|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global}
-2|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global,tblspc01}
-3|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global,tblspc01,tblspc02}
-4|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|{pg_default,pg_global,tblspc01,tblspc02,tblspc03,tblspc04,tblspc05,tblspc06,tblspc07,tblspc08,tblspc09,tblspc10,tblspc11,tblspc12,tblspc13,tblspc14,tblspc15,tblspc16,tblspc17,tblspc18,tblspc19,tblspc20,tblspc21,tblspc22,tblspc23,tblspc24,tblspc25,tblspc26,tblspc27,tblspc28,tblspc29,tblspc30,tblspc31,tblspc32,tblspc33,tblspc34,tblspc35,tblspc36,tblspc37,tblspc38,tblspc39,tblspc40,tblspc41,tblspc42,tblspc43,tblspc44,tblspc45,tblspc46,tblspc47,tblspc48,tblspc49,tblspc50,tblspc51,tblspc52,tblspc53,tblspc54,tblspc55,tblspc56,tblspc57,tblspc58,tblspc59,tblspc60,tblspc61,tblspc62,tblspc63,tblspc64}
+snapid|device_major|device_minor|device_name|device_readsector|device_readtime|device_writesector|device_writetime|device_ioqueue|device_iototaltime|overflow_drs|overflow_drt|overflow_dws|overflow_dwt|overflow_dit|device_tblspaces
+1|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|0|0|0|0|0|{pg_default,pg_global}
+2|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|0|0|0|0|0|{pg_default,pg_global,tblspc01}
+3|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|0|0|0|0|0|{pg_default,pg_global,tblspc01,tblspc02}
+4|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|xxx|0|0|0|0|0|{pg_default,pg_global,tblspc01,tblspc02,tblspc03,tblspc04,tblspc05,tblspc06,tblspc07,tblspc08,tblspc09,tblspc10,tblspc11,tblspc12,tblspc13,tblspc14,tblspc15,tblspc16,tblspc17,tblspc18,tblspc19,tblspc20,tblspc21,tblspc22,tblspc23,tblspc24,tblspc25,tblspc26,tblspc27,tblspc28,tblspc29,tblspc30,tblspc31,tblspc32,tblspc33,tblspc34,tblspc35,tblspc36,tblspc37,tblspc38,tblspc39,tblspc40,tblspc41,tblspc42,tblspc43,tblspc44,tblspc45,tblspc46,tblspc47,tblspc48,tblspc49,tblspc50,tblspc51,tblspc52,tblspc53,tblspc54,tblspc55,tblspc56,tblspc57,tblspc58,tblspc59,tblspc60,tblspc61,tblspc62,tblspc63,tblspc64}
 (4 rows)
 --- FU-0012 (adjust log level [adjust_log_level = off]) ---
 server signaled
@@ -435,7 +435,7 @@ blocker_query    | SELECT * FROM xxx;SELECT pg_sleep(2);
 
 --- FU-0002 (lock conflict [blocker query: SELECT FOR UPDATE]) ---
 -[ RECORD 1 ]----+-------------------------------------------------
-snapid           | 8
+snapid           | 7
 datname          | postgres
 nspname          | 
 relname          | 
@@ -452,7 +452,7 @@ blocker_query    | SELECT * FROM xxx FOR UPDATE;SELECT pg_sleep(2);
 
 --- FU-0003 (lock conflict [blocker query: SELECT FOR SHARE]) ---
 -[ RECORD 1 ]----+------------------------------------------------
-snapid           | 9
+snapid           | 8
 datname          | postgres
 nspname          | 
 relname          | 
@@ -469,7 +469,7 @@ blocker_query    | SELECT * FROM xxx FOR SHARE;SELECT pg_sleep(2);
 
 --- FU-0004 (lock conflict [blocker query: INSERT]) ---
 -[ RECORD 1 ]----+-----------------------------------------------
-snapid           | 10
+snapid           | 9
 datname          | postgres
 nspname          | statsinfo
 relname          | xxx
@@ -486,7 +486,7 @@ blocker_query    | INSERT INTO xxx VALUES (1);SELECT pg_sleep(2);
 
 --- FU-0005 (lock conflict [blocker query: UPDATE]) ---
 -[ RECORD 1 ]----+-------------------------------------------
-snapid           | 11
+snapid           | 10
 datname          | postgres
 nspname          | statsinfo
 relname          | xxx
@@ -503,7 +503,7 @@ blocker_query    | UPDATE xxx SET col = 0;SELECT pg_sleep(2);
 
 --- FU-0006 (lock conflict [blocker query: DELETE]) ---
 -[ RECORD 1 ]----+------------------------------------
-snapid           | 12
+snapid           | 11
 datname          | postgres
 nspname          | statsinfo
 relname          | xxx
@@ -520,7 +520,7 @@ blocker_query    | DELETE FROM xxx;SELECT pg_sleep(2);
 
 --- FU-0007 (lock conflict [blocker query: CREATE INDEX]) ---
 -[ RECORD 1 ]----+--------------------------------------------------
-snapid           | 13
+snapid           | 12
 datname          | postgres
 nspname          | statsinfo
 relname          | xxx
@@ -537,7 +537,7 @@ blocker_query    | CREATE INDEX idx ON xxx (col);SELECT pg_sleep(2);
 
 --- FU-0009 (lock conflict [blocker query: CLUSTER]) ---
 -[ RECORD 1 ]----+----------------------------------------------
-snapid           | 14
+snapid           | 13
 datname          | postgres
 nspname          | statsinfo
 relname          | xxx
@@ -554,7 +554,7 @@ blocker_query    | CLUSTER xxx USING idx_xxx;SELECT pg_sleep(2);
 
 --- FU-0010 (lock conflict [blocker query: ANALYZE]) ---
 -[ RECORD 1 ]----+--------------------------------
-snapid           | 15
+snapid           | 14
 datname          | postgres
 nspname          | statsinfo
 relname          | xxx
@@ -571,7 +571,7 @@ blocker_query    | ANALYZE xxx;SELECT pg_sleep(2);
 
 --- FU-0011 (lock conflict [blocker query: REINDEX]) ---
 -[ RECORD 1 ]----+--------------------------------------
-snapid           | 16
+snapid           | 15
 datname          | postgres
 nspname          | statsinfo
 relname          | xxx
@@ -588,7 +588,7 @@ blocker_query    | REINDEX TABLE xxx;SELECT pg_sleep(2);
 
 --- FU-0012 (lock conflict [blocker query: ALTER TABLE]) ---
 -[ RECORD 1 ]----+---------------------------------------------------------
-snapid           | 17
+snapid           | 16
 datname          | postgres
 nspname          | statsinfo
 relname          | xxx
@@ -605,7 +605,7 @@ blocker_query    | ALTER TABLE xxx ADD COLUMN name text;SELECT pg_sleep(2);
 
 --- FU-0013 (lock conflict [blocker query: TRUNCATE]) ---
 -[ RECORD 1 ]----+---------------------------------
-snapid           | 18
+snapid           | 17
 datname          | postgres
 nspname          | statsinfo
 relname          | xxx
@@ -622,7 +622,7 @@ blocker_query    | TRUNCATE xxx;SELECT pg_sleep(2);
 
 --- FU-0014 (lock conflict [blocker query: DROP TABLE]) ---
 -[ RECORD 1 ]----+-----------------------------------
-snapid           | 19
+snapid           | 18
 datname          | postgres
 nspname          | statsinfo
 relname          | xxx
@@ -639,7 +639,7 @@ blocker_query    | DROP TABLE xxx;SELECT pg_sleep(2);
 
 --- FU-0017 (lock conflict [blocker query: PREPARE]) ---
 -[ RECORD 1 ]----+-----------------------------------------------------
-snapid           | 20
+snapid           | 19
 datname          | postgres
 nspname          | statsinfo
 relname          | xxx
@@ -656,7 +656,7 @@ blocker_query    | PREPARE block AS DELETE FROM xxx;SELECT pg_sleep(2);
 
 --- FU-0018 (lock conflict [blocker query: PREPARE TRANSACTION]) ---
 -[ RECORD 1 ]----+--------------------------------
-snapid           | 21
+snapid           | 20
 datname          | postgres
 nspname          | statsinfo
 relname          | xxx
@@ -673,7 +673,7 @@ blocker_query    | (xact is detached from session)
 
 --- FU-0019 (lock conflict [blocker query: STORED PROCEDURE]) ---
 -[ RECORD 1 ]----+-------------------------------------------------------------------
-snapid           | 22
+snapid           | 21
 datname          | postgres
 nspname          | statsinfo
 relname          | xxx
@@ -690,7 +690,7 @@ blocker_query    | SELECT block_proc();INSERT INTO xxx VALUES (1);SELECT pg_slee
 
 --- FU-0030 (recovery conflict [DB: 1]) ---
 -[ RECORD 1 ]----+---------
-snapid           | 23
+snapid           | 22
 name             | postgres
 confl_tablespace | 0
 confl_lock       | 0
@@ -700,7 +700,7 @@ confl_deadlock   | 0
 
 --- FU-0031 (recovery conflict [DB: 2]) ---
 -[ RECORD 1 ]----+---------
-snapid           | 24
+snapid           | 23
 name             | postgres
 confl_tablespace | 0
 confl_lock       | 0
@@ -708,7 +708,7 @@ confl_snapshot   | 0
 confl_bufferpin  | 0
 confl_deadlock   | 0
 -[ RECORD 2 ]----+---------
-snapid           | 24
+snapid           | 23
 name             | testdb
 confl_tablespace | 0
 confl_lock       | 0
