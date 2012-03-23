@@ -1469,11 +1469,11 @@ CREATE FUNCTION statsrepo.get_long_transactions(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		max_xact_pid,
-		max_xact_client,
-		max_xact_start::timestamp(0),
-		max(max_xact_duration)::numeric(1000, 3) AS duration,
-		(SELECT max_xact_query FROM statsrepo.activity WHERE snapid = max(a.snapid))
+		a.max_xact_pid,
+		a.max_xact_client,
+		a.max_xact_start::timestamp(0),
+		max(a.max_xact_duration)::numeric(1000, 3) AS duration,
+		a.max_xact_query
 	FROM
 		statsrepo.activity a,
 		statsrepo.snapshot s
@@ -1483,9 +1483,10 @@ $$
 		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 		AND max_xact_pid <> 0
 	GROUP BY
-		max_xact_pid,
-		max_xact_client,
-		max_xact_start
+		a.max_xact_pid,
+		a.max_xact_client,
+		a.max_xact_start,
+		a.max_xact_query
 	ORDER BY
 		duration DESC;
 $$
