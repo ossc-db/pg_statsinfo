@@ -1231,9 +1231,14 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 
 		/* extract device information */
 		if (exec_grep(FILE_DISKSTATS, regex, &records) <= 0)
-			ereport(ERROR,
-				(errcode(ERRCODE_DATA_EXCEPTION),
-				 errmsg("unexpected file format: \"%s\"", FILE_DISKSTATS)));
+		{
+			ereport(WARNING,
+				(errmsg("device information of \"%s\" used by tablespace \"%s\" does not exist in \"%s\"",
+					device, spcname, FILE_DISKSTATS)));
+			prev_device = NULL;
+			spclist = list_truncate(spclist, 0);
+			continue;
+		}
 
 		record = b_trim((char *) list_nth(records, 0));
 
