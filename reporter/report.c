@@ -15,39 +15,15 @@
 
 #define SQL_SELECT_SUMMARY						"SELECT * FROM statsrepo.get_summary($1, $2)"
 #define SQL_SELECT_DBSTATS						"SELECT * FROM statsrepo.get_dbstats($1, $2)"
-#define SQL_SELECT_XACT_TENDENCY "\
-	SELECT \
-		snapid, \
-		datname, \
-		commit_tps::numeric(1000, 3), \
-		rollback_tps::numeric(1000, 3) \
-	FROM \
-		statsrepo.get_xact_tendency($1, $2)"
-
-#define SQL_SELECT_DBSIZE_TENDENCY "\
-	SELECT \
-		snapid, \
-		datname, \
-		size::numeric(1000, 3) \
-	FROM \
-		statsrepo.get_dbsize_tendency($1, $2)"
-
+#define SQL_SELECT_XACT_TENDENCY				"SELECT * FROM statsrepo.get_xact_tendency_report($1, $2)"
+#define SQL_SELECT_DBSIZE_TENDENCY				"SELECT * FROM statsrepo.get_dbsize_tendency_report($1, $2)"
 #define SQL_SELECT_RECOVERY_CONFLICTS 			"SELECT * FROM statsrepo.get_recovery_conflicts($1, $2)"
 #define SQL_SELECT_INSTANCE_PROC_RATIO			"SELECT * FROM statsrepo.get_proc_ratio($1, $2)"
-#define SQL_SELECT_INSTANCE_PROC_TENDENCY "\
-	SELECT \
-		snapid, \
-		idle::numeric(1000, 3), \
-		idle_in_xact::numeric(1000, 3), \
-		waiting::numeric(1000, 3), \
-		running::numeric(1000, 3) \
-	FROM \
-		statsrepo.get_proc_tendency($1, $2)"
-
+#define SQL_SELECT_INSTANCE_PROC_TENDENCY		"SELECT * FROM statsrepo.get_proc_tendency_report($1, $2)"
 #define SQL_SELECT_CPU_USAGE					"SELECT * FROM statsrepo.get_cpu_usage($1, $2)"
-#define SQL_SELECT_CPU_USAGE_TENDENCY			"SELECT * FROM statsrepo.get_cpu_usage_tendency($1, $2)"
+#define SQL_SELECT_CPU_USAGE_TENDENCY			"SELECT * FROM statsrepo.get_cpu_usage_tendency_report($1, $2)"
 #define SQL_SELECT_IO_USAGE						"SELECT * FROM statsrepo.get_io_usage($1, $2)"
-#define SQL_SELECT_IO_USAGE_TENDENCY			"SELECT * FROM statsrepo.get_io_usage_tendency($1, $2)"
+#define SQL_SELECT_IO_USAGE_TENDENCY			"SELECT * FROM statsrepo.get_io_usage_tendency_report($1, $2)"
 #define SQL_SELECT_DISK_USAGE_TABLESPACE		"SELECT * FROM statsrepo.get_disk_usage_tablespace($1, $2)"
 #define SQL_SELECT_DISK_USAGE_TABLE				"SELECT * FROM statsrepo.get_disk_usage_table($1, $2) LIMIT 10"
 #define SQL_SELECT_LONG_TRANSACTIONS			"SELECT * FROM statsrepo.get_long_transactions($1, $2)"
@@ -291,14 +267,14 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Transaction Statistics **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%10s  %-16s  %12s  %12s\n",
-		"SnapshotID", "Database", "Commit/s", "Rollback/s");
-	fprintf(out, "-----------------------------------------------------------\n");
+	fprintf(out, "%-16s  %-16s  %12s  %12s\n",
+		"DateTime", "Database", "Commit/s", "Rollback/s");
+	fprintf(out, "-----------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_XACT_TENDENCY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%10s  %-16s  %12s  %12s\n",
+		fprintf(out, "%-16s  %-16s  %12s  %12s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
@@ -309,14 +285,14 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Database Size **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%10s  %-16s  %13s\n",
-		"SnapshotID", "Database", "Size");
-	fprintf(out, "----------------------------------------------\n");
+	fprintf(out, "%-16s  %-16s  %13s\n",
+		"DateTime", "Database", "Size");
+	fprintf(out, "----------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_DBSIZE_TENDENCY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%10s  %-16s  %10s MB\n",
+		fprintf(out, "%-16s  %-16s  %10s MB\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2));
@@ -374,14 +350,14 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Instance Processes **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%10s  %12s  %12s  %12s  %12s\n",
-		"SnapshotID", "Idle", "Idle In Xact", "Waiting", "Running");
-	fprintf(out, "-----------------------------------------------------------------------------\n");
+	fprintf(out, "%-16s  %12s  %12s  %12s  %12s\n",
+		"DateTime", "Idle", "Idle In Xact", "Waiting", "Running");
+	fprintf(out, "---------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_INSTANCE_PROC_TENDENCY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%10s  %12s  %12s  %12s  %12s\n",
+		fprintf(out, "%-16s  %12s  %12s  %12s  %12s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
@@ -419,14 +395,14 @@ report_resource_usage(PGconn *conn, ReportScope *scope, FILE *out)
 	PQclear(res);
 
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%10s  %10s  %10s  %10s  %10s\n",
-		"SnapshotID", "User", "System", "Idle", "IOwait");
-	fprintf(out, "-------------------------------------------------------------\n");
+	fprintf(out, "%-16s  %10s  %10s  %10s  %10s\n",
+		"DateTime", "User", "System", "Idle", "IOwait");
+	fprintf(out, "-------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_CPU_USAGE_TENDENCY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%10s  %8s %%  %8s %%  %8s %%  %8s %%\n",
+		fprintf(out, "%-16s  %8s %%  %8s %%  %8s %%  %8s %%\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
@@ -460,14 +436,14 @@ report_resource_usage(PGconn *conn, ReportScope *scope, FILE *out)
 	PQclear(res);
 
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%10s  %-12s  %15s  %15s  %15s  %15s\n",
-		"SnapshotID", "Device", "Read Size/s", "Write Size/s", "Read Time/s", "Write Time/s");
-	fprintf(out, "-----------------------------------------------------------------------------------------------\n");
+	fprintf(out, "%-16s  %-12s  %15s  %15s  %15s  %15s\n",
+		"DateTime", "Device", "Read Size/s", "Write Size/s", "Read Time/s", "Write Time/s");
+	fprintf(out, "-----------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_IO_USAGE_TENDENCY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%10s  %-12s  %12s KB  %12s KB  %12s ms  %12s ms\n",
+		fprintf(out, "%-16s  %-12s  %12s KB  %12s KB  %12s ms  %12s ms\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),

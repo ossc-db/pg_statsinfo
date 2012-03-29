@@ -907,19 +907,89 @@ CREATE FUNCTION statsrepo.get_xact_tendency(
 	IN snapid_end		bigint,
 	OUT snapid			bigint,
 	OUT datname			name,
-	OUT commit_tps		double precision,
-	OUT rollback_tps	double precision
+	OUT commit_tps		numeric,
+	OUT rollback_tps	numeric
 ) RETURNS SETOF record AS
 $$
 	SELECT
 		snapid,
 		name,
-		"commit/s",
-		"rollback/s"
+		"commit/s"::numeric(1000, 3),
+		"rollback/s"::numeric(1000, 3)
 	FROM
 	(
 		SELECT
 			de.snapid,
+			de.name,
+			coalesce((de.xact_commit - ds.xact_commit) / extract(epoch FROM de.time - ds.time), 0) AS "commit/s",
+			coalesce((de.xact_rollback - de.xact_rollback) / extract(epoch FROM de.time - ds.time), 0) AS "rollback/s"
+		FROM
+			(SELECT
+				d.snapid,
+				d.name,
+				s.time,
+				s.instid,
+				sum(xact_commit) AS xact_commit,
+				sum(xact_rollback) AS xact_rollback,
+				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < d.snapid AND instid = s.instid) AS prev_snapid
+			 FROM
+			 	statsrepo.database d,
+				statsrepo.snapshot s
+			 WHERE
+			 	d.snapid BETWEEN $1 AND $2
+				AND d.snapid = s.snapid
+				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			 GROUP BY
+			 	d.snapid, d.name, s.time, s.instid) AS de,
+			(SELECT
+				d.snapid,
+				d.name,
+				s.time,
+				s.instid,
+				sum(xact_commit) AS xact_commit,
+				sum(xact_rollback) AS xact_rollback,
+				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > d.snapid AND instid = s.instid) AS next_snapid
+			 FROM
+			 	statsrepo.database d,
+				statsrepo.snapshot s
+			 WHERE
+			 	d.snapid BETWEEN $1 AND $2
+				AND d.snapid = s.snapid
+				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			 GROUP BY
+			 	d.snapid, d.name, s.time, s.instid) AS ds
+		WHERE
+			ds.snapid = de.prev_snapid
+			AND de.snapid = ds.next_snapid
+			AND ds.name = de.name
+		ORDER BY
+			de.snapid, de.name
+	) t
+	WHERE
+		snapid > $1
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Transaction Statistics'
+CREATE FUNCTION statsrepo.get_xact_tendency_report(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT "timestamp"		text,
+	OUT datname			name,
+	OUT commit_tps		numeric,
+	OUT rollback_tps	numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		to_char(time, 'YYYY-MM-DD HH24:MI'),
+		name,
+		"commit/s"::numeric(1000, 3),
+		"rollback/s"::numeric(1000, 3)
+	FROM
+	(
+		SELECT
+			de.snapid,
+			de.time,
 			de.name,
 			coalesce((de.xact_commit - ds.xact_commit) / extract(epoch FROM de.time - ds.time), 0) AS "commit/s",
 			coalesce((de.xact_rollback - de.xact_rollback) / extract(epoch FROM de.time - ds.time), 0) AS "rollback/s"
@@ -982,7 +1052,7 @@ $$
 	SELECT
 		d.snapid,
 		d.name,
-		sum(size) / 1024 / 1024
+		(sum(size) / 1024 / 1024)::numeric(1000, 3)
 	FROM
 		statsrepo.database d,
 		statsrepo.snapshot s
@@ -992,6 +1062,33 @@ $$
 		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 	GROUP BY
 		d.snapid, d.name
+	ORDER BY
+		d.snapid, d.name;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Database Size'
+CREATE FUNCTION statsrepo.get_dbsize_tendency_report(
+	IN snapid_begin	bigint,
+	IN snapid_end	bigint,
+	OUT "timestamp"	text,
+	OUT datname		name,
+	OUT size		numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+		d.name,
+		(sum(size) / 1024 / 1024)::numeric(1000, 3)
+	FROM
+		statsrepo.database d,
+		statsrepo.snapshot s
+	WHERE
+		d.snapid BETWEEN $1 AND $2
+		AND d.snapid = s.snapid
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+	GROUP BY
+		d.snapid, d.name, s.time
 	ORDER BY
 		d.snapid, d.name;
 $$
@@ -1071,18 +1168,48 @@ CREATE FUNCTION statsrepo.get_proc_tendency(
 	IN snapid_begin		bigint,
 	IN snapid_end		bigint,
 	OUT snapid			bigint,
-	OUT idle			double precision,
-	OUT idle_in_xact	double precision,
-	OUT waiting			double precision,
-	OUT running			double precision
+	OUT idle			numeric,
+	OUT idle_in_xact	numeric,
+	OUT waiting			numeric,
+	OUT running			numeric
 ) RETURNS SETOF record AS
 $$
 	SELECT
 		a.snapid,
-		idle, 
-		idle_in_xact,
-		waiting,
-		running
+		idle::numeric(1000, 3), 
+		idle_in_xact::numeric(1000, 3),
+		waiting::numeric(1000, 3),
+		running::numeric(1000, 3)
+	FROM
+		statsrepo.activity a,
+		statsrepo.snapshot s
+	WHERE
+		a.snapid BETWEEN $1 AND $2
+		AND a.snapid = s.snapid
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+		AND idle IS NOT NULL
+	ORDER BY
+		a.snapid;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Instance Processes'
+CREATE FUNCTION statsrepo.get_proc_tendency_report(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT "timestamp"		text,
+	OUT idle			numeric,
+	OUT idle_in_xact	numeric,
+	OUT waiting			numeric,
+	OUT running			numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+		idle::numeric(1000, 3), 
+		idle_in_xact::numeric(1000, 3),
+		waiting::numeric(1000, 3),
+		running::numeric(1000, 3)
 	FROM
 		statsrepo.activity a,
 		statsrepo.snapshot s
@@ -1234,6 +1361,89 @@ $$
 $$
 LANGUAGE sql;
 
+-- generate information that corresponds to 'CPU Usage'
+CREATE FUNCTION statsrepo.get_cpu_usage_tendency_report(
+	IN snapid_begin	bigint,
+	IN snapid_end	bigint,
+	OUT "timestamp"	text,
+	OUT "user"		numeric,
+	OUT system		numeric,
+	OUT idle		numeric,
+	OUT iowait		numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		to_char(t.time, 'YYYY-MM-DD HH24:MI'),
+		(100 * statsrepo.div(t.user, t.total))::numeric(5,2),
+		(100 * statsrepo.div(t.system, t.total))::numeric(5,2),
+		(100 * statsrepo.div(t.idle, t.total))::numeric(5,2),
+		(100 * statsrepo.div(t.iowait, t.total))::numeric(5,2)
+	FROM
+	(
+		SELECT
+			ce.snapid,
+			ce.time,
+			(CASE WHEN ce.overflow_user = 1 THEN ce.cpu_user + 4294967296 ELSE ce.cpu_user END - cs.cpu_user) AS user,
+			(CASE WHEN ce.overflow_system = 1 THEN ce.cpu_system + 4294967296 ELSE ce.cpu_system END - cs.cpu_system) AS system,
+			(CASE WHEN ce.overflow_idle = 1 THEN ce.cpu_idle + 4294967296 ELSE ce.cpu_idle END - cs.cpu_idle) AS idle,
+			(CASE WHEN ce.overflow_iowait = 1 THEN ce.cpu_iowait + 4294967296 ELSE ce.cpu_iowait END - cs.cpu_iowait) AS iowait,
+			
+			(CASE WHEN ce.overflow_user = 1 THEN ce.cpu_user + 4294967296 ELSE ce.cpu_user END +
+			 CASE WHEN ce.overflow_system = 1 THEN ce.cpu_system + 4294967296 ELSE ce.cpu_system END +
+			 CASE WHEN ce.overflow_idle = 1 THEN ce.cpu_idle + 4294967296 ELSE ce.cpu_idle END +
+			 CASE WHEN ce.overflow_iowait = 1 THEN ce.cpu_iowait + 4294967296 ELSE ce.cpu_iowait END) -
+			(cs.cpu_user + cs.cpu_system + cs.cpu_idle + cs.cpu_iowait) AS total
+		FROM
+			(SELECT
+				s.snapid,
+				s.time,
+				s.instid,
+				c.cpu_user,
+				c.cpu_system,
+				c.cpu_idle,
+				c.cpu_iowait,
+				c.overflow_user,
+				c.overflow_system,
+				c.overflow_idle,
+				c.overflow_iowait,
+				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < s.snapid AND instid = s.instid) AS prev_snapid
+			 FROM
+				statsrepo.cpu c,
+				statsrepo.snapshot s
+			 WHERE
+				c.snapid BETWEEN $1 AND $2
+				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+				AND s.snapid = c.snapid) AS ce,
+			(SELECT
+				s.snapid,
+				s.instid,
+				c.cpu_user,
+				c.cpu_system,
+				c.cpu_idle,
+				c.cpu_iowait,
+				c.overflow_user,
+				c.overflow_system,
+				c.overflow_idle,
+				c.overflow_iowait,
+				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > s.snapid AND instid = s.instid) AS next_snapid
+			 FROM
+				statsrepo.cpu c,
+				statsrepo.snapshot s
+			 WHERE
+				c.snapid BETWEEN $1 AND $2
+				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+				AND s.snapid = c.snapid) AS cs
+		WHERE
+			cs.snapid = ce.prev_snapid
+			AND cs.instid = ce.instid
+		ORDER BY
+			ce.snapid
+	) t
+	WHERE
+		snapid > $1;
+$$
+LANGUAGE sql;
+
 -- generate information that corresponds to 'IO Usage'
 CREATE FUNCTION statsrepo.get_io_usage(
 	IN snapid_begin			bigint,
@@ -1335,6 +1545,89 @@ $$
 	(
 		SELECT
 			de.snapid,
+			de.dev_name,
+			coalesce((de.rs - ds.rs) / 2 /
+				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS read_size_tps,
+			coalesce((de.ws - ds.ws) / 2 /
+				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS write_size_tps,
+			coalesce((de.rt - ds.rt) /
+				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS read_time_tps,
+			coalesce((de.wt - ds.wt) /
+				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS write_time_tps
+		FROM
+			(SELECT
+				d.snapid,
+				d.device_name as dev_name,
+				sum(d.device_readsector) + (sum(d.overflow_drs) * 4294967296) AS rs,
+				sum(d.device_writesector) + (sum(d.overflow_dws) * 4294967296) AS ws,
+				sum(d.device_readtime) + (sum(d.overflow_drt) * 4294967296) AS rt,
+				sum(d.device_writetime) + (sum(d.overflow_dwt) * 4294967296) AS wt,
+				s.time,
+				s.instid,
+				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < d.snapid AND instid = s.instid) AS prev_snapid
+			 FROM
+				statsrepo.device d,
+				statsrepo.snapshot s
+			 WHERE
+				d.snapid BETWEEN $1 AND $2
+				AND d.snapid = s.snapid
+				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			 GROUP BY
+				d.snapid, d.device_name, s.time, s.instid) AS de,
+			(SELECT
+				d.snapid,
+				d.device_name as dev_name,
+				sum(d.device_readsector) AS rs,
+				sum(d.device_writesector) AS ws,
+				sum(d.device_readtime) AS rt,
+				sum(d.device_writetime) AS wt,
+				s.time,
+				s.instid,
+				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > d.snapid AND instid = s.instid) AS next_snapid
+			 FROM
+				statsrepo.device d,
+				statsrepo.snapshot s
+			 WHERE
+				d.snapid BETWEEN $1 AND $2
+				AND d.snapid = s.snapid
+				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			 GROUP BY
+				d.snapid, d.device_name, s.time, s.instid) AS ds
+		WHERE
+			ds.snapid = de.prev_snapid
+			AND ds.dev_name = de.dev_name
+		ORDER BY
+			de.snapid, de.dev_name
+	) t
+	WHERE
+		snapid > $1;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'IO Usage'
+CREATE FUNCTION statsrepo.get_io_usage_tendency_report(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT "timestamp"		text,
+	OUT device_name		text,
+	OUT read_size_tps	numeric,
+	OUT write_size_tps	numeric,
+	OUT read_time_tps	numeric,
+	OUT write_time_tps	numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		to_char(time, 'YYYY-MM-DD HH24:MI'),
+		dev_name,
+		read_size_tps,
+		write_size_tps,
+		read_time_tps,
+		write_time_tps
+	FROM
+	(
+		SELECT
+			de.snapid,
+			de.time,
 			de.dev_name,
 			coalesce((de.rs - ds.rs) / 2 /
 				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS read_size_tps,
