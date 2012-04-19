@@ -253,11 +253,11 @@ SELECT \
 	client_port, \
 	backend_start, \
 	state, \
-	pg_current_xlog_location(), \
-	sent_location, \
-	write_location, \
-	flush_location, \
-	replay_location, \
+	pg_current_xlog_location() || ' (' || pg_xlogfile_name(pg_current_xlog_location()) || ')', \
+	sent_location || ' (' || pg_xlogfile_name(sent_location) || ')', \
+	write_location || ' (' || pg_xlogfile_name(write_location) || ')', \
+	flush_location || ' (' || pg_xlogfile_name(flush_location) || ')', \
+	replay_location || ' (' || pg_xlogfile_name(replay_location) || ')', \
 	sync_priority, \
 	sync_state \
 FROM \

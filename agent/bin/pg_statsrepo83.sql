@@ -2184,11 +2184,11 @@ $$
 		client_port,
 		backend_start,
 		state,
-		current_location || ' (' || pg_xlogfile_name(current_location) || ')',
-		sent_location    || ' (' || pg_xlogfile_name(sent_location)    || ')',
-		write_location   || ' (' || pg_xlogfile_name(write_location)   || ')',
-		flush_location   || ' (' || pg_xlogfile_name(flush_location)   || ')',
-		replay_location  || ' (' || pg_xlogfile_name(replay_location)  || ')',
+		current_location,
+		sent_location,
+		write_location,
+		flush_location,
+		replay_location,
 		sync_priority,
 		sync_state
 	FROM

@@ -115,6 +115,7 @@ static ReportBuild parse_reportid(const char *value);
 static List *select_scope_by_snapid(PGconn *conn, const char *beginid, const char *endid);
 static List *select_scope_by_timestamp(PGconn *conn, time_t begindate, time_t enddate);
 static void destroy_report_scope(ReportScope *scope);
+static int get_server_version(PGconn *conn);
 
 /*
  * generate a report
@@ -167,10 +168,21 @@ do_report(PGconn *conn,
 			 errmsg("could not open file : '%s'", filename)));
 
 	/* isolate transaction to insure the contents of report */
-	pgut_command(conn, "BEGIN ISOLATION LEVEL SERIALIZABLE", 0, NULL);
+	pgut_command(conn, "BEGIN ISOLATION LEVEL REPEATABLE READ", 0, NULL);
 
 	/* exclusive control for don't run concurrently with the maintenance */
-	pgut_command(conn, "LOCK TABLE statsrepo.instance IN SHARE MODE", 0, NULL);
+	if (get_server_version(conn) >= 90000)
+	{
+		PGresult *res;
+
+		res = pgut_execute(conn, "SELECT pg_is_in_recovery()", 0, NULL);
+
+		if (strcmp(PQgetvalue(res, 0, 0), "f") == 0)
+			pgut_command(conn, "LOCK TABLE statsrepo.instance IN SHARE MODE", 0, NULL);
+		PQclear(res);
+	}
+	else
+		pgut_command(conn, "LOCK TABLE statsrepo.instance IN SHARE MODE", 0, NULL);
 
 	/* get the report scope of each instance */
 	if (beginid || endid)
@@ -1134,4 +1146,20 @@ destroy_report_scope(ReportScope *scope)
 	free(scope->beginid);
 	free(scope->endid);
 	free(scope);
+}
+
+static int
+get_server_version(PGconn *conn)
+{
+	PGresult	*res;
+	int			 server_version_num;
+
+	res = pgut_execute(conn, "SHOW server_version_num", 0, NULL);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		server_version_num = -1;
+	else
+		server_version_num = atoi(PQgetvalue(res, 0, 0));
+	PQclear(res);
+
+	return server_version_num;
 }
