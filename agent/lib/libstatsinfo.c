@@ -963,13 +963,13 @@ statsinfo_restart(PG_FUNCTION_ARGS)
 	PG_RETURN_TEXT_P(cstring_to_text(cmd));
 }
 
-#define FILE_CPUSTAT		"/proc/stat"
-#define NUM_CPUSTATS_COLS	9
+#define FILE_CPUSTAT			"/proc/stat"
+#define NUM_CPUSTATS_COLS		9
+#define NUM_STAT_FIELDS_MIN		6
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
-#define NUM_STAT_FIELDS		9
-#else
-#define NUM_STAT_FIELDS		10
+/* not support a kernel that does not have the required fields at "/proc/stat" */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,41)
+#error kernel version 2.5.41 or later is required
 #endif
 
 /*
@@ -1043,7 +1043,7 @@ get_cpustats(FunctionCallInfo fcinfo,
 			 errmsg("unexpected file format: \"%s\"", FILE_CPUSTAT)));
 
 	record = (char *) list_nth(records, 0);
-	if (exec_split(record, "\\s+", &fields) != NUM_STAT_FIELDS)
+	if (exec_split(record, "\\s+", &fields) < NUM_STAT_FIELDS_MIN)
 		ereport(ERROR,
 			(errcode(ERRCODE_DATA_EXCEPTION),
 			 errmsg("unexpected file format: \"%s\"", FILE_CPUSTAT),
