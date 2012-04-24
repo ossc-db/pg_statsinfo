@@ -27,6 +27,7 @@ FROM \
 		('" GUC_PREFIX ".textlog_permission'), \
 		('" GUC_PREFIX ".excluded_dbnames'), \
 		('" GUC_PREFIX ".excluded_schemas'), \
+		('" GUC_PREFIX ".stat_statements_max'), \
 		('" GUC_PREFIX ".sampling_interval'), \
 		('" GUC_PREFIX ".snapshot_interval'), \
 		('" GUC_PREFIX ".repository_server'), \

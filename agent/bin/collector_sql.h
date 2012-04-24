@@ -153,7 +153,7 @@ SELECT \
 	NULL::bigint AS temp_blks_written \
 FROM \
 	pg_stat_statements \
-ORDER BY total_time DESC LIMIT 30"
+ORDER BY total_time DESC LIMIT $1"
 
 #else
 
@@ -175,7 +175,7 @@ SELECT \
 	temp_blks_written \
 FROM \
 	pg_stat_statements \
-ORDER BY total_time DESC LIMIT 30"
+ORDER BY total_time DESC LIMIT $1"
 
 #endif
 

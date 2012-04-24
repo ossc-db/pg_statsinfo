@@ -35,6 +35,7 @@ char		   *log_timezone_name;
 char		   *data_directory;
 char		   *excluded_dbnames;
 char		   *excluded_schemas;
+char		   *stat_statements_max;
 int				sampling_interval;
 int				snapshot_interval;
 /*---- GUC variables (logger) ----------*/
@@ -123,6 +124,7 @@ static struct ParamMap PARAM_MAP[] =
 	{"syslog_ident", assign_string, &syslog_ident},
 	{GUC_PREFIX ".excluded_dbnames", assign_string, &excluded_dbnames},
 	{GUC_PREFIX ".excluded_schemas", assign_string, &excluded_schemas},
+	{GUC_PREFIX ".stat_statements_max", assign_string, &stat_statements_max},
 	{GUC_PREFIX ".repository_server", assign_string, &repository_server},
 	{GUC_PREFIX ".sampling_interval", assign_int, &sampling_interval},
 	{GUC_PREFIX ".snapshot_interval", assign_int, &snapshot_interval},

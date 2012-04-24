@@ -320,9 +320,10 @@ get_snapshot(char *comment)
 	/* When pg_stat_statements is installed, we collect it */
 	if (has_pg_stat_statements(conn))
 	{
-		PGresult *stmt;
+		PGresult   *stmt;
+		const char *params[] = {stat_statements_max};
 
-		stmt = pgut_execute(conn, SQL_SELECT_STATEMENT, 0, NULL);
+		stmt = pgut_execute(conn, SQL_SELECT_STATEMENT, 1, params);
 		if (PQresultStatus(stmt) == PGRES_TUPLES_OK)
 			snap->instance = lappend(snap->instance, stmt);
 		else

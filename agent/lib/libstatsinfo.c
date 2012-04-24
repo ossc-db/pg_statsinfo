@@ -111,6 +111,7 @@ PG_MODULE_MAGIC;
 #define DEFAULT_MAINTENANCE_TIME		"00:02:00"
 #define DEFAULT_REPOSITORY_KEEPDAY		7		/* day */
 #define DEFAULT_LONG_LOCK_THREASHOLD	30		/* sec */
+#define DEFAULT_STAT_STATEMENTS_MAX		30
 #define LONG_TRANSACTION_THRESHOLD		1.0		/* sec */
 
 static const struct config_enum_entry elevel_options[] =
@@ -169,6 +170,7 @@ static bool		enable_maintenance = DEFAULT_ENABLE_MAINTENANCE;
 static char	   *maintenance_time = NULL;
 static int		repository_keepday = DEFAULT_REPOSITORY_KEEPDAY;
 static int		long_lock_threashold = DEFAULT_LONG_LOCK_THREASHOLD;
+static int		stat_statements_max = DEFAULT_STAT_STATEMENTS_MAX;
 
 /*---- Function declarations ----*/
 
@@ -828,6 +830,21 @@ _PG_init(void)
 							NULL,
 							&long_lock_threashold,
 							DEFAULT_LONG_LOCK_THREASHOLD,
+							0,
+							INT_MAX,
+							PGC_SIGHUP,
+							0,
+#if PG_VERSION_NUM >= 90100
+							NULL,
+#endif
+							NULL,
+							NULL);
+
+	DefineCustomIntVariable(GUC_PREFIX ".stat_statements_max",
+							"Sets the max collection size from pg_stat_statements.",
+							NULL,
+							&stat_statements_max,
+							DEFAULT_STAT_STATEMENTS_MAX,
 							0,
 							INT_MAX,
 							PGC_SIGHUP,
@@ -1654,6 +1671,7 @@ exec_background_process(char cmd[])
 	send_i32(fd, GUC_PREFIX ".textlog_permission", textlog_permission);
 	send_str(fd, GUC_PREFIX ".excluded_dbnames", excluded_dbnames);
 	send_str(fd, GUC_PREFIX ".excluded_schemas", excluded_schemas);
+	send_i32(fd, GUC_PREFIX ".stat_statements_max", stat_statements_max);
 	send_i32(fd, GUC_PREFIX ".sampling_interval", sampling_interval);
 	send_i32(fd, GUC_PREFIX ".snapshot_interval", snapshot_interval);
 	send_str(fd, GUC_PREFIX ".repository_server", repository_server);
