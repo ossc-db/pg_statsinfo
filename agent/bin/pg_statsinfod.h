@@ -55,6 +55,7 @@ extern char		   *data_directory;
 extern char		   *excluded_dbnames;
 extern char		   *excluded_schemas;
 extern char		   *stat_statements_max;
+extern char		   *stat_statements_exclude;
 extern int			sampling_interval;
 extern int			snapshot_interval;
 /*---- GUC variables (logger) ----------*/

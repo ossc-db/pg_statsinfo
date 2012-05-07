@@ -137,12 +137,12 @@ FROM \
 
 #define SQL_SELECT_STATEMENT "\
 SELECT \
-	dbid, \
-	userid, \
-	query, \
-	calls, \
-	total_time, \
-	rows, \
+	s.dbid, \
+	s.userid, \
+	s.query, \
+	s.calls, \
+	s.total_time, \
+	s.rows, \
 	NULL::bigint AS shared_blks_hit, \
 	NULL::bigint AS shared_blks_read, \
 	NULL::bigint AS shared_blks_written, \
@@ -152,30 +152,38 @@ SELECT \
 	NULL::bigint AS temp_blks_read, \
 	NULL::bigint AS temp_blks_written \
 FROM \
-	pg_stat_statements \
-ORDER BY total_time DESC LIMIT $1"
+	pg_stat_statements s \
+	LEFT JOIN pg_roles r ON r.oid = s.userid \
+WHERE \
+	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
+ORDER BY \
+	s.total_time DESC LIMIT $2"
 
 #else
 
 #define SQL_SELECT_STATEMENT "\
 SELECT \
-	dbid, \
-	userid, \
-	query, \
-	calls, \
-	total_time, \
-	rows, \
-	shared_blks_hit, \
-	shared_blks_read, \
-	shared_blks_written, \
-	local_blks_hit, \
-	local_blks_read, \
-	local_blks_written, \
-	temp_blks_read, \
-	temp_blks_written \
+	s.dbid, \
+	s.userid, \
+	s.query, \
+	s.calls, \
+	s.total_time, \
+	s.rows, \
+	s.shared_blks_hit, \
+	s.shared_blks_read, \
+	s.shared_blks_written, \
+	s.local_blks_hit, \
+	s.local_blks_read, \
+	s.local_blks_written, \
+	s.temp_blks_read, \
+	s.temp_blks_written \
 FROM \
-	pg_stat_statements \
-ORDER BY total_time DESC LIMIT $1"
+	pg_stat_statements s \
+	LEFT JOIN pg_roles r ON r.oid = s.userid \
+WHERE \
+	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
+ORDER BY \
+	s.total_time DESC LIMIT $2"
 
 #endif
 
