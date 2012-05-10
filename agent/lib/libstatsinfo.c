@@ -171,7 +171,7 @@ static char	   *maintenance_time = NULL;
 static int		repository_keepday = DEFAULT_REPOSITORY_KEEPDAY;
 static int		long_lock_threashold = DEFAULT_LONG_LOCK_THREASHOLD;
 static int		stat_statements_max = DEFAULT_STAT_STATEMENTS_MAX;
-static char	   *stat_statements_exclude = NULL;
+static char	   *stat_statements_exclude_users = NULL;
 
 /*---- Function declarations ----*/
 
@@ -856,10 +856,10 @@ _PG_init(void)
 							NULL,
 							NULL);
 
-	DefineCustomStringVariable(GUC_PREFIX ".stat_statements_exclude",
+	DefineCustomStringVariable(GUC_PREFIX ".stat_statements_exclude_users",
 							   "Sets the dbuser that doesn't collect statistics of statement from pg_stat_statements.",
 							   NULL,
-							   &stat_statements_exclude,
+							   &stat_statements_exclude_users,
 							   "",
 							   PGC_SIGHUP,
 							   0,
@@ -1686,7 +1686,7 @@ exec_background_process(char cmd[])
 	send_str(fd, GUC_PREFIX ".excluded_dbnames", excluded_dbnames);
 	send_str(fd, GUC_PREFIX ".excluded_schemas", excluded_schemas);
 	send_i32(fd, GUC_PREFIX ".stat_statements_max", stat_statements_max);
-	send_str(fd, GUC_PREFIX ".stat_statements_exclude", stat_statements_exclude);
+	send_str(fd, GUC_PREFIX ".stat_statements_exclude_users", stat_statements_exclude_users);
 	send_i32(fd, GUC_PREFIX ".sampling_interval", sampling_interval);
 	send_i32(fd, GUC_PREFIX ".snapshot_interval", snapshot_interval);
 	send_str(fd, GUC_PREFIX ".repository_server", repository_server);

@@ -28,7 +28,7 @@ FROM \
 		('" GUC_PREFIX ".excluded_dbnames'), \
 		('" GUC_PREFIX ".excluded_schemas'), \
 		('" GUC_PREFIX ".stat_statements_max'), \
-		('" GUC_PREFIX ".stat_statements_exclude'), \
+		('" GUC_PREFIX ".stat_statements_exclude_users'), \
 		('" GUC_PREFIX ".sampling_interval'), \
 		('" GUC_PREFIX ".snapshot_interval'), \
 		('" GUC_PREFIX ".repository_server'), \

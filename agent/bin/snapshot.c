@@ -321,7 +321,7 @@ get_snapshot(char *comment)
 	if (has_pg_stat_statements(conn))
 	{
 		PGresult   *stmt;
-		const char *params[] = {stat_statements_exclude, stat_statements_max};
+		const char *params[] = {stat_statements_exclude_users, stat_statements_max};
 
 		stmt = pgut_execute(conn, SQL_SELECT_STATEMENT, 2, params);
 		if (PQresultStatus(stmt) == PGRES_TUPLES_OK)
