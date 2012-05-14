@@ -166,6 +166,7 @@ static char	   *adjust_log_warning = NULL;
 static char	   *adjust_log_error = NULL;
 static char	   *adjust_log_log = NULL;
 static char	   *adjust_log_fatal = NULL;
+static char	   *textlog_nologging_users = NULL;
 static bool		enable_maintenance = DEFAULT_ENABLE_MAINTENANCE;
 static char	   *maintenance_time = NULL;
 static int		repository_keepday = DEFAULT_REPOSITORY_KEEPDAY;
@@ -637,7 +638,7 @@ _PG_init(void)
 							   NULL);
 
 	DefineCustomStringVariable(GUC_PREFIX ".excluded_schemas",
-							   "Selects which schema are excluded by pg_statinfo.",
+							   "Selects which schemas are excluded by pg_statinfo.",
 							   NULL,
 							   &excluded_schemas,
 							   "pg_catalog,pg_toast,information_schema",
@@ -783,6 +784,19 @@ _PG_init(void)
 							   NULL,
 							   NULL);
 
+	DefineCustomStringVariable(GUC_PREFIX ".textlog_nologging_users",
+							   "Sets dbusers that doesn't logging to textlog.",
+							   NULL,
+							   &textlog_nologging_users,
+							   "",
+							   PGC_SIGHUP,
+							   GUC_SUPERUSER_ONLY,
+#if PG_VERSION_NUM >= 90100
+							   NULL,
+#endif
+							   NULL,
+							   NULL);
+
 	DefineCustomBoolVariable(GUC_PREFIX ".enable_maintenance",
 							 "Enable the maintenance.",
 							 NULL,
@@ -857,7 +871,7 @@ _PG_init(void)
 							NULL);
 
 	DefineCustomStringVariable(GUC_PREFIX ".stat_statements_exclude_users",
-							   "Sets the dbuser that doesn't collect statistics of statement from pg_stat_statements.",
+							   "Sets dbusers that doesn't collect statistics of statement from pg_stat_statements.",
 							   NULL,
 							   &stat_statements_exclude_users,
 							   "",
@@ -1697,6 +1711,7 @@ exec_background_process(char cmd[])
 	send_str(fd, GUC_PREFIX ".adjust_log_error", adjust_log_error);
 	send_str(fd, GUC_PREFIX ".adjust_log_log", adjust_log_log);
 	send_str(fd, GUC_PREFIX ".adjust_log_fatal", adjust_log_fatal);
+	send_str(fd, GUC_PREFIX ".textlog_nologging_users", textlog_nologging_users);
 	send_i32(fd, GUC_PREFIX ".enable_maintenance", enable_maintenance);
 	send_str(fd, GUC_PREFIX ".maintenance_time", maintenance_time);
 	send_i32(fd, GUC_PREFIX ".repository_keepday", repository_keepday);

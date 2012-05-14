@@ -39,6 +39,7 @@ FROM \
 		('" GUC_PREFIX ".adjust_log_error'), \
 		('" GUC_PREFIX ".adjust_log_log'), \
 		('" GUC_PREFIX ".adjust_log_fatal'), \
+		('" GUC_PREFIX ".textlog_nologging_users'), \
 		('" GUC_PREFIX ".enable_maintenance'), \
 		('" GUC_PREFIX ".maintenance_time'), \
 		('" GUC_PREFIX ".repository_keepday')) AS t(name) \

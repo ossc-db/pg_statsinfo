@@ -36,6 +36,7 @@ static char		   *my_adjust_log_warning;
 static char		   *my_adjust_log_error;
 static char		   *my_adjust_log_log;
 static char		   *my_adjust_log_fatal;
+static List		   *my_textlog_nologging_users;
 /*-----------------------*/
 
 #if PG_VERSION_NUM < 90000
@@ -101,6 +102,8 @@ static void assign_textlog_path(Logger *logger, const char *pg_log);
 static void assign_csvlog_path(Logger *logger, const char *pg_log, const char *csvlog);
 static List *add_adlog(List *adlog_list, int elevel, char *rawstring);
 static char *b_trim(char *str);
+static bool split_string(char *rawstring, char separator, List **elemlist);
+static bool is_nologging_user(const Log *log);
 
 void
 logger_init(void)
@@ -374,6 +377,8 @@ reload_params(void)
 	 */
 	my_textlog_filename = pgut_strdup(textlog_filename);
 	my_textlog_permission = textlog_permission & 0666;
+	list_destroy(my_textlog_nologging_users, free);
+	split_string(textlog_nologging_users, ',', &my_textlog_nologging_users);
 
 	/* syslog */
 	my_syslog_min_messages = syslog_min_messages;
@@ -468,14 +473,18 @@ logger_route(Logger *logger, const Log *log)
 
 		if (logger->textlog != NULL)
 		{
-			if (!write_textlog(log,
-							   my_textlog_line_prefix,
-							   my_log_error_verbosity,
-							   logger->textlog))
+			/* don't write a textlog of the users that are set not logging */
+			if (!is_nologging_user(log))
 			{
-				/* unexpected error; close the file, and try to reopen */
-				fclose(logger->textlog);
-				logger->textlog = NULL;
+				if (!write_textlog(log,
+								   my_textlog_line_prefix,
+								   my_log_error_verbosity,
+								   logger->textlog))
+				{
+					/* unexpected error; close the file, and try to reopen */
+					fclose(logger->textlog);
+					logger->textlog = NULL;
+				}
 			}
 		}
 	}
@@ -859,4 +868,102 @@ b_trim(char *str)
 	memmove(str, start, strlen(start) + 1);
 
 	return str;
+}
+
+/*
+ * Note: this function modify the argument
+ */
+static bool
+split_string(char *rawstring, char separator, List **elemlist)
+{
+	char	*nextp = rawstring;
+	bool	 done = false;
+
+	*elemlist = NIL;
+
+	/* skip leading whitespace */
+	while (isspace((unsigned char) *nextp))
+		nextp++;
+
+	/* allow empty string */
+	if (*nextp == '\0')
+		return true;
+
+	/* At the top of the loop, we are at start of a new identifier. */
+	do
+	{
+		char *curname;
+		char *endp;
+
+		if (*nextp == '\"')
+		{
+			/* Quoted name --- collapse quote-quote pairs, no downcasing */
+			curname = nextp + 1;
+			for (;;)
+			{
+				endp = strchr(nextp + 1, '\"');
+				if (endp == NULL)
+					return false; /* mismatched quotes */
+				if (endp[1] != '\"')
+					break; /* found end of quoted name */
+				/* Collapse adjacent quotes into one quote, and look again */
+				memmove(endp, endp + 1, strlen(endp));
+				nextp = endp;
+			}
+			/* endp now points at the terminating quote */
+			nextp = endp + 1;
+		}
+		else
+		{
+			/* Unquoted name --- extends to separator or whitespace */
+			curname = nextp;
+			while (*nextp && *nextp != separator &&
+				   !isspace((unsigned char) *nextp))
+				nextp++;
+			endp = nextp;
+			if (curname == nextp)
+				return false; /* empty unquoted name not allowed */
+		}
+
+		/* skip trailing whitespace */
+		while (isspace((unsigned char) *nextp))
+			nextp++;
+
+		if (*nextp == separator)
+		{
+			nextp++;
+			while (isspace((unsigned char) *nextp))
+				nextp++; /* skip leading whitespace for next */
+			/* we expect another name, so done remains false */
+		}
+		else if (*nextp == '\0')
+			done = true;
+		else
+			return false; /* invalid syntax */
+
+		/* Now safe to overwrite separator with a null */
+		*endp = '\0';
+
+		/*
+		 * Finished isolating current name --- add it to list
+		 */
+		*elemlist = lappend(*elemlist, pgut_strdup(curname));
+
+		/* Loop back if we didn't reach end of string */
+	} while (!done);
+
+	return true;
+}
+
+static bool
+is_nologging_user(const Log *log)
+{
+	ListCell	*cell;
+
+	foreach(cell, my_textlog_nologging_users)
+	{
+		if (strcmp(log->username, (char *) lfirst(cell)) == 0)
+		return true;
+	}
+	return false;
 }

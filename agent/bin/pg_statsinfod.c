@@ -57,6 +57,7 @@ char		   *adjust_log_warning;
 char		   *adjust_log_error;
 char		   *adjust_log_log;
 char		   *adjust_log_fatal;
+char		   *textlog_nologging_users;
 /*---- GUC variables (writer) ----------*/
 char		   *repository_server;
 bool		    enable_maintenance;
@@ -143,6 +144,7 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".adjust_log_error", assign_string, &adjust_log_error},
 	{GUC_PREFIX ".adjust_log_log", assign_string, &adjust_log_log},
 	{GUC_PREFIX ".adjust_log_fatal", assign_string, &adjust_log_fatal},
+	{GUC_PREFIX ".textlog_nologging_users", assign_string, &textlog_nologging_users},
 	{GUC_PREFIX ".enable_maintenance", assign_bool, &enable_maintenance},
 	{GUC_PREFIX ".maintenance_time", assign_time, &maintenance_time},
 	{GUC_PREFIX ".repository_keepday", assign_int, &repository_keepday},

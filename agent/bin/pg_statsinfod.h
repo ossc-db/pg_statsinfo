@@ -76,6 +76,7 @@ extern char		   *adjust_log_warning;
 extern char		   *adjust_log_error;
 extern char		   *adjust_log_log;
 extern char		   *adjust_log_fatal;
+extern char		   *textlog_nologging_users;
 /*---- GUC variables (writer) ----------*/
 extern char		   *repository_server;
 extern bool		    enable_maintenance;
