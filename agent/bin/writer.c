@@ -19,6 +19,7 @@ static time_t			writer_reload_time = 0;
 
 static PGconn		   *writer_conn = NULL;
 static time_t			writer_conn_last_used;
+static bool				superuser_connect = false;
 
 /*---- GUC variables ----*/
 static char	   *my_repository_server = NULL;
@@ -27,10 +28,11 @@ static char	   *my_repository_server = NULL;
 
 static void reload_params(void);
 static int recv_writer_queue(void);
-static PGconn *writer_connect(void);
+static PGconn *writer_connect(bool superuser);
 static char *get_instid(PGconn *conn);
 static const char *get_nodename(void);
 static void destroy_writer_queue(QueueItem *item);
+static void set_connect_privileges(void);
 
 
 void
@@ -48,6 +50,9 @@ void *
 writer_main(void *arg)
 {
 	int		items;
+
+	reload_params();
+	set_connect_privileges();
 
 	while (shutdown_state < COLLECTOR_SHUTDOWN)
 	{
@@ -138,6 +143,14 @@ reload_params(void)
 	pgut_disconnect(writer_conn);
 	writer_conn = NULL;
 
+	if (my_repository_server != NULL &&
+		strcmp(my_repository_server, repository_server) != 0)
+	{
+		free(my_repository_server);
+		my_repository_server = pgut_strdup(repository_server);
+		set_connect_privileges();
+	}
+
 	free(my_repository_server);
 	my_repository_server = pgut_strdup(repository_server);
 }
@@ -163,7 +176,7 @@ recv_writer_queue(void)
 		return 0;
 
 	/* install writer schema */
-	if ((conn = writer_connect()) == NULL)
+	if ((conn = writer_connect(superuser_connect)) == NULL)
 	{
 		elog(ERROR, "could not connect to repository");
 
@@ -227,13 +240,16 @@ recv_writer_queue(void)
  * connect to the repository server.
  */
 static PGconn *
-writer_connect(void)
+writer_connect(bool superuser)
 {
 	char	info[1024];
 	int		retry = 0;
 
-	snprintf(info, lengthof(info),
-		"%s options='-c log_statement=none'", my_repository_server);
+	if (superuser)
+		snprintf(info, lengthof(info),
+			"%s options='-c log_statement=none'", my_repository_server);
+	else
+		snprintf(info, lengthof(info), "%s", my_repository_server);
 
 	do
 	{
@@ -346,4 +362,31 @@ static void
 destroy_writer_queue(QueueItem *item)
 {
 	item->free(item);
+}
+
+static void
+set_connect_privileges(void)
+{
+	PGresult	*res;
+
+	/* connect to repository */
+	if (writer_connect(false) == NULL)
+	{
+		elog(ERROR, "could not connect to repository");
+		return;
+	}
+
+	res = pgut_execute(writer_conn,
+		"SELECT rolsuper FROM pg_roles WHERE rolname = current_user", 0, NULL);
+
+	if (PQresultStatus(res) == PGRES_TUPLES_OK &&
+		PQntuples(res) > 0 &&
+		strcmp(PQgetvalue(res, 0, 0), "t") == 0)
+		superuser_connect = true;
+	else
+		superuser_connect = false;
+
+	PQclear(res);
+	pgut_disconnect(writer_conn);
+	writer_conn = NULL;
 }
