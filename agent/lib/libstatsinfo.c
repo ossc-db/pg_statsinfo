@@ -101,15 +101,31 @@
 
 PG_MODULE_MAGIC;
 
+static const char *
+default_log_maintenance_command(void)
+{
+	char	bin_path[MAXPGPATH];
+	char	command[MAXPGPATH];
+
+	/* $PGHOME/bin */
+	strlcpy(bin_path, my_exec_path, MAXPGPATH);
+	get_parent_directory(bin_path);
+
+	snprintf(command, sizeof(command),
+		"%s/%s %%l", bin_path, "archive_pglog.sh");
+	return pstrdup(command);
+}
+
 /*---- GUC variables ----*/
 
 #define DEFAULT_SAMPLING_INTERVAL		5		/* sec */
 #define DEFAULT_SNAPSHOT_INTERVAL		600		/* sec */
 #define DEFAULT_SYSLOG_LEVEL			DISABLE
 #define DEFAULT_TEXTLOG_LEVEL			WARNING
-#define DEFAULT_ENABLE_MAINTENANCE		true
+#define DEFAULT_ENABLE_MAINTENANCE		"on"
 #define DEFAULT_MAINTENANCE_TIME		"00:02:00"
 #define DEFAULT_REPOSITORY_KEEPDAY		7		/* day */
+#define DEFAULT_LOG_MAINTENANCE_COMMAND	default_log_maintenance_command()
 #define DEFAULT_LONG_LOCK_THREASHOLD	30		/* sec */
 #define DEFAULT_STAT_STATEMENTS_MAX		30
 #define LONG_TRANSACTION_THRESHOLD		1.0		/* sec */
@@ -167,9 +183,10 @@ static char	   *adjust_log_error = NULL;
 static char	   *adjust_log_log = NULL;
 static char	   *adjust_log_fatal = NULL;
 static char	   *textlog_nologging_users = NULL;
-static bool		enable_maintenance = DEFAULT_ENABLE_MAINTENANCE;
+static char	   *enable_maintenance = NULL;
 static char	   *maintenance_time = NULL;
 static int		repository_keepday = DEFAULT_REPOSITORY_KEEPDAY;
+static char	   *log_maintenance_command = NULL;
 static int		long_lock_threashold = DEFAULT_LONG_LOCK_THREASHOLD;
 static int		stat_statements_max = DEFAULT_STAT_STATEMENTS_MAX;
 static char	   *stat_statements_exclude_users = NULL;
@@ -222,9 +239,11 @@ static bool verify_timestr(const char *timestr);
 
 #if PG_VERSION_NUM >= 90100
 static bool check_textlog_filename(char **newval, void **extra, GucSource source);
+static bool check_enable_maintenance(char **newval, void **extra, GucSource source);
 static bool check_maintenance_time(char **newval, void **extra, GucSource source);
 #else
 static const char *assign_textlog_filename(const char *newval, bool doit, GucSource source);
+static const char *assign_enable_maintenance(const char *newval, bool doit, GucSource source);
 static const char *assign_maintenance_time(const char *newval, bool doit, GucSource source);
 #endif
 
@@ -235,6 +254,11 @@ static int exec_grep(const char *filename, const char *regex, List **records);
 static int exec_split(const char *rawstring, const char *regex, List **fields);
 static bool parse_int64(const char *value, int64 *result);
 static bool parse_float8(const char *value, double *result);
+
+#if PG_VERSION_NUM < 80400
+static bool parse_bool(const char *value, bool *result);
+#endif
+
 static char *b_trim(char *str);
 static Datum BuildArrayType(List *values, Oid elmtype, Datum(*convert)(void *));
 static Datum _CStringGetTextDatum(void *ptr);
@@ -797,18 +821,20 @@ _PG_init(void)
 							   NULL,
 							   NULL);
 
-	DefineCustomBoolVariable(GUC_PREFIX ".enable_maintenance",
-							 "Enable the maintenance.",
-							 NULL,
-							 &enable_maintenance,
-							 DEFAULT_ENABLE_MAINTENANCE,
-							 PGC_SIGHUP,
-							 GUC_SUPERUSER_ONLY,
+	DefineCustomStringVariable(GUC_PREFIX ".enable_maintenance",
+							   "Sets the maintenance mode.",
+							   NULL,
+							   &enable_maintenance,
+							   DEFAULT_ENABLE_MAINTENANCE,
+							   PGC_SIGHUP,
+							   GUC_SUPERUSER_ONLY,
 #if PG_VERSION_NUM >= 90100
-							 NULL,
+							   check_enable_maintenance,
+							   NULL,
+#else
+						       assign_enable_maintenance,
 #endif
-							 NULL,
-							 NULL);
+							   NULL);
 
 	DefineCustomStringVariable(GUC_PREFIX ".maintenance_time",
 							   "Sets the maintenance time.",
@@ -839,6 +865,19 @@ _PG_init(void)
 #endif
 							NULL,
 							NULL);
+
+	DefineCustomStringVariable(GUC_PREFIX ".log_maintenance_command",
+							   "Sets the shell command that will be called to the log maintenance.",
+							   NULL,
+							   &log_maintenance_command,
+							   DEFAULT_LOG_MAINTENANCE_COMMAND,
+							   PGC_SIGHUP,
+							   0,
+#if PG_VERSION_NUM >= 90100
+							   NULL,
+#endif
+							   NULL,
+							   NULL);
 
 	DefineCustomIntVariable(GUC_PREFIX ".long_lock_threashold",
 							"Sets the threshold of lock wait time.",
@@ -1712,9 +1751,10 @@ exec_background_process(char cmd[])
 	send_str(fd, GUC_PREFIX ".adjust_log_log", adjust_log_log);
 	send_str(fd, GUC_PREFIX ".adjust_log_fatal", adjust_log_fatal);
 	send_str(fd, GUC_PREFIX ".textlog_nologging_users", textlog_nologging_users);
-	send_i32(fd, GUC_PREFIX ".enable_maintenance", enable_maintenance);
+	send_str(fd, GUC_PREFIX ".enable_maintenance", enable_maintenance);
 	send_str(fd, GUC_PREFIX ".maintenance_time", maintenance_time);
 	send_i32(fd, GUC_PREFIX ".repository_keepday", repository_keepday);
+	send_str(fd, GUC_PREFIX ".log_maintenance_command", log_maintenance_command);
 
 #ifdef HAVE_SYSLOG
 	send_str(fd, "syslog_facility", GetConfigOption("syslog_facility", false));
@@ -2147,6 +2187,66 @@ check_textlog_filename(char **newval, void **extra, GucSource source)
 	return true;
 }
 
+/* forbid unrecognized keyword for maintenance mode */
+static bool
+check_enable_maintenance(char **newval, void **extra, GucSource source)
+{
+	char		*rawstring;
+	List		*elemlist;
+	ListCell	*cell;
+	bool		 bool_val;
+	int			 mode = 0x00;
+	char		 mode_string[32];
+
+	if (parse_bool(*newval, &bool_val))
+	{
+		if (bool_val)
+		{
+			mode |= MAINTENANCE_MODE_SNAPSHOT;
+			mode |= MAINTENANCE_MODE_LOG;
+		}
+		snprintf(mode_string, sizeof(mode_string), "%d", mode);
+		*newval = strdup(mode_string);
+		return true;
+	}
+
+	/* Need a modifiable copy of string */
+	rawstring = pstrdup(*newval);
+
+	if (!SplitIdentifierString(rawstring, ',', &elemlist))
+	{
+		GUC_check_errdetail(GUC_PREFIX ".enable_maintenance list syntax is invalid");
+		goto error;
+	}
+
+	foreach(cell, elemlist)
+	{
+		char *tok = (char *) lfirst(cell);
+
+		if (pg_strcasecmp(tok, "snapshot") == 0)
+			mode |= MAINTENANCE_MODE_SNAPSHOT;
+		else if (pg_strcasecmp(tok, "log") == 0)
+			mode |= MAINTENANCE_MODE_LOG;
+		else
+		{
+			GUC_check_errdetail(GUC_PREFIX ".enable_maintenance unrecognized keyword: \"%s\"", tok);
+			goto error;
+		}
+	}
+
+	pfree(rawstring);
+	list_free(elemlist);
+
+	snprintf(mode_string, sizeof(mode_string), "%d", mode);
+	*newval = strdup(mode_string);
+	return true;
+
+error:
+	pfree(rawstring);
+	list_free(elemlist);
+	return false;
+}
+
 /* forbid empty and invalid time format */
 static bool
 check_maintenance_time(char **newval, void **extra, GucSource source)
@@ -2188,6 +2288,67 @@ assign_textlog_filename(const char *newval, bool doit, GucSource source)
 	}
 
 	return newval;
+}
+
+/* forbid unrecognized keyword for maintenance mode */
+static const char *
+assign_enable_maintenance(const char *newval, bool doit, GucSource source)
+{
+	char		*rawstring;
+	List		*elemlist;
+	ListCell	*cell;
+	bool		 bool_val;
+	int			 mode = 0x00;
+	char		 mode_string[32];
+
+	if (parse_bool(newval, &bool_val))
+	{
+		if (bool_val)
+		{
+			mode |= MAINTENANCE_MODE_SNAPSHOT;
+			mode |= MAINTENANCE_MODE_LOG;
+		}
+		snprintf(mode_string, sizeof(mode_string), "%d", mode);
+		return strdup(mode_string);
+	}
+
+	/* Need a modifiable copy of string */
+	rawstring = pstrdup(newval);
+
+	if (!SplitIdentifierString(rawstring, ',', &elemlist))
+	{
+		pfree(rawstring);
+		list_free(elemlist);
+		ereport(GUC_complaint_elevel(source),
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg(GUC_PREFIX ".enable_maintenance list syntax is invalid")));
+		return NULL;
+	}
+
+	foreach(cell, elemlist)
+	{
+		char *tok = (char *) lfirst(cell);
+
+		if (pg_strcasecmp(tok, "snapshot") == 0)
+			mode |= MAINTENANCE_MODE_SNAPSHOT;
+		else if (pg_strcasecmp(tok, "log") == 0)
+			mode |= MAINTENANCE_MODE_LOG;
+		else
+		{
+			pfree(rawstring);
+			list_free(elemlist);
+			ereport(GUC_complaint_elevel(source),
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg(GUC_PREFIX ".enable_maintenance unrecognized keyword: \"%s\"", tok)));
+			return NULL;
+		}
+	}
+
+	pfree(rawstring);
+	list_free(elemlist);
+
+	snprintf(mode_string, sizeof(mode_string), "%d", mode);
+	return strdup(mode_string);
 }
 
 /* forbid empty and invalid time format */
@@ -2545,6 +2706,73 @@ parse_float8(const char *value, double *result)
 
 	return true;
 }
+
+#if PG_VERSION_NUM < 80400
+/*
+ * Try to interpret value as boolean value.  Valid values are: true,
+ * false, yes, no, on, off, 1, 0; as well as unique prefixes thereof.
+ * If the string parses okay, return true, else false.
+ * If okay and result is not NULL, return the value in *result.
+ */
+static bool
+parse_bool(const char *value, bool *result)
+{
+	size_t		len = strlen(value);
+
+	if (pg_strncasecmp(value, "true", len) == 0)
+	{
+		if (result)
+			*result = true;
+	}
+	else if (pg_strncasecmp(value, "false", len) == 0)
+	{
+		if (result)
+			*result = false;
+	}
+
+	else if (pg_strncasecmp(value, "yes", len) == 0)
+	{
+		if (result)
+			*result = true;
+	}
+	else if (pg_strncasecmp(value, "no", len) == 0)
+	{
+		if (result)
+			*result = false;
+	}
+
+	/* 'o' is not unique enough */
+	else if (pg_strncasecmp(value, "on", (len > 2 ? len : 2)) == 0)
+	{
+		if (result)
+			*result = true;
+	}
+	else if (pg_strncasecmp(value, "off", (len > 2 ? len : 2)) == 0)
+	{
+		if (result)
+			*result = false;
+	}
+
+	else if (pg_strcasecmp(value, "1") == 0)
+	{
+		if (result)
+			*result = true;
+	}
+	else if (pg_strcasecmp(value, "0") == 0)
+	{
+		if (result)
+			*result = false;
+	}
+
+	else
+	{
+		if (result)
+			*result = false; /* suppress compiler warning */
+		return false;
+	}
+	return true;
+}
+#endif
 
 /*
  * Note: this function modify the argument string

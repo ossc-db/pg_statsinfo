@@ -8,6 +8,10 @@
 
 #include <time.h>
 
+/* maintenance mode */
+#define MaintenanceModeIsSnapshot(mode)	( mode & MAINTENANCE_MODE_SNAPSHOT )
+#define MaintenanceModeIsLog(mode)		( mode & MAINTENANCE_MODE_LOG )
+
 /* read settings */
 #define SQL_SELECT_CUSTOM_SETTINGS "\
 SELECT \
@@ -42,7 +46,8 @@ FROM \
 		('" GUC_PREFIX ".textlog_nologging_users'), \
 		('" GUC_PREFIX ".enable_maintenance'), \
 		('" GUC_PREFIX ".maintenance_time'), \
-		('" GUC_PREFIX ".repository_keepday')) AS t(name) \
+		('" GUC_PREFIX ".repository_keepday'), \
+		('" GUC_PREFIX ".log_maintenance_command')) AS t(name) \
 	LEFT JOIN pg_settings s \
 	ON t.name = s.name"
 
@@ -79,6 +84,8 @@ collector_main(void *arg)
 	time_t		now;
 	time_t		next_sample;
 	time_t		next_snapshot;
+	pid_t		log_maintenance_pid = 0;
+	int			fd_err;
 
 	now = time(NULL);
 	next_sample = get_next_time(now, sampling_interval);
@@ -153,24 +160,49 @@ collector_main(void *arg)
 			maintenance_requested = NULL;
 			pthread_mutex_unlock(&reload_lock);
 
-			do_maintenance(repository_keep_period);
+			maintenance_snapshot(repository_keep_period);
 		}
 
 		/* maintenance by time */
 		if (enable_maintenance && now >= maintenance_time)
 		{
-			time_t repository_keep_period;
-			struct tm *tm;
+			if (MaintenanceModeIsSnapshot(enable_maintenance))
+			{
+				time_t repository_keep_period;
+				struct tm *tm;
 
-			/* calculate retention period on the basis of today's 0:00 AM */
-			tm = localtime(&now);
-			tm->tm_hour = 0;
-			tm->tm_min = 0;
-			tm->tm_sec = 0;
-			repository_keep_period = mktime(tm) - ((time_t) repository_keepday * SECS_PER_DAY);
+				/* calculate retention period on the basis of today's 0:00 AM */
+				tm = localtime(&now);
+				tm->tm_hour = 0;
+				tm->tm_min = 0;
+				tm->tm_sec = 0;
+				repository_keep_period = mktime(tm) - ((time_t) repository_keepday * SECS_PER_DAY);
 
-			do_maintenance(repository_keep_period);
+				maintenance_snapshot(repository_keep_period);
+			}
+
+			if (MaintenanceModeIsLog(enable_maintenance))
+			{
+				if (log_maintenance_pid <= 0)
+				{
+					if ((log_maintenance_pid = maintenance_log(log_maintenance_command, &fd_err)) < 0)
+						elog(ERROR, "could not run the log maintenance command");
+				}
+				else
+					elog(WARNING,
+						"previous log maintenance is not complete, "
+						"so current log maintenance was skipped");
+			}
+
 			maintenance_time = maintenance_time + (1 * SECS_PER_DAY);
+		}
+
+		/* check the status of log maintenance command */
+		if (log_maintenance_pid > 0 &&
+			check_maintenance_log(log_maintenance_pid, fd_err))
+		{
+			/* log maintenance command has been completed */
+			log_maintenance_pid = 0;
 		}
 
 		usleep(200 * 1000);	/* 200ms */

@@ -32,6 +32,10 @@
 #define LOGMSG_MAINTENANCE	LOG_PREFIX "maintenance requested"
 #define LOGMSG_RESTART		LOG_PREFIX "restart requested"
 
+/* maintenance mode flag */
+#define MAINTENANCE_MODE_SNAPSHOT	0x01
+#define MAINTENANCE_MODE_LOG		0x02
+
 extern bool readControlFile(ControlFileData *ctrl, const char *pgdata);
 
 #endif   /* PG_STATSINFO_COMMON_H */

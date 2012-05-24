@@ -21,6 +21,7 @@ SRCS = \
 
 OBJS = $(SRCS:.c=.o)
 DATA = pg_statsrepo83.sql pg_statsrepo_partition.sql pg_statsrepo_alert.sql uninstall_pg_statsrepo.sql
+SCRIPTS = archive_pglog.sh
 PROGRAM = pg_statsinfod
 REGRESS = pg_statsinfo
 

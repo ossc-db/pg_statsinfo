@@ -60,9 +60,10 @@ char		   *adjust_log_fatal;
 char		   *textlog_nologging_users;
 /*---- GUC variables (writer) ----------*/
 char		   *repository_server;
-bool		    enable_maintenance;
+int			    enable_maintenance;
 time_t			maintenance_time;
 int				repository_keepday;
+char		   *log_maintenance_command;
 /*---- message format ----*/
 char		   *msg_debug;
 char		   *msg_info;
@@ -145,9 +146,10 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".adjust_log_log", assign_string, &adjust_log_log},
 	{GUC_PREFIX ".adjust_log_fatal", assign_string, &adjust_log_fatal},
 	{GUC_PREFIX ".textlog_nologging_users", assign_string, &textlog_nologging_users},
-	{GUC_PREFIX ".enable_maintenance", assign_bool, &enable_maintenance},
+	{GUC_PREFIX ".enable_maintenance", assign_int, &enable_maintenance},
 	{GUC_PREFIX ".maintenance_time", assign_time, &maintenance_time},
 	{GUC_PREFIX ".repository_keepday", assign_int, &repository_keepday},
+	{GUC_PREFIX ".log_maintenance_command", assign_string, &log_maintenance_command},
 	{":debug", assign_string, &msg_debug},
 	{":info", assign_string, &msg_info},
 	{":notice", assign_string, &msg_notice},
@@ -677,7 +679,7 @@ after_readopt(void)
 			checkpoint_starting_prefix_len = flags - msg_checkpoint_starting;
 	}
 
-	if (!enable_maintenance)
+	if (!(enable_maintenance & MAINTENANCE_MODE_SNAPSHOT))
 		elog(NOTICE,
 			"automatic maintenance is disable. Please note the data size of the repository");
 }

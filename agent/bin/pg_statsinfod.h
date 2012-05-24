@@ -79,9 +79,10 @@ extern char		   *adjust_log_fatal;
 extern char		   *textlog_nologging_users;
 /*---- GUC variables (writer) ----------*/
 extern char		   *repository_server;
-extern bool		    enable_maintenance;
+extern int		    enable_maintenance;
 extern time_t		maintenance_time;
 extern int			repository_keepday;
+extern char		   *log_maintenance_command;
 /*---- message format ----*/
 extern char		   *msg_debug;
 extern char		   *msg_info;
@@ -185,15 +186,16 @@ extern bool write_textlog(const Log *log, const char *prefix,
 extern bool parse_checkpoint(const char *message, const char *timestamp);
 /* autovacuum.c */
 extern bool parse_autovacuum(const char *message, const char *timestamp);
-/* maintenance.c */
-extern bool check_maintenance(const char *message);
 
 /* writer.c */
 extern void writer_init(void);
 extern void *writer_main(void *arg);
 extern void writer_send(QueueItem *item);
 extern bool writer_has_queue(WriterQueueType type);
-extern void do_maintenance(time_t repository_keepday);
+/* maintenance.c */
+extern void maintenance_snapshot(time_t repository_keepday);
+extern pid_t maintenance_log(const char *command, int *fd_err);
+bool check_maintenance_log(pid_t log_maintenance_pid, int fd_err);
 
 /* pg_statsinfod.c */
 extern bool postmaster_is_alive(void);
