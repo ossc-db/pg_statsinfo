@@ -8,7 +8,7 @@
 
 #define SQL_INSERT_AUTOVACUUM "\
 INSERT INTO statsrepo.autovacuum VALUES \
-($1, $2::timestamptz - interval '1sec' * $10, \
+($1, $2::timestamptz - interval '1sec' * $11, \
  $3, $4, $5, $6, $7, $8, $9, $10, $11)"
 
 #define SQL_INSERT_AUTOANALYZE "\
