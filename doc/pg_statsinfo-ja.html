@@ -22,6 +22,7 @@
   <li><a href="#features-log">サーバログ処理機能</a></li>
   <li><a href="#features-alert">アラート機能</a></li>
   <li><a href="#features-report">簡易レポート機能</a></li>
+  <li><a href="#features-maintenance">自動メンテナンス機能</a></li>
 </ol>
 <li><a href="#install">インストール</a>
 <ol>
@@ -36,6 +37,7 @@
   <li><a href="#log">ログファイルの出力について</a></li>
   <li><a href="#usage-alert">アラート機能の使い方</a></li>
   <li><a href="#usage-report">簡易レポート機能の使い方</a></li>
+  <li><a href="#usage-maintenance">自動メンテナンス機能の使い方</a></li>
   <li><a href="#configuration">設定ファイル</a></li>
   <li><a href="#user-operations">運用上必要となる作業</a></li>
 </ol>
@@ -86,10 +88,6 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
 <ul>
   <li>ユーザが指定した時間間隔で定期的にスナップショットを取得することができます。デフォルト設定では10分間隔で取得します。</li>
   <li>任意のタイミングで手動でスナップショットを取得することもできます。</li>
-  <li>取得したスナップショットを定期的に自動削除することができます。本機能はデフォルト設定では ON です。</li>
-  <ul>
-    <li>(注1) 自動削除を行わない設定の場合、古いスナップショットは自動的に削除されないため、ユーザ操作で定期的に削除してください。</li>
-  </ul>
 </ul>
 
 <h4>取得できる統計情報一覧</h4>
@@ -120,9 +118,8 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
   <li>最新テキストログのファイル名を固定。常に同じ名前 (デフォルト $PGDATA/pg_log/postgresql.log) で最新のサーバログを閲覧でき、ログ監視ソフトウェアとの連携が容易になります。</li>
   <li>テキストログファイルのアクセス権の設定。テキストログのファイル権限を 600 以外にも設定できるため、運用が柔軟になります。</li>
   <li>テキストログ、syslog に出力されるサーバログのメッセージレベルを任意のレベルに変更可能。例えば、オペレーションミスなどで発生する ERROR レベルのログを INFO レベルに変更して出力できます。</li>
+  <li>テキストログのフィルタリング設定。特定のユーザのサーバログをテキストログに出力しないようにすることができます。</li>
 </ul>
-
-<p>古いサーバログは自動的には削除されないため、ユーザ操作で定期的に削除して下さい。</p>
 
 <h3 id="features-alert">アラート機能</h3>
 <p>
@@ -170,6 +167,23 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
 
 <p>
 簡易レポート機能の使用方法は<a href="#usage-report">こちら</a>をご覧ください。
+</p>
+
+<h3 id="features-maintenance">自動メンテナンス機能</h3>
+<p>1日1回、任意の時刻に下記のメンテナンス操作を行うことができます。
+<ul>
+  <li>保持期間を経過した古いスナップショットの削除</li>
+  <li>サーバログのログファイルの整理</li>
+</ul>
+
+<p>本機能はデフォルトは ON であり、上記の操作を自動メンテナンス実行時刻に実行します。</p>
+<p>
+(注1) スナップショットの削除が無効な場合、古いスナップショットは自動的に削除されないため、ユーザ操作で定期的に削除してください。<br>
+(注2) ログファイルの整理が無効な場合、古いログファイルは自動的には削除されないため、ユーザ操作で定期的に削除して下さい。
+</p>
+
+<p>
+自動メンテナンス機能の使用方法は<a href="#usage-maintenance">こちら</a>をご覧ください。
 </p>
 
 <h2 id="install">インストール</h2>
@@ -227,8 +241,8 @@ shared_preload_libraries = 'pg_statsinfo'       # 事前ロードを行う
 custom_variable_classes = 'pg_statsinfo'        # pg_statsinfoのパラメータ指定するために必要
 
 pg_statsinfo.snapshot_interval = 30min          # スナップショットの取得間隔
-pg_statsinfo.enable_maintenance = 'on'          # リポジトリDBの自動メンテナンス設定
-pg_statsinfo.maintenance_time = '00:02:00'      # リポジトリDBの自動メンテナンス実行時刻設定
+pg_statsinfo.enable_maintenance = 'on'          # 自動メンテナンス設定
+pg_statsinfo.maintenance_time = '00:02:00'      # 自動メンテナンス実行時刻設定
 pg_statsinfo.repository_keepday = 7 	        # スナップショットの保持期間設定
 
 log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log' # ログファイル名を指定する
@@ -272,10 +286,23 @@ local   all             postgres                                ident
 
 <h4 id="pg_stat_statements">クエリの統計情報の取得設定</h4>
 <p>
-なお、PostgreSQL のバージョン 8.4 以上を使っている場合、監視対象インスタンスの postgres データベースに <a href="http://www.postgresql.jp/document/current/html/pgstatstatements.html">pg_stat_statements</a> をインストールすることで、クエリの統計情報もスナップショットとして収集できるようになります。<br/>
+PostgreSQL のバージョン 8.4 以上を使っている場合、監視対象インスタンスの postgres データベースに <a href="http://www.postgresql.jp/document/current/html/pgstatstatements.html">pg_stat_statements</a> をインストールすることで、クエリの統計情報もスナップショットとして収集できるようになります。<br/>
 利用する場合には、postgresql.conf の shared_preload_libraries に pg_stat_statements を追加し、初回起動時に以下の手順で登録してください。 
 </p>
-<pre>$ psql -d postgres -f $PGSHARE/contrib/pg_stat_statements.sql</pre>
+<pre>
+# PostgreSQL のバージョンが 9.1 以降の場合
+$ psql -d postgres -c "CREATE EXTENSION pg_stat_statements"
+
+# PostgreSQL のバージョンが 9.0 以前の場合
+$ psql -d postgres -f $PGSHARE/contrib/pg_stat_statements.sql
+</pre>
+
+<p>また、必要に応じて設定ファイルに下記のパラメータを設定してください。</p>
+<ul>
+  <li>pg_statsinfo.stat_statements_max</li>
+  <li>pg_statsinfo.stat_statements_exclude_users</li>
+</ul>
+<p>上記のパラメータの説明は<a href="#configuration">設定ファイル</a>をご覧ください。</p>
 
 <p>以上でインストールは終了です。</p>
 
@@ -295,45 +322,21 @@ smart 以外の終了モード (fast, immediate) ではエラーが出力され�
 
 <h3 id="snapshot">スナップショットの取得・削除</h3>
 <h4>自動取得</h4>
-スナップショットを一定の時間間隔で定期的に取得します。
-postgresql.confに以下の設定を記述することで自動取得を実行できます。
+<p>スナップショットを一定の時間間隔で定期的に取得します。postgresql.confに以下の設定を記述することで自動取得を実行できます。</p>
 <p>例: スナップショットの取得間隔を30分に設定する。</p>
 <pre>pg_statsinfo.snapshot_interval = 30min </pre>
 
 <h4>手動取得</h4>
 <p>任意のタイミングでスナップショットを取得する場合は、監視対象のインスタンスが存在するDBクラスタのpostgresデータベースに対し、関数 statsinfo.snapshot(text DEFAULT NULL) を実行して下さい。<br/>
-
 引数でスナップショット取得理由をコメントとして記録できます。</p>
 <p>例: 手動でスナップショットを取得します。コメントとして文字列 'comment' を付与します。</p>
 <pre>$ psql -d postgres -c "SELECT statsinfo.snapshot('comment')"</pre>
 
 <h4>自動削除</h4>
-<p>リポジトリDBの自動メンテナンス ( デフォルト ON ) を行うと、1日1回任意の時刻に古いスナップショットを自動的に削除することができます。
-自動メンテナンスの実行時刻、スナップショットの保持期間は、設定パラメータで指定します。
-</p>
+<p>自動メンテナンス機能を使用することで保持期間を経過したスナップショット削除を自動的に削除することができます。<br>
+自動メンテナンスのスナップショット削除はデフォルトが ON となっています。</p>
+<p>自動メンテナンス機能の使い方は<a href="#usage-maintenance">こちら</a>をご覧ください。</p>
 
-postgresql.confに以下の設定を記述することで自動削除を実行できます。
-<p>例：毎日0時2分に7日の保持期間を過ぎたスナップショットを自動削除する。</p>
-<pre>
-pg_statsinfo.enable_maintenance = 'on'          # リポジトリDBの自動メンテナンス設定
-pg_statsinfo.maintenance_time = '00:02:00'      # リポジトリDBの自動メンテナンス実行時刻設定
-pg_statsinfo.repository_keepday = 7 	        # スナップショットの保持期間設定
-</pre>
-
-<p>（注1）自動メンテナンスを行わない場合、スナップショットは手動で削除しない限りリポジトリDBに残り続けます。
-不要となった古いスナップショットは定期的に削除して下さい。</p>
-<p>（注2）複数監視対象インスタンス‐単一リポジトリDBの構成で、各監視対象インスタンスのスナップショットの保持期間を互いに異なる期間に設定した場合、自動メンテナンス実行時には最も短く設定した期間のスナップショットが保持されます。
-例えば、各監視対象インスタンスの postgresql.conf に以下のようにスナップショット保持期間 (pg_statsinfo.repository_keepday) の設定を記述した場合、自動メンテナンス実行時のスナップショット保持期間として反映されるのは監視対象インスタンス3の設定となります。</p>
-<pre><監視対象インスタンス1>
-pg_statsinfo.enable_maintenance = 'on' 
-pg_statsinfo.repository_keepday = 7
-<監視対象インスタンス2>
-pg_statsinfo.enable_maintenance = 'on' 
-pg_statsinfo.repository_keepday = 5
-<監視対象インスタンス3>
-pg_statsinfo.enable_maintenance = 'on' 
-pg_statsinfo.repository_keepday = 3
-</pre>
 <h4>手動削除</h4>
 <p>スナップショットの手動削除は監視対象インスタンスに対して、関数 statsinfo.maintenance(timestamptz) を実行して下さい。
 引数で指定した時刻より古いスナップショットが削除されます。</p>
@@ -367,6 +370,11 @@ postgresql.conf に pg_statsinfo.textlog_filename を指定していた場合は
 pg_statsinfo は、本ログに出力された情報を基に、加工したログ出力を行いますが、
 本ログに関しては全く加工を行いません。
 </p>
+
+<h4>自動メンテナンス機能によるログファイル整理</h4>
+<p>自動メンテナンス機能を使用することでログファイルの整理を行うことができます。<br>
+自動メンテナンスのログファイル整理はデフォルトが ON となっています。</p>
+<p>自動メンテナンス機能の使い方は<a href="#usage-maintenance">こちら</a>をご覧ください。</p>
 
 <h3 id="usage-alert">アラート機能の使い方</h3>
 <p>
@@ -679,6 +687,61 @@ $ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -D 123
 
 <br>
 
+<h3 id="usage-maintenance">自動メンテナンス機能の使い方</h3>
+
+<h4>スナップショット削除</h4>
+<p>自動メンテナンスのスナップショット削除を有効にすると、1日1回任意の時刻に古いスナップショットを自動的に削除することができます。<br>
+自動メンテナンスのスナップショット削除を有効にするには、設定ファイル(postgresql.conf)に以下の設定を記述します。</p>
+
+<p>例: 毎日0時2分に7日間の保持期間を過ぎたスナップショットを自動削除する</p>
+<pre>
+pg_statsinfo.enable_maintenance = 'snapshot'  # 自動メンテナンス設定
+pg_statsinfo.maintenance_time = '00:02:00'    # 自動メンテナンス実行時刻設定
+pg_statsinfo.repository_keepday = 7           # スナップショットの保持期間設定
+</pre>
+
+<p>(注1) 自動メンテナンスのスナップショット削除はデフォルトで有効となっています。</p>
+<p>(注2) 自動メンテナンスのログファイル整理と併せて使用する場合は自動メンテナンス設定を 'on' に設定するかカンマ区切りで 'log' を追記してください。</p>
+<p>(注3) 自動メンテナンスでスナップショット削除を行わない場合、スナップショットは手動で削除しない限りリポジトリDBに残り続けます。
+不要となった古いスナップショットは定期的に削除して下さい。</p>
+<p>(注4) 複数監視対象インスタンス－単一リポジトリDBの構成で、各監視対象インスタンスのスナップショットの保持期間を
+互いに異なる期間に設定した場合、自動メンテナンス実行時には最も短く設定した期間のスナップショットが保持されます。
+例えば、各監視対象インスタンスの postgresql.conf に以下のようにスナップショット保持期間(pg_statsinfo.repository_keepday)の
+設定を記述した場合、自動メンテナンス実行時のスナップショット保持期間として反映されるのは監視対象インスタンス3の設定となります。
+</p>
+<pre><監視対象インスタンス1>
+pg_statsinfo.enable_maintenance = 'snapshot' 
+pg_statsinfo.repository_keepday = 7
+<監視対象インスタンス2>
+pg_statsinfo.enable_maintenance = 'snapshot' 
+pg_statsinfo.repository_keepday = 5
+<監視対象インスタンス3>
+pg_statsinfo.enable_maintenance = 'snapshot' 
+pg_statsinfo.repository_keepday = 3
+</pre>
+
+<h4>ログファイル整理</h4>
+<p>自動メンテナンスのログファイル整理を有効にすると、1日1回任意の時刻にサーバログの整理を行うための任意のシェルコマンドを実行することができます。<br>
+自動メンテナンスのログファイル整理を有効にするには、設定ファイル(postgresql.conf)に以下の設定を記述します。</p>
+
+<p>例: 毎日0時2分に前日以前のCSVログファイルを圧縮アーカイブする</p>
+<pre>
+pg_statsinfo.enable_maintenance = 'log'     # 自動メンテナンス設定
+pg_statsinfo.maintenance_time = '00:02:00'  # 自動メンテナンス実行時刻設定
+pg_statsinfo.log_maintenance_command = '$PGHOME/bin/archive_pglog.sh %l'  # ログファイル整理コマンド設定 (*1)
+
+(*1) archive_pglog.sh
+archive_pglog.sh は同梱されるシェルスクリプトです。
+前日以前のCSVログファイルを圧縮アーカイブし、ログファイル格納ディレクトリ配下にアーカイブファイル(TGZ)を作成します。
+また、アーカイブしたCSVログファイルをログファイル格納ディレクトリから削除します。
+</pre>
+
+<p>(注1) 自動メンテナンスのログファイル整理はデフォルトで有効となっています。</p>
+<p>(注2) 自動メンテナンスのスナップショット削除と併せて使用する場合は自動メンテナンス設定を 'on' に設定するかカンマ区切りで 'snapshot' を追記してください。</p>
+<p>(注3) ログファイル整理コマンドの設定を省略した場合、上記の例と同じコマンドが適用されます。</p>
+
+<br>
+
 <h3 id="configuration">設定ファイル</h3>
 
 <p>pg_statsinfo は設定ファイルとして監視対象インスタンスの postgresql.conf を使用します。
@@ -843,6 +906,11 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
     <td>テキストログファイルのパーミッション指定</td>
   </tr>
   <tr>
+    <td>pg_statsinfo.textlog_nologging_users</td>
+    <td>-</td>
+    <td>テキストログのフィルタリング設定。テキストログへの出力を除外するユーザを設定します。複数のユーザを設定する場合はカンマ区切りで指定します。</td>
+  </tr>
+  <tr>
     <td>pg_statsinfo.sampling_interval</td>
     <td>5s</td>
     <td>サンプリングの実行間隔 (*3)</td>
@@ -904,13 +972,21 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
   </tr>
   <tr>
     <td>pg_statsinfo.enable_maintenance</td>
-    <td>on</td>
-    <td>リポジトリDBの自動メンテナンス設定</td>
+    <td>'on'</td>
+    <td>自動メンテナンス設定。自動メンテナンスで実行する操作を以下より選択します。
+      <ul>
+        <li>'snapshot': スナップショット削除を実行します</li>
+        <li>'log': ログファイル整理コマンドを実行します</li>
+        <li>'snapshot, log': スナップショット削除とログファイル整理コマンドを実行します</li>
+        <li>'on': スナップショット削除とログファイル整理コマンドを実行します</li>
+        <li>'off': 何もしない</li>
+      </ul>
+    </td>
   </tr>
   <tr>
     <td>pg_statsinfo.maintenance_time</td>
     <td>'00:02:00'</td>
-    <td>リポジトリDBの自動メンテナンス実行時刻設定</td>
+    <td>自動メンテナンス実行時刻設定</td>
   </tr>
   <tr>
     <td>pg_statsinfo.repository_keepday</td>
@@ -918,9 +994,24 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
     <td>スナップショットの保持期間設定</td>
   </tr>
   <tr>
+    <td>pg_statsinfo.log_maintenance_command</td>
+    <td>$PGHOME/bin/archive_pglog.sh %l</td>
+    <td>サーバログのログファイルの整理を実行するシェルコマンドを指定します。文字列内に'%l'を記述した場合は'%l'がログファイル格納ディレクトリの絶対パスに置き換わります。シェルコマンドは正常にコマンドが終了した場合にのみ正常終了値(0)を返してください。</td>
+  </tr>
+  <tr>
     <td>pg_statsinfo.long_lock_threashold</td>
     <td>30s</td>
-    <td>ロック競合情報の収集対象とする条件(閾値)。スナップショットの時点で発生しているロック競合の内、ロック待ちの経過時間(秒)が閾値を越えているものが収集対象となります。</t
+    <td>ロック競合情報の収集対象とする条件(閾値)。スナップショットの時点で発生しているロック競合の内、ロック待ちの経過時間(秒)が閾値を越えているものが収集対象となります。</td>
+  </tr>
+  <tr>
+    <td>pg_statsinfo.stat_statements_max</td>
+    <td>30</td>
+    <td>pg_stat_statementsで収集する情報数の上限</td>
+  </tr>
+  <tr>
+    <td>pg_statsinfo.stat_statements_exclude_users</td>
+    <td>-</td>
+    <td>pg_stat_statementsで収集する情報のフィルタリング設定。収集対象から除外するユーザを設定します。複数のユーザを設定する場合はカンマ区切りで指定します。</td>
   </tr>
 </tbody>
 </table>
@@ -974,10 +1065,8 @@ log_line_prefix の値そのものは無視されることに注意して下さ�
 <p>ユーザが行う必要のある操作と運用上必要となる作業について説明します。</p>
 
 <h4>サーバログの削除</h4>
-<p>
-CSVログ、テキストログは手動で削除しない限り残り続けます。
-不要となった古いログファイルは定期的に削除して下さい。
-</p>
+<p>不要となった古いログファイル(CSVログ、テキストログ)は定期的に削除して下さい。<br>
+不要となったログファイルの削除は手動で行うか、自動メンテナンスのログファイル整理を利用して下さい。</p>
 
 <h4>ログローテート</h4>
 <p>任意のタイミングでログをローテートさせたい場合は、監視対象インスタンスにて以下を実行して下さい。</p>
@@ -1043,7 +1132,7 @@ PostgreSQL はタイムゾーンを独自に管理しており、外部プログ
 <dd>シャットダウン時のチェックポイントログはリポジトリDBに保存されません。
 同居構成の場合には既にリポジトリDBが終了してしまっているためです。</dd>
 
-<dt>リポジトリDBの自動メンテナンスの制限</dt>
+<dt>自動メンテナンス(スナップショット削除)の制限</dt>
 <dd>複数の監視対象インスタンスのスナップショットを同一のリポジトリDBに蓄積する構成では、自動メンテナンスを実行する pg_statsinfo を1つにする必要があります。
 これは、インスタンス毎のメンテナンス設定で自動メンテナンスがそれぞれ実行されてしまうためです。<br>
 監視対象インスタンス毎にリポジトリDBを用意する構成では、1つにする必要はありません。</dd>
@@ -1073,17 +1162,21 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
 取得した統計情報から、有益な情報を見たい場合は <a href="#features-report">簡易レポート機能</a> を利用するか、<a href='http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html'>pg_repoter</a> をお使いください。
 </p>
 
-<h4>Q3. 自動メンテナンス機能が動作しません。</h4>
+<h4>Q3. 自動メンテナンス機能のスナップショット削除が動作しません。</h4>
 <p>
-自動メンテナンスの設定が有効になっていないか、リポジトリDBの statsrepo スキーマの版がリポジトリDBの PostgreSQL のバージョンと一致していないことが考えれられます。
+自動メンテナンスの設定が有効になっていないか、リポジトリDBの statsrepo スキーマの版がリポジトリDBの PostgreSQL のバージョンと一致していないことが考えられます。
 以下の事項を点検してください。
 </p>
 
 <dl>
   <dt>自動メンテナンスの設定が、postgresql.conf に適切に記述されているか</dt>
-  <dd>postgresql.conf に以下の設定項目が存在するか確認してください。
-    <ul><li>pg_statsinfo.enable_maintenance = 'on'</li></ul></dd>
-  
+  <dd>postgresql.conf の自動メンテナンス設定が 'on' または 'snapshot' が含まれているか確認してください。
+    <ul>
+      <li>pg_statsinfo.enable_maintenance = 'on'</li>
+      <li>pg_statsinfo.enable_maintenance = 'snapshot'</li>
+      <li>pg_statsinfo.enable_maintenance = 'snapshot, log'</li>
+    </ul>
+  </dd>
   <dt>リポジトリDBの statsrepo スキーマのバージョンが正しいか</dt>
   <dd>リポジトリDBの statsrepo スキーマに del_snapshot2 関数が存在するか以下の SQL をリポジトリDBで実行して確認してください。
     <pre># SELECT n.nspname, p.proname FROM pg_proc p LEFT JOIN pg_namespace n ON p.pronamespace = n.oid WHERE p.proname = 'del_snapshot2' AND n.nspname = 'statsrepo';</pre>
@@ -1095,7 +1188,9 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
 <br>
 
 <h4>Q4. log_statement=all と設定して運用した場合、pg_statsinfo が実行するSQLが大量に出力されてしまいログの可視性が下がります。pg_statsinfo のログを出力しない方法は？</h4>
-<p>下記の運用手順によって対処が可能です。</p>
+<p>pg_statsinfo 2.3.0 以降のバージョンでは log_statement の設定に関わらず pg_statsinfo が実行するSQLのログを一部を除き出力しません。<br>
+pg_statsinfo が実行するSQLのログを完全に出力しないようにする場合は下記の運用手順を実施してください。</p>
+
 <pre>
 1. 監視対象DBに pg_statsinfo 専用のユーザを作成する
 # CREATE ROLE statsinfo WITH LOGIN SUPERUSER;
@@ -1205,7 +1300,7 @@ $ pg_ctl restart
 
 <h4>注意事項</h4>
 <ul>
-  <li>リポジトリDBの自動メンテナンスを行う場合は、いずれか1つの監視対象インスタンスにのみ設定してください。</li>
+  <li>自動メンテナンスでスナップショット削除を行う場合は、いずれか1つの監視対象インスタンスにのみ設定してください。</li>
 </ul>
 
 <h3 id="warm-standby">ウォームスタンバイ</h3>
@@ -1269,7 +1364,7 @@ pg_statsinfo は、この SystemTap が収集するプロファイリング情�
   <a href="http://pgstatsinfo.projects.postgresql.org/index_ja.html">Top</a> &gt;
   <a href="http://pgstatsinfo.projects.postgresql.org/pg_statsinfo-ja.html">pg_statsinfo</a>
 <div>
-<p class="footer">Copyright (c) 2009-2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION</p>
+<p class="footer">Copyright (c) 2009-2012, NIPPON TELEGRAPH AND TELEPHONE CORPORATION</p>
 
 <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
