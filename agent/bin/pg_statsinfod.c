@@ -733,7 +733,7 @@ getlocaltimestamp(void)
 		return NULL;
 	}
 
-	snprintf(tp, 32, "%04d-%02d-%02d %02d:%02d:%02d.%ld",
+	snprintf(tp, 32, "%04d-%02d-%02d %02d:%02d:%02d.%06ld",
 			ts->tm_year + 1900,
 			ts->tm_mon + 1,
 			ts->tm_mday,
@@ -744,7 +744,7 @@ getlocaltimestamp(void)
 #else
 	GetLocalTime(&stTime);
 
-	snprintf(tp, 32, "%04d-%02d-%02d %02d:%02d:%02d.%ld",
+	snprintf(tp, 32, "%04d-%02d-%02d %02d:%02d:%02d.%06ld",
 			stTime.wYear,
 			stTime.wMonth,
 			stTime.wDay,
