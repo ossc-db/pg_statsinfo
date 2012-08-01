@@ -338,8 +338,7 @@ forkexec(const char *cmd, int *outStdin)
 		if (pid == 0)
 		{
 			/* child process */
-			if (close(fd[1]) < 0 || close(0) < 0 ||
-				dup(fd[0]) < 0 || close(fd[0]) < 0 ||
+			if (close(fd[1]) < 0 || dup2(fd[0], STDIN_FILENO) < 0 ||
 				execl("/bin/sh", "sh", "-c", cmd, NULL) < 0)
 			{
 				elog(LOG, "pg_statsinfo(): could not execute background process");

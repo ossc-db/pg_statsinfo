@@ -36,6 +36,10 @@
 #define MAINTENANCE_MODE_SNAPSHOT	0x01
 #define MAINTENANCE_MODE_LOG		0x02
 
+/* exit code for pg_statsinfod */
+#define STATSINFO_EXIT_SUCCESS		0x00
+#define STATSINFO_EXIT_FAILED		0xff
+
 extern bool readControlFile(ControlFileData *ctrl, const char *pgdata);
 
 #endif   /* PG_STATSINFO_COMMON_H */

@@ -25,7 +25,7 @@ SCRIPTS = archive_pglog.sh
 PROGRAM = pg_statsinfod
 REGRESS = pg_statsinfo
 
-PG_CPPFLAGS = -I$(libpq_srcdir) -DFRONTEND -DPGUT_MULTI_THREADED -DPGUT_OVERRIDE_ELOG -DUSE_DAEMON
+PG_CPPFLAGS = -I$(libpq_srcdir) -DFRONTEND -DPGUT_MULTI_THREADED -DPGUT_OVERRIDE_ELOG
 PG_LIBS = $(libpq) -lpthread
 
 ifndef USE_PGXS

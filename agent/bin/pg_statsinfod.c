@@ -26,7 +26,6 @@ char		   *instance_id;			/* system identifier */
 static pid_t	postmaster_pid;			/* postmaster's pid */
 char		   *postmaster_port;		/* postmaster port number as string */
 static char	   *share_path;				/* $PGHOME/share */
-static char	   *prev_csv_name;			/* virtual previous csv name */
 int				server_version_num;		/* PG_VERSION_NUM */
 char		   *server_version_string;	/* PG_VERSION */
 int				server_encoding = -1;	/* server character encoding */
@@ -115,7 +114,6 @@ static struct ParamMap PARAM_MAP[] =
 	{"postmaster_pid", assign_int, &postmaster_pid},
 	{"port", assign_string, &postmaster_port},
 	{"share_path", assign_string, &share_path},
-	{"prev_csv_name", assign_string, &prev_csv_name},
 	{"server_version_num", assign_int, &server_version_num},
 	{"server_version_string", assign_string, &server_version_string},
 	{"server_encoding", assign_int, &server_encoding},
@@ -183,6 +181,8 @@ isTTY(int fd)
 int
 main(int argc, char *argv[])
 {
+	void	*logger_retval;
+
 	shutdown_state = STARTUP;
 
 	pgut_init(argc, argv);
@@ -201,7 +201,6 @@ main(int argc, char *argv[])
 		data_directory == NULL ||
 		log_directory == NULL ||
 		share_path == NULL ||
-		prev_csv_name == NULL ||
 		msg_shutdown == NULL ||
 		msg_shutdown_smart == NULL ||
 		msg_shutdown_fast == NULL ||
@@ -257,19 +256,22 @@ main(int argc, char *argv[])
 	elog(LOG, "start");
 	pthread_create(&th_collector, NULL, collector_main, NULL);
 	pthread_create(&th_writer, NULL, writer_main, NULL);
-	pthread_create(&th_logger, NULL, logger_main, prev_csv_name);
+	pthread_create(&th_logger, NULL, logger_main, NULL);
 
 	/* join the threads */ 
-	pthread_join(th_collector, NULL);
-	pthread_join(th_writer, NULL);
-	pthread_join(th_logger, NULL);
+	pthread_join(th_collector, (void **) NULL);
+	pthread_join(th_writer, (void **) NULL);
+	pthread_join(th_logger, (void **) &logger_retval);
 
 #ifdef NOT_USED
 	if (!shutdown_message_found)
 		restart_postmaster();		/* postmaster might be crashed! */
 #endif
 
-	return 0;
+	if (logger_retval == (void *) LOGGER_RETURN_FAILED)
+		return STATSINFO_EXIT_FAILED;
+
+	return STATSINFO_EXIT_SUCCESS;
 }
 
 static int

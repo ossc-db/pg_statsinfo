@@ -15,6 +15,10 @@
 #include <dirent.h>
 #endif
 
+/* pg_statsinfo.control values */
+static StatsinfoControlFileData		ControlFile;
+
+static int			cf_fd; 
 static time_t		logger_reload_time = 0;
 static List		   *adjust_log_list = NIL;
 
@@ -88,7 +92,7 @@ static int				recursive_level = 0;
 static void reload_params(void);
 static void logger_recv(Logger *logger);
 
-static void logger_parse(Logger *logger, const char *pg_log);
+static void logger_parse(Logger *logger, const char *pg_log, bool only_routing);
 
 static void logger_route(Logger *logger, const Log *log);
 
@@ -99,11 +103,16 @@ static void get_csvlog(char csvlog[], const char *prev, const char *pg_log);
 static void adjust_log(Log *log);
 static void replace_extension(char path[], const char *extension);
 static void assign_textlog_path(Logger *logger, const char *pg_log);
-static void assign_csvlog_path(Logger *logger, const char *pg_log, const char *csvlog);
+static void assign_csvlog_path(Logger *logger, const char *pg_log, const char *csvlog, long offset);
 static List *add_adlog(List *adlog_list, int elevel, char *rawstring);
 static char *b_trim(char *str);
 static bool split_string(char *rawstring, char separator, List **elemlist);
 static bool is_nologging_user(const Log *log);
+static int csvfilter(const struct dirent *dp);
+static void load_controlfile(Logger *logger);
+static bool ReadControlFile(void);
+static void RewriteControlFile(void);
+static void logger_shutdown(void *retval);
 
 void
 logger_init(void)
@@ -115,19 +124,41 @@ logger_init(void)
 }
 
 /*
- * logger_main(const char *prev_csv_name)
+ * logger_main
  */
 void *
 logger_main(void *arg)
 {
-	Logger		logger;
-	const char *prev_csv_name = (const char *) arg;
+	Logger			  logger;
+	int				  entry;
+	struct dirent	**dplist;
 
 	memset(&logger, 0, sizeof(logger));
 	initStringInfo(&logger.buf);
 	reload_params();
+
+	/* sets latest csvlog to the elements of logger */
+	for (;;)
+	{
+		entry = scandir(my_log_directory, &dplist, csvfilter, alphasort);
+		if (entry > 0)
+			break;
+		usleep(200 * 1000);	/* 200ms */
+	};
+	assign_csvlog_path(&logger, my_log_directory, dplist[entry - 1]->d_name, 0);
 	assign_textlog_path(&logger, my_log_directory);
-	assign_csvlog_path(&logger, my_log_directory, prev_csv_name);
+
+	while (entry--)
+		free(dplist[entry]);
+	free(dplist);
+
+	/* load the pg_statsinfo.control */
+	load_controlfile(&logger);
+	ControlFile.state = STATSINFO_RUNNING;
+
+	/* perform the log routing until end of the latest csvlog */
+	logger.fp = pgut_fopen(logger.csv_path, "rt");
+	logger_parse(&logger, my_log_directory, true);
 
 	/*
 	 * Logger should not shutdown before any other threads are alive,
@@ -153,7 +184,7 @@ logger_main(void *arg)
 				assign_textlog_path(&logger, my_log_directory);
 		}
 
-		logger_parse(&logger, my_log_directory);
+		logger_parse(&logger, my_log_directory, false);
 		usleep(200 * 1000);	/* 200ms */
 
 		/* check postmaster pid. */
@@ -170,7 +201,7 @@ logger_main(void *arg)
 
 		for (;;)
 		{
-			logger_parse(&logger, my_log_directory);
+			logger_parse(&logger, my_log_directory, false);
 			logger_recv(&logger);
 			if (shutdown_message_found || time(NULL) > until)
 				break;
@@ -187,8 +218,12 @@ logger_main(void *arg)
 
 	logger_close(&logger);
 	shutdown_progress(LOGGER_SHUTDOWN);
+	ControlFile.state = STATSINFO_SHUTDOWNED;
 
-	return NULL;
+	/* update pg_statsinfo.control */
+	RewriteControlFile();
+
+	return (void *) LOGGER_RETURN_SUCCESS;
 }
 
 #ifdef PGUT_OVERRIDE_ELOG
@@ -530,7 +565,7 @@ init_log(Log *log, const char *buf, size_t len, const size_t fields[])
  * logger_parse - Parse CSV log and route it into textlog, syslog, or trap.
  */
 static void
-logger_parse(Logger *logger, const char *pg_log)
+logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 {
 	while (logger_next(logger, pg_log))
 	{
@@ -542,39 +577,51 @@ logger_parse(Logger *logger, const char *pg_log)
 		/* parse performance logs; those messages are NOT routed. */
 		if (log.elevel == LOG)
 		{
-			/* checkpoint ? */
-			if (parse_checkpoint(log.message, log.timestamp))
-				continue;
+			if (!only_routing)
+			{
+				/* checkpoint ? */
+				if (parse_checkpoint(log.message, log.timestamp))
+					continue;
 
-			/* autovacuum ? */
-			if (parse_autovacuum(log.message, log.timestamp))
-				continue;
+				/* autovacuum ? */
+				if (parse_autovacuum(log.message, log.timestamp))
+					continue;
+			}
 
 			/* snapshot requested ? */
 			if (strcmp(log.message, LOGMSG_SNAPSHOT) == 0)
 			{
-				pthread_mutex_lock(&reload_lock);
-				free((char *) snapshot_requested);
-				snapshot_requested = pgut_strdup(log.detail);
-				pthread_mutex_unlock(&reload_lock);
+				if (!only_routing)
+				{
+					pthread_mutex_lock(&reload_lock);
+					free((char *) snapshot_requested);
+					snapshot_requested = pgut_strdup(log.detail);
+					pthread_mutex_unlock(&reload_lock);
+				}
 				continue;
 			}
 
 			/* maintenance requested ? */
 			if (strcmp(log.message, LOGMSG_MAINTENANCE) == 0)
 			{
-				pthread_mutex_lock(&reload_lock);
-				free((char *) maintenance_requested);
-				maintenance_requested = pgut_strdup(log.detail);
-				pthread_mutex_unlock(&reload_lock);
+				if (!only_routing)
+				{
+					pthread_mutex_lock(&reload_lock);
+					free((char *) maintenance_requested);
+					maintenance_requested = pgut_strdup(log.detail);
+					pthread_mutex_unlock(&reload_lock);
+				}
 				continue;
 			}
 
 			/* restart requested ? */
 			if (strcmp(log.message, LOGMSG_RESTART) == 0)
 			{
-				shutdown_message_found = true;
-				shutdown_progress(SHUTDOWN_REQUESTED);
+				if (!only_routing)
+				{
+					shutdown_message_found = true;
+					shutdown_progress(SHUTDOWN_REQUESTED);
+				}
 				continue;
 			}
 
@@ -599,7 +646,13 @@ logger_parse(Logger *logger, const char *pg_log)
 			adjust_log(&log);
 		logger_route(logger, &log);
 
-		if (save_elevel == LOG)
+		/* update pg_statsinfo.control */
+		strlcpy(ControlFile.csv_name,
+			logger->csv_name, sizeof(ControlFile.csv_name));
+		ControlFile.csv_offset = logger->csv_offset;
+		RewriteControlFile();
+
+		if (!only_routing && save_elevel == LOG)
 		{
 			/* setting parameters reloaded ? */
 			if (strcmp(log.message, msg_sighup) == 0)
@@ -646,9 +699,10 @@ logger_close(Logger *logger)
 		logger->textlog = NULL;
 
 		/* overwrite existing .log file; it must be empty.
-		 * (Note : Some error messages through system() (eg. recovery_command)
-		 *  outputs to the .log file  from postgres's logger, so sometimes
-		 *  .log file will not be empty. At the moment we overwrite without check.
+		 * Note:
+		 * Some error messages through system() (eg. recovery_command)
+		 * outputs to the .log file  from postgres's logger, so sometimes
+		 * .log file will not be empty. At the moment we overwrite without check.
 		 */
 		if (logger->csv_path[0] && stat(logger->csv_path, &st) == 0)
 		{
@@ -693,8 +747,9 @@ logger_next(Logger *logger, const char *pg_log)
 		/*
 		 * csvlog files that have empty *.log have not been parsed yet
 		 * because postgres logger make an empty log file.
-		 * (Note: Some "cannot stat" error messages are output to *.log,
-		 *  so we check logger->fp and csvlog again.
+		 * Note:
+		 * Some "cannot stat" error messages are output to *.log,
+		 * so we check logger->fp and csvlog again.
 		 */
 		 if (stat(textlog, &st) == 0 && st.st_size > 0)
 		 {
@@ -704,7 +759,7 @@ logger_next(Logger *logger, const char *pg_log)
 
 		logger_close(logger);
 		assign_textlog_path(logger, pg_log);
-		assign_csvlog_path(logger, pg_log, csvlog);
+		assign_csvlog_path(logger, pg_log, csvlog, 0);
 
 		logger->fp = pgut_fopen(logger->csv_path, "rt");
 		if (logger->fp == NULL)
@@ -744,8 +799,11 @@ logger_next(Logger *logger, const char *pg_log)
 static void
 get_csvlog(char csvlog[], const char *prev, const char *pg_log)
 {
-	DIR			   *dir;
-	struct dirent  *dp;
+	int				  entry;
+	struct dirent	**dplist;
+	struct stat		  st;
+	char			  tmppath[MAXPGPATH];
+	int				  i;
 
 	Assert(csvlog);
 	Assert(prev);
@@ -754,32 +812,32 @@ get_csvlog(char csvlog[], const char *prev, const char *pg_log)
 
 	csvlog[0] = '\0';
 
-	if ((dir = opendir(pg_log)) == NULL)
+	if ((entry = scandir(pg_log, &dplist, csvfilter, alphasort)) < 0)
 	{
 		/* pg_log directory might not exist before syslogger started */
 		if (errno != ENOENT)
 			ereport(WARNING,
 				(errcode_errno(),
-				 errmsg("could not open directory \"%s\": ", pg_log)));
+				 errmsg("could not scan directory \"%s\": ", pg_log)));
 		return;
 	}
 
-	for (dp = readdir(dir); dp != NULL; dp = readdir(dir))
+	for (i = 0; i < entry; i++)
 	{
-		const char *extension = strrchr(dp->d_name, '.');
-
-		/* check the extension is .csv */
-		if (extension == NULL || strcmp(extension, ".csv") != 0)
-			continue;
-
 		/* get the next log of previous parsed log */
-		if (strcmp(prev, dp->d_name) >= 0 ||
-			(csvlog[0] && strcmp(csvlog, dp->d_name) < 0))
-			continue;
+		if (strcmp(prev, dplist[i]->d_name) < 0)
+		{
+			strlcpy(csvlog, dplist[i]->d_name, MAXPGPATH);
 
-		strlcpy(csvlog, dp->d_name, MAXPGPATH);
+			join_path_components(tmppath, pg_log, dplist[i]->d_name);
+			if (stat(tmppath, &st) == 0 && st.st_size > 0)
+				break;
+		}
 	}
-	closedir(dir);
+
+	while (entry--)
+		free(dplist[entry]);
+	free(dplist);
 }
 
 static void
@@ -821,11 +879,11 @@ assign_textlog_path(Logger *logger, const char *pg_log)
 }
 
 static void
-assign_csvlog_path(Logger *logger, const char *pg_log, const char *csvlog)
+assign_csvlog_path(Logger *logger, const char *pg_log, const char *csvlog, long offset)
 {
 	join_path_components(logger->csv_path, pg_log, csvlog);
 	logger->csv_name = logger->csv_path + strlen(pg_log) + 1;
-	logger->csv_offset = 0;
+	logger->csv_offset = offset;
 }
 
 static List *
@@ -966,4 +1024,220 @@ is_nologging_user(const Log *log)
 		return true;
 	}
 	return false;
+}
+
+static int
+csvfilter(const struct dirent *dp)
+{
+	const char	*extension;
+
+	if (dp->d_type != DT_REG)
+		return 0;
+
+	/* check the extension is .csv */
+	extension = strrchr(dp->d_name, '.');
+	if (extension && strcmp(extension, ".csv") == 0)
+		return 1;
+	else
+		return 0;
+}
+
+/*
+ * load the previous state from pg_statsinfo.control.
+ */
+static void
+load_controlfile(Logger *logger)
+{
+	struct stat		st;
+	bool			need_load = false;
+
+	if (stat(STATSINFO_CONTROL_FILE, &st) == 0)
+	{
+		cf_fd = open(STATSINFO_CONTROL_FILE, O_RDWR | PG_BINARY, 0);
+		need_load = true;
+	}
+	else
+		cf_fd = open(STATSINFO_CONTROL_FILE,
+					O_RDWR | O_CREAT | O_EXCL | PG_BINARY,
+					S_IRUSR | S_IWUSR);
+	if (cf_fd < 0)
+	{
+		if (errno == ENOENT)
+			return;		/* file not found */
+
+		ereport(ERROR,
+			(errcode_errno(),
+			 errmsg("could not open control file \"%s\": %m",
+			 	STATSINFO_CONTROL_FILE)));
+		/* shutdown logger thread */
+		logger_shutdown((void *) LOGGER_RETURN_FAILED);
+	}
+
+	if (!need_load)
+		return;
+
+	/*
+	 * if state value of pg_statsinfo.control is not "STATSINFO_SHUTDOWNED",
+	 * that means the previous pg_statsinfod was abnormally end.
+	 * in that case, parse the csvlog between csvlog of the point of abnormal
+	 * termination and latest csvlog.
+	 */
+	if (ReadControlFile())
+	{
+		char prev_csvlog[MAXPGPATH];
+
+		join_path_components(prev_csvlog, my_log_directory, ControlFile.csv_name);
+
+		if (stat(prev_csvlog, &st) == 0 && ControlFile.csv_offset <= st.st_size)
+		{
+			/* set the csvlog path and the csvlog offset to the logger */
+			assign_csvlog_path(logger, my_log_directory,
+			ControlFile.csv_name, ControlFile.csv_offset);
+			return;
+		}
+
+		/* csvlog which parsed at last is missed */
+		ereport(WARNING,
+			(errmsg("csvlog file \"%s\" not found or incurrect offset",
+				ControlFile.csv_name)));
+	}
+
+	/*
+	 * could not read the pg_statsinfo.control or incorrect data.
+	 * rename the latest textlog file to "<latest-csvlog>.err.<seqid>"
+	 * (eg. postgresql-2012-07-01_000000.err.1)
+	 */
+	if (stat(logger->textlog_path, &st) == 0)
+	{
+		char new_path[MAXPGPATH];
+		char extension[32];
+		int seqid = 0;
+
+		for (;;)
+		{
+			strlcpy(new_path, logger->csv_path, sizeof(new_path));
+			snprintf(extension, sizeof(extension), ".err.%d", ++seqid);
+			replace_extension(new_path, extension);
+
+			if (stat(new_path, &st) != 0)
+				break;
+		}
+
+		rename(logger->textlog_path, new_path);
+		elog(WARNING,
+			"latest textlog file already exists, it renamed to '%s'", new_path);
+	}
+}
+
+/*
+ * I/O routines for pg_statsinfo.control
+ *
+ * ControlFile is a buffer in memory that holds an image of the contents of
+ * pg_statsinfo.control. RewriteControlFile() writes the pg_statsinfo.control
+ * file with the contents in buffer. ReadControlFile() loads the buffer from the
+ * pg_statsinfo.control file.
+ */
+static bool
+ReadControlFile(void)
+{
+	pg_crc32	crc;
+
+	Assert(cf_fd > 0);	/* have not been opened the pg_statsinfo.control */
+
+	/* read data */
+	if (read(cf_fd, &ControlFile,
+			sizeof(ControlFile)) != sizeof(ControlFile))
+	{
+		ereport(ERROR,
+			(errcode_errno(),
+			 errmsg("could not read from control file \"%s\": %m",
+			 	STATSINFO_CONTROL_FILE)));
+		return false;
+	}
+
+	/*
+	 * Check for expected pg_statsinfo.control format version.
+	 * If this is wrong, the CRC check will likely fail because we'll be
+	 * checking the wrong number of bytes.
+	 * Complaining about wrong version will probably be more enlightening
+	 * than complaining about wrong CRC.
+	 */
+	if (ControlFile.control_version != STATSINFO_CONTROL_VERSION &&
+		((ControlFile.control_version / 100) != (STATSINFO_CONTROL_VERSION / 100)))
+	{
+		ereport(ERROR,
+			(errmsg("pg_statsinfo.control format incompatible"),
+			 errdetail("pg_statsinfo.control was created with STATSINFO_CONTROL_VERSION %d (0x%08x), "
+			 		   "but the pg_statsinfo was compiled with STATSINFO_CONTROL_VERSION %d (0x%08x)",
+					ControlFile.control_version, ControlFile.control_version,
+					STATSINFO_CONTROL_VERSION, STATSINFO_CONTROL_VERSION)));
+		return false;
+	}
+
+	/* check the CRC */
+	INIT_CRC32(crc);
+	COMP_CRC32(crc,
+		(char *) &ControlFile, offsetof(StatsinfoControlFileData, crc));
+	FIN_CRC32(crc);
+
+	if (!EQ_CRC32(crc, ControlFile.crc))
+	{
+		ereport(ERROR,
+			(errmsg("incorrect checksum in control file \"%s\"",
+				STATSINFO_CONTROL_FILE)));
+		return false;
+	}
+
+	return true;
+}
+
+static void
+RewriteControlFile(void)
+{
+	char	buffer[sizeof(ControlFile)];
+
+	Assert(cf_fd > 0);	/* have not been opened the pg_statsinfo.control */
+
+	/* initialize version and compatibility-check fields */
+	ControlFile.control_version = STATSINFO_CONTROL_VERSION;
+
+	/* contents are protected with a CRC */
+	INIT_CRC32(ControlFile.crc);
+	COMP_CRC32(ControlFile.crc,
+		(char *) &ControlFile, offsetof(StatsinfoControlFileData, crc));
+	FIN_CRC32(ControlFile.crc);
+
+	memset(buffer, 0, sizeof(ControlFile));
+	memcpy(buffer, &ControlFile, sizeof(ControlFile));
+
+	lseek(cf_fd, 0, SEEK_SET);
+	errno = 0;
+	if (write(cf_fd, buffer, sizeof(ControlFile)) != sizeof(ControlFile))
+	{
+		/* if write didn't set errno, assume problem is no disk space */
+		if (errno == 0)
+			errno = ENOSPC;
+		ereport(ERROR,
+			(errcode_errno(),
+			 errmsg("could not write to control file \"%s\": %m",
+			 	STATSINFO_CONTROL_FILE)));
+		/* shutdown logger thread */
+		logger_shutdown((void *) LOGGER_RETURN_FAILED);
+	}
+}
+
+static void
+logger_shutdown(void *retval)
+{
+	/* notify shutdown request to other threads */
+	if (shutdown_state < SHUTDOWN_REQUESTED)
+		shutdown_progress(SHUTDOWN_REQUESTED);
+
+	/* wait until the end of the other threads */
+	while (shutdown_state < WRITER_SHUTDOWN)
+		usleep(200 * 1000);	/* 200ms */
+
+	/* exit the logger thread */
+	shutdown_progress(LOGGER_SHUTDOWN);
+	pthread_exit(retval);
 }

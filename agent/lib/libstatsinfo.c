@@ -9,6 +9,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <time.h>
 
 #include "access/heapam.h"
@@ -17,18 +19,24 @@
 #include "catalog/pg_tablespace.h"
 #include "funcapi.h"
 #include "libpq/ip.h"
+#include "libpq/pqsignal.h"
 #include "mb/pg_wchar.h"
 #include "regex/regex.h"
 #include "miscadmin.h"
 #include "pgstat.h"
 #include "postmaster/autovacuum.h"
 #include "postmaster/syslogger.h"
+#include "postmaster/fork_process.h"
+#include "postmaster/postmaster.h"
+#include "storage/ipc.h"
 #include "storage/proc.h"
 #include "storage/procarray.h"
+#include "storage/pmsignal.h"
 #include "utils/builtins.h"
 #include "utils/guc.h"
 #include "utils/tqual.h"
 #include "utils/lsyscache.h"
+#include "utils/ps_status.h"
 
 #if PG_VERSION_NUM >= 90100
 #include "catalog/pg_collation.h"
@@ -225,6 +233,10 @@ extern PGUT_EXPORT void	fini_last_xact_activity(void);
 /*----  Internal declarations ----*/
 
 static void inet_to_cstring(const SockAddr *addr, char host[NI_MAXHOST]);
+static void StartStatsinfoLauncher(void);
+static void StatsinfoLauncherMain(void);
+static void sil_sigchld_handler(SIGNAL_ARGS);
+static void sil_exit(SIGNAL_ARGS);
 static pid_t exec_background_process(char cmd[]);
 static uint64 get_sysident(void);
 static void must_be_superuser(void);
@@ -302,6 +314,10 @@ typedef struct Stats
 } Stats;
 
 static Stats	*stats;
+
+/* flags for pg_statsinfo launcher */
+static volatile bool need_exit = false;
+static volatile bool got_SIGCHLD = false;
 
 /*
  * statsinfo_sample - sample statistics for server instance.
@@ -649,7 +665,7 @@ _PG_init(void)
 							NULL);
 
 	DefineCustomStringVariable(GUC_PREFIX ".excluded_dbnames",
-							   "Selects which dbnames are excluded by pg_statinfo.",
+							   "Selects which dbnames are excluded by pg_statsinfo.",
 							   NULL,
 							   &excluded_dbnames,
 							   "template0, template1",
@@ -662,7 +678,7 @@ _PG_init(void)
 							   NULL);
 
 	DefineCustomStringVariable(GUC_PREFIX ".excluded_schemas",
-							   "Selects which schemas are excluded by pg_statinfo.",
+							   "Selects which schemas are excluded by pg_statsinfo.",
 							   NULL,
 							   &excluded_schemas,
 							   "pg_catalog,pg_toast,information_schema",
@@ -977,13 +993,11 @@ _PG_init(void)
 	init_last_xact_activity();
 #endif
 
-	/* spawn daemon process if the first call */
+	/*
+	 * spawn pg_statsinfo launcher process if the first call
+	 */
 	if (!IsUnderPostmaster)
-	{
-		char	cmd[MAXPGPATH];
-
-		exec_background_process(cmd);
-	}
+		StartStatsinfoLauncher();
 }
 
 /*
@@ -1665,6 +1679,153 @@ send_u64(int fd, const char *key, uint64 value)
 }
 
 /*
+ * StartStatsinfoLauncher - Main entry point for pg_statsinfo launcher process.
+ */
+static void
+StartStatsinfoLauncher(void)
+{
+	/*
+	 * invoke pg_statsinfo launcher processs
+	 */
+	switch (fork_process())
+	{
+		case -1:
+			ereport(LOG,
+				(errmsg("could not fork pg_statsinfo launcher process: %m")));
+			break;
+		case 0:
+			/* in child process */
+			/* Close the postmaster's sockets */
+			ClosePostmasterPorts(false);
+
+			/* Lose the postmaster's on-exit routines */
+			on_exit_reset();
+
+			StatsinfoLauncherMain();
+			break;
+		default:
+			break;
+	}
+
+	return;
+}
+
+#define LAUNCH_RETRY_PERIOD		300	/* sec */
+#define LAUNCH_RETRY_MAX		5
+
+/*
+ * StatsinfoLauncherMain - Main loop for the pg_statsinfo launcher process.
+ */
+static void
+StatsinfoLauncherMain(void)
+{
+	int			StatsinfoPID;
+	int			launch_retry = 0;
+	pg_time_t	launch_time;
+	char		cmd[MAXPGPATH];
+
+	/* we are postmaster subprocess now */
+	IsUnderPostmaster = true;
+
+	/* Identify myself via ps */
+	init_ps_display("pg_statsinfo launcher process", "", "", "");
+
+	/* delay for the preparation of syslogger */
+	pg_usleep(1000000L);	/* 1s */
+
+	ereport(LOG,
+		(errmsg("pg_statsinfo launcher started")));
+
+	/* Set up signal handlers */
+	pqsignal(SIGHUP, sil_exit);
+	pqsignal(SIGINT, sil_exit);
+	pqsignal(SIGTERM, sil_exit);
+	pqsignal(SIGQUIT, sil_exit);
+	pqsignal(SIGALRM, sil_exit);
+	pqsignal(SIGPIPE, sil_exit);
+	pqsignal(SIGUSR1, sil_exit);
+	pqsignal(SIGUSR2, sil_exit);
+	pqsignal(SIGCHLD, sil_sigchld_handler);
+
+	/* launch a pg_statsinfod process */
+	StatsinfoPID = exec_background_process(cmd);
+	launch_time = (pg_time_t) time(NULL);
+
+	for (;;)
+	{
+		/* pg_statsinfo launcher quits either when the postmaster dies */
+		if (!PostmasterIsAlive(true))
+			break;
+
+		/* have received a signal that terminate process */
+		if (need_exit)
+			break;
+
+		/* pg_statsinfod process died */
+		if (got_SIGCHLD)
+		{
+			int status;
+
+			waitpid(StatsinfoPID, &status, WNOHANG);
+
+			/* pg_statsinfod normally end, terminate the pg_statsinfo launcher */
+			if (status == 0)
+				break;
+
+			/* 
+			 * if the pg_statsinfod was aborted with fatal error,
+			 * then terminate the pg_statsinfo launcher
+			 */
+			if (WIFEXITED(status) && WEXITSTATUS(status) == STATSINFO_EXIT_FAILED)
+			{
+				ereport(WARNING,
+					(errmsg("pg_statsinfod is aborted with fatal error, "
+							"terminate the pg_statsinfo launcher")));
+				break;
+			}
+
+			/* pg_statsinfod abnormally end, relaunch new pg_statsinfod process */
+			ereport(WARNING,
+				(errmsg("pg_statsinfod is aborted")));
+
+			/* 
+			 * if the pg_statsinfod was aborted continuously,
+			 * then terminate the pg_statsinfo launcher
+			 */
+			if (((pg_time_t) time(NULL) - launch_time) <= LAUNCH_RETRY_PERIOD)
+			{
+				if (launch_retry >= LAUNCH_RETRY_MAX)
+				{
+					ereport(WARNING,
+					(errmsg("pg_statsinfod is aborted continuously, "
+							"terminate the pg_statsinfo launcher")));
+					break;
+				}
+			}
+			else
+				launch_retry = 0;
+
+			ereport(LOG,
+				(errmsg("relaunch a pg_statsinfod process")));
+
+			got_SIGCHLD = false;
+			StatsinfoPID = exec_background_process(cmd);
+			launch_time = (pg_time_t) time(NULL);
+
+			launch_retry++;
+		}
+
+		pg_usleep(100000L);		/* 100ms */
+	}
+
+	/* Normal exit from the pg_statsinfo launcher is here */
+	ereport(LOG,
+		(errmsg("pg_statsinfo launcher shutting down")));
+
+	proc_exit(0);
+}
+
+/*
  * exec_background_process - Start statsinfo background process.
  */
 static pid_t
@@ -1673,16 +1834,14 @@ exec_background_process(char cmd[])
 	char		binpath[MAXPGPATH];
 	char		logpath[MAXPGPATH];
 	char		share_path[MAXPGPATH];
-	char		prev_csv_name[MAXPGPATH];
 	uint64		sysident;
 	int			fd;
 	pid_t		fpid;
 	pid_t		postmaster_pid = get_postmaster_pid();
-	pg_time_t	now;
+	pg_time_t	log_ts;
 	pg_tz	   *log_tz;
-	int			len;
 
-	now = (pg_time_t) time(NULL) - 1;
+	log_ts = (pg_time_t) time(NULL);
 	log_tz = pg_tzset(GetConfigOption("log_timezone", false));
 
 	/* $PGHOME/bin */
@@ -1697,14 +1856,6 @@ exec_background_process(char cmd[])
 		strlcpy(logpath, Log_directory, MAXPGPATH);
 	else
 		join_path_components(logpath, DataDir, Log_directory);
-
-	/* prev_csv_name */
-	pg_strftime(prev_csv_name, MAXPGPATH, Log_filename,
-				pg_localtime(&now, log_tz));
-	len = strlen(prev_csv_name);
-	if (len > 4 && (strcmp(prev_csv_name + (len - 4), ".log") == 0))
-		len -= 4;
-	strlcpy(prev_csv_name + len, ".csv", MAXPGPATH - len);
 
 	/* ControlFile: system_identifier */
 	sysident = get_sysident();
@@ -1723,11 +1874,10 @@ exec_background_process(char cmd[])
 	send_str(fd, "port", GetConfigOption("port", false));
 	send_str(fd, "server_version_num", GetConfigOption("server_version_num", false));
 	send_str(fd, "server_version_string", GetConfigOption("server_version", false));
-	send_str(fd, "prev_csv_name", prev_csv_name);
 	send_str(fd, "share_path", share_path);
 	send_i32(fd, "server_encoding", GetDatabaseEncoding());
 	send_str(fd, "data_directory", DataDir);
-	send_str(fd, "log_timezone", pg_localtime(&now, log_tz)->tm_zone);
+	send_str(fd, "log_timezone", pg_localtime(&log_ts, log_tz)->tm_zone);
 	send_str(fd, "log_directory", Log_directory);
 	send_str(fd, "log_error_verbosity", GetConfigOption("log_error_verbosity", false));
 	send_str(fd, GUC_PREFIX ".syslog_min_messages", elevel_to_str(syslog_min_messages));
@@ -1781,6 +1931,19 @@ exec_background_process(char cmd[])
 	close(fd);
 
 	return fpid;
+}
+
+/* SIGCHLD: pg_statsinfod process died */
+static void
+sil_sigchld_handler(SIGNAL_ARGS)
+{
+	got_SIGCHLD = true;
+}
+
+static void
+sil_exit(SIGNAL_ARGS)
+{
+	need_exit = true;
 }
 
 /*

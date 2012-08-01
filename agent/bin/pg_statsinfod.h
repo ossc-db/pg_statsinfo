@@ -24,6 +24,12 @@
 #define LOGCODE_LEN			6		/* buffer size for sqlcode */
 #define SECS_PER_DAY		86400	/* seconds per day */
 
+#define STATSINFO_CONTROL_FILE		"pg_statsinfo.control"
+#define STATSINFO_CONTROL_VERSION	20400
+
+#define LOGGER_RETURN_SUCCESS		0x00
+#define LOGGER_RETURN_FAILED		0xff
+
 /* shutdown state */
 typedef enum ShutdownState
 {
@@ -42,6 +48,16 @@ typedef enum WriterQueueType
 	QUEUE_CHECKPOINT,
 	QUEUE_AUTOVACUUM
 } WriterQueueType;
+
+/*
+ * System status indicator
+ * Note: this is stored in pg_statsinfo.control
+ */
+typedef enum StatsinfoState
+{
+	STATSINFO_RUNNING,
+	STATSINFO_SHUTDOWNED
+} StatsinfoState;
 
 /* pg_statsinfod.c */
 extern char		   *instance_id;
@@ -160,6 +176,16 @@ typedef struct Log
 	const char *error_location;
 	const char *application_name;
 } Log;
+
+/* Contents of pg_statsinfo.control */
+typedef struct StatsinfoControlFileData
+{
+	uint32	control_version;		/* STATSINFO_CONTROL_VERSION */
+	char	csv_name[MAXPGPATH];	/* latest parsed csvlog file name */
+	long	csv_offset;				/* latest parsed csvlog file offset */
+	StatsinfoState	state;			/* see enum above */
+	pg_crc32	crc;				/* CRC of all above ... MUST BE LAST! */
+} StatsinfoControlFileData;
 
 /* collector.c */
 extern void collector_init(void);
