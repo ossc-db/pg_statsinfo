@@ -247,7 +247,6 @@ static uint64 get_sysident(void);
 static void must_be_superuser(void);
 static int get_devinfo(const char *path, Datum values[], bool nulls[]);
 static char *get_archive_path(void);
-static const char *elevel_to_str(int elevel);
 static void adjust_log_destination(GucContext context, GucSource source);
 static int get_log_min_messages(void);
 static pid_t get_postmaster_pid(void);
@@ -274,6 +273,7 @@ static bool parse_float8(const char *value, double *result);
 
 #if PG_VERSION_NUM < 80400
 static bool parse_bool(const char *value, bool *result);
+static const char *elevel_to_str(int elevel);
 #endif
 
 static char *b_trim(char *str);
@@ -1837,7 +1837,6 @@ static pid_t
 exec_background_process(char cmd[])
 {
 	char		binpath[MAXPGPATH];
-	char		logpath[MAXPGPATH];
 	char		share_path[MAXPGPATH];
 	uint64		sysident;
 	int			fd;
@@ -1855,12 +1854,6 @@ exec_background_process(char cmd[])
 
 	/* $PGHOME/share */
 	get_share_path(my_exec_path, share_path);
-
-	/* $PGDATA/pg_log */
-	if (is_absolute_path(Log_directory))
-		strlcpy(logpath, Log_directory, MAXPGPATH);
-	else
-		join_path_components(logpath, DataDir, Log_directory);
 
 	/* ControlFile: system_identifier */
 	sysident = get_sysident();
@@ -1883,38 +1876,6 @@ exec_background_process(char cmd[])
 	send_i32(fd, "server_encoding", GetDatabaseEncoding());
 	send_str(fd, "data_directory", DataDir);
 	send_str(fd, "log_timezone", pg_localtime(&log_ts, log_tz)->tm_zone);
-	send_str(fd, "log_directory", Log_directory);
-	send_str(fd, "log_error_verbosity", GetConfigOption("log_error_verbosity", false));
-	send_str(fd, GUC_PREFIX ".syslog_min_messages", elevel_to_str(syslog_min_messages));
-	send_str(fd, GUC_PREFIX ".textlog_min_messages", elevel_to_str(textlog_min_messages));
-	send_str(fd, GUC_PREFIX ".textlog_filename", textlog_filename);
-	send_str(fd, GUC_PREFIX ".textlog_line_prefix", textlog_line_prefix);
-	send_str(fd, GUC_PREFIX ".syslog_line_prefix", syslog_line_prefix);
-	send_i32(fd, GUC_PREFIX ".textlog_permission", textlog_permission);
-	send_str(fd, GUC_PREFIX ".excluded_dbnames", excluded_dbnames);
-	send_str(fd, GUC_PREFIX ".excluded_schemas", excluded_schemas);
-	send_i32(fd, GUC_PREFIX ".stat_statements_max", stat_statements_max);
-	send_str(fd, GUC_PREFIX ".stat_statements_exclude_users", stat_statements_exclude_users);
-	send_i32(fd, GUC_PREFIX ".sampling_interval", sampling_interval);
-	send_i32(fd, GUC_PREFIX ".snapshot_interval", snapshot_interval);
-	send_str(fd, GUC_PREFIX ".repository_server", repository_server);
-	send_i32(fd, GUC_PREFIX ".adjust_log_level", adjust_log_level);
-	send_str(fd, GUC_PREFIX ".adjust_log_info", adjust_log_info);
-	send_str(fd, GUC_PREFIX ".adjust_log_notice", adjust_log_notice);
-	send_str(fd, GUC_PREFIX ".adjust_log_warning", adjust_log_warning);
-	send_str(fd, GUC_PREFIX ".adjust_log_error", adjust_log_error);
-	send_str(fd, GUC_PREFIX ".adjust_log_log", adjust_log_log);
-	send_str(fd, GUC_PREFIX ".adjust_log_fatal", adjust_log_fatal);
-	send_str(fd, GUC_PREFIX ".textlog_nologging_users", textlog_nologging_users);
-	send_str(fd, GUC_PREFIX ".enable_maintenance", enable_maintenance);
-	send_str(fd, GUC_PREFIX ".maintenance_time", maintenance_time);
-	send_i32(fd, GUC_PREFIX ".repository_keepday", repository_keepday);
-	send_str(fd, GUC_PREFIX ".log_maintenance_command", log_maintenance_command);
-
-#ifdef HAVE_SYSLOG
-	send_str(fd, "syslog_facility", GetConfigOption("syslog_facility", false));
-	send_str(fd, "syslog_ident", GetConfigOption("syslog_ident", false));
-#endif
 	send_str(fd, ":debug", _("DEBUG"));
 	send_str(fd, ":info", _("INFO"));
 	send_str(fd, ":notice", _("NOTICE"));
@@ -2208,22 +2169,6 @@ get_archive_path(void)
 	}
 
 	return NULL;
-}
-
-static const char *
-elevel_to_str(int elevel)
-{
-	const struct config_enum_entry *e;
-
-	for (e = elevel_options; e && e->name; e++)
-	{
-		if (e->val == elevel)
-			return e->name;
-	}
-
-	elog(ERROR, "could not find enum option %d for %s",
-		 elevel, GUC_PREFIX ".log_min_messages");
-	return NULL;				/* silence compiler */
 }
 
 /*
@@ -2594,6 +2539,22 @@ str_to_elevel(const char *name,
 			(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 			 errmsg("invalid value for parameter \"%s\": \"%s\"", name, str)));
 	return 0;
+}
+
+static const char *
+elevel_to_str(int elevel)
+{
+	const struct config_enum_entry *e;
+
+	for (e = elevel_options; e && e->name; e++)
+	{
+		if (e->val == elevel)
+			return e->name;
+	}
+
+	elog(ERROR, "could not find enum option %d for %s",
+		 elevel, GUC_PREFIX ".log_min_messages");
+	return NULL;				/* silence compiler */
 }
 #endif
 

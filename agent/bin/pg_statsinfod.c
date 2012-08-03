@@ -102,6 +102,7 @@ static bool assign_syslog(const char *value, void *var);
 static bool assign_string(const char *value, void *var);
 static bool assign_bool(const char *value, void *var);
 static bool assign_time(const char *value, void *var);
+static void readopt(void);
 static void after_readopt(void);
 static bool decode_time(const char *field, int *hour, int *min, int *sec);
 static int strtoi(const char *nptr, char **endptr, int base);
@@ -191,9 +192,9 @@ main(int argc, char *argv[])
 	if (isTTY(fileno(stdin)))
 		return help();
 
-	/* read required parameters from stdin */
-	readopt_from_file(stdin);
-	fclose(stdin);
+	/* read required parameters */
+	readopt();
+
 	if (instance_id == NULL ||
 		postmaster_pid == 0 ||
 		postmaster_port == NULL ||
@@ -293,7 +294,7 @@ postmaster_is_alive(void)
 {
 #ifdef WIN32
 	static HANDLE hProcess = NULL;
-	
+
 	if (hProcess == NULL)
 	{
 		hProcess = OpenProcess(SYNCHRONIZE, false, postmaster_pid);
@@ -584,6 +585,34 @@ assign_param(const char *name, const char *value)
 }
 
 /*
+ * read required parameters.
+ */
+static void
+readopt(void)
+{
+	PGconn		*conn;
+	PGresult	*res;
+	char		 conninfo[1024];
+
+	/* read required parameters from stdin */
+	readopt_from_file(stdin);
+	fclose(stdin);
+
+	Assert(postmaster_port);
+
+	/* read required parameters from db */
+	snprintf(conninfo, lengthof(conninfo),
+		"dbname=%s port=%s options='-c log_statement=none'",
+		"postgres", postmaster_port);
+	conn = pgut_connect(conninfo, NO, ERROR);
+	res = pgut_execute(conn, SQL_SELECT_CUSTOM_SETTINGS, 0, NULL);
+	readopt_from_db(res);
+
+	PQclear(res);
+	pgut_disconnect(conn);
+}
+
+/*
  * Assign options from file. The file format must be:
  *	uint32	name_size
  *	char	name[name_size]
@@ -661,6 +690,10 @@ readopt_from_db(PGresult *res)
 	}
 
 	after_readopt();
+
+	if (!(enable_maintenance & MAINTENANCE_MODE_SNAPSHOT))
+		elog(NOTICE,
+			"automatic maintenance is disable. Please note the data size of the repository");
 }
 
 /*
@@ -680,10 +713,6 @@ after_readopt(void)
 		if (flags)
 			checkpoint_starting_prefix_len = flags - msg_checkpoint_starting;
 	}
-
-	if (!(enable_maintenance & MAINTENANCE_MODE_SNAPSHOT))
-		elog(NOTICE,
-			"automatic maintenance is disable. Please note the data size of the repository");
 }
 
 /*

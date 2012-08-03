@@ -12,45 +12,6 @@
 #define MaintenanceModeIsSnapshot(mode)	( mode & MAINTENANCE_MODE_SNAPSHOT )
 #define MaintenanceModeIsLog(mode)		( mode & MAINTENANCE_MODE_LOG )
 
-/* read settings */
-#define SQL_SELECT_CUSTOM_SETTINGS "\
-SELECT \
-	t.name, \
-	s.setting \
-FROM \
-	(VALUES \
-		('log_directory'), \
-		('log_error_verbosity'), \
-		('syslog_facility'), \
-		('syslog_ident'), \
-		('" GUC_PREFIX ".syslog_min_messages'), \
-		('" GUC_PREFIX ".textlog_min_messages'), \
-		('" GUC_PREFIX ".textlog_filename'), \
-		('" GUC_PREFIX ".textlog_line_prefix'), \
-		('" GUC_PREFIX ".syslog_line_prefix'), \
-		('" GUC_PREFIX ".textlog_permission'), \
-		('" GUC_PREFIX ".excluded_dbnames'), \
-		('" GUC_PREFIX ".excluded_schemas'), \
-		('" GUC_PREFIX ".stat_statements_max'), \
-		('" GUC_PREFIX ".stat_statements_exclude_users'), \
-		('" GUC_PREFIX ".sampling_interval'), \
-		('" GUC_PREFIX ".snapshot_interval'), \
-		('" GUC_PREFIX ".repository_server'), \
-		('" GUC_PREFIX ".adjust_log_level'), \
-		('" GUC_PREFIX ".adjust_log_info'), \
-		('" GUC_PREFIX ".adjust_log_notice'), \
-		('" GUC_PREFIX ".adjust_log_warning'), \
-		('" GUC_PREFIX ".adjust_log_error'), \
-		('" GUC_PREFIX ".adjust_log_log'), \
-		('" GUC_PREFIX ".adjust_log_fatal'), \
-		('" GUC_PREFIX ".textlog_nologging_users'), \
-		('" GUC_PREFIX ".enable_maintenance'), \
-		('" GUC_PREFIX ".maintenance_time'), \
-		('" GUC_PREFIX ".repository_keepday'), \
-		('" GUC_PREFIX ".log_maintenance_command')) AS t(name) \
-	LEFT JOIN pg_settings s \
-	ON t.name = s.name"
-
 pthread_mutex_t	reload_lock;
 pthread_mutex_t	maintenance_lock;
 volatile time_t	server_reload_time;
