@@ -130,13 +130,18 @@ default_log_maintenance_command(void)
 #define DEFAULT_SNAPSHOT_INTERVAL		600		/* sec */
 #define DEFAULT_SYSLOG_LEVEL			DISABLE
 #define DEFAULT_TEXTLOG_LEVEL			WARNING
-#define DEFAULT_ENABLE_MAINTENANCE		"on"
 #define DEFAULT_MAINTENANCE_TIME		"00:02:00"
 #define DEFAULT_REPOSITORY_KEEPDAY		7		/* day */
 #define DEFAULT_LOG_MAINTENANCE_COMMAND	default_log_maintenance_command()
 #define DEFAULT_LONG_LOCK_THREASHOLD	30		/* sec */
 #define DEFAULT_STAT_STATEMENTS_MAX		30
 #define LONG_TRANSACTION_THRESHOLD		1.0		/* sec */
+
+#if PG_VERSION_NUM < 80400
+#define DEFAULT_ENABLE_MAINTENANCE		"3"		/* snapshot + log */
+#else
+#define DEFAULT_ENABLE_MAINTENANCE		"on"	/* snapshot + log */
+#endif
 
 static const struct config_enum_entry elevel_options[] =
 {
