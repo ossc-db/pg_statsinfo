@@ -1046,7 +1046,7 @@ csvfilter(const struct dirent *dp)
 static void
 open_controlfile(Logger *logger, int flags, mode_t mode)
 {
-	if ((cf_fd = open(STATSINFO_CONTROL_FILE, flags, mode) < 0))
+	if ((cf_fd = open(STATSINFO_CONTROL_FILE, flags, mode)) < 0)
 	{
 		ereport(ERROR,
 			(errcode_errno(),
