@@ -109,10 +109,11 @@ static char *b_trim(char *str);
 static bool split_string(char *rawstring, char separator, List **elemlist);
 static bool is_nologging_user(const Log *log);
 static int csvfilter(const struct dirent *dp);
+static void open_controlfile(Logger *logger, int flags, mode_t mode);
 static void load_controlfile(Logger *logger);
 static bool ReadControlFile(void);
-static void RewriteControlFile(void);
-static void logger_shutdown(void *retval);
+static void RewriteControlFile(Logger *logger);
+static void logger_shutdown(Logger *logger);
 
 void
 logger_init(void)
@@ -216,12 +217,12 @@ logger_main(void *arg)
 		elog(WARNING, "shutdown because server process exited abnormally");
 	logger_recv(&logger);
 
+	/* update pg_statsinfo.control */
+	ControlFile.state = STATSINFO_SHUTDOWNED;
+	RewriteControlFile(&logger);
+
 	logger_close(&logger);
 	shutdown_progress(LOGGER_SHUTDOWN);
-	ControlFile.state = STATSINFO_SHUTDOWNED;
-
-	/* update pg_statsinfo.control */
-	RewriteControlFile();
 
 	return (void *) LOGGER_RETURN_SUCCESS;
 }
@@ -650,7 +651,7 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 		strlcpy(ControlFile.csv_name,
 			logger->csv_name, sizeof(ControlFile.csv_name));
 		ControlFile.csv_offset = logger->csv_offset;
-		RewriteControlFile();
+		RewriteControlFile(logger);
 
 		if (!only_routing && save_elevel == LOG)
 		{
@@ -1042,6 +1043,20 @@ csvfilter(const struct dirent *dp)
 		return 0;
 }
 
+static void
+open_controlfile(Logger *logger, int flags, mode_t mode)
+{
+	if ((cf_fd = open(STATSINFO_CONTROL_FILE, flags, mode) < 0))
+	{
+		ereport(ERROR,
+			(errcode_errno(),
+			 errmsg("could not open control file \"%s\": %m",
+			 	STATSINFO_CONTROL_FILE)));
+		/* shutdown due to fatal error */
+		logger_shutdown(logger);
+	}
+}
+
 /*
  * load the previous state from pg_statsinfo.control.
  */
@@ -1049,32 +1064,16 @@ static void
 load_controlfile(Logger *logger)
 {
 	struct stat		st;
-	bool			need_load = false;
 
-	if (stat(STATSINFO_CONTROL_FILE, &st) == 0)
+	if (stat(STATSINFO_CONTROL_FILE, &st) != 0)
 	{
-		cf_fd = open(STATSINFO_CONTROL_FILE, O_RDWR | PG_BINARY, 0);
-		need_load = true;
-	}
-	else
-		cf_fd = open(STATSINFO_CONTROL_FILE,
-					O_RDWR | O_CREAT | O_EXCL | PG_BINARY,
-					S_IRUSR | S_IWUSR);
-	if (cf_fd < 0)
-	{
-		if (errno == ENOENT)
-			return;		/* file not found */
-
-		ereport(ERROR,
-			(errcode_errno(),
-			 errmsg("could not open control file \"%s\": %m",
-			 	STATSINFO_CONTROL_FILE)));
-		/* shutdown logger thread */
-		logger_shutdown((void *) LOGGER_RETURN_FAILED);
-	}
-
-	if (!need_load)
+		open_controlfile(logger,
+			O_RDWR | O_CREAT | O_EXCL | PG_BINARY,
+			S_IRUSR | S_IWUSR);
 		return;
+	}
+
+	open_controlfile(logger, O_RDWR | PG_BINARY, 0);
 
 	/*
 	 * if state value of pg_statsinfo.control is not "STATSINFO_SHUTDOWNED",
@@ -1086,7 +1085,11 @@ load_controlfile(Logger *logger)
 	{
 		char prev_csvlog[MAXPGPATH];
 
-		join_path_components(prev_csvlog, my_log_directory, ControlFile.csv_name);
+		if (ControlFile.state == STATSINFO_SHUTDOWNED)
+			return;
+
+		join_path_components(
+			prev_csvlog,my_log_directory, ControlFile.csv_name);
 
 		if (stat(prev_csvlog, &st) == 0 && ControlFile.csv_offset <= st.st_size)
 		{
@@ -1192,7 +1195,7 @@ ReadControlFile(void)
 }
 
 static void
-RewriteControlFile(void)
+RewriteControlFile(Logger *logger)
 {
 	char	buffer[sizeof(ControlFile)];
 
@@ -1221,13 +1224,13 @@ RewriteControlFile(void)
 			(errcode_errno(),
 			 errmsg("could not write to control file \"%s\": %m",
 			 	STATSINFO_CONTROL_FILE)));
-		/* shutdown logger thread */
-		logger_shutdown((void *) LOGGER_RETURN_FAILED);
+		/* shutdown due to fatal error */
+		logger_shutdown(logger);
 	}
 }
 
 static void
-logger_shutdown(void *retval)
+logger_shutdown(Logger *logger)
 {
 	/* notify shutdown request to other threads */
 	if (shutdown_state < SHUTDOWN_REQUESTED)
@@ -1237,7 +1240,12 @@ logger_shutdown(void *retval)
 	while (shutdown_state < WRITER_SHUTDOWN)
 		usleep(200 * 1000);	/* 200ms */
 
+	/* final shutdown message */
+	elog(ERROR, "shutdown due to fatal error");
+	logger_recv(logger);
+	logger_close(logger);
+
 	/* exit the logger thread */
 	shutdown_progress(LOGGER_SHUTDOWN);
-	pthread_exit(retval);
+	pthread_exit((void *) LOGGER_RETURN_FAILED);
 }
