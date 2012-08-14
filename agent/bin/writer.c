@@ -246,8 +246,12 @@ writer_connect(bool superuser)
 	int		retry = 0;
 
 	if (superuser)
+#ifdef DEBUG
+		snprintf(info, lengthof(info), "%s", my_repository_server);
+#else
 		snprintf(info, lengthof(info),
 			"%s options='-c log_statement=none'", my_repository_server);
+#endif
 	else
 		snprintf(info, lengthof(info), "%s", my_repository_server);
 

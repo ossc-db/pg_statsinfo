@@ -344,6 +344,12 @@ collector_connect(const char *db)
 		}
 	}
 
-	snprintf(info, lengthof(info), "dbname=%s port=%s options='-c log_statement=none'", db, postmaster_port);
+#ifdef DEBUG
+	snprintf(info, lengthof(info),
+		"dbname=%s port=%s", db, postmaster_port);
+#else
+	snprintf(info, lengthof(info),
+		"dbname=%s port=%s options='-c log_statement=none'", db, postmaster_port);
+#endif
 	return do_connect(&collector_conn, info, schema);
 }
