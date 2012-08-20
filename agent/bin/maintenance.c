@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#define SQL_MAINTENANCE_PERTITION	"SELECT statsrepo.del_snapshot2(CAST($1 AS TIMESTAMPTZ))"
+#define SQL_MAINTENANCE_PARTITION	"SELECT statsrepo.del_snapshot2(CAST($1 AS TIMESTAMPTZ))"
 #define SQL_MAINTENANCE				"SELECT statsrepo.del_snapshot(CAST($1 AS TIMESTAMPTZ))"
 
 typedef struct Maintenance
@@ -168,7 +168,7 @@ Maintenance_exec(Maintenance *maintenance, PGconn *conn, const char *instid)
 	{
 		/* exclusive control during snapshot and maintenance */
 		pthread_mutex_lock(&maintenance_lock);
-		status = pgut_command(conn, SQL_MAINTENANCE_PERTITION, 1, params);
+		status = pgut_command(conn, SQL_MAINTENANCE_PARTITION, 1, params);
 		pthread_mutex_unlock(&maintenance_lock);
 	}
 	else
