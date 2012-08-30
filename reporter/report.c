@@ -756,14 +756,14 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Statements **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %8s  %13s  %12s  %-s\n",
+	fprintf(out, "%-16s  %-16s  %8s  %14s  %13s  %-s\n",
 		"User", "Database", "Calls", "Total Time", "Time/Call", "Query");
 	fprintf(out, "--------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_QUERY_ACTIVITY_STATEMENTS, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-16s  %8s  %10s ms  %9s ms  %-s\n",
+		fprintf(out, "%-16s  %-16s  %8s  %10s sec  %9s sec  %-s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 3),

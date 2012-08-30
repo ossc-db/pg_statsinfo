@@ -14,6 +14,11 @@
 	(((expected) > 0 && (ret) != (expected)) || (ret) < 0)
 
 static void
+appendStringInfoVA_s(StringInfo str, const char *fmt, va_list args)
+/* This lets gcc check the format string for consistency. */
+__attribute__((format(PG_PRINTF_ATTRIBUTE, 2, 0)));
+
+static void
 termStringInfo(StringInfo str)
 {
 	if (str && str->data)

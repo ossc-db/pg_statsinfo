@@ -44,6 +44,23 @@ match_checkpoint_starting(const char *message)
 }
 
 /*
+ * is_checkpoint
+ */
+bool
+is_checkpoint(const char *message)
+{
+	/* log for checkpoint starting */
+	if (match_checkpoint_starting(message))
+		return true;
+
+	/* log for checkpoint complete */
+	if (match(message, msg_checkpoint_complete))
+		return true;
+
+	return false;
+}
+
+/*
  * parse_checkpoint
  */
 bool

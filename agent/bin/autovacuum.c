@@ -19,7 +19,11 @@ INSERT INTO statsrepo.autoanalyze VALUES \
 #define MSG_RUSAGE \
 	"CPU %fs/%fu sec elapsed %f sec"
 
+#if PG_VERSION_NUM >= 90200
+#define NUM_AUTOVACUUM		14
+#else
 #define NUM_AUTOVACUUM		9
+#endif
 #define NUM_AUTOANALYZE		4
 #define NUM_RUSAGE			3
 
@@ -35,6 +39,23 @@ typedef struct AutovacuumLog
 static void Autovacuum_free(AutovacuumLog *av);
 static bool Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid);
 static bool Autoanalyze_exec(AutovacuumLog *av, PGconn *conn, const char *instid);
+
+/*
+ * is_autovacuum
+ */
+bool
+is_autovacuum(const char *message)
+{
+	/* autovacuum log */
+	if (match(message, msg_autovacuum))
+		return true;
+
+	/* autoanalyze log */
+	if (match(message, msg_autoanalyze))
+		return true;
+
+	return false;
+}
 
 /*
  * parse_autovacuum

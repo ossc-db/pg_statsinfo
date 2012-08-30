@@ -248,8 +248,10 @@ extern void write_syslog(const Log *log, const char *prefix,
 extern bool write_textlog(const Log *log, const char *prefix,
 				PGErrorVerbosity verbosity, FILE *fp);
 /* checkpoint.c */
+extern bool is_checkpoint(const char *message);
 extern bool parse_checkpoint(const char *message, const char *timestamp);
 /* autovacuum.c */
+extern bool is_autovacuum(const char *message);
 extern bool parse_autovacuum(const char *message, const char *timestamp);
 
 /* writer.c */

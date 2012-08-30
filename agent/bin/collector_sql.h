@@ -7,6 +7,16 @@
 #ifndef COLLECTOR_SQL_H
 #define COLLECTOR_SQL_H
 
+#if PG_VERSION_NUM >= 90200
+#define PG_STAT_ACTIVITY_ATTNAME_PID		"pid"
+#define PG_STAT_ACTIVITY_ATTNAME_QUERY		"query"
+#define PG_STAT_REPLICATION_ATTNAME_PID		"pid"
+#else
+#define PG_STAT_ACTIVITY_ATTNAME_PID		"procpid"
+#define PG_STAT_ACTIVITY_ATTNAME_QUERY		"current_query"
+#define PG_STAT_REPLICATION_ATTNAME_PID		"procpid"
+#endif
+
 /*----------------------------------------------------------------------------
  * snapshots per instance
  *----------------------------------------------------------------------------
@@ -134,7 +144,6 @@ FROM \
 
 /* statement */
 #if PG_VERSION_NUM < 90000
-
 #define SQL_SELECT_STATEMENT "\
 SELECT \
 	s.dbid, \
@@ -158,9 +167,7 @@ WHERE \
 	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
 ORDER BY \
 	s.total_time DESC LIMIT $2"
-
-#else
-
+#elif PG_VERSION_NUM < 90200
 #define SQL_SELECT_STATEMENT "\
 SELECT \
 	s.dbid, \
@@ -184,7 +191,30 @@ WHERE \
 	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
 ORDER BY \
 	s.total_time DESC LIMIT $2"
-
+#else
+#define SQL_SELECT_STATEMENT "\
+SELECT \
+	s.dbid, \
+	s.userid, \
+	s.query, \
+	s.calls, \
+	s.total_time / 1000, \
+	s.rows, \
+	s.shared_blks_hit, \
+	s.shared_blks_read, \
+	s.shared_blks_written, \
+	s.local_blks_hit, \
+	s.local_blks_read, \
+	s.local_blks_written, \
+	s.temp_blks_read, \
+	s.temp_blks_written \
+FROM \
+	pg_stat_statements s \
+	LEFT JOIN pg_roles r ON r.oid = s.userid \
+WHERE \
+	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
+ORDER BY \
+	s.total_time DESC LIMIT $2"
 #endif
 
 /* lock */
@@ -193,7 +223,7 @@ ORDER BY \
 #define SQL_SELECT_LOCK_BLOCKER_QUERY "\
 CASE \
 	WHEN la.gid IS NOT NULL THEN '(xact is detached from session)' \
-	WHEN la.queries is null THEN '(library might not have been loaded)' \
+	WHEN la.queries IS NULL THEN '(library might not have been loaded)' \
 	ELSE la.queries \
 END"
 #else
@@ -224,7 +254,7 @@ SELECT \
 	la.pid AS blocker_pid, \
 	la.gid AS blocker_gid, \
 	(statement_timestamp() - sb.query_start)::interval(0), \
-	sb.current_query, \
+	sb." PG_STAT_ACTIVITY_ATTNAME_QUERY ", \
 	" SQL_SELECT_LOCK_BLOCKER_QUERY " \
 FROM \
 	(SELECT DISTINCT l0.pid, l0.relation, " SQL_SELECT_LOCK_XID_CAST ", la.gid, lx.queries \
@@ -237,11 +267,11 @@ FROM \
 		LEFT JOIN statsinfo.last_xact_activity() lx ON l0.pid = lx.pid \
 	 WHERE l0.granted = true AND \
 		(la.gid IS NULL OR l0.relation IS NOT NULL)) la \
-	 LEFT JOIN pg_stat_activity sa ON la.pid = sa.procpid, \
+	 LEFT JOIN pg_stat_activity sa ON la.pid = sa." PG_STAT_ACTIVITY_ATTNAME_PID ", \
 	(SELECT DISTINCT pid, relation, " SQL_SELECT_LOCK_XID_CAST " \
 	 FROM pg_locks \
 	 WHERE granted = false) lb \
-	 LEFT JOIN pg_stat_activity sb ON lb.pid = sb.procpid \
+	 LEFT JOIN pg_stat_activity sb ON lb.pid = sb." PG_STAT_ACTIVITY_ATTNAME_PID " \
 	 LEFT JOIN pg_database db ON sb.datid = db.oid \
 	 LEFT JOIN pg_class cb ON lb.relation = cb.oid \
 	 LEFT JOIN pg_namespace nb ON cb.relnamespace = nb.oid \
@@ -252,7 +282,7 @@ WHERE \
 /* replication */
 #define SQL_SELECT_REPLICATION "\
 SELECT \
-	procpid, \
+	" PG_STAT_REPLICATION_ATTNAME_PID ", \
 	usesysid, \
 	usename, \
 	application_name, \

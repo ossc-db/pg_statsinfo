@@ -22,6 +22,22 @@
 #include "pqexpbuffer.h"
 #include "utils/elog.h"
 
+/*
+ * Set the format style used by gcc to check printf type functions. We really
+ * want the "gnu_printf" style set, which includes what glibc uses, such
+ * as %m for error strings and %lld for 64 bit long longs. But not all gcc
+ * compilers are known to support it, so we just use "printf" which all
+ * gcc versions alive are known to support, except on Windows where
+ * using "gnu_printf" style makes a dramatic difference. Maybe someday
+ * we'll have a configure test for this, if we ever discover use of more
+ * variants to be necessary.
+ */
+#ifdef WIN32
+#define PG_PRINTF_ATTRIBUTE gnu_printf
+#else
+#define PG_PRINTF_ATTRIBUTE printf
+#endif
+
 #define INFINITE_STR		"INFINITE"
 
 typedef enum YesNo
@@ -150,7 +166,8 @@ extern void CHECK_FOR_INTERRUPTS(void);
 #define appendStringInfoChar	appendPQExpBufferChar
 #define appendBinaryStringInfo	appendBinaryPQExpBuffer
 
-extern bool appendStringInfoVA(StringInfo str, const char *fmt, va_list args);
+extern bool appendStringInfoVA(StringInfo str, const char *fmt, va_list args)
+__attribute__((format(PG_PRINTF_ATTRIBUTE, 2, 0)));
 extern int appendStringInfoFile(StringInfo str, FILE *fp);
 extern int appendStringInfoFd(StringInfo str, int fd);
 

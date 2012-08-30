@@ -31,7 +31,6 @@
 #include "storage/ipc.h"
 #include "storage/proc.h"
 #include "storage/procarray.h"
-#include "storage/pmsignal.h"
 #include "utils/builtins.h"
 #include "utils/guc.h"
 #include "utils/tqual.h"
@@ -40,6 +39,11 @@
 
 #if PG_VERSION_NUM >= 90100
 #include "catalog/pg_collation.h"
+#endif
+
+#if PG_VERSION_NUM >= 90200
+#include "utils/timestamp.h"
+#include "utils/rel.h"
 #endif
 
 #include "pgut/pgut-be.h"
@@ -79,11 +83,21 @@
 	"received SIGHUP, reloading configuration files"
 
 /* log_autovacuum_min_duration: vacuum */
+#if PG_VERSION_NUM >= 90200
+#define MSG_AUTOVACUUM \
+	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
+	"pages: %d removed, %d remain\n" \
+	"tuples: %.0f removed, %.0f remain\n" \
+	"buffer usage: %d hits, %d misses, %d dirtied\n" \
+	"avg read rate: %.3f MiB/s, avg write rate: %.3f MiB/s\n" \
+	"system usage: %s"
+#else
 #define MSG_AUTOVACUUM \
 	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
 	"pages: %d removed, %d remain\n" \
 	"tuples: %.0f removed, %.0f remain\n" \
 	"system usage: %s"
+#endif
 
 /* log_autovacuum_min_duration: analyze */
 #define MSG_AUTOANALYZE \
@@ -252,6 +266,7 @@ static int get_log_min_messages(void);
 static pid_t get_postmaster_pid(void);
 static bool verify_log_filename(const char *filename);
 static bool verify_timestr(const char *timestr);
+static bool postmaster_is_alive(void);
 
 #if PG_VERSION_NUM >= 90100
 static bool check_textlog_filename(char **newval, void **extra, GucSource source);
@@ -375,6 +390,14 @@ statsinfo_sample(PG_FUNCTION_ARGS)
 			;	/* exclude myself */
 		else if (be->st_waiting)
 			waiting++;
+#if PG_VERSION_NUM >= 90200
+		else if (be->st_state == STATE_IDLE)
+			idle++;
+		else if (be->st_state == STATE_IDLEINTRANSACTION)
+			idle_in_xact++;
+		else if (be->st_state == STATE_RUNNING)
+			running++;
+#else
 		else if (be->st_activity[0] != '\0')
 		{
 			if (strcmp(be->st_activity, "<IDLE>") == 0)
@@ -384,6 +407,7 @@ statsinfo_sample(PG_FUNCTION_ARGS)
 			else
 				running++;
 		}
+#endif
 
 		/*
 		 * sample long transactions, but exclude vacuuming processes.
@@ -398,15 +422,30 @@ statsinfo_sample(PG_FUNCTION_ARGS)
 			continue;
 
 		/* XXX: needs lock? */
-		proc = BackendPidGetProc(be->st_procpid);
-		if (proc == NULL || (proc->vacuumFlags & PROC_IN_VACUUM))
+#if PG_VERSION_NUM >= 90200
+		if ((proc = BackendPidGetProc(be->st_procpid)) == NULL ||
+			(ProcGlobal->allPgXact[proc->pgprocno].vacuumFlags & PROC_IN_VACUUM))
 			continue;
+
+		if (be->st_state == STATE_IDLEINTRANSACTION)
+			strlcpy(stats->max_xact_query,
+				"<IDLE> in transaction", pgstat_track_activity_query_size);
+		else
+			strlcpy(stats->max_xact_query,
+				be->st_activity, pgstat_track_activity_query_size);
+#else
+		if ((proc = BackendPidGetProc(be->st_procpid)) == NULL ||
+			(proc->vacuumFlags & PROC_IN_VACUUM))
+			continue;
+
+		strlcpy(stats->max_xact_query,
+			be->st_activity, pgstat_track_activity_query_size);
+#endif
 
 		stats->max_xact_pid = be->st_procpid;
 		stats->max_xact_start = be->st_xact_start_timestamp;
 		stats->max_xact_duration = duration;
 		inet_to_cstring(&be->st_clientaddr, stats->max_xact_client);
-		strlcpy(stats->max_xact_query, be->st_activity, pgstat_track_activity_query_size);
 	}
 
 	stats->idle += idle;
@@ -1700,9 +1739,6 @@ StartStatsinfoLauncher(void)
 			break;
 		case 0:
 			/* in child process */
-			/* Close the postmaster's sockets */
-			ClosePostmasterPorts(false);
-
 			/* Lose the postmaster's on-exit routines */
 			on_exit_reset();
 
@@ -1759,7 +1795,7 @@ StatsinfoLauncherMain(void)
 	for (;;)
 	{
 		/* pg_statsinfo launcher quits either when the postmaster dies */
-		if (!PostmasterIsAlive(true))
+		if (!postmaster_is_alive())
 			break;
 
 		/* have received a signal that terminate process */
@@ -1997,7 +2033,6 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 	{
 		Form_pg_tablespace form = (Form_pg_tablespace) GETSTRUCT(tuple);
 		Datum			datum;
-		bool			isnull;
 
 		memset(values, 0, sizeof(values));
 		memset(nulls, 0, sizeof(nulls));
@@ -2010,28 +2045,31 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 		values[i++] = CStringGetTextDatum(NameStr(form->spcname));
 
 		/* location */
-		datum = fastgetattr(tuple, Anum_pg_tablespace_spclocation,
-							RelationGetDescr(relation), &isnull);
-		if (isnull || VARSIZE_ANY_EXHDR(datum) == 0)
-		{
-			path = DataDir;
+		if (HeapTupleGetOid(tuple) == DEFAULTTABLESPACE_OID ||
+			HeapTupleGetOid(tuple) == GLOBALTABLESPACE_OID)
 			datum = CStringGetTextDatum(DataDir);
-		}
 		else
 		{
-			path = TextDatumGetCString(datum);
+#if PG_VERSION_NUM >= 90200
+			datum = DirectFunctionCall1(pg_tablespace_location,
+										ObjectIdGetDatum(HeapTupleGetOid(tuple)));
+#else
+			bool isnull;
+			datum = fastgetattr(tuple, Anum_pg_tablespace_spclocation,
+								RelationGetDescr(relation), &isnull);
+			/* resolve symlink */
+			if ((len = readlink(TextDatumGetCString(datum),
+								location, lengthof(location))) > 0)
+			{
+				location[len] = '\0';
+				datum = CStringGetTextDatum(location);
+			}
+#endif
 		}
 		values[i++] = datum;
 
-		/* resolve symlink */
-		if ((len = readlink(path, location, lengthof(location))) > 0)
-		{
-			location[len] = '\0';
-			path = location;
-		}
-
 		/* device */
-		i += get_devinfo(path, values + i, nulls + i);
+		i += get_devinfo(TextDatumGetCString(datum), values + i, nulls + i);
 
 		/* spcoptions */
 #if PG_VERSION_NUM >= 90000
@@ -2991,4 +3029,39 @@ search_devicestats(ArrayType *devicestats, const char *device_name)
 	}
 	/* not found */
 	return NULL;
+}
+
+/*
+ * postmaster_is_alive - check whether postmaster process is still alive
+ */
+static bool
+postmaster_is_alive(void)
+{
+#ifndef WIN32
+	pid_t	ppid = getppid();
+
+	/* If the postmaster is still our parent, it must be alive. */
+	if (ppid == PostmasterPid)
+		return true;
+
+	/* If the init process is our parent, postmaster must be dead. */
+	if (ppid == 1)
+		return false;
+
+	/*
+	 * If we get here, our parent process is neither the postmaster nor init.
+	 * This can occur on BSD and MacOS systems if a debugger has been attached.
+	 * We fall through to the less-reliable kill() method.
+	 */
+
+	/*
+	 * Use kill() to see if the postmaster is still alive. This can sometimes
+	 * give a false positive result, since the postmaster's PID may get
+	 * recycled, but it is good enough for existing uses by indirect children
+	 * and in debugging environments.
+	 */
+	return (kill(PostmasterPid, 0) == 0);
+#else							/* WIN32 */
+	return (WaitForSingleObject(PostmasterHandle, 0) == WAIT_TIMEOUT);
+#endif   /* WIN32 */
 }

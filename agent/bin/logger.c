@@ -578,15 +578,20 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 		/* parse performance logs; those messages are NOT routed. */
 		if (log.elevel == LOG)
 		{
-			if (!only_routing)
+			/* checkpoint ? */
+			if (is_checkpoint(log.message))
 			{
-				/* checkpoint ? */
-				if (parse_checkpoint(log.message, log.timestamp))
-					continue;
+				if (!only_routing)
+					parse_checkpoint(log.message, log.timestamp);
+				continue;
+			}
 
-				/* autovacuum ? */
-				if (parse_autovacuum(log.message, log.timestamp))
-					continue;
+			/* autovacuum ? */
+			if (is_autovacuum(log.message))
+			{
+				if (!only_routing)
+					parse_autovacuum(log.message, log.timestamp);
+				continue;
 			}
 
 			/* snapshot requested ? */

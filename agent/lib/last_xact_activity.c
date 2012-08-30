@@ -278,7 +278,11 @@ myExecutorStart(QueryDesc *queryDesc, int eflags)
 	 */
 	if (!(entry->inxact && entry->pid != MyProc->pid))
 	{
+#if PG_VERSION_NUM >= 90200
+		entry->xid = ProcGlobal->allPgXact[MyProc->pgprocno].xid;
+#else
 		entry->xid = MyProc->xid;
+#endif
 		append_query(entry, queryDesc->sourceText);
 	}
 	entry->change_count++;
@@ -798,7 +802,11 @@ init_entry(int beid, Oid userid)
 	if (MyProc)
 	{
 		entry->pid = MyProc->pid;
+#if PG_VERSION_NUM >= 90200
+		entry->xid = ProcGlobal->allPgXact[MyProc->pgprocno].xid;
+#else
 		entry->xid = MyProc->xid;
+#endif
 	}
 	entry->userid = userid;
 	entry->inxact = false;

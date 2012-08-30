@@ -260,8 +260,8 @@ CREATE TABLE statsrepo.function
 	funcname		name,
 	argtypes		text,
 	calls			bigint,
-	total_time		bigint,
-	self_time		bigint,
+	total_time		double precision,
+	self_time		double precision,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE,
 	FOREIGN KEY (snapid, dbid) REFERENCES statsrepo.database (snapid, dbid)
 );
@@ -1896,8 +1896,8 @@ CREATE FUNCTION statsrepo.get_query_activity_functions(
 	OUT nspname			name,
 	OUT proname			name,
 	OUT calls			bigint,
-	OUT total_time		bigint,
-	OUT self_time		bigint,
+	OUT total_time		numeric,
+	OUT self_time		numeric,
 	OUT time_per_call	numeric
 ) RETURNS SETOF record AS
 $$
@@ -1907,10 +1907,10 @@ $$
 		s.name,
 		fe.funcname,
 		statsrepo.sub(fe.calls, fb.calls),
-		statsrepo.sub(fe.total_time, fb.total_time),
-		statsrepo.sub(fe.self_time, fb.self_time),
+		statsrepo.sub(fe.total_time, fb.total_time)::numeric(1000, 3),
+		statsrepo.sub(fe.self_time, fb.self_time)::numeric(1000, 3),
 		statsrepo.div(
-			statsrepo.sub(fe.total_time, fb.total_time),
+			statsrepo.sub(fe.total_time, fb.total_time)::numeric,
 			statsrepo.sub(fe.calls, fb.calls))
 	FROM
 		statsrepo.function fe LEFT JOIN statsrepo.function fb
