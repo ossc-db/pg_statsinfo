@@ -20,6 +20,7 @@
 #define SQL_SELECT_RECOVERY_CONFLICTS 			"SELECT * FROM statsrepo.get_recovery_conflicts($1, $2)"
 #define SQL_SELECT_INSTANCE_PROC_RATIO			"SELECT * FROM statsrepo.get_proc_ratio($1, $2)"
 #define SQL_SELECT_INSTANCE_PROC_TENDENCY		"SELECT * FROM statsrepo.get_proc_tendency_report($1, $2)"
+#define SQL_SELECT_WALSTATS_TENDENCY			"SELECT * FROM statsrepo.get_xlog_tendency($1, $2)"
 #define SQL_SELECT_CPU_USAGE					"SELECT * FROM statsrepo.get_cpu_usage($1, $2)"
 #define SQL_SELECT_CPU_USAGE_TENDENCY			"SELECT * FROM statsrepo.get_cpu_usage_tendency_report($1, $2)"
 #define SQL_SELECT_IO_USAGE						"SELECT * FROM statsrepo.get_io_usage($1, $2)"
@@ -375,6 +376,24 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 			PQgetvalue(res, i, 2),
 			PQgetvalue(res, i, 3),
 			PQgetvalue(res, i, 4));
+	}
+	fprintf(out, "\n");
+	PQclear(res);
+	
+	fprintf(out, "/** WAL Statistics **/\n");
+	fprintf(out, "-----------------------------------\n");
+	fprintf(out, "%-16s  %-17s  %-24s  %17s\n",
+		"DateTime", "Current Location", "Current WAL File", "WAL Write Size");
+	fprintf(out, "----------------------------------------------------------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_WALSTATS_TENDENCY, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "%-16s  %-17s  %-24s  %14s MB\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1),
+			PQgetvalue(res, i, 2),
+			PQgetvalue(res, i, 3));
 	}
 	fprintf(out, "\n");
 	PQclear(res);
