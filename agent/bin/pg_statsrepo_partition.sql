@@ -433,6 +433,11 @@ LANGUAGE sql;
 -- utility function for reporter.
 ------------------------------------------------------------------------------
 
+-- get_version() - version of statsrepo schema
+CREATE FUNCTION statsrepo.get_version() RETURNS text AS
+'SELECT CAST(''20400'' AS TEXT)'
+LANGUAGE sql IMMUTABLE;
+
 -- tps() - transaction per seconds
 CREATE FUNCTION statsrepo.tps(numeric, interval) RETURNS numeric AS
 'SELECT ($1 / extract(epoch FROM $2))::numeric(1000, 3)'
