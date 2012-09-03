@@ -301,6 +301,21 @@ SELECT \
 FROM \
 	pg_stat_replication"
 
+/* xlog */
+#if PG_VERSION_NUM >= 90000
+#define SQL_SELECT_XLOG "\
+SELECT \
+	pg_current_xlog_location(), \
+	pg_xlogfile_name(pg_current_xlog_location()) \
+WHERE \
+	NOT pg_is_in_recovery()"
+#else
+#define SQL_SELECT_XLOG "\
+SELECT \
+	pg_current_xlog_location(), \
+	pg_xlogfile_name(pg_current_xlog_location())"
+#endif
+
 /* cpu */
 #define SQL_SELECT_CPU "\
 SELECT * FROM statsinfo.cpustats($1)"

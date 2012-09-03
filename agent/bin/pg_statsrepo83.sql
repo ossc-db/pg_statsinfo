@@ -403,6 +403,14 @@ CREATE TABLE statsrepo.replication
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
+CREATE TABLE statsrepo.xlog
+(
+	snapid				bigint,
+	current_location	text,
+	xlogfile			text,
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
 -- del_snapshot(snapid) - delete the specified snapshot.
 CREATE FUNCTION statsrepo.del_snapshot(bigint) RETURNS void AS
 $$
@@ -447,6 +455,39 @@ LANGUAGE sql IMMUTABLE STRICT;
 CREATE FUNCTION statsrepo.sub(anyelement, anyelement) RETURNS anyelement AS
 'SELECT coalesce($1, 0) - coalesce($2, 0)'
 LANGUAGE sql;
+
+-- convert_hex() - convert a hexadecimal string to a decimal number
+CREATE FUNCTION statsrepo.convert_hex(text)
+RETURNS bigint AS
+$$
+	SELECT
+		(sum((16::numeric ^ (length($1) - i)) *
+			position(upper(substring($1 from i for 1)) in '123456789ABCDEF')))::bigint
+	FROM
+		generate_series(1, length($1)) AS t(i);
+$$
+LANGUAGE sql IMMUTABLE STRICT;
+
+-- xlog_location_diff() - compute the difference in bytes between two WAL locations
+CREATE FUNCTION statsrepo.xlog_location_diff(text, text)
+RETURNS numeric AS
+$$
+	/* XLogFileSize * (xlogid1 - xlogid2) + xrecoff1 - xrecoff2 */
+	SELECT
+		(X'FF000000'::bigint * (t.xlogid1 - t.xlogid2) + t.xrecoff1 - t.xrecoff2)::numeric
+	FROM
+	(
+		SELECT
+			statsrepo.convert_hex(lsn1[1]) AS xlogid1,
+			statsrepo.convert_hex(lsn1[2]) AS xrecoff1,
+			statsrepo.convert_hex(lsn2[1]) AS xlogid2,
+			statsrepo.convert_hex(lsn2[2]) AS xrecoff2
+		 FROM
+			regexp_matches($1, '^([0-F]{1,8})/([0-F]{1,8})$') AS lsn1,
+			regexp_matches($2, '^([0-F]{1,8})/([0-F]{1,8})$') AS lsn2
+	) t;
+$$
+LANGUAGE sql IMMUTABLE STRICT;
 
 -- tables - pre-JOINed tables
 CREATE VIEW statsrepo.tables AS
@@ -1220,6 +1261,65 @@ $$
 		AND idle IS NOT NULL
 	ORDER BY
 		a.snapid;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'WAL Statistics'
+CREATE FUNCTION statsrepo.get_xlog_tendency(
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT "timestamp"			text,
+	OUT current_location	text,
+	OUT xlogfile			text,
+	OUT xlog_write_size		numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		to_char(time, 'YYYY-MM-DD HH24:MI'),
+		current_location,
+		xlogfile,
+		(xlog_write_size / 1024 / 1024)::numeric(1000, 3)
+	FROM
+	(
+		SELECT
+			xe.snapid,
+			xe.time,
+			xe.current_location,
+			xe.xlogfile,
+			statsrepo.xlog_location_diff(xe.current_location, xs.current_location) AS xlog_write_size
+		FROM
+		 	(SELECT
+		 		s.snapid,
+		 		s.time,
+		 		x.current_location,
+		 		x.xlogfile,
+				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < s.snapid AND instid = s.instid) AS prev_snapid
+		 	 FROM
+			 	statsrepo.xlog x,
+				statsrepo.snapshot s
+			 WHERE
+				x.snapid BETWEEN $1 AND $2
+				AND x.snapid = s.snapid
+				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)) AS xe,
+		 	(SELECT
+		 		s.snapid,
+		 		s.time,
+		 		x.current_location,
+		 		x.xlogfile,
+				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > s.snapid AND instid = s.instid) AS next_snapid
+		 	 FROM
+			 	statsrepo.xlog x,
+				statsrepo.snapshot s
+			 WHERE
+				x.snapid BETWEEN $1 AND $2
+				AND x.snapid = s.snapid
+				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)) AS xs
+		WHERE
+			xs.snapid = xe.prev_snapid
+			AND xe.snapid = xs.next_snapid
+	) t
+	WHERE
+		snapid > $1;
 $$
 LANGUAGE sql;
 
