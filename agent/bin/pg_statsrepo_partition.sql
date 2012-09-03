@@ -471,7 +471,7 @@ RETURNS numeric AS
 $$
 	/* XLogFileSize * (xlogid1 - xlogid2) + xrecoff1 - xrecoff2 */
 	SELECT
-		(X'FF000000'::bigint * (t.xlogid1 - t.xlogid2) + t.xrecoff1 - t.xrecoff2)::numeric
+		(X'FF000000'::bigint * (t.xlogid1 - t.xlogid2)::numeric + t.xrecoff1 - t.xrecoff2)
 	FROM
 	(
 		SELECT
