@@ -1276,14 +1276,16 @@ CREATE FUNCTION statsrepo.get_xlog_tendency(
 	OUT "timestamp"			text,
 	OUT current_location	text,
 	OUT xlogfile			text,
-	OUT xlog_write_size		numeric
+	OUT write_size			numeric,
+	OUT write_size_ps		numeric
 ) RETURNS SETOF record AS
 $$
 	SELECT
 		to_char(time, 'YYYY-MM-DD HH24:MI'),
 		current_location,
 		xlogfile,
-		(xlog_write_size / 1024 / 1024)::numeric(1000, 3)
+		(write_size / 1024 / 1024)::numeric(1000, 3),
+		(statsrepo.div(write_size, duration) / 1024 / 1024)::numeric(1000, 3)
 	FROM
 	(
 		SELECT
@@ -1291,7 +1293,8 @@ $$
 			xe.time,
 			xe.current_location,
 			xe.xlogfile,
-			statsrepo.xlog_location_diff(xe.current_location, xs.current_location) AS xlog_write_size
+			statsrepo.xlog_location_diff(xe.current_location, xs.current_location) AS write_size,
+			extract(epoch FROM xe.time - xs.time)::numeric AS duration
 		FROM
 		 	(SELECT
 		 		s.snapid,
