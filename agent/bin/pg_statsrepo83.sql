@@ -2064,7 +2064,6 @@ $$
 		AND i.snapid = c.snapid
 		AND i.tbl = c.tbl
 		AND c.attnum = ANY (i.indkey)
-		AND i.isclustered
 		AND i.schema NOT IN ('pg_catalog', 'pg_toast', 'information_schema')
 		AND c.correlation < 1
 	ORDER BY
