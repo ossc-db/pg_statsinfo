@@ -230,6 +230,7 @@ PG_FUNCTION_INFO_V1(statsinfo_cpustats);
 PG_FUNCTION_INFO_V1(statsinfo_cpustats_noarg);
 PG_FUNCTION_INFO_V1(statsinfo_devicestats);
 PG_FUNCTION_INFO_V1(statsinfo_devicestats_noarg);
+PG_FUNCTION_INFO_V1(statsinfo_loadavg);
 PG_FUNCTION_INFO_V1(statsinfo_profile);
 
 extern Datum PGUT_EXPORT statsinfo_sample(PG_FUNCTION_ARGS);
@@ -242,6 +243,7 @@ extern Datum PGUT_EXPORT statsinfo_cpustats(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_cpustats_noarg(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_devicestats(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_devicestats_noarg(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_loadavg(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_profile(PG_FUNCTION_ARGS);
 
 extern PGUT_EXPORT void	_PG_init(void);
@@ -1547,6 +1549,74 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 	SPI_finish();
 
 	return (Datum) 0;
+}
+
+#define FILE_LOADAVG			"/proc/loadavg"
+#define NUM_LOADAVG_COLS		3
+#define NUM_LOADAVG_FIELDS_MIN	3
+
+/*
+ * statsinfo_loadavg - get loadavg information
+ */
+Datum
+statsinfo_loadavg(PG_FUNCTION_ARGS)
+{
+	TupleDesc	tupdesc;
+	int			fd;
+	char		buffer[256];
+	float4		loadavg1;
+	float4		loadavg5;
+	float4		loadavg15;
+	HeapTuple	tuple;
+	Datum		values[NUM_LOADAVG_COLS];
+	bool		nulls[NUM_LOADAVG_COLS];
+
+	must_be_superuser();
+
+	/* Build a tuple descriptor for our result type */
+	if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
+		elog(ERROR, "return type must be a row type");
+
+	Assert(tupdesc->natts == lengthof(values));
+
+	/* extract loadavg information */
+	if ((fd = open(FILE_LOADAVG, O_RDONLY)) < 0)
+		ereport(ERROR,
+			(errcode_for_file_access(),
+			 errmsg("could not open file \"%s\": ", FILE_LOADAVG)));
+
+	if (read(fd, buffer, sizeof(buffer)) < 0)
+	{
+		close(fd);
+		ereport(ERROR,
+			(errcode_for_file_access(),
+			 errmsg("could not read file \"%s\": ", FILE_LOADAVG)));
+	}
+
+	close(fd);
+
+	if (sscanf(buffer, "%f %f %f",
+			&loadavg1, &loadavg5, &loadavg15) < NUM_LOADAVG_FIELDS_MIN)
+		ereport(ERROR,
+			(errcode(ERRCODE_DATA_EXCEPTION),
+			 errmsg("unexpected file format: \"%s\"", FILE_LOADAVG),
+			 errdetail("number of fields is not corresponding")));
+
+	memset(nulls, 0, sizeof(nulls));
+	memset(values, 0, sizeof(values));
+
+	/* loadavg1 */
+	values[0] = Float4GetDatum(loadavg1);
+
+	/* loadavg5 */
+	values[1] = Float4GetDatum(loadavg5);
+
+	/* loadavg15 */
+	values[2] = Float4GetDatum(loadavg15);
+
+	tuple = heap_form_tuple(tupdesc, values, nulls);
+
+	return HeapTupleGetDatum(tuple);
 }
 
 #define FILE_PROFILE		"/proc/systemtap/statsinfo_prof/profile"

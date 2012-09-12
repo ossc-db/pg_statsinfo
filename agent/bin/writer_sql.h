@@ -56,6 +56,9 @@ INSERT INTO statsrepo.cpu VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
 INSERT INTO statsrepo.device VALUES \
 ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)"
 
+#define SQL_INSERT_LOADAVG "\
+INSERT INTO statsrepo.loadavg VALUES ($1, $2, $3, $4)"
+
 #define SQL_INSERT_PROFILE "\
 INSERT INTO statsrepo.profile VALUES ($1, $2, $3, $4)"
 

@@ -324,6 +324,10 @@ SELECT * FROM statsinfo.cpustats($1)"
 #define SQL_SELECT_DEVICE "\
 SELECT * FROM statsinfo.devicestats($1)"
 
+/* loadavg */
+#define SQL_SELECT_LOADAVG "\
+SELECT * FROM statsinfo.loadavg()"
+
 /* profile */
 #define SQL_SELECT_PROFILE	"SELECT * FROM statsinfo.profile()"
 

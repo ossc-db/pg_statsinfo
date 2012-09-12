@@ -352,6 +352,16 @@ CREATE TABLE statsrepo.device
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
+CREATE TABLE statsrepo.loadavg
+(
+	snapid			bigint,
+	loadavg1		real,
+	loadavg5		real,
+	loadavg15		real,
+	PRIMARY KEY (snapid),
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
 CREATE TABLE statsrepo.profile
 (
 	snapid			bigint,
@@ -1792,6 +1802,33 @@ $$
 	) t
 	WHERE
 		snapid > $1;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Load Average'
+CREATE FUNCTION statsrepo.get_loadavg_tendency(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT "timestamp"		text,
+	OUT "1min"			numeric,
+	OUT "5min"			numeric,
+	OUT "15min"			numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+		l.loadavg1::numeric(1000, 3),
+		l.loadavg5::numeric(1000, 3),
+		l.loadavg15::numeric(1000, 3)
+	FROM
+		statsrepo.loadavg l,
+		statsrepo.snapshot s
+	WHERE
+		s.snapid BETWEEN $1 AND $2
+		AND s.snapid = l.snapid
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+	ORDER BY
+		s.snapid;
 $$
 LANGUAGE sql;
 

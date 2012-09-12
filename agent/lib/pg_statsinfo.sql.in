@@ -186,6 +186,19 @@ AS 'MODULE_PATHNAME', 'statsinfo_devicestats_noarg'
 LANGUAGE C;
 
 --
+-- statsinfo.loadavg()
+--
+CREATE FUNCTION statsinfo.loadavg
+(
+	OUT loadavg1	real,
+	OUT loadavg5	real,
+	OUT loadavg15	real
+)
+RETURNS SETOF record
+AS 'MODULE_PATHNAME', 'statsinfo_loadavg'
+LANGUAGE C;
+
+--
 -- statsinfo.profile()
 --
 CREATE FUNCTION statsinfo.profile
