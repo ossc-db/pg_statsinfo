@@ -413,9 +413,9 @@ CREATE TABLE statsrepo.replication
 
 CREATE TABLE statsrepo.xlog
 (
-	snapid				bigint,
-	current_location	text,
-	xlogfile			text,
+	snapid		bigint,
+	location	text,
+	xlogfile	text,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
@@ -1234,15 +1234,15 @@ CREATE FUNCTION statsrepo.get_xlog_tendency(
 	IN snapid_begin			bigint,
 	IN snapid_end			bigint,
 	OUT "timestamp"			text,
-	OUT current_location	text,
+	OUT location			text,
 	OUT xlogfile			text,
 	OUT write_size			numeric,
-	OUT write_size_ps		numeric
+	OUT write_size_per_sec	numeric
 ) RETURNS SETOF record AS
 $$
 	SELECT
 		to_char(time, 'YYYY-MM-DD HH24:MI'),
-		current_location,
+		location,
 		xlogfile,
 		(write_size / 1024 / 1024)::numeric(1000, 3),
 		(statsrepo.div(write_size, duration) / 1024 / 1024)::numeric(1000, 3)
@@ -1251,10 +1251,10 @@ $$
 		SELECT
 			s.snapid,
 			s.time,
-			x.current_location,
+			x.location,
 			x.xlogfile,
 			statsrepo.xlog_location_diff(
-				x.current_location, lag(x.current_location) OVER w) AS write_size,
+				x.location, lag(x.location) OVER w) AS write_size,
 			extract(epoch FROM s.time - lag(s.time) OVER w)::numeric AS duration
 		 FROM
 			statsrepo.xlog x,

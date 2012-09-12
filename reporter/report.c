@@ -350,6 +350,25 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "/* Instance Activity */\n");
 	fprintf(out, "----------------------------------------\n\n");
 
+	fprintf(out, "/** WAL Statistics **/\n");
+	fprintf(out, "-----------------------------------\n");
+	fprintf(out, "%-16s  %-17s  %-24s  %15s  %15s\n",
+		"DateTime", "Location", "Segment File", "Write Size", "Write Size/s");
+	fprintf(out, "--------------------------------------------------------------------------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_WALSTATS_TENDENCY, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "%-16s  %-17s  %-24s  %12s MB  %12s MB\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1),
+			PQgetvalue(res, i, 2),
+			PQgetvalue(res, i, 3),
+			PQgetvalue(res, i, 4));
+	}
+	fprintf(out, "\n");
+	PQclear(res);
+
 	fprintf(out, "/** Instance Processes Ratio **/\n");
 	fprintf(out, "-----------------------------------\n");
 
@@ -372,25 +391,6 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	for(i = 0; i < PQntuples(res); i++)
 	{
 		fprintf(out, "%-16s  %12s  %12s  %12s  %12s\n",
-			PQgetvalue(res, i, 0),
-			PQgetvalue(res, i, 1),
-			PQgetvalue(res, i, 2),
-			PQgetvalue(res, i, 3),
-			PQgetvalue(res, i, 4));
-	}
-	fprintf(out, "\n");
-	PQclear(res);
-	
-	fprintf(out, "/** WAL Statistics **/\n");
-	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-17s  %-24s  %15s  %15s\n",
-		"DateTime", "Current Location", "Current WAL File", "Write Size", "Write Size/s");
-	fprintf(out, "--------------------------------------------------------------------------------------------------\n");
-
-	res = pgut_execute(conn, SQL_SELECT_WALSTATS_TENDENCY, lengthof(params), params);
-	for(i = 0; i < PQntuples(res); i++)
-	{
-		fprintf(out, "%-16s  %-17s  %-24s  %12s MB  %12s MB\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
