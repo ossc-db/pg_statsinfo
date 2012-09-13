@@ -20,6 +20,7 @@
 #define SQL_SELECT_RECOVERY_CONFLICTS 			"SELECT * FROM statsrepo.get_recovery_conflicts($1, $2)"
 #define SQL_SELECT_INSTANCE_PROC_RATIO			"SELECT * FROM statsrepo.get_proc_ratio($1, $2)"
 #define SQL_SELECT_INSTANCE_PROC_TENDENCY		"SELECT * FROM statsrepo.get_proc_tendency_report($1, $2)"
+#define SQL_SELECT_WALSTATS						"SELECT * FROM statsrepo.get_xlog_stats($1, $2)"
 #define SQL_SELECT_WALSTATS_TENDENCY			"SELECT * FROM statsrepo.get_xlog_tendency($1, $2)"
 #define SQL_SELECT_CPU_USAGE					"SELECT * FROM statsrepo.get_cpu_usage($1, $2)"
 #define SQL_SELECT_CPU_USAGE_TENDENCY			"SELECT * FROM statsrepo.get_cpu_usage_tendency_report($1, $2)"
@@ -351,6 +352,15 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "----------------------------------------\n\n");
 
 	fprintf(out, "/** WAL Statistics **/\n");
+	fprintf(out, "-----------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_WALSTATS, lengthof(params), params);
+	if (PQntuples(res) == 0)
+		return;
+	fprintf(out, "Written WAL Total    : %s MB\n", PQgetvalue(res, 0, 0));
+	fprintf(out, "Written WAL Average  : %s MB\n\n", PQgetvalue(res, 0, 1));
+	PQclear(res);
+
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %-17s  %-24s  %15s  %15s\n",
 		"DateTime", "Location", "Segment File", "Write Size", "Write Size/s");

@@ -1280,6 +1280,54 @@ $$
 LANGUAGE sql;
 
 -- generate information that corresponds to 'WAL Statistics'
+CREATE FUNCTION statsrepo.get_xlog_stats(
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT write_size_sum		numeric,
+	OUT write_size_avg		numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		(sum(write_size) / 1024 / 1024)::numeric(1000, 3),
+		(avg(write_size) / 1024 / 1024)::numeric(1000, 3)
+	FROM
+	(
+		SELECT
+			xe.snapid,
+			statsrepo.xlog_location_diff(xe.location, xs.location) AS write_size
+		FROM
+		 	(SELECT
+		 		s.snapid,
+		 		x.location,
+				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < s.snapid AND instid = s.instid) AS prev_snapid
+		 	 FROM
+			 	statsrepo.xlog x,
+				statsrepo.snapshot s
+			 WHERE
+				x.snapid BETWEEN $1 AND $2
+				AND x.snapid = s.snapid
+				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)) AS xe,
+		 	(SELECT
+		 		s.snapid,
+		 		x.location,
+				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > s.snapid AND instid = s.instid) AS next_snapid
+		 	 FROM
+			 	statsrepo.xlog x,
+				statsrepo.snapshot s
+			 WHERE
+				x.snapid BETWEEN $1 AND $2
+				AND x.snapid = s.snapid
+				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)) AS xs
+		WHERE
+			xs.snapid = xe.prev_snapid
+			AND xe.snapid = xs.next_snapid
+	) t
+	WHERE
+		snapid > $1;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'WAL Statistics'
 CREATE FUNCTION statsrepo.get_xlog_tendency(
 	IN snapid_begin			bigint,
 	IN snapid_end			bigint,
