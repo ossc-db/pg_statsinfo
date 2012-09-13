@@ -110,7 +110,9 @@ BEGIN
     extract(epoch FROM curr.time) - extract(epoch FROM prev.time);
 
   -- alert if rollbacks/sec is higher than th_rollback.
-  SELECT (c.rollbacks - p.rollbacks) / duration_in_sec INTO val_rollback
+  SELECT CASE WHEN duration_in_sec = 0 THEN 0
+          ELSE (c.rollbacks - p.rollbacks) / duration_in_sec END
+    INTO val_rollback
     FROM (SELECT sum(xact_rollback) AS rollbacks
             FROM statsrepo.database
            WHERE snapid = curr.snapid) AS c,
@@ -125,7 +127,9 @@ BEGIN
 
 
   -- alert if throughput(commit/sec) is higher than th_tps.
-  SELECT (c.commits - p.commits) / duration_in_sec INTO val_tps
+  SELECT CASE WHEN duration_in_sec = 0 THEN 0
+          ELSE (c.commits - p.commits) / duration_in_sec END
+    INTO val_tps
     FROM (SELECT sum(xact_commit) AS commits
             FROM statsrepo.database
            WHERE snapid = curr.snapid) AS c,
@@ -140,12 +144,14 @@ BEGIN
 
 
   -- alert if garbage(ratio or size) is higher than th_gb_pct/th_ga_size.
-  SELECT sum(c.garbage_size)/1024/1024, 100 * sum(c.garbage_size)/sum(size) INTO val_gb_size, val_gb_pct
+  SELECT sum(c.garbage_size) / 1024 / 1024,
+         CASE WHEN sum(size) = 0 THEN 0
+          ELSE 100 * sum(c.garbage_size) / sum(size) END
+    INTO val_gb_size, val_gb_pct
     FROM
       (SELECT 
-         CASE WHEN n_live_tup=0 THEN 0 
-          ELSE size * (n_dead_tup::float8/(n_live_tup+n_dead_tup)::float8)
-         END AS garbage_size,
+         CASE WHEN n_live_tup = 0 THEN 0
+          ELSE size * (n_dead_tup::float8 / (n_live_tup + n_dead_tup)::float8) END AS garbage_size,
          size
        FROM statsrepo.tables WHERE snapid=curr.snapid) AS c;
   IF val_gb_size > th_gb_size THEN
@@ -163,9 +169,8 @@ BEGIN
   -- alert if garbage ratio of each tables is higher than th_gb_pct_table
   FOR val_gb_pct_table IN 
     SELECT "database" || '.' || "schema" || '.' || "table" AS relname,
-      CASE WHEN (n_live_tup + n_dead_tup) = 0 THEN 0 
-       ELSE 100 * n_dead_tup::float8/(n_live_tup+n_dead_tup)::float8 
-      END AS gb_pct
+      CASE WHEN (n_live_tup + n_dead_tup) = 0 THEN 0
+       ELSE 100 * n_dead_tup::float8 / (n_live_tup + n_dead_tup)::float8 END AS gb_pct
       FROM statsrepo.tables WHERE relpages > 1000 AND snapid=curr.snapid
   LOOP
     IF val_gb_pct_table.gb_pct > th_gb_pct_table THEN
@@ -177,8 +182,8 @@ BEGIN
 
 
   -- alert if query-response-time(avg or max) is higher than th_res_avg/th_res_max.
-  SELECT  avg( (c.total_time - coalesce(p.total_time,0))/(c.calls - coalesce(p.calls,0)) ),
-          max( (c.total_time - coalesce(p.total_time,0))/(c.calls - coalesce(p.calls,0)) )
+  SELECT avg((c.total_time - coalesce(p.total_time, 0)) / (c.calls - coalesce(p.calls, 0))),
+         max((c.total_time - coalesce(p.total_time, 0)) / (c.calls - coalesce(p.calls, 0)))
     INTO val_res_avg, val_res_max
     FROM (SELECT dbid, userid, total_time, calls, query FROM statsrepo.statement
            WHERE snapid = curr.snapid) AS c
@@ -186,7 +191,7 @@ BEGIN
          (SELECT dbid, userid, total_time, calls, query FROM statsrepo.statement
            WHERE snapid = prev.snapid) AS p
          ON c.dbid = p.dbid AND c.userid = p.userid AND c.query = p.query
-    WHERE c.calls <> coalesce(p.calls,0);
+    WHERE c.calls <> coalesce(p.calls, 0);
     
   IF val_res_avg > th_res_avg THEN
      RETURN NEXT 'Query average response exceeds threshold in snapshots between ''' ||
