@@ -1232,10 +1232,14 @@ CREATE FUNCTION statsrepo.get_proc_tendency(
 $$
 	SELECT
 		a.snapid,
-		idle::numeric(1000, 3), 
-		idle_in_xact::numeric(1000, 3),
-		waiting::numeric(1000, 3),
-		running::numeric(1000, 3)
+		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+			ELSE (100 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,2) END,
+		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+			ELSE (100 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,2) END,
+		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+			ELSE (100 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,2) END,
+		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+			ELSE (100 * running / (idle + idle_in_xact + waiting + running))::numeric(5,2) END
 	FROM
 		statsrepo.activity a,
 		statsrepo.snapshot s
@@ -1262,10 +1266,14 @@ CREATE FUNCTION statsrepo.get_proc_tendency_report(
 $$
 	SELECT
 		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
-		idle::numeric(1000, 3), 
-		idle_in_xact::numeric(1000, 3),
-		waiting::numeric(1000, 3),
-		running::numeric(1000, 3)
+		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+			ELSE (100 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,2) END,
+		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+			ELSE (100 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,2) END,
+		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+			ELSE (100 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,2) END,
+		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+			ELSE (100 * running / (idle + idle_in_xact + waiting + running))::numeric(5,2) END
 	FROM
 		statsrepo.activity a,
 		statsrepo.snapshot s

@@ -400,7 +400,7 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	res = pgut_execute(conn, SQL_SELECT_INSTANCE_PROC_TENDENCY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %12s  %12s  %12s  %12s\n",
+		fprintf(out, "%-16s  %10s %%  %10s %%  %10s %%  %10s %%\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
