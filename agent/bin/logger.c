@@ -1150,7 +1150,7 @@ ReadControlFile(void)
 {
 	pg_crc32	crc;
 
-	Assert(cf_fd > 0);	/* have not been opened the pg_statsinfo.control */
+	Assert(cf_fd >= 0);	/* have not been opened the pg_statsinfo.control */
 
 	/* read data */
 	if (read(cf_fd, &ControlFile,
@@ -1204,7 +1204,7 @@ RewriteControlFile(Logger *logger)
 {
 	char	buffer[sizeof(ControlFile)];
 
-	Assert(cf_fd > 0);	/* have not been opened the pg_statsinfo.control */
+	Assert(cf_fd >= 0);	/* have not been opened the pg_statsinfo.control */
 
 	/* initialize version and compatibility-check fields */
 	ControlFile.control_version = STATSINFO_CONTROL_VERSION;
