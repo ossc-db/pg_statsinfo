@@ -360,6 +360,18 @@ CREATE TABLE statsrepo.loadavg
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
+CREATE TABLE statsrepo.memory
+(
+	snapid		bigint,
+	memfree		bigint,
+	buffers		bigint,
+	cached		bigint,
+	swap		bigint,
+	dirty		bigint,
+	PRIMARY KEY (snapid),
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
 CREATE TABLE statsrepo.profile
 (
 	snapid			bigint,
@@ -1698,6 +1710,37 @@ $$
 	WHERE
 		s.snapid BETWEEN $1 AND $2
 		AND s.snapid = l.snapid
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+	ORDER BY
+		s.snapid;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Memory Usage'
+CREATE FUNCTION statsrepo.get_memory_tendency(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT "timestamp"		text,
+	OUT memfree			numeric,
+	OUT buffers			numeric,
+	OUT cached			numeric,
+	OUT swap			numeric,
+	OUT dirty			numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+		(m.memfree::float / 1024)::numeric(1000, 2),
+		(m.buffers::float / 1024)::numeric(1000, 2),
+		(m.cached::float / 1024)::numeric(1000, 2),
+		(m.swap::float / 1024)::numeric(1000, 2),
+		(m.dirty::float / 1024)::numeric(1000, 2)
+	FROM
+		statsrepo.memory m,
+		statsrepo.snapshot s
+	WHERE
+		s.snapid BETWEEN $1 AND $2
+		AND s.snapid = m.snapid
 		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 	ORDER BY
 		s.snapid;

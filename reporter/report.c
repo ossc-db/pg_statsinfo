@@ -25,6 +25,7 @@
 #define SQL_SELECT_CPU_USAGE					"SELECT * FROM statsrepo.get_cpu_usage($1, $2)"
 #define SQL_SELECT_CPU_USAGE_TENDENCY			"SELECT * FROM statsrepo.get_cpu_usage_tendency_report($1, $2)"
 #define SQL_SELECT_LOADAVG_TENDENCY				"SELECT * FROM statsrepo.get_loadavg_tendency($1, $2)"
+#define SQL_SELECT_MEMORY_TENDENCY				"SELECT * FROM statsrepo.get_memory_tendency($1, $2)"
 #define SQL_SELECT_IO_USAGE						"SELECT * FROM statsrepo.get_io_usage($1, $2)"
 #define SQL_SELECT_IO_USAGE_TENDENCY			"SELECT * FROM statsrepo.get_io_usage_tendency_report($1, $2)"
 #define SQL_SELECT_DISK_USAGE_TABLESPACE		"SELECT * FROM statsrepo.get_disk_usage_tablespace($1, $2)"
@@ -505,6 +506,26 @@ report_resource_usage(PGconn *conn, ReportScope *scope, FILE *out)
 	for(i = 0; i < PQntuples(res); i++)
 	{
 		fprintf(out, "%-16s  %-12s  %12s KB  %12s KB  %12s ms  %12s ms\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1),
+			PQgetvalue(res, i, 2),
+			PQgetvalue(res, i, 3),
+			PQgetvalue(res, i, 4),
+			PQgetvalue(res, i, 5));
+	}
+	fprintf(out, "\n");
+	PQclear(res);
+
+	fprintf(out, "/** Memory Usage **/\n");
+	fprintf(out, "-----------------------------------\n");
+	fprintf(out, "%-16s  %11s  %11s  %11s  %11s  %11s\n",
+		"DateTime", "Memfree", "Buffers", "Cached", "Swap", "Dirty");
+	fprintf(out, "------------------------------------------------------------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_MEMORY_TENDENCY, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "%-16s  %8s MB  %8s MB  %8s MB  %8s MB  %8s MB\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),

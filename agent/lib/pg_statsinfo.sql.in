@@ -199,6 +199,21 @@ AS 'MODULE_PATHNAME', 'statsinfo_loadavg'
 LANGUAGE C;
 
 --
+-- statsinfo.memory()
+--
+CREATE FUNCTION statsinfo.memory
+(
+	OUT memfree		bigint,
+	OUT buffers		bigint,
+	OUT cached		bigint,
+	OUT swap		bigint,
+	OUT dirty		bigint
+)
+RETURNS SETOF record
+AS 'MODULE_PATHNAME', 'statsinfo_memory'
+LANGUAGE C;
+
+--
 -- statsinfo.profile()
 --
 CREATE FUNCTION statsinfo.profile

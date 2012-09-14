@@ -328,6 +328,10 @@ SELECT * FROM statsinfo.devicestats($1)"
 #define SQL_SELECT_LOADAVG "\
 SELECT * FROM statsinfo.loadavg()"
 
+/* memory */
+#define SQL_SELECT_MEMORY "\
+SELECT * FROM statsinfo.memory()"
+
 /* profile */
 #define SQL_SELECT_PROFILE	"SELECT * FROM statsinfo.profile()"
 

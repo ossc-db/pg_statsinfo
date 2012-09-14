@@ -231,6 +231,7 @@ PG_FUNCTION_INFO_V1(statsinfo_cpustats_noarg);
 PG_FUNCTION_INFO_V1(statsinfo_devicestats);
 PG_FUNCTION_INFO_V1(statsinfo_devicestats_noarg);
 PG_FUNCTION_INFO_V1(statsinfo_loadavg);
+PG_FUNCTION_INFO_V1(statsinfo_memory);
 PG_FUNCTION_INFO_V1(statsinfo_profile);
 
 extern Datum PGUT_EXPORT statsinfo_sample(PG_FUNCTION_ARGS);
@@ -244,6 +245,7 @@ extern Datum PGUT_EXPORT statsinfo_cpustats_noarg(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_devicestats(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_devicestats_noarg(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_loadavg(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_memory(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_profile(PG_FUNCTION_ARGS);
 
 extern PGUT_EXPORT void	_PG_init(void);
@@ -1564,6 +1566,7 @@ statsinfo_loadavg(PG_FUNCTION_ARGS)
 	TupleDesc	tupdesc;
 	int			fd;
 	char		buffer[256];
+	int			nbytes;
 	float4		loadavg1;
 	float4		loadavg5;
 	float4		loadavg15;
@@ -1585,7 +1588,7 @@ statsinfo_loadavg(PG_FUNCTION_ARGS)
 			(errcode_for_file_access(),
 			 errmsg("could not open file \"%s\": ", FILE_LOADAVG)));
 
-	if (read(fd, buffer, sizeof(buffer)) < 0)
+	if ((nbytes = read(fd, buffer, sizeof(buffer) - 1)) < 0)
 	{
 		close(fd);
 		ereport(ERROR,
@@ -1594,6 +1597,7 @@ statsinfo_loadavg(PG_FUNCTION_ARGS)
 	}
 
 	close(fd);
+	buffer[nbytes] = '\0';
 
 	if (sscanf(buffer, "%f %f %f",
 			&loadavg1, &loadavg5, &loadavg15) < NUM_LOADAVG_FIELDS_MIN)
@@ -1613,6 +1617,130 @@ statsinfo_loadavg(PG_FUNCTION_ARGS)
 
 	/* loadavg15 */
 	values[2] = Float4GetDatum(loadavg15);
+
+	tuple = heap_form_tuple(tupdesc, values, nulls);
+
+	return HeapTupleGetDatum(tuple);
+}
+
+#define FILE_MEMINFO		"/proc/meminfo"
+#define NUM_MEMORY_COLS		5
+
+typedef struct meminfo_table
+{
+	const char	*name;	/* memory type name */
+	int64		*slot;	/* slot in return struct */
+} meminfo_table;
+
+static int
+compare_meminfo_table(const void *a, const void *b)
+{
+	return strcmp(((const meminfo_table *) a)->name, ((const meminfo_table *) b)->name);
+}
+
+/*
+ * statsinfo_memory - get memory information
+ */
+Datum
+statsinfo_memory(PG_FUNCTION_ARGS)
+{
+	TupleDesc		 tupdesc;
+	HeapTuple		 tuple;
+	Datum			 values[NUM_MEMORY_COLS];
+	bool			 nulls[NUM_MEMORY_COLS];
+	int				 fd;
+	char			 buffer[2048];
+	int				 nbytes;
+	int64			 main_free = 0;
+	int64			 buffers = 0;
+	int64			 cached = 0;
+	int64			 swap_free = 0;
+	int64			 swap_total = 0;
+	int64			 dirty = 0;
+	char 			 namebuf[16];
+	char			*head;
+	char			*tail;
+	int				 meminfo_table_count;
+	meminfo_table	 findme = { namebuf, NULL };
+	meminfo_table	*found;
+	meminfo_table	 meminfo_tables[] =
+	{
+		{"Buffers",   &buffers},
+		{"Cached",    &cached},
+		{"Dirty",     &dirty},		/* 2.5.41+ */
+		{"MemFree",   &main_free},
+		{"SwapFree",  &swap_free},
+		{"SwapTotal", &swap_total}
+	};
+
+	must_be_superuser();
+
+	/* Build a tuple descriptor for our result type */
+	if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
+		elog(ERROR, "return type must be a row type");
+
+	Assert(tupdesc->natts == lengthof(values));
+
+	/* extract memory information */
+	if ((fd = open(FILE_MEMINFO, O_RDONLY)) < 0)
+		ereport(ERROR,
+			(errcode_for_file_access(),
+			 errmsg("could not open file \"%s\": ", FILE_MEMINFO)));
+
+	if ((nbytes = read(fd, buffer, sizeof(buffer) - 1)) < 0)
+	{
+		close(fd);
+		ereport(ERROR,
+			(errcode_for_file_access(),
+			 errmsg("could not read file \"%s\": ", FILE_MEMINFO)));
+	}
+
+	close(fd);
+	buffer[nbytes] = '\0';
+
+	meminfo_table_count = sizeof(meminfo_tables) / sizeof(meminfo_table);
+	head = buffer;
+	for (;;)
+	{
+		if ((tail = strchr(head, ':')) == NULL)
+			break;
+		*tail = '\0';
+		if (strlen(head) >= sizeof(namebuf))
+		{
+			head = tail + 1;
+			goto nextline;
+		}
+		strcpy(namebuf, head);
+		found = bsearch(&findme, meminfo_tables, meminfo_table_count,
+						sizeof(meminfo_table), compare_meminfo_table);
+		head = tail + 1;
+		if (!found)
+			goto nextline;
+		*(found->slot) = strtoul(head, &tail, 10);
+
+nextline:
+		if ((tail = strchr(head, '\n')) == NULL)
+			break;
+		head = tail + 1;
+	}
+
+	memset(nulls, 0, sizeof(nulls));
+	memset(values, 0, sizeof(values));
+
+	/* memfree */
+	values[0] = Int64GetDatum(main_free);
+
+	/* buffers */
+	values[1] = Int64GetDatum(buffers);
+
+	/* cached */
+	values[2] = Int64GetDatum(cached);
+
+	/* swap */
+	values[3] = Int64GetDatum(swap_total - swap_free);
+
+	/* dirty */
+	values[4] = Int64GetDatum(dirty);
 
 	tuple = heap_form_tuple(tupdesc, values, nulls);
 
