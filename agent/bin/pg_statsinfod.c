@@ -102,6 +102,7 @@ static bool assign_syslog(const char *value, void *var);
 static bool assign_string(const char *value, void *var);
 static bool assign_bool(const char *value, void *var);
 static bool assign_time(const char *value, void *var);
+static bool connect_test(const char *conninfo);
 static void readopt(void);
 static void after_readopt(void);
 static bool decode_time(const char *field, int *hour, int *min, int *sec);
@@ -584,6 +585,22 @@ assign_param(const char *name, const char *value)
 	return true;
 }
 
+static bool
+connect_test(const char *conninfo)
+{
+#if PG_VERSION_NUM >= 90100
+	return PQping(conninfo) == PQPING_OK;
+#else
+	PGconn			*conn;
+	ConnStatusType	 status;
+
+	conn = PQconnectdb(conninfo);
+	status = PQstatus(conn);
+	PQfinish(conn);
+	return status == CONNECTION_OK;
+#endif
+}
+
 /*
  * read required parameters.
  */
@@ -600,10 +617,19 @@ readopt(void)
 
 	Assert(postmaster_port);
 
-	/* read required parameters from db */
 	snprintf(conninfo, lengthof(conninfo),
 		"dbname=%s port=%s options='-c log_statement=none'",
 		"postgres", postmaster_port);
+
+	/* wait until postmaster is ready to accept connection */
+	while (postmaster_is_alive())
+	{
+		if (connect_test(conninfo))
+			break;
+		sleep(1);	/* 1s */
+	}
+
+	/* read required parameters from db */
 	conn = pgut_connect(conninfo, NO, ERROR);
 	res = pgut_execute(conn, SQL_SELECT_CUSTOM_SETTINGS, 0, NULL);
 	readopt_from_db(res);
