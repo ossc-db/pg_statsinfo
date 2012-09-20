@@ -1250,39 +1250,6 @@ $$
 LANGUAGE sql;
 
 -- generate information that corresponds to 'WAL Statistics'
-CREATE FUNCTION statsrepo.get_xlog_stats(
-	IN snapid_begin			bigint,
-	IN snapid_end			bigint,
-	OUT write_size_sum		numeric,
-	OUT write_size_avg		numeric
-) RETURNS SETOF record AS
-$$
-	SELECT
-		(sum(write_size) / 1024 / 1024)::numeric(1000, 3),
-		(avg(write_size) / 1024 / 1024)::numeric(1000, 3)
-	FROM
-	(
-		SELECT
-			s.snapid,
-			statsrepo.xlog_location_diff(
-				x.location, lag(x.location) OVER w) AS write_size
-		 FROM
-			statsrepo.xlog x,
-			statsrepo.snapshot s
-		 WHERE
-			x.snapid BETWEEN $1 AND $2
-			AND x.snapid = s.snapid
-			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-		 WINDOW w AS (ORDER BY s.snapid)
-		 ORDER BY
-		 	s.snapid
-	) t
-	WHERE
-		snapid > $1;
-$$
-LANGUAGE sql;
-
--- generate information that corresponds to 'WAL Statistics'
 CREATE FUNCTION statsrepo.get_xlog_tendency(
 	IN snapid_begin			bigint,
 	IN snapid_end			bigint,
@@ -1322,6 +1289,22 @@ $$
 	) t
 	WHERE
 		snapid > $1;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'WAL Statistics'
+CREATE FUNCTION statsrepo.get_xlog_stats(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT write_total		numeric,
+	OUT write_speed		numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		sum(write_size)::numeric(1000, 3),
+		avg(write_size_per_sec)::numeric(1000, 3)
+	FROM
+		statsrepo.get_xlog_tendency($1, $2);
 $$
 LANGUAGE sql;
 

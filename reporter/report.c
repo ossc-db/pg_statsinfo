@@ -358,8 +358,8 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	res = pgut_execute(conn, SQL_SELECT_WALSTATS, lengthof(params), params);
 	if (PQntuples(res) == 0)
 		return;
-	fprintf(out, "Written WAL Total    : %s MB\n", PQgetvalue(res, 0, 0));
-	fprintf(out, "Written WAL Average  : %s MB\n\n", PQgetvalue(res, 0, 1));
+	fprintf(out, "WAL Write Total  : %s MB\n", PQgetvalue(res, 0, 0));
+	fprintf(out, "WAL Write Speed  : %s MB/s\n\n", PQgetvalue(res, 0, 1));
 	PQclear(res);
 
 	fprintf(out, "-----------------------------------\n");
