@@ -127,7 +127,7 @@ check_maintenance_log(pid_t log_maintenance_pid, int fd_err)
 				else
 				{
 					elog(ERROR, "read() on self-pipe failed: %s", strerror(errno));
-					errmsg[read_size] = '\0';
+					errmsg[0] = '\0';
 				}
 
 				if (WIFEXITED(status))
