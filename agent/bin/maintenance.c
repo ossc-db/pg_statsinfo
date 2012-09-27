@@ -122,7 +122,7 @@ check_maintenance_log(pid_t log_maintenance_pid, int fd_err)
 				ssize_t read_size;
 				char    errmsg[ERROR_MESSAGE_MAXSIZE];
 
-				if((read_size = read(fd_err, errmsg, sizeof(errmsg))) >= 0)
+				if((read_size = read(fd_err, errmsg, sizeof(errmsg) - 1)) >= 0)
 					errmsg[read_size] = '\0';
 				else
 				{
