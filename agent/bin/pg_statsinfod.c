@@ -108,6 +108,7 @@ static void after_readopt(void);
 static bool decode_time(const char *field, int *hour, int *min, int *sec);
 static int strtoi(const char *nptr, char **endptr, int base);
 static bool execute_script(PGconn *conn, const char *script_file);
+static bool check_repository(void);
 
 /* parameters */
 static struct ParamMap PARAM_MAP[] =
@@ -246,6 +247,10 @@ main(int argc, char *argv[])
 	 * terminated by ERRORs.
 	 */
 	pgut_abort_level = FATAL;
+
+	/* check the state of repository database */
+	if (!check_repository())
+		return STATSINFO_EXIT_FAILED;
 
 	/* init logger, collector, and writer module */
 	pthread_mutex_init(&shutdown_state_lock, NULL);
@@ -914,4 +919,61 @@ execute_script(PGconn *conn, const char *script_file)
 	fclose(fp);
 	termStringInfo(&buf);
 	return ok;
+}
+
+/*
+ * check the state of repository database.
+ *  - connect to the repository database
+ *  - statsrepo schema version
+ */
+static bool
+check_repository(void)
+{
+	PGconn		*conn;
+	PGresult	*res;
+	uint32		 version;
+
+	/* connect to the repository database */
+	if ((conn = pgut_connect(repository_server, NO, ERROR)) == NULL)
+		return false;
+
+	/* check statsrepo schema exists */
+	res = pgut_execute(conn,
+		"SELECT nspname FROM pg_namespace WHERE nspname = 'statsrepo'", 0, NULL);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		goto error;
+	if (PQntuples(res) == 0)
+		goto done;	/* not installed */
+	PQclear(res);
+
+	/* check the statsrepo schema version */
+	res = pgut_execute(conn, "SELECT statsrepo.get_version()", 0, NULL);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		char *sqlstate;
+
+		sqlstate = PQresultErrorField(res, PG_DIAG_SQLSTATE);
+		if (sqlstate && strcmp(sqlstate, "42883") == 0)	/* undefined function */
+			elog(ERROR, "incompatible statsrepo schema: version mismatch");
+		goto error;
+	}
+
+	/* verify the version of statsrepo schema */
+	parse_uint32(PQgetvalue(res, 0, 0), &version);
+	if (version != STATSREPO_SCHEMA_VERSION &&
+		((version / 100) != (STATSREPO_SCHEMA_VERSION / 100)))
+	{
+		elog(ERROR, "incompatible statsrepo schema: version mismatch");
+		goto error;
+	}
+
+done:
+	PQclear(res);
+	pgut_disconnect(conn);
+	return true;
+
+error:
+	PQclear(res);
+	pgut_disconnect(conn);
+	return false;
 }
