@@ -97,6 +97,7 @@ static void logger_parse(Logger *logger, const char *pg_log, bool only_routing);
 static void logger_route(Logger *logger, const Log *log);
 
 static void init_log(Log *log, const char *buf, size_t len, const size_t fields[]);
+static bool logger_open(Logger *logger, const char *csvlog);
 static void logger_close(Logger *logger);
 static bool logger_next(Logger *logger, const char *pg_log);
 static void get_csvlog(char csvlog[], const char *prev, const char *pg_log);
@@ -158,7 +159,7 @@ logger_main(void *arg)
 	ControlFile.state = STATSINFO_RUNNING;
 
 	/* perform the log routing until end of the latest csvlog */
-	logger.fp = pgut_fopen(logger.csv_path, "rt");
+	logger_open(&logger, logger.csv_path);
 	logger_parse(&logger, my_log_directory, true);
 
 	/*
@@ -686,6 +687,35 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 	}
 }
 
+static bool
+logger_open(Logger *logger, const char *csvlog)
+{
+	mode_t	mask;
+
+	Assert(!logger->fp);
+	Assert(!logger->textlog);
+
+	assign_csvlog_path(logger, my_log_directory, csvlog, 0);
+	assign_textlog_path(logger, my_log_directory);
+
+	/* open csvlog file */
+	logger->fp = pgut_fopen(logger->csv_path, "rt");
+	if (logger->fp == NULL)
+		return false;
+
+	/* create a new textlog file */
+	mask = umask(0777 & ~my_textlog_permission);
+	logger->textlog = pgut_fopen(logger->textlog_path, "at");
+	umask(mask);
+	if (logger->textlog == NULL)
+	{
+		fclose(logger->fp);
+		return false;
+	}
+
+	return true;
+}
+
 static void
 logger_close(Logger *logger)
 {
@@ -764,11 +794,7 @@ logger_next(Logger *logger, const char *pg_log)
 		 }
 
 		logger_close(logger);
-		assign_textlog_path(logger, pg_log);
-		assign_csvlog_path(logger, pg_log, csvlog, 0);
-
-		logger->fp = pgut_fopen(logger->csv_path, "rt");
-		if (logger->fp == NULL)
+		if (!logger_open(logger, csvlog))
 			return false;
 
 		elog(DEBUG2, "read csvlog \"%s\"", logger->csv_path);
@@ -887,8 +913,12 @@ assign_textlog_path(Logger *logger, const char *pg_log)
 static void
 assign_csvlog_path(Logger *logger, const char *pg_log, const char *csvlog, long offset)
 {
-	join_path_components(logger->csv_path, pg_log, csvlog);
-	logger->csv_name = logger->csv_path + strlen(pg_log) + 1;
+	if (is_absolute_path(csvlog))
+		strlcpy(logger->csv_path, csvlog, MAXPGPATH);
+	else
+		join_path_components(logger->csv_path, pg_log, csvlog);
+
+	logger->csv_name = last_dir_separator(logger->csv_path) + 1;
 	logger->csv_offset = offset;
 }
 
@@ -1094,7 +1124,7 @@ load_controlfile(Logger *logger)
 			return;
 
 		join_path_components(
-			prev_csvlog,my_log_directory, ControlFile.csv_name);
+			prev_csvlog, my_log_directory, ControlFile.csv_name);
 
 		if (stat(prev_csvlog, &st) == 0 && ControlFile.csv_offset <= st.st_size)
 		{
