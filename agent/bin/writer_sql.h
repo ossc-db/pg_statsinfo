@@ -17,7 +17,7 @@ INSERT INTO statsrepo.snapshot(instid, time, comment) VALUES \
 
 #define SQL_INSERT_DATABASE "\
 INSERT INTO statsrepo.database VALUES \
-($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)"
+($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)"
 
 #define SQL_INSERT_TABLESPACE "\
 INSERT INTO statsrepo.tablespace VALUES \
@@ -29,7 +29,7 @@ INSERT INTO statsrepo.activity VALUES \
 
 #define SQL_INSERT_STATEMENT "\
 INSERT INTO statsrepo.statement \
-  SELECT (($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)::statsrepo.statement).* \
+  SELECT (($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)::statsrepo.statement).* \
     FROM statsrepo.database d \
    WHERE d.snapid = $1 AND d.dbid = $2"
 

@@ -73,6 +73,11 @@ CREATE TABLE statsrepo.database
 	confl_snapshot		bigint,
 	confl_bufferpin		bigint,
 	confl_deadlock		bigint,
+	temp_files			bigint,
+	temp_bytes			bigint,
+	deadlocks			bigint,
+	blk_read_time		double precision,
+	blk_write_time		double precision,
 	PRIMARY KEY (snapid, dbid),
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
@@ -240,12 +245,16 @@ CREATE TABLE statsrepo.statement
 	rows				bigint,
 	shared_blks_hit		bigint,
 	shared_blks_read	bigint,
+	shared_blks_dirtied	bigint,
 	shared_blks_written	bigint,
 	local_blks_hit		bigint,
 	local_blks_read		bigint,
+	local_blks_dirtied	bigint,
 	local_blks_written	bigint,
 	temp_blks_read		bigint,
 	temp_blks_written	bigint,
+	blk_read_time		double precision,
+	blk_write_time		double precision,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE,
 	FOREIGN KEY (snapid, dbid) REFERENCES statsrepo.database (snapid, dbid)
 );
@@ -279,6 +288,11 @@ CREATE TABLE statsrepo.autovacuum
 	page_remain		integer,
 	tup_removed		bigint,
 	tup_remain		bigint,
+	page_hit		integer,
+	page_miss		integer,
+	page_dirty		integer,
+	read_rate		double precision,
+	write_rate		double precision,
 	duration		real,
 	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
 );

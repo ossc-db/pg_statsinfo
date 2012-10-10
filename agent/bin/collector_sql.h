@@ -23,7 +23,7 @@
  */
 
 /* database */
-#if PG_VERSION_NUM >= 90100
+#if PG_VERSION_NUM >= 90200
 #define SQL_SELECT_DATABASE "\
 SELECT \
 	d.oid AS dbid, \
@@ -43,12 +43,48 @@ SELECT \
 	pg_stat_get_db_conflict_lock(d.oid) AS confl_lock, \
 	pg_stat_get_db_conflict_snapshot(d.oid) AS confl_snapshot, \
 	pg_stat_get_db_conflict_bufferpin(d.oid) AS confl_bufferpin, \
-	pg_stat_get_db_conflict_startup_deadlock(d.oid) AS confl_deadlock \
+	pg_stat_get_db_conflict_startup_deadlock(d.oid) AS confl_deadlock, \
+	pg_stat_get_db_temp_files(d.oid) AS temp_files, \
+	pg_stat_get_db_temp_bytes(d.oid) AS temp_bytes, \
+	pg_stat_get_db_deadlocks(d.oid) AS deadlocks, \
+	pg_stat_get_db_blk_read_time(d.oid) AS blk_read_time, \
+	pg_stat_get_db_blk_write_time(d.oid) AS blk_write_time \
 FROM \
 	pg_database d \
 WHERE datallowconn \
   AND datname <> ALL (('{' || $1 || '}')::text[]) \
-ORDER BY 1"
+ORDER BY dbid"
+#elif PG_VERSION_NUM >= 90100
+#define SQL_SELECT_DATABASE "\
+SELECT \
+	d.oid AS dbid, \
+	d.datname, \
+	pg_database_size(d.oid), \
+	CASE WHEN pg_is_in_recovery() THEN 0 ELSE age(d.datfrozenxid) END, \
+	pg_stat_get_db_xact_commit(d.oid) AS xact_commit, \
+	pg_stat_get_db_xact_rollback(d.oid) AS xact_rollback, \
+	pg_stat_get_db_blocks_fetched(d.oid) - pg_stat_get_db_blocks_hit(d.oid) AS blks_read, \
+	pg_stat_get_db_blocks_hit(d.oid) AS blks_hit, \
+	pg_stat_get_db_tuples_returned(d.oid) AS tup_returned, \
+	pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
+	pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
+	pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
+	pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
+	pg_stat_get_db_conflict_tablespace(d.oid) AS confl_tablespace, \
+	pg_stat_get_db_conflict_lock(d.oid) AS confl_lock, \
+	pg_stat_get_db_conflict_snapshot(d.oid) AS confl_snapshot, \
+	pg_stat_get_db_conflict_bufferpin(d.oid) AS confl_bufferpin, \
+	pg_stat_get_db_conflict_startup_deadlock(d.oid) AS confl_deadlock, \
+	NULL AS temp_files, \
+	NULL AS temp_bytes, \
+	NULL AS deadlocks, \
+	NULL AS blk_read_time, \
+	NULL AS blk_write_time \
+FROM \
+	pg_database d \
+WHERE datallowconn \
+  AND datname <> ALL (('{' || $1 || '}')::text[]) \
+ORDER BY dbid"
 #elif PG_VERSION_NUM >= 90000
 #define SQL_SELECT_DATABASE "\
 SELECT \
@@ -65,16 +101,21 @@ SELECT \
 	pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
 	pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
 	pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
-	NULL::bigint AS confl_tablespace, \
-	NULL::bigint AS confl_lock, \
-	NULL::bigint AS confl_snapshot, \
-	NULL::bigint AS confl_bufferpin, \
-	NULL::bigint AS confl_deadlock \
+	NULL AS confl_tablespace, \
+	NULL AS confl_lock, \
+	NULL AS confl_snapshot, \
+	NULL AS confl_bufferpin, \
+	NULL AS confl_deadlock, \
+	NULL AS temp_files, \
+	NULL AS temp_bytes, \
+	NULL AS deadlocks, \
+	NULL AS blk_read_time, \
+	NULL AS blk_write_time \
 FROM \
 	pg_database d \
 WHERE datallowconn \
   AND datname <> ALL (('{' || $1 || '}')::text[]) \
-ORDER BY 1"
+ORDER BY dbid"
 #else
 #define SQL_SELECT_DATABASE "\
 SELECT \
@@ -91,16 +132,21 @@ SELECT \
 	pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
 	pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
 	pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
-	NULL::bigint AS confl_tablespace, \
-	NULL::bigint AS confl_lock, \
-	NULL::bigint AS confl_snapshot, \
-	NULL::bigint AS confl_bufferpin, \
-	NULL::bigint AS confl_deadlock \
+	NULL AS confl_tablespace, \
+	NULL AS confl_lock, \
+	NULL AS confl_snapshot, \
+	NULL AS confl_bufferpin, \
+	NULL AS confl_deadlock, \
+	NULL AS temp_files, \
+	NULL AS temp_bytes, \
+	NULL AS deadlocks, \
+	NULL AS blk_read_time, \
+	NULL AS blk_write_time \
 FROM \
 	pg_database d \
 WHERE datallowconn \
   AND datname <> ALL (('{' || $1 || '}')::text[]) \
-ORDER BY 1"
+ORDER BY dbid"
 #endif
 
 /* activity */
@@ -143,23 +189,27 @@ FROM \
 	pg_roles"
 
 /* statement */
-#if PG_VERSION_NUM < 90000
+#if PG_VERSION_NUM >= 90200
 #define SQL_SELECT_STATEMENT "\
 SELECT \
 	s.dbid, \
 	s.userid, \
 	s.query, \
 	s.calls, \
-	s.total_time, \
+	s.total_time / 1000, \
 	s.rows, \
-	NULL::bigint AS shared_blks_hit, \
-	NULL::bigint AS shared_blks_read, \
-	NULL::bigint AS shared_blks_written, \
-	NULL::bigint AS local_blks_hit, \
-	NULL::bigint AS local_blks_read, \
-	NULL::bigint AS local_blks_written, \
-	NULL::bigint AS temp_blks_read, \
-	NULL::bigint AS temp_blks_written \
+	s.shared_blks_hit, \
+	s.shared_blks_read, \
+	s.shared_blks_dirtied, \
+	s.shared_blks_written, \
+	s.local_blks_hit, \
+	s.local_blks_read, \
+	s.local_blks_dirtied, \
+	s.local_blks_written, \
+	s.temp_blks_read, \
+	s.temp_blks_written, \
+	s.blk_read_time, \
+	s.blk_write_time \
 FROM \
 	pg_stat_statements s \
 	LEFT JOIN pg_roles r ON r.oid = s.userid \
@@ -167,7 +217,7 @@ WHERE \
 	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
 ORDER BY \
 	s.total_time DESC LIMIT $2"
-#elif PG_VERSION_NUM < 90200
+#elif PG_VERSION_NUM >= 90100
 #define SQL_SELECT_STATEMENT "\
 SELECT \
 	s.dbid, \
@@ -178,12 +228,16 @@ SELECT \
 	s.rows, \
 	s.shared_blks_hit, \
 	s.shared_blks_read, \
+	NULL AS shared_blks_dirtied, \
 	s.shared_blks_written, \
 	s.local_blks_hit, \
 	s.local_blks_read, \
+	NULL AS local_blks_dirtied, \
 	s.local_blks_written, \
 	s.temp_blks_read, \
-	s.temp_blks_written \
+	s.temp_blks_written, \
+	NULL AS blk_read_time, \
+	NULL AS blk_write_time \
 FROM \
 	pg_stat_statements s \
 	LEFT JOIN pg_roles r ON r.oid = s.userid \
@@ -198,16 +252,20 @@ SELECT \
 	s.userid, \
 	s.query, \
 	s.calls, \
-	s.total_time / 1000, \
+	s.total_time, \
 	s.rows, \
-	s.shared_blks_hit, \
-	s.shared_blks_read, \
-	s.shared_blks_written, \
-	s.local_blks_hit, \
-	s.local_blks_read, \
-	s.local_blks_written, \
-	s.temp_blks_read, \
-	s.temp_blks_written \
+	NULL AS shared_blks_hit, \
+	NULL AS shared_blks_read, \
+	NULL AS shared_blks_dirtied, \
+	NULL AS shared_blks_written, \
+	NULL AS local_blks_hit, \
+	NULL AS local_blks_read, \
+	NULL AS local_blks_dirtied, \
+	NULL AS local_blks_written, \
+	NULL AS temp_blks_read, \
+	NULL AS temp_blks_written, \
+	NULL AS blk_read_time, \
+	NULL AS blk_write_time \
 FROM \
 	pg_stat_statements s \
 	LEFT JOIN pg_roles r ON r.oid = s.userid \
@@ -447,7 +505,7 @@ SELECT \
 		WHEN s.stakind2 = 3 THEN s.stanumbers2[1] \
 		WHEN s.stakind3 = 3 THEN s.stanumbers3[1] \
 		WHEN s.stakind4 = 3 THEN s.stanumbers4[1] \
-		ELSE NULL::real \
+		ELSE NULL \
 	END AS correlation \
 FROM \
 	pg_attribute a \
