@@ -943,7 +943,12 @@ CREATE FUNCTION statsrepo.get_dbstats(
 	OUT blks_hit_rate		numeric,
 	OUT blks_hit_tps		numeric,
 	OUT blks_read_tps		numeric,
-	OUT tup_fetch_tps		numeric
+	OUT tup_fetch_tps		numeric,
+	OUT temp_files			bigint,
+	OUT temp_bytes			bigint,
+	OUT deadlocks			bigint,
+	OUT blk_read_time		numeric,
+	OUT blk_write_time		numeric
 ) RETURNS SETOF record AS
 $$
 	SELECT
@@ -970,7 +975,12 @@ $$
 		statsrepo.tps(
 			statsrepo.sub(ed.tup_returned, sd.tup_returned) +
 			statsrepo.sub(ed.tup_fetched, sd.tup_fetched),
-			es.time - ss.time)
+			es.time - ss.time),
+		statsrepo.sub(ed.temp_files, sd.temp_files),
+		statsrepo.sub(ed.temp_bytes, sd.temp_bytes) / 1024 / 1024,
+		statsrepo.sub(ed.deadlocks, sd.deadlocks),
+		statsrepo.sub(ed.blk_read_time, sd.blk_read_time)::numeric(1000, 3),
+		statsrepo.sub(ed.blk_write_time, sd.blk_write_time)::numeric(1000, 3)
 	FROM
 		statsrepo.snapshot ss,
 		statsrepo.snapshot es,
@@ -2262,6 +2272,43 @@ $$
 $$
 LANGUAGE sql;
 
+-- generate information that corresponds to 'Autovacuum Activity'
+CREATE FUNCTION statsrepo.get_autovacuum_activity2(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT datname			text,
+	OUT nspname			text,
+	OUT relname			text,
+	OUT avg_page_hit	numeric,
+	OUT avg_page_miss	numeric,
+	OUT avg_page_dirty	numeric,
+	OUT avg_read_rate	numeric,
+	OUT avg_write_rate	numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		database,
+		schema,
+		"table",
+		round(avg(page_hit)::numeric,3),
+		round(avg(page_miss)::numeric,3),
+		round(avg(page_dirty)::numeric,3),
+		round(avg(read_rate)::numeric,3),
+		round(avg(write_rate)::numeric,3)
+	FROM
+		statsrepo.autovacuum v,
+		(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+		(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
+	WHERE
+		v.start BETWEEN b.time AND e.time
+		AND v.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+	GROUP BY
+		database, schema, "table"
+	ORDER BY
+		4 DESC;
+$$
+LANGUAGE sql;
+
 -- generate information that corresponds to 'Query Activity (Functions)'
 CREATE FUNCTION statsrepo.get_query_activity_functions(
 	IN snapid_begin		bigint,
@@ -2315,7 +2362,9 @@ CREATE FUNCTION statsrepo.get_query_activity_statements(
 	OUT query			text,
 	OUT calls			bigint,
 	OUT total_time		numeric,
-	OUT time_per_call	numeric
+	OUT time_per_call	numeric,
+	OUT blk_read_time	numeric,
+	OUT blk_write_time	numeric
 ) RETURNS SETOF record AS
 $$
 	SELECT
@@ -2326,7 +2375,9 @@ $$
 		statsrepo.sub(se.total_time, sb.total_time)::numeric(1000, 3),
 		statsrepo.div(
 			statsrepo.sub(se.total_time, sb.total_time)::numeric,
-			statsrepo.sub(se.calls, sb.calls))
+			statsrepo.sub(se.calls, sb.calls)),
+		statsrepo.sub(se.blk_read_time, sb.blk_read_time)::numeric(1000, 3),
+		statsrepo.sub(se.blk_write_time, sb.blk_write_time)::numeric(1000, 3)
 	FROM
 		statsrepo.statement se LEFT JOIN statsrepo.statement sb
 			ON sb.snapid = $1 AND sb.dbid = se.dbid AND sb.query = se.query,

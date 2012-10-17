@@ -36,7 +36,27 @@
 #define SQL_SELECT_LOW_DENSITY_TABLES			"SELECT * FROM statsrepo.get_low_density_tables($1, $2) LIMIT 10"
 #define SQL_SELECT_FRAGMENTED_TABLES			"SELECT * FROM statsrepo.get_flagmented_tables($1, $2)"
 #define SQL_SELECT_CHECKPOINT_ACTIVITY			"SELECT * FROM statsrepo.get_checkpoint_activity($1, $2)"
-#define SQL_SELECT_AUTOVACUUM_ACTIVITY			"SELECT * FROM statsrepo.get_autovacuum_activity($1, $2)"
+#define SQL_SELECT_AUTOVACUUM_ACTIVITY "\
+SELECT \
+	datname || '.' || nspname || '.' || relname, \
+	\"count\", \
+	avg_index_scans, \
+	avg_tup_removed, \
+	avg_tup_remain, \
+	avg_duration, \
+	max_duration \
+FROM \
+	statsrepo.get_autovacuum_activity($1, $2)"
+#define SQL_SELECT_AUTOVACUUM_ACTIVITY2 "\
+SELECT \
+	datname || '.' || nspname || '.' || relname, \
+	avg_page_hit, \
+	avg_page_miss, \
+	avg_page_dirty, \
+	avg_read_rate, \
+	avg_write_rate \
+FROM \
+	statsrepo.get_autovacuum_activity2($1, $2)"
 #define SQL_SELECT_QUERY_ACTIVITY_FUNCTIONS		"SELECT * FROM statsrepo.get_query_activity_functions($1, $2) LIMIT 20"
 #define SQL_SELECT_QUERY_ACTIVITY_STATEMENTS	"SELECT * FROM statsrepo.get_query_activity_statements($1, $2) LIMIT 20"
 #define SQL_SELECT_LOCK_ACTIVITY				"SELECT * FROM statsrepo.get_lock_activity($1, $2) LIMIT 20"
@@ -51,6 +71,7 @@
 		i.instid, \
 		i.hostname, \
 		i.port, \
+		i.pg_version, \
 		min(s.snapid), \
 		max(s.snapid) \
 	FROM \
@@ -61,7 +82,8 @@
 	GROUP BY \
 		i.instid, \
 		i.hostname, \
-		i.port \
+		i.port, \
+		i.pg_version \
 	ORDER BY \
 		i.instid"
 
@@ -70,6 +92,7 @@
 		i.instid, \
 		i.hostname, \
 		i.port, \
+		i.pg_version, \
 		min(s.snapid), \
 		max(s.snapid) \
 	FROM \
@@ -80,18 +103,20 @@
 	GROUP BY \
 		i.instid, \
 		i.hostname, \
-		i.port \
+		i.port, \
+		i.pg_version \
 	ORDER BY \
 		i.instid"
 
 /* the report scope per instance */
 typedef struct ReportScope
 {
-	char	*instid;	/* instance ID */
-	char	*host;		/* host */
-	char	*port;		/* port */
-	char	*beginid;	/* begin point of report */
-	char	*endid;		/* end point of report */
+	char	*instid;		/* instance ID */
+	char	*host;			/* host */
+	char	*port;			/* port */
+	int		 version;		/* PostgreSQL version */
+	char	*beginid;		/* begin point of report */
+	char	*endid;			/* end point of report */
 } ReportScope;
 
 /* function interface of the report builder */
@@ -120,6 +145,7 @@ static List *select_scope_by_snapid(PGconn *conn, const char *beginid, const cha
 static List *select_scope_by_timestamp(PGconn *conn, time_t begindate, time_t enddate);
 static void destroy_report_scope(ReportScope *scope);
 static int get_server_version(PGconn *conn);
+static int parse_version(const char *versionString);
 
 /*
  * generate a report
@@ -277,7 +303,23 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 		fprintf(out, "Cache Hit Ratio            : %s %%\n", PQgetvalue(res, i, 5));
 		fprintf(out, "Block Read/s (disk+cache)  : %s\n", PQgetvalue(res, i, 6));
 		fprintf(out, "Block Read/s (disk)        : %s\n", PQgetvalue(res, i, 7));
-		fprintf(out, "Rows Read/s                : %s\n\n", PQgetvalue(res, i, 8));
+		fprintf(out, "Rows Read/s                : %s\n", PQgetvalue(res, i, 8));
+		if (scope->version >= 90200)
+		{
+			fprintf(out, "Temporary Files            : %s\n", PQgetvalue(res, i, 9));
+			fprintf(out, "Temporary Bytes            : %s MB\n", PQgetvalue(res, i, 10));
+			fprintf(out, "Deadlocks                  : %s\n", PQgetvalue(res, i, 11));
+			fprintf(out, "Block Read Time            : %s ms\n", PQgetvalue(res, i, 12));
+			fprintf(out, "Block Write Time           : %s ms\n\n", PQgetvalue(res, i, 13));
+		}
+		else
+		{
+			fprintf(out, "Temporary Files            : (N/A)\n");
+			fprintf(out, "Temporary Bytes            : (N/A)\n");
+			fprintf(out, "Deadlocks                  : (N/A)\n");
+			fprintf(out, "Block Read Time            : (N/A)\n");
+			fprintf(out, "Block Write Time           : (N/A)\n\n");
+		}
 	}
 	PQclear(res);
 
@@ -323,19 +365,22 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 		"Conflict Snapshot", "Conflict Bufferpin", "Conflict Deadlock");
 	fprintf(out, "-----------------------------------------------------------------------------------------------------------------\n");
 
-	res = pgut_execute(conn, SQL_SELECT_RECOVERY_CONFLICTS, lengthof(params), params);
-	for(i = 0; i < PQntuples(res); i++)
+	if (scope->version >= 90100)
 	{
-		fprintf(out, "%-16s  %19s  %13s  %17s  %18s  %17s\n",
-			PQgetvalue(res, i, 0),
-			PQgetvalue(res, i, 1),
-			PQgetvalue(res, i, 2),
-			PQgetvalue(res, i, 3),
-			PQgetvalue(res, i, 4),
-			PQgetvalue(res, i, 5));
+		res = pgut_execute(conn, SQL_SELECT_RECOVERY_CONFLICTS, lengthof(params), params);
+		for(i = 0; i < PQntuples(res); i++)
+		{
+			fprintf(out, "%-16s  %19s  %13s  %17s  %18s  %17s\n",
+				PQgetvalue(res, i, 0),
+				PQgetvalue(res, i, 1),
+				PQgetvalue(res, i, 2),
+				PQgetvalue(res, i, 3),
+				PQgetvalue(res, i, 4),
+				PQgetvalue(res, i, 5));
+		}
+		PQclear(res);
 	}
 	fprintf(out, "\n");
-	PQclear(res);
 }
 
 /*
@@ -358,8 +403,14 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	res = pgut_execute(conn, SQL_SELECT_WALSTATS, lengthof(params), params);
 	if (PQntuples(res) == 0)
 		return;
-	fprintf(out, "WAL Write Total  : %s MB\n", PQgetvalue(res, 0, 0));
-	fprintf(out, "WAL Write Speed  : %s MB/s\n\n", PQgetvalue(res, 0, 1));
+	if (PQgetisnull(res, 0, 0))
+		fprintf(out, "WAL Write Total  : (N/A)\n");
+	else
+		fprintf(out, "WAL Write Total  : %s MB\n", PQgetvalue(res, 0, 0));
+	if (PQgetisnull(res, 0, 1))
+		fprintf(out, "WAL Write Speed  : (N/A)\n\n");
+	else
+		fprintf(out, "WAL Write Speed  : %s MB/s\n\n", PQgetvalue(res, 0, 1));
 	PQclear(res);
 
 	fprintf(out, "-----------------------------------\n");
@@ -763,28 +814,51 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "----------------------------------------\n");
 	fprintf(out, "/* Autovacuum Activity */\n");
-	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %-16s  %8s  %16s  %17s  %16s  %15s  %15s\n",
-		"Database", "Schema", "Table", "Count", "Index Scans(Avg)",
-		"Removed Rows(Avg)", "Remain Rows(Avg)", "Duration(Avg)", "Duration(Max)");
-	fprintf(out, "----------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "----------------------------------------\n\n");
+
+	fprintf(out, "/** Basic Statistics (Average) **/\n");
+	fprintf(out, "-----------------------------------\n");
+	fprintf(out, "%-32s  %8s  %12s  %12s  %12s  %12s  %13s\n",
+		"Table", "Count", "Index Scans", "Removed Rows", "Remain Rows", "Duration", "Duration(Max)");
+	fprintf(out, "--------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_ACTIVITY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-16s  %-16s  %8s  %16s  %17s  %16s  %13s s  %13s s\n",
+		fprintf(out, "%-32s  %8s  %12s  %12s  %12s  %10s s  %11s s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
 			PQgetvalue(res, i, 3),
 			PQgetvalue(res, i, 4),
 			PQgetvalue(res, i, 5),
-			PQgetvalue(res, i, 6),
-			PQgetvalue(res, i, 7),
-			PQgetvalue(res, i, 8));
+			PQgetvalue(res, i, 6));
 	}
 	fprintf(out, "\n");
 	PQclear(res);
+
+	if (scope->version >= 90200)
+	{
+		fprintf(out, "/** I/O Statistics (Average) **/\n");
+		fprintf(out, "-----------------------------------\n");
+		fprintf(out, "%-32s  %10s  %10s  %10s  %13s  %13s\n",
+			"Table", "Page Hit", "Page Miss", "Page Dirty", "Read Rate", "Write Rate");
+		fprintf(out, "-----------------------------------------------------------------------------------------------------\n");
+
+		res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_ACTIVITY2, lengthof(params), params);
+		for(i = 0; i < PQntuples(res); i++)
+		{
+			fprintf(out, "%-32s  %10s  %10s  %10s  %7s MiB/s  %7s MiB/s\n",
+				PQgetvalue(res, i, 0),
+				PQgetvalue(res, i, 1),
+				PQgetvalue(res, i, 2),
+				PQgetvalue(res, i, 3),
+				PQgetvalue(res, i, 4),
+				PQgetvalue(res, i, 5));
+		}
+		fprintf(out, "\n");
+		PQclear(res);
+	}
 }
 
 /*
@@ -826,20 +900,30 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Statements **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %8s  %14s  %13s  %-s\n",
-		"User", "Database", "Calls", "Total Time", "Time/Call", "Query");
-	fprintf(out, "--------------------------------------------------------------------------------------------\n");
+	fprintf(out, "%-16s  %-16s  %8s  %14s  %13s  %15s  %16s  %-s\n",
+		"User", "Database", "Calls", "Total Time", "Time/Call",
+		"Block Read Time", "Block Write Time", "Query");
+	fprintf(out, "------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_QUERY_ACTIVITY_STATEMENTS, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-16s  %8s  %10s sec  %9s sec  %-s\n",
-			PQgetvalue(res, i, 0),
-			PQgetvalue(res, i, 1),
-			PQgetvalue(res, i, 3),
-			PQgetvalue(res, i, 4),
-			PQgetvalue(res, i, 5),
-			PQgetvalue(res, i, 2));
+		fprintf(out, "%-16s  ", PQgetvalue(res, i, 0));
+		fprintf(out, "%-16s  ", PQgetvalue(res, i, 1));
+		fprintf(out, "%8s  ", PQgetvalue(res, i, 3));
+		fprintf(out, "%10s sec  ", PQgetvalue(res, i, 4));
+		fprintf(out, "%9s sec  ", PQgetvalue(res, i, 5));
+		if (scope->version >= 90200)
+		{
+			fprintf(out, "%12s ms  ", PQgetvalue(res, i, 6));
+			fprintf(out, "%13s ms  ", PQgetvalue(res, i, 7));
+		}
+		else
+		{
+			fprintf(out, "%15s  ", "(N/A)");
+			fprintf(out, "%16s  ", "(N/A)");
+		}
+		fprintf(out, "%-s\n", PQgetvalue(res, i, 2));
 	}
 	fprintf(out, "\n");
 	PQclear(res);
@@ -911,8 +995,9 @@ report_replication_activity(PGconn *conn, ReportScope *scope, FILE *out)
 		fprintf(out, "Flush WAL Location    : %s\n", PQgetvalue(res, i, 10));
 		fprintf(out, "Replay WAL Location   : %s\n", PQgetvalue(res, i, 11));
 		fprintf(out, "Sync Priority         : %s\n", PQgetvalue(res, i, 12));
-		fprintf(out, "Sync State            : %s\n\n", PQgetvalue(res, i, 13));
+		fprintf(out, "Sync State            : %s\n", PQgetvalue(res, i, 13));
 	}
+	fprintf(out, "\n");
 	PQclear(res);
 }
 
@@ -1155,8 +1240,9 @@ select_scope_by_snapid(PGconn *conn, const char *beginid, const char *endid)
 		scope->instid = pgut_strdup(PQgetvalue(res, i, 0));		/* instance ID */
 		scope->host = pgut_strdup(PQgetvalue(res, i, 1));		/* host */
 		scope->port = pgut_strdup(PQgetvalue(res, i, 2));		/* port */
-		scope->beginid = pgut_strdup(PQgetvalue(res, i, 3));	/* begin point of report */
-		scope->endid = pgut_strdup(PQgetvalue(res, i, 4));		/* end point of report */
+		scope->version = parse_version(PQgetvalue(res, i, 3));	/* PostgreSQL version */
+		scope->beginid = pgut_strdup(PQgetvalue(res, i, 4));	/* begin point of report */
+		scope->endid = pgut_strdup(PQgetvalue(res, i, 5));		/* end point of report */
 		scope_list = lappend(scope_list, scope);
 	}
 	PQclear(res);
@@ -1199,8 +1285,9 @@ select_scope_by_timestamp(PGconn *conn, time_t begindate, time_t enddate)
 		scope->instid = pgut_strdup(PQgetvalue(res, i, 0));		/* instance ID */
 		scope->host = pgut_strdup(PQgetvalue(res, i, 1));		/* host */
 		scope->port = pgut_strdup(PQgetvalue(res, i, 2));		/* port */
-		scope->beginid = pgut_strdup(PQgetvalue(res, i, 3));	/* begin point of report */
-		scope->endid = pgut_strdup(PQgetvalue(res, i, 4));		/* end point of report */
+		scope->version = parse_version(PQgetvalue(res, i, 3));	/* PostgreSQL version */
+		scope->beginid = pgut_strdup(PQgetvalue(res, i, 4));	/* begin point of report */
+		scope->endid = pgut_strdup(PQgetvalue(res, i, 5));		/* end point of report */
 		scope_list = lappend(scope_list, scope);
 	}
 	PQclear(res);
@@ -1232,4 +1319,21 @@ get_server_version(PGconn *conn)
 	PQclear(res);
 
 	return server_version_num;
+}
+
+static int
+parse_version(const char *versionString)
+{
+	int	cnt;
+	int	vmaj, vmin, vrev;
+
+	cnt = sscanf(versionString, "%d.%d.%d", &vmaj, &vmin, &vrev);
+
+	if (cnt < 2)
+		return -1;
+
+	if (cnt == 2)
+		vrev = 0;
+
+	return (100 * vmaj + vmin) * 100 + vrev;
 }
