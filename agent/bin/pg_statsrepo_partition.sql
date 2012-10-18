@@ -522,6 +522,43 @@ $$
 $$
 LANGUAGE sql IMMUTABLE STRICT;
 
+-- pg_size_pretty() - formatting with size units
+CREATE FUNCTION statsrepo.pg_size_pretty(bigint)
+RETURNS text AS
+$$
+DECLARE
+	size	bigint := $1;
+	buf		text;
+	limit1	bigint := 10 * 1024;
+	limit2	bigint := limit1 * 2 - 1;
+BEGIN
+	IF size < limit1 THEN
+		buf := size || ' bytes';
+	ELSE
+		size := size >> 9;	/* keep one extra bit for rounding */
+		IF size < limit2 THEN
+			buf := (size + 1) / 2 || ' KiB';
+		ELSE
+			size := size >> 10;
+			IF size < limit2 THEN
+				buf := (size + 1) / 2 || ' MiB';
+			ELSE
+				size := size >> 10;
+				IF size < limit2 THEN
+					buf := (size + 1) / 2 || ' GiB';
+				ELSE
+					size := size >> 10;
+					buf := (size + 1) / 2 || ' TiB';
+				END IF;
+			END IF;
+		END IF;
+	END IF;
+
+	RETURN buf;
+END;
+$$
+LANGUAGE plpgsql IMMUTABLE STRICT;
+
 -- tables - pre-JOINed tables
 CREATE VIEW statsrepo.tables AS
   SELECT t.snapid,
@@ -891,7 +928,7 @@ $$
 		statsrepo.snapshot b,
 		statsrepo.snapshot e,
 		(SELECT
-			pg_size_pretty(sum(ed.size)::int8),
+			statsrepo.pg_size_pretty(sum(ed.size)::int8),
 			sum(ed.xact_commit) - sum(sd.xact_commit),
 			sum(ed.xact_rollback) - sum(sd.xact_rollback)
 		 FROM

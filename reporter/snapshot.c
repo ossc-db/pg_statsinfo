@@ -15,7 +15,7 @@ SELECT \
 	s.time::timestamp(0), \
 	s.comment, \
 	s.exec_time::interval(0), \
-	pg_size_pretty(s.snapshot_increase_size) \
+	statsrepo.pg_size_pretty(s.snapshot_increase_size) \
 FROM \
 	statsrepo.snapshot s \
 	LEFT JOIN statsrepo.instance i ON s.instid = i.instid"
@@ -196,19 +196,19 @@ size_pretty(int64 size)
 	{
 		mult *= 1024;
 		if (size < limit * mult)
-			snprintf(buf, sizeof(buf), INT64_FORMAT " KB",
+			snprintf(buf, sizeof(buf), INT64_FORMAT " KiB",
 					 (size + mult / 2) / mult);
 		else
 		{
 			mult *= 1024;
 			if (size < limit * mult)
-				snprintf(buf, sizeof(buf), INT64_FORMAT " MB",
+				snprintf(buf, sizeof(buf), INT64_FORMAT " MiB",
 						 (size + mult / 2) / mult);
 			else
 			{
 				mult *= 1024;
 				if (size < limit * mult)
-					snprintf(buf, sizeof(buf), INT64_FORMAT " GB",
+					snprintf(buf, sizeof(buf), INT64_FORMAT " GiB",
 							 (size + mult / 2) / mult);
 				else
 				{
@@ -219,7 +219,7 @@ size_pretty(int64 size)
 					val = size / mult;
 					if ((size % mult) >= (mult / 2))
 						val++;
-					snprintf(buf, sizeof(buf), INT64_FORMAT " TB",
+					snprintf(buf, sizeof(buf), INT64_FORMAT " TiB",
 							 val);
 				}
 			}

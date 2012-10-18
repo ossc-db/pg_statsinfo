@@ -296,8 +296,8 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 	for (i = 0; i < PQntuples(res); i++)
 	{
 		fprintf(out, "Database Name              : %s\n", PQgetvalue(res, i, 0));
-		fprintf(out, "Database Size              : %s MB\n", PQgetvalue(res, i, 1));
-		fprintf(out, "Database Size Increase     : %s MB\n", PQgetvalue(res, i, 2));
+		fprintf(out, "Database Size              : %s MiB\n", PQgetvalue(res, i, 1));
+		fprintf(out, "Database Size Increase     : %s MiB\n", PQgetvalue(res, i, 2));
 		fprintf(out, "Commit/s                   : %s\n", PQgetvalue(res, i, 3));
 		fprintf(out, "Rollback/s                 : %s\n", PQgetvalue(res, i, 4));
 		fprintf(out, "Cache Hit Ratio            : %s %%\n", PQgetvalue(res, i, 5));
@@ -307,7 +307,7 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 		if (scope->version >= 90200)
 		{
 			fprintf(out, "Temporary Files            : %s\n", PQgetvalue(res, i, 9));
-			fprintf(out, "Temporary Bytes            : %s MB\n", PQgetvalue(res, i, 10));
+			fprintf(out, "Temporary Bytes            : %s MiB\n", PQgetvalue(res, i, 10));
 			fprintf(out, "Deadlocks                  : %s\n", PQgetvalue(res, i, 11));
 			fprintf(out, "Block Read Time            : %s ms\n", PQgetvalue(res, i, 12));
 			fprintf(out, "Block Write Time           : %s ms\n\n", PQgetvalue(res, i, 13));
@@ -343,14 +343,14 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Database Size **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %13s\n",
+	fprintf(out, "%-16s  %-16s  %14s\n",
 		"DateTime", "Database", "Size");
-	fprintf(out, "----------------------------------------------------\n");
+	fprintf(out, "-----------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_DBSIZE_TENDENCY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-16s  %10s MB\n",
+		fprintf(out, "%-16s  %-16s  %10s MiB\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2));
@@ -406,22 +406,22 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	if (PQgetisnull(res, 0, 0))
 		fprintf(out, "WAL Write Total  : (N/A)\n");
 	else
-		fprintf(out, "WAL Write Total  : %s MB\n", PQgetvalue(res, 0, 0));
+		fprintf(out, "WAL Write Total  : %s MiB\n", PQgetvalue(res, 0, 0));
 	if (PQgetisnull(res, 0, 1))
 		fprintf(out, "WAL Write Speed  : (N/A)\n\n");
 	else
-		fprintf(out, "WAL Write Speed  : %s MB/s\n\n", PQgetvalue(res, 0, 1));
+		fprintf(out, "WAL Write Speed  : %s MiB/s\n\n", PQgetvalue(res, 0, 1));
 	PQclear(res);
 
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-17s  %-24s  %15s  %15s\n",
+	fprintf(out, "%-16s  %-17s  %-24s  %14s  %14s\n",
 		"DateTime", "Location", "Segment File", "Write Size", "Write Size/s");
-	fprintf(out, "--------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_WALSTATS_TENDENCY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-17s  %-24s  %12s MB  %12s MB\n",
+		fprintf(out, "%-16s  %-17s  %-24s  %10s MiB  %10s MiB\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
@@ -527,15 +527,15 @@ report_resource_usage(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** IO Usage **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-12s  %-24s  %11s  %11s  %17s  %17s  %16s  %15s\n",
+	fprintf(out, "%-12s  %-24s  %12s  %12s  %17s  %17s  %16s  %15s\n",
 		"Device", "Including TabelSpaces", "Total Read", "Total Write",
 		"Total Read Time", "Total Write Time", "Current IO Queue", "Total IO Time");
-	fprintf(out, "--------------------------------------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "----------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_IO_USAGE, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-12s  %-24s  %8s MB  %8s MB  %14s ms  %14s ms  %16s  %12s ms\n",
+		fprintf(out, "%-12s  %-24s  %8s MiB  %8s MiB  %14s ms  %14s ms  %16s  %12s ms\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
@@ -549,14 +549,14 @@ report_resource_usage(PGconn *conn, ReportScope *scope, FILE *out)
 	PQclear(res);
 
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-12s  %15s  %15s  %15s  %15s\n",
+	fprintf(out, "%-16s  %-12s  %14s  %14s  %15s  %15s\n",
 		"DateTime", "Device", "Read Size/s", "Write Size/s", "Read Time/s", "Write Time/s");
-	fprintf(out, "-----------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "---------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_IO_USAGE_TENDENCY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-12s  %12s KB  %12s KB  %12s ms  %12s ms\n",
+		fprintf(out, "%-16s  %-12s  %10s KiB  %10s KiB  %12s ms  %12s ms\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
@@ -569,14 +569,14 @@ report_resource_usage(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Memory Usage **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %11s  %11s  %11s  %11s  %11s\n",
+	fprintf(out, "%-16s  %12s  %12s  %12s  %12s  %12s\n",
 		"DateTime", "Memfree", "Buffers", "Cached", "Swap", "Dirty");
-	fprintf(out, "------------------------------------------------------------------------------------\n");
+	fprintf(out, "-----------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_MEMORY_TENDENCY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %8s MB  %8s MB  %8s MB  %8s MB  %8s MB\n",
+		fprintf(out, "%-16s  %8s MiB  %8s MiB  %8s MiB  %8s MiB  %8s MiB\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
@@ -604,14 +604,14 @@ report_disk_usage(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Disk Usage per Tablespace **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-32s  %-12s  %11s  %11s  %10s\n",
+	fprintf(out, "%-16s  %-32s  %-12s  %12s  %12s  %10s\n",
 		"Tablespace", "Location", "Device", "Used", "Avail", "Remain");
-	fprintf(out, "---------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "-----------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_DISK_USAGE_TABLESPACE, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-32s  %-12s  %8s MB  %8s MB  %8s %%\n",
+		fprintf(out, "%-16s  %-32s  %-12s  %8s MiB  %8s MiB  %8s %%\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
@@ -624,14 +624,14 @@ report_disk_usage(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Disk Usage per Table **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %-16s  %11s  %12s  %12s  %12s\n",
+	fprintf(out, "%-16s  %-16s  %-16s  %12s  %12s  %12s  %12s\n",
 		"Database", "Schema", "Table", "Size", "Table Reads", "Index Reads", "Toast Reads");
-	fprintf(out, "--------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "---------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_DISK_USAGE_TABLE, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-16s  %-16s  %8s MB  %12s  %12s  %12s\n",
+		fprintf(out, "%-16s  %-16s  %-16s  %8s MiB  %12s  %12s  %12s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
@@ -1046,15 +1046,15 @@ report_schema_information(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Tables **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %-16s  %8s  %14s  %9s  %12s  %11s  %11s\n",
+	fprintf(out, "%-16s  %-16s  %-16s  %8s  %14s  %10s  %10s  %11s  %11s\n",
 		"Database", "Schema", "Table", "Columns", "Row Width", "Size",
 		"Size Incr", "Table Scans", "Index Scans");
-	fprintf(out, "------------------------------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_SCHEMA_INFORMATION_TABLES, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-16s  %-16s  %8s  %9s byte  %6s MB  %9s MB  %11s  %11s\n",
+		fprintf(out, "%-16s  %-16s  %-16s  %8s  %9s byte  %6s MiB  %6s MiB  %11s  %11s\n",
 			PQgetvalue(res, i, 0),	
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
@@ -1070,15 +1070,15 @@ report_schema_information(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Indexes **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %-16s  %-16s  %9s  %12s  %11s  %9s  %10s  %11s  %-s\n",
+	fprintf(out, "%-16s  %-16s  %-16s  %-16s  %10s  %10s  %11s  %9s  %10s  %11s  %-s\n",
 		"Database", "Schema", "Index", "Table", "Size", "Size Incr",
 		"Index Scans", "Rows/Scan", "Disk Reads", "Cache Reads", "Index Key");
-	fprintf(out, "--------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "-------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_SCHEMA_INFORMATION_INDEXES, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-16s  %-16s  %-16s  %6s MB  %9s MB  %11s  %9s  %10s  %11s  %-s\n",
+		fprintf(out, "%-16s  %-16s  %-16s  %-16s  %6s MiB  %6s MiB  %11s  %9s  %10s  %11s  %-s\n",
 			PQgetvalue(res, i, 0),	
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
