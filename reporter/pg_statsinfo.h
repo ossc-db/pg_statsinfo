@@ -2,7 +2,7 @@
  *
  * pg_statsinfo.h
  *
- * Copyright (c) 2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2011-2012, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  *
  *-------------------------------------------------------------------------
  */

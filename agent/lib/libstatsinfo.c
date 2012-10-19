@@ -1,7 +1,7 @@
 /*
  * lib/libstatsinfo.c
  *
- * Copyright (c) 2010-2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2010-2012, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 #include "libstatsinfo.h"

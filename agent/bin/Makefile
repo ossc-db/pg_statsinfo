@@ -1,7 +1,7 @@
 #
 # pg_statsinfo: bin/Makefile
 #
-#    Copyright (c) 2010-2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+#    Copyright (c) 2010-2012, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
 #
 SRCS = \
 	pg_statsinfod.c \

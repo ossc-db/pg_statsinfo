@@ -1,7 +1,7 @@
 /*
  * snapshot.c
  *
- * Copyright (c) 2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2011-2012, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 #include "pg_statsinfo.h"
