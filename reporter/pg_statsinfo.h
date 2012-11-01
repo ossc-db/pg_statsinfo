@@ -26,7 +26,7 @@
 #define REPORTID_CHECKPOINT_ACTIVITY	"CheckpointActivity"
 #define REPORTID_AUTOVACUUM_ACTIVITY	"AutovacuumActivity"
 #define REPORTID_QUERY_ACTIVITY			"QueryActivity"
-#define REPORTID_LOCK_ACTIVITY			"LockActivity"
+#define REPORTID_LOCK_CONFLICTS			"LockConflicts"
 #define REPORTID_REPLICATION_ACTIVITY	"ReplicationActivity"
 #define REPORTID_SETTING_PARAMETERS		"SettingParameters"
 #define REPORTID_SCHEMA_INFORMATION		"SchemaInformation"

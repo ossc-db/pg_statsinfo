@@ -59,7 +59,7 @@ FROM \
 	statsrepo.get_autovacuum_activity2($1, $2)"
 #define SQL_SELECT_QUERY_ACTIVITY_FUNCTIONS		"SELECT * FROM statsrepo.get_query_activity_functions($1, $2) LIMIT 20"
 #define SQL_SELECT_QUERY_ACTIVITY_STATEMENTS	"SELECT * FROM statsrepo.get_query_activity_statements($1, $2) LIMIT 20"
-#define SQL_SELECT_LOCK_ACTIVITY				"SELECT * FROM statsrepo.get_lock_activity($1, $2) LIMIT 20"
+#define SQL_SELECT_LOCK_CONFLICTS				"SELECT * FROM statsrepo.get_lock_activity($1, $2) LIMIT 20"
 #define SQL_SELECT_REPLICATION_ACTIVITY			"SELECT * FROM statsrepo.get_replication_activity($1, $2)"
 #define SQL_SELECT_SETTING_PARAMETERS			"SELECT * FROM statsrepo.get_setting_parameters($1, $2)"
 #define SQL_SELECT_SCHEMA_INFORMATION_TABLES	"SELECT * FROM statsrepo.get_schema_info_tables($1, $2)"
@@ -133,7 +133,7 @@ static void report_notable_tables(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_checkpoint_activity(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_query_activity(PGconn *conn, ReportScope *scope, FILE *out);
-static void report_lock_activity(PGconn *conn, ReportScope *scope, FILE *out);
+static void report_lock_conflicts(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_replication_activity(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_setting_parameters(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_schema_information(PGconn *conn, ReportScope *scope, FILE *out);
@@ -930,24 +930,24 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 }
 
 /*
- * generate a report that corresponds to 'LockActivity'
+ * generate a report that corresponds to 'LockConflicts'
  */
 static void
-report_lock_activity(PGconn *conn, ReportScope *scope, FILE *out)
+report_lock_conflicts(PGconn *conn, ReportScope *scope, FILE *out)
 {
 	PGresult	*res;
 	const char	*params[] = { scope->beginid, scope->endid };
 	int			 i;
 
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "/* Lock Activity */\n");
+	fprintf(out, "/* Lock Conflicts */\n");
 	fprintf(out, "----------------------------------------\n");
 	fprintf(out, "%-16s  %-16s  %-16s  %-8s  %11s  %11s  %-16s\n%-s\n%-s\n",
 		"Database", "Schema", "Relation", "Duration", "Blockee PID", "Blocker PID", "Blocker GID",
 		"Blockee Query", "Blocker Query");
 	fprintf(out, "--------------------------------------------------------------------------------------------------------\n");
 
-	res = pgut_execute(conn, SQL_SELECT_LOCK_ACTIVITY, lengthof(params), params);
+	res = pgut_execute(conn, SQL_SELECT_LOCK_CONFLICTS, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
 		fprintf(out, "%-16s  %-16s  %-16s  %-8s  %11s  %11s  %-16s\n%-s\n%-s\n",
@@ -1139,7 +1139,7 @@ report_all(PGconn *conn, ReportScope *scope, FILE *out)
 	report_checkpoint_activity(conn, scope, out);
 	report_autovacuum_activity(conn, scope, out);
 	report_query_activity(conn, scope, out);
-	report_lock_activity(conn, scope, out);
+	report_lock_conflicts(conn, scope, out);
 	report_replication_activity(conn, scope, out);
 	report_setting_parameters(conn, scope, out);
 	report_schema_information(conn, scope, out);
@@ -1187,8 +1187,8 @@ parse_reportid(const char *value)
 		return (ReportBuild) report_autovacuum_activity;
 	else if (pg_strncasecmp(REPORTID_QUERY_ACTIVITY, v, len) == 0)
 		return (ReportBuild) report_query_activity;
-	else if (pg_strncasecmp(REPORTID_LOCK_ACTIVITY, v, len) == 0)
-		return (ReportBuild) report_lock_activity;
+	else if (pg_strncasecmp(REPORTID_LOCK_CONFLICTS, v, len) == 0)
+		return (ReportBuild) report_lock_conflicts;
 	else if (pg_strncasecmp(REPORTID_REPLICATION_ACTIVITY, v, len) == 0)
 		return (ReportBuild) report_replication_activity;
 	else if (pg_strncasecmp(REPORTID_SETTING_PARAMETERS, v, len) == 0)

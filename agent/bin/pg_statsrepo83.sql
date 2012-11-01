@@ -2432,7 +2432,7 @@ $$
 $$
 LANGUAGE sql;
 
--- generate information that corresponds to 'Lock Activity'
+-- generate information that corresponds to 'Lock Conflicts'
 CREATE FUNCTION statsrepo.get_lock_activity(
 	IN snapid_begin		bigint,
 	IN snapid_end		bigint,
