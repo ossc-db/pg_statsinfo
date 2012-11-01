@@ -6,7 +6,7 @@
 <link rel="stylesheet" type="text/css" href="style.css">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head><body>
-<h1 id="pg_statsinfo">pg_statsinfo 2.3.0</h1>
+<h1 id="pg_statsinfo">pg_statsinfo 2.4.0</h1>
 <div class="navigation">
   <a href="http://pgstatsinfo.projects.postgresql.org/index_ja.html">Top</a> &gt;
   <a href="http://pgstatsinfo.projects.postgresql.org/pg_statsinfo-ja.html">pg_statsinfo</a>
@@ -84,7 +84,7 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
 </p>
 
 <h4>スナップショットの取得</h4>
-スナップショットの取得方法は以下の通りです。
+スナップショットの取得方法は以下のとおりです。
 <ul>
   <li>ユーザが指定した時間間隔で定期的にスナップショットを取得することができます。デフォルト設定では10分間隔で取得します。</li>
   <li>任意のタイミングで手動でスナップショットを取得することもできます。</li>
@@ -96,14 +96,15 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
   <li><a href="http://www.postgresql.jp/document/current/html/monitoring-stats.html">統計情報コレクタ</a>が収集する全ての情報。挿入 / 更新 / 削除行数やバッファアクセス回数。</li>
   <li>テーブルスペース、pg_xlog 領域、アーカイブログ領域のディスク使用量。</li>
   <li>ロングトランザクション化しているクエリ。</li>
-  <li>プロセスの状況。処理中、ロック待ち、トランザクション中の待機、アイドルのそれぞれで集計します。</li>
+  <li>バックエンドプロセスの状況。処理中、ロック待ち、トランザクション中の待機、アイドルのそれぞれで集計します。</li>
+  <li>トランザクションログ(WAL)の出力量</li>
   <li>チェックポイントや自動バキュームの経過時間やバッファアクセス回数。</li>
   <li>実行回数、累積実行時間の多いSQLと関数。</li>
   <li>PostgreSQLの設定パラメータ。</li>
-  <li>OS リソース情報 (CPU 使用量、ディスク I/O)。</li>
+  <li>OS リソース情報 (CPU使用量、メモリ使用量、ディスクI/O、ロードアベレージ)。</li>
   <li>ロック競合情報</li>
   <li>リカバリとの競合によるクエリのキャンセル数</li>
-  <li>walsenderの活動状況</li>
+  <li>レプリケーション情報 (walsenderの活動状況)</li>
   <li>SystemTap を使用したプロファイリング情報 (実験的扱いの機能)。</li>
 </ul>
 
@@ -111,6 +112,9 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
 スナップショットのサイズは、DB内のオブジェクト数に依存しますが、概ね1回のスナップショットで1DBあたり600 - 800KBを消費します。
 デフォルトの取得間隔（10分間隔）の場合、監視対象インスタンス一つあたり1日で90 - 120MBを消費します。
 </p>
+
+<h4>リポジトリDBのテーブル構成</h4>
+<p>リポジトリDBのテーブル構成に関しては、「<a href="files/pg_statsinfo_v2.4_repository_infomation.xls">pg_statsinfo v2.4 リポジトリDB構成</a>」を参照してください。</p>
 
 <h3 id="features-log">サーバログ処理機能</h3>
 <ul>
@@ -160,7 +164,7 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
 </ul>
 
 <p>
-簡易レポート機能が出力するレポートの項目については<a href="files/pg_statsinfo_v2.3_report_infomation.xls">こちら</a>をご覧ください。<br>
+簡易レポート機能が出力するレポートの項目については「<a href="files/pg_statsinfo_v2.4_report_infomation.xls">pg_statsinfo v2.4 レポート項目一覧</a>」をご覧ください。<br>
 なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_reporter</a> と同等です。<br>
 グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_reporter</a> を使用してください。
 </p>
@@ -192,7 +196,7 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
 <h3 id="requirement">動作環境</h3>
 <dl>
 <dt>PostgreSQL</dt>
-<dd>バージョン 8.3, 8.4, 9.0, 9.1</dd>
+<dd>バージョン 8.3, 8.4, 9.0, 9.1, 9.2</dd>
 <dt>動作検証済みOS</dt>
 <dd>RHEL 5.x, RHEL 6.x, CentOS 5.x, CentOS 6.x</dd>
 </dl>
@@ -227,7 +231,7 @@ contrib/pg_statsinfo.sql、contrib/pg_statsrepo.sqlは自動的にインスト�
 
 <p>監視対象の PostgreSQL インスタンスを停止した状態で、postgresql.conf に以下の設定を行います。
 この設定では、スナップショットの保存先は同一インスタンスの postgres データベースになります。
-これら以外の設定については、「<a href="#configuration">設定ファイル</a>」を参照して下さい。</p>
+これら以外の設定については、<a href="#configuration">設定ファイル</a>を参照して下さい。</p>
 
 <pre>
 #最小設定
@@ -238,7 +242,7 @@ log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log' # ログファイル名を指定
 <pre>
 #推奨設定
 shared_preload_libraries = 'pg_statsinfo'       # 事前ロードを行う
-custom_variable_classes = 'pg_statsinfo'        # pg_statsinfoのパラメータ指定するために必要
+custom_variable_classes = 'pg_statsinfo'        # 独自変数クラス名を使用するための設定 (PostgreSQL 9.2以降では不要です)
 
 pg_statsinfo.snapshot_interval = 30min          # スナップショットの取得間隔
 pg_statsinfo.enable_maintenance = 'on'          # 自動メンテナンス設定
@@ -311,7 +315,7 @@ $ psql -d postgres -f $PGSHARE/contrib/pg_stat_statements.sql
 
 <h3 id="start_or_stop">起動と終了</h3>
 
-<p>起動は、通常通りPostgreSQLを起動するだけです。
+<p>起動は、通常どおりPostgreSQLを起動するだけです。
 PostgreSQL の起動と連動して pg_statsinfo も自動的に起動します。
 pg_statsinfo を実行ファイル単体で起動することはできません。</p>
 <pre>$ pg_ctl start [OPTIONS]</pre>
@@ -511,7 +515,7 @@ $ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -r All
   <dt>-r, --report=REPORTID</dt>
   <dd>レポート種別IDを指定します。</dd>
   <dd>レポート種別IDに指定できる値は以下のとおりです。</dd>
-  <dd>レポート種別IDとレポートの内容についての対応は<a href="files/pg_statsinfo_v2.3_report_infomation.xls">こちら</a>をご覧ください。</dd>
+  <dd>レポート種別IDとレポートの内容についての対応は「<a href="files/pg_statsinfo_v2.4_report_infomation.xls">pg_statsinfo v2.4 レポート項目一覧</a>」をご覧ください。</dd>
   <dd>
     <ul>
       <li>Summary</li>
@@ -524,7 +528,7 @@ $ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -r All
       <li>CheckpointActivity</li>
       <li>AutovacuumActivity</li>
       <li>QueryActivity</li>
-      <li>LockActivity</li>
+      <li>LockConflicts</li>
       <li>ReplicationActivity</li>
       <li>SettingParameters</li>
       <li>SchemaInformation</li>
@@ -549,12 +553,12 @@ $ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -r All
   <dd>本オプションと「--B, --begindate」または「-E, --enddate」を同時に指定することはできません。</dd>
   
   <dt>-B, --begindate=DATE</dt>
-  <dd>レポート範囲の開始点とするスナップショットを日時 (YYYY-MM-DD HH:MI:SS形式) を指定します。</dd>
+  <dd>レポート範囲の開始点とするスナップショットを日時 (YYYY-MM-DD HH:MI:SS形式) で指定します。</dd>
   <dd>本オプションは省略可能です。省略時は最初のスナップショットを開始点とします。</dd>
   <dd>本オプションと「--b, --beginid」または「-e, --endid」を同時に指定することはできません。</dd>
   
   <dt>-E, --enddate=DATE</dt>
-  <dd>レポート範囲の終了点とするスナップショットを日時 (YYYY-MM-DD HH:MI:SS形式) を指定します。</dd>
+  <dd>レポート範囲の終了点とするスナップショットを日時 (YYYY-MM-DD HH:MI:SS形式) で指定します。</dd>
   <dd>本オプションは省略可能です。省略時は最後のスナップショットを終了点とします。</dd>
   <dd>本オプションと「--b, --beginid」または「-e, --endid」を同時に指定することはできません。</dd>
   
@@ -782,7 +786,7 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
   <tr>
     <td>track_activities</td>
     <td>on</td>
-    <td>セッションで実行中のコマンドに関する情報の収集設</td>
+    <td>セッションで実行中のコマンドに関する情報の収集設定</td>
   </tr>
   <tr>
     <td>log_min_messages</td>
@@ -811,10 +815,11 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
 <br>
 
 <h4>追加設定項目</h4>
-<p>pg_statsinfo を利用するために確認が推奨されるパラメータは以下です。
-パラメータを後から変更するためには、再読み込み (pg_ctl reload) のみが必要です。</p>
-
-<p>また、PostgreSQL 8.3 で利用する場合には、custom_variable_classes の設定値は 'statsinfo'、独自パラメータ 'pg_statsinfo.*' は 'statsinfo.*' と読み替えてください。</p>
+<p>
+pg_statsinfo を利用するために確認が推奨されるパラメータは以下です。
+パラメータを後から変更するためには、設定値のリロード (pg_ctl reload) が必要です。<br>
+なお、PostgreSQL 8.3 で利用する場合には、custom_variable_classes の設定値は 'statsinfo'、独自パラメータ 'pg_statsinfo.*' は 'statsinfo.*' と読み替えてください。
+</p>
 
 <table>
 <thead>
@@ -830,6 +835,14 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
     <td>none</td>
     <td>関数の呼び出しに関する統計情報の収集設定。
         統計情報を収集するためには pl または all を設定します。</td>
+  </tr>
+  <tr>
+    <td>track_io_timing</td>
+    <td>off</td>
+    <td>ブロックの読み込みと書き込み時間に関する統計情報の収集設定。 
+        ブロックの読み書きに関する統計情報を収集する場合は on を設定します。<br/>
+        本パラメータを on に設定した場合、現時点の時刻をオペレーティングシステムに繰り返し問い合わせるので、プラットフォームによっては深刻な負荷の原因になる可能性がある点を留意してください。<br/>
+        (本パラメータはPostgreSQL 9.2以降から指定可能です)</td>
   </tr>
   <tr>
     <td>log_checkpoints</td>
@@ -871,7 +884,9 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
     <td>custom_variable_classes</td>
     <td>(空文字)</td>
     <td>独自変数クラス名の設定。<br/>
-        "pg_statsinfo." から始まるパラメータを設定するためには、'pg_statsinfo' を指定する必要があります。</td>
+        PostgreSQL 8.3で利用する場合は 'statsinfo' を指定してください。<br/>
+        PostgreSQL 8.4 ～ 9.1 で利用する場合には 'pg_statsinfo' を指定してください。<br/>
+        PostgreSQL 9.2以降で利用する場合は当パラメータの設定は不要です。<br/>
   </tr>
   <tr>
     <td>pg_statsinfo.textlog_min_messages</td>
@@ -1073,10 +1088,9 @@ log_line_prefix の値そのものは無視されることに注意して下さ�
 <pre>$ psql -d postgres -c "SELECT pg_rotate_logfile()"</pre>
 
 <h4 id="on-abort">異常終了時の対処</h4>
-<p>pg_statsinfo のみが異常終了しても、PostgreSQL インスタンスには影響はありませんが、pg_statsinfo の機能は停止したままになってしまいます。
-pg_statsinfo を再起動するには PostgreSQL インスタンスを再起動してください。
-なお、pg_statsinfo のみが異常終了してから再起動までの間にサーバログがローテートされていた場合、最新のサーバログを除いては解析されません。
-pg_statsinfo の停止中に出力されたサーバログについては、直接CSVログファイルを閲覧して下さい。
+<p>pg_statsinfo のみが異常終了しても、PostgreSQL インスタンスには影響はありませんが、pg_statsinfo の機能は停止したままになってしまいます。<br/>
+pg_statsinfo を再起動するには PostgreSQL インスタンスを再起動してください。<br/>
+なお、pg_statsinfo が異常終了してから再起動するまでの間に出力されたサーバログは、再起動時に解析(サーバログの分配のみ)されます。
 </p>
 
 <h2 id="uninstall">アンインストール</h2>
@@ -1132,17 +1146,25 @@ PostgreSQL はタイムゾーンを独自に管理しており、外部プログ
 <dd>シャットダウン時のチェックポイントログはリポジトリDBに保存されません。
 同居構成の場合には既にリポジトリDBが終了してしまっているためです。</dd>
 
-<dt>自動メンテナンス(スナップショット削除)の制限</dt>
-<dd>複数の監視対象インスタンスのスナップショットを同一のリポジトリDBに蓄積する構成では、自動メンテナンスを実行する pg_statsinfo を1つにする必要があります。
-これは、インスタンス毎のメンテナンス設定で自動メンテナンスがそれぞれ実行されてしまうためです。<br>
-監視対象インスタンス毎にリポジトリDBを用意する構成では、1つにする必要はありません。</dd>
-
 <dt>スナップショット取得とテーブル削除の同時実行</dt>
 <dd>スナップショット取得とテーブル削除が同時に要求されると、タイミングによってはスナップショット取得でエラーが発生する可能性があります。
 エラーが発生した場合、スナップショット取得はリトライされます。</dd>
 
 <dt>複数の監視インスタンスの設定について</dt>
 <dd>各インスタンス毎に、データベースシステム識別子 or OSホスト名 or Port番号のいずれかが異なっていない場合、複数インスタンスとして認識できません。</dd>
+
+<dt>自動メンテナンス(スナップショット削除)の注意点</dt>
+<dd>複数の監視対象インスタンスのスナップショットを同一のリポジトリDBに蓄積する構成では、
+自動メンテナンス設定のスナップショット保持期間の設定に注意してください。<br/>
+複数の監視対象インスタンスで自動メンテナンスのスナップショット削除を有効とする場合、
+それぞれの監視対象インスタンスのスナップショット保持期間の設定でスナップショット削除が実行されます。<br/>
+そのため、結果的に監視対象インスタンスの中で最も期間の短いスナップショット保持期間が有効となります。</dd>
+
+<dt>トランザクションログ(WAL)の出力量の統計情報収集に関する制限</dt>
+<dd>監視対象インスタンスがレプリケーション構成のスタンバイの場合は、トランザクションログ(WAL)の出力量の統計情報が収集されません。</dd>
+
+<dt>トランザクションログ(WAL)の出力量のレポートに関する制限</dt>
+<dd>監視対象インスタンスのWALセグメントサイズ(XLOG_SEG_SIZE)がデフォルト(16MB)以外の場合は、当該インスタンスに対するWALの出力量のレポート(WAL Statistics)の値が正しい値とならない。</dd>
 <br>
 </dl>
 
@@ -1164,7 +1186,7 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
 
 <h4>Q3. 自動メンテナンス機能のスナップショット削除が動作しません。</h4>
 <p>
-自動メンテナンスの設定が有効になっていないか、リポジトリDBの statsrepo スキーマの版がリポジトリDBの PostgreSQL のバージョンと一致していないことが考えられます。
+自動メンテナンスの設定が有効になっていないことが考えられます。
 以下の事項を点検してください。
 </p>
 
@@ -1177,12 +1199,6 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
       <li>pg_statsinfo.enable_maintenance = 'snapshot, log'</li>
     </ul>
   </dd>
-  <dt>リポジトリDBの statsrepo スキーマのバージョンが正しいか</dt>
-  <dd>リポジトリDBの statsrepo スキーマに del_snapshot2 関数が存在するか以下の SQL をリポジトリDBで実行して確認してください。
-    <pre># SELECT n.nspname, p.proname FROM pg_proc p LEFT JOIN pg_namespace n ON p.pronamespace = n.oid WHERE p.proname = 'del_snapshot2' AND n.nspname = 'statsrepo';</pre>
-  </dd>
-  <dd>del_snapshot2 関数が存在しない場合は PostgreSQL 8.3用の statsrepo スキーマです。存在する場合は PostgreSQL 8.4以降用の statsrepo スキーマです。</dd>
-  <dd>statsrepo スキーマのバージョンがリポジトリDBの PostgreSQL のバージョンと一致していない場合は、現在の statsrepo スキーマを破棄し、その後 PostgreSQL を再起動してください。</dd>
 </dl>
 
 <br>
@@ -1260,16 +1276,16 @@ $ pg_ctl restart
   <dd>当該レポート項目を表示するには「log_checkpoints」を「on」に設定してください。</dd>
   
   <dt>Long Transactions</dt>
-  <dd>レポート対象となる該当が存在しない可能性があります。</dd>
+  <dd>レポート対象となる情報がスナップショットに存在しない可能性があります。</dd>
   
   <dt>Notable Tables</dt>
-  <dd>レポート対象となる該当が存在しない可能性があります。</dd>
+  <dd>レポート対象となる情報がスナップショットに存在しない可能性があります。</dd>
   
-  <dt>Lock Activity</dt>
-  <dd>レポート対象となる該当が存在しない可能性があります。</dd>
+  <dt>Lock Conflicts</dt>
+  <dd>レポート対象となる情報がスナップショットに存在しない可能性があります。</dd>
   
   <dt>Replication Activity</dt>
-  <dd>レポート対象となる該当が存在しない可能性があります。</dd>
+  <dd>レポート対象となる情報がスナップショットに存在しない可能性があります。</dd>
   
   <dt>Schema Information</dt>
   <dd>一部のデータベースのスキーマ情報が含まれてない場合は、該当のデータベースに接続できる設定になっているか <a href="http://www.postgresql.jp/document/current/html/client-authentication.html">クライアント認証</a> などを確認してください。</dd>
@@ -1300,7 +1316,7 @@ $ pg_ctl restart
 
 <h4>注意事項</h4>
 <ul>
-  <li>自動メンテナンスでスナップショット削除を行う場合は、いずれか1つの監視対象インスタンスにのみ設定してください。</li>
+  <li>複数の監視対象インスタンスで自動メンテナンスのスナップショット削除が設定されている場合、監視対象インスタンスの中で最も期間の短いスナップショット保持期間が有効となります。</li>
 </ul>
 
 <h3 id="warm-standby">ウォームスタンバイ</h3>
