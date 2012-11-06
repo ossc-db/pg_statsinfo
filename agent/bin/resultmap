@@ -1,0 +1,5 @@
+pg_statsinfo:out:.*=pg_statsinfo-el6.x86_64-pg92.out
+pg_statsinfo:out:.*=pg_statsinfo-el6.x86_64-pg91.out
+pg_statsinfo:out:.*=pg_statsinfo-el6.x86_64-pg90.out
+pg_statsinfo:out:.*=pg_statsinfo-el6.x86_64-pg84.out
+pg_statsinfo:out:.*=pg_statsinfo-el6.x86_64-pg83.out

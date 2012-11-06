@@ -20,8 +20,8 @@ vacuumdb: vacuuming database "template1"
 /**--- データベース情報の収集 ---**/
  snapid | database | dbid | size | age | xact_commit | xact_rollback | blks_read | blks_hit | tup_returned | tup_fetched | tup_inserted | tup_updated | tup_deleted | confl_tablespace | confl_lock | confl_snapshot | confl_bufferpin | confl_deadlock | temp_files | temp_bytes | deadlocks | blk_read_time | blk_write_time 
 --------+----------+------+------+-----+-------------+---------------+-----------+----------+--------------+-------------+--------------+-------------+-------------+------------------+------------+----------------+-----------------+----------------+------------+------------+-----------+---------------+----------------
-      1 | db01     | xxx  | xxx  | xxx | xxx         | xxx           | xxx       | xxx      | xxx          | xxx         | xxx          | xxx         | xxx         | xxx              | xxx        | xxx            | xxx             | xxx            | xxx        | xxx        | xxx       | xxx           | xxx
-      1 | postgres | xxx  | xxx  | xxx | xxx         | xxx           | xxx       | xxx      | xxx          | xxx         | xxx          | xxx         | xxx         | xxx              | xxx        | xxx            | xxx             | xxx            | xxx        | xxx        | xxx       | xxx           | xxx
+      1 | db01     | xxx  | xxx  | xxx | xxx         | xxx           | xxx       | xxx      | xxx          | xxx         | xxx          | xxx         | xxx         | (N/A)            | (N/A)      | (N/A)          | (N/A)           | (N/A)          | (N/A)      | (N/A)      | (N/A)     | (N/A)         | (N/A)
+      1 | postgres | xxx  | xxx  | xxx | xxx         | xxx           | xxx       | xxx      | xxx          | xxx         | xxx          | xxx         | xxx         | (N/A)            | (N/A)      | (N/A)          | (N/A)           | (N/A)          | (N/A)      | (N/A)      | (N/A)     | (N/A)         | (N/A)
 (2 rows)
 
 /**--- スキーマ情報の収集 ---**/
@@ -69,10 +69,9 @@ vacuumdb: vacuuming database "template1"
 (1 row)
 
 /**--- ユーザ定義関数情報の収集 ---**/
- snapid | database |  schema  | funcname | funcid | argtypes | calls | total_time | self_time 
---------+----------+----------+----------+--------+----------+-------+------------+-----------
-      1 | db01     | schema01 | func01   | xxx    | xxx      | xxx   | xxx        | xxx
-(1 row)
+ snapid | database | schema | funcname | funcid | argtypes | calls | total_time | self_time 
+--------+----------+--------+----------+--------+----------+-------+------------+-----------
+(0 rows)
 
 /**--- CPU情報の収集 ---**/
  snapid | cpu_id | cpu_user | cpu_system | cpu_idle | cpu_iowait | overflow_user | overflow_system | overflow_idle | overflow_iowait 
@@ -154,10 +153,10 @@ DROP TABLE
 (0 rows)
 
 /***-- ロック競合が発生している状態 --***/
- snapid | datname | nspname | relname | blocker_appname | blocker_addr | blocker_hostname | blocker_port | blockee_pid | blocker_pid | blocker_gid | duration |                       blockee_query                       |                    blocker_query                    
---------+---------+---------+---------+-----------------+--------------+------------------+--------------+-------------+-------------+-------------+----------+-----------------------------------------------------------+-----------------------------------------------------
-      6 | db01    |         |         | xxx             |              |                  | xxx          | xxx         | xxx         |             | xxx      | LOCK TABLE schema01.tbl01 IN ACCESS SHARE MODE;           | LOCK TABLE schema01.tbl01 IN ACCESS EXCLUSIVE MODE;
-      6 | db01    |         |         | xxx             |              |                  | xxx          | xxx         | xxx         |             | xxx      | LOCK TABLE schema01.tbl01 IN SHARE UPDATE EXCLUSIVE MODE; | LOCK TABLE schema01.tbl01 IN ACCESS EXCLUSIVE MODE;
+ snapid | datname | nspname | relname | blocker_appname | blocker_addr | blocker_hostname | blocker_port | blockee_pid | blocker_pid | blocker_gid | duration |                       blockee_query                       | blocker_query 
+--------+---------+---------+---------+-----------------+--------------+------------------+--------------+-------------+-------------+-------------+----------+-----------------------------------------------------------+---------------
+      6 | db01    |         |         |                 |              |                  | xxx          | xxx         | xxx         |             | xxx      | LOCK TABLE schema01.tbl01 IN ACCESS SHARE MODE;           | 
+      6 | db01    |         |         |                 |              |                  | xxx          | xxx         | xxx         |             | xxx      | LOCK TABLE schema01.tbl01 IN SHARE UPDATE EXCLUSIVE MODE; | 
 (2 rows)
 
 /**--- WAL情報の収集 ---**/
@@ -179,40 +178,7 @@ DROP TABLE
 --------+------+--------+-------+-------+------------+------+-----------------+------------------+---------------------+---------------------+----------------+-----------------+--------------------+--------------------+----------------+-------------------+---------------+----------------
 (0 rows)
 
-/***-- pg_stat_statementsがインストールされている --***/
-CREATE EXTENSION
- snapid | database |  role  |             query             | calls | total_time | rows | shared_blks_hit | shared_blks_read | shared_blks_dirtied | shared_blks_written | local_blks_hit | local_blks_read | local_blks_dirtied | local_blks_written | temp_blks_read | temp_blks_written | blk_read_time | blk_write_time 
---------+----------+--------+-------------------------------+-------+------------+------+-----------------+------------------+---------------------+---------------------+----------------+-----------------+--------------------+--------------------+----------------+-------------------+---------------+----------------
-      7 | db01     | user01 | SELECT schema01.func01(?, ?); |     2 | xxx        | xxx  | xxx             | xxx              | xxx                 | xxx                 | xxx            | xxx             | xxx                | xxx                | xxx            | xxx               | xxx           | xxx
-(1 row)
-
 \! sh ./sql/function-snapshot2.sh
-/*---- 監視対象インスタンス初期化 (レプリケーション構成) ----*/
-NOTICE:  pg_stop_backup complete, all required WAL segments have been archived
-/**--- 監視対象インスタンスがレプリケーション構成のマスタ ---**/
-/***-- WAL情報の収集 --***/
- snapid | location | xlogfile 
---------+----------+----------
-      8 | xxx      | xxx
-(1 row)
-
-/***-- レプリケーション情報の収集 --***/
- snapid | procpid | usesysid | usename  | application_name | client_addr | client_hostname | client_port | backend_start |   state   | current_location | sent_location | write_location | flush_location | replay_location | sync_priority | sync_state 
---------+---------+----------+----------+------------------+-------------+-----------------+-------------+---------------+-----------+------------------+---------------+----------------+----------------+-----------------+---------------+------------
-      8 | xxx     | xxx      | postgres | xxx              | xxx         | xxx             | xxx         | xxx           | streaming | xxx              | xxx           | xxx            | xxx            | xxx             |             0 | async
-(1 row)
-
-/**--- 監視対象インスタンスがレプリケーション構成のスタンバイ ---**/
-/***-- WAL情報の収集 --***/
- snapid | location | xlogfile 
---------+----------+----------
-(0 rows)
-
-/***-- レプリケーション情報の収集 --***/
- snapid | procpid | usesysid | usename | application_name | client_addr | client_hostname | client_port | backend_start | state | current_location | sent_location | write_location | flush_location | replay_location | sync_priority | sync_state 
---------+---------+----------+---------+------------------+-------------+-----------------+-------------+---------------+-------+------------------+---------------+----------------+----------------+-----------------+---------------+------------
-(0 rows)
-
 \! sh ./sql/function-logger.sh
 /*---- 監視対象インスタンス初期化 ----*/
 CREATE TABLE
@@ -240,30 +206,30 @@ P0001 ERROR:  textlog routing test (error)
 P0001 STATEMENT:  SELECT statsinfo.elog('ALL', 'textlog routing test (error)')
 /**--- ログレベル制御 (adjust_log_level = off) ---**/
 server signaled
-42P01 ERROR:  relation "xxx" does not exist at character 15
+42P01 ERROR:  relation "xxx" does not exist
 42P01 STATEMENT:  SELECT * FROM xxx
 /**--- ログレベル制御 (adjust_log_info = '42P01') ---**/
 server signaled
-42P01 INFO:  relation "xxx" does not exist at character 15
+42P01 INFO:  relation "xxx" does not exist
 42P01 STATEMENT:  SELECT * FROM xxx
 /**--- ログレベル制御 (adjust_log_notice = '42P01') ---**/
 server signaled
-42P01 NOTICE:  relation "xxx" does not exist at character 15
+42P01 NOTICE:  relation "xxx" does not exist
 42P01 STATEMENT:  SELECT * FROM xxx
 /**--- ログレベル制御 (adjust_log_warning = '42P01') ---**/
 server signaled
-42P01 WARNING:  relation "xxx" does not exist at character 15
+42P01 WARNING:  relation "xxx" does not exist
 42P01 STATEMENT:  SELECT * FROM xxx
 /**--- ログレベル制御 (adjust_log_error = '00000') ---**/
 server signaled
 00000 ERROR:  statement: SELECT 1
 /**--- ログレベル制御 (adjust_log_log = '42P01') ---**/
 server signaled
-42P01 LOG:  relation "xxx" does not exist at character 15
+42P01 LOG:  relation "xxx" does not exist
 42P01 STATEMENT:  SELECT * FROM xxx
 /**--- ログレベル制御 (adjust_log_fatal = '42P01') ---**/
 server signaled
-42P01 FATAL:  relation "xxx" does not exist at character 15
+42P01 FATAL:  relation "xxx" does not exist
 42P01 STATEMENT:  SELECT * FROM xxx
 /**--- テキストログのフィルタリング設定 (textlog_nologging_users = 'user01') ---**/
 server signaled
@@ -276,9 +242,9 @@ CHECKPOINT
 INSERT 0 1
  instid |        flags         | start | num_buffers | xlog_added | xlog_removed | xlog_recycled | write_duration | sync_duration | total_duration 
 --------+----------------------+-------+-------------+------------+--------------+---------------+----------------+---------------+----------------
-      4 | immediate force wait | xxx   | xxx         | xxx        | xxx          | xxx           | xxx            | xxx           | xxx
-      4 | time                 | xxx   | xxx         | xxx        | xxx          | xxx           | xxx            | xxx           | xxx
-      4 | xlog                 | xxx   | xxx         | xxx        | xxx          | xxx           | xxx            | xxx           | xxx
+      2 | immediate force wait | xxx   | xxx         | xxx        | xxx          | xxx           | xxx            | xxx           | xxx
+      2 | time                 | xxx   | xxx         | xxx        | xxx          | xxx           | xxx            | xxx           | xxx
+      2 | xlog                 | xxx   | xxx         | xxx        | xxx          | xxx           | xxx            | xxx           | xxx
 (3 rows)
 
 /**--- AUTOANALYZE情報の収集 ---**/
@@ -287,45 +253,36 @@ INSERT 0 10000
 DELETE 4001
  instid | database | schema | table | start | duration 
 --------+----------+--------+-------+-------+----------
-      4 | postgres | public | tbl01 | xxx   | xxx
+      2 | postgres | public | tbl01 | xxx   | xxx
 (1 row)
 
 /**--- AUTOVACUUM情報の収集 ---**/
  instid | database | schema | table | start | index_scans | page_removed | page_remain | tup_removed | tup_remain | page_hit | page_miss | page_dirty | read_rate | write_rate | duration 
 --------+----------+--------+-------+-------+-------------+--------------+-------------+-------------+------------+----------+-----------+------------+-----------+------------+----------
-      4 | postgres | public | tbl01 | xxx   | xxx         | xxx          | xxx         | xxx         | xxx        | xxx      | xxx       | xxx        | xxx       | xxx        | xxx
+      2 | postgres | public | tbl01 | xxx   | xxx         | xxx          | xxx         | xxx         | xxx        | (N/A)    | (N/A)     | (N/A)      | (N/A)     | (N/A)      | xxx
 (1 row)
 
 \! sh ./sql/function-alert.sh
 /*---- 監視対象インスタンス初期化 ----*/
-CREATE EXTENSION
 /*---- アラート機能 ----*/
 /**--- 秒間ロールバック数の判定 ---**/
-UPDATE 5
+UPDATE 3
 BEGIN
 CREATE TABLE
 ROLLBACK
 ANALYZE
 ALERT:  pg_statsinfo: too many rollbacks in snapshots between 'xxx' and 'xxx' --- xxx Rollbacks/sec
-UPDATE 5
+UPDATE 3
 /**--- 秒間コミット数の判定 ---**/
-UPDATE 5
+UPDATE 3
 BEGIN
 CREATE TABLE
 COMMIT
 ANALYZE
 ALERT:  pg_statsinfo: too many transactions in snapshots between 'xxx' and 'xxx' --- xxx Transactions/sec
-UPDATE 5
-/**--- クエリの平均レスポンス時間の判定 ---**/
-UPDATE 5
-ALERT:  pg_statsinfo: Query average response exceeds threshold in snapshots between 'xxx' and 'xxx' --- xxx sec
-UPDATE 5
-/**--- クエリの最長レスポンス時間の判定 ---**/
-UPDATE 5
-ALERT:  pg_statsinfo: Query worst response exceeds threshold in snapshots between 'xxx' and 'xxx' --- xxx sec
-UPDATE 5
+UPDATE 3
 /**--- 不要領域のサイズ／割合の判定 ---**/
-UPDATE 5
+UPDATE 3
 CREATE TABLE
 CREATE TABLE
 INSERT 0 500000
@@ -336,7 +293,7 @@ ANALYZE
 ALERT:  pg_statsinfo: dead tuple size exceeds threashold in snapshots between 'xxx' and 'xxx' --- xxx MiB
 ALERT:  pg_statsinfo: dead tuple ratio exceeds threashold in snapshots between 'xxx' and 'xxx' --- xxx %
 ALERT:  pg_statsinfo: dead tuple ratio in postgres.public.tbl02 exceeds threashold in snapshots between 'xxx' and 'xxx' --- xxx %
-UPDATE 5
+UPDATE 3
 \! sh ./sql/function-maintenance.sh
 /*---- リポジトリDB初期化 ----*/
 /*---- 監視対象インスタンス初期化 ----*/

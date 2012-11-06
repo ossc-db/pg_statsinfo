@@ -1,4 +1,7 @@
-\! sh ./sql/init.sh
-\! sh ./sql/test_function_v2.1.sh
-\! sh ./sql/test_function_v2.2.sh
-\! sh ./sql/clean.sh
+\! sh ./sql/setup.sh
+\! sh ./sql/function-snapshot1.sh
+\! sh ./sql/function-snapshot2.sh
+\! sh ./sql/function-logger.sh
+\! sh ./sql/function-alert.sh
+\! sh ./sql/function-maintenance.sh
+\! sh ./sql/cleanup.sh
