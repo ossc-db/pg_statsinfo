@@ -1,4 +1,4 @@
-\! sh ./sql/init.sh
-\! sh ./sql/test_functionality.sh
-\! sh ./sql/test_reliability.sh
-\! sh ./sql/clean.sh
+\! sh ./sql/setup.sh
+\! sh ./sql/function-report1.sh
+\! sh ./sql/function-report2.sh
+\! sh ./sql/cleanup.sh
