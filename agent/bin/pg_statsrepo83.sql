@@ -484,7 +484,7 @@ LANGUAGE sql IMMUTABLE;
 
 -- tps() - transaction per seconds
 CREATE FUNCTION statsrepo.tps(numeric, interval) RETURNS numeric AS
-'SELECT ($1 / extract(epoch FROM $2))::numeric(1000, 3)'
+'SELECT (CASE WHEN extract(epoch FROM $2) > 0 THEN $1 / extract(epoch FROM $2) ELSE 0 END)::numeric(1000, 3)'
 LANGUAGE sql IMMUTABLE STRICT;
 
 -- div() - NULL-safe operator /
@@ -1043,15 +1043,16 @@ $$
 	SELECT
 		snapid,
 		name,
-		"commit/s"::numeric(1000, 3),
-		"rollback/s"::numeric(1000, 3)
+		coalesce(statsrepo.tps(xact_commit, duration), 0)::numeric(1000,3),
+		coalesce(statsrepo.tps(xact_rollback, duration), 0)::numeric(1000,3)
 	FROM
 	(
 		SELECT
 			de.snapid,
 			de.name,
-			coalesce((de.xact_commit - ds.xact_commit) / extract(epoch FROM de.time - ds.time), 0) AS "commit/s",
-			coalesce((de.xact_rollback - de.xact_rollback) / extract(epoch FROM de.time - ds.time), 0) AS "rollback/s"
+			de.xact_commit - ds.xact_commit AS xact_commit,
+			de.xact_rollback - de.xact_rollback AS xact_rollback,
+			de.time - ds.time AS duration
 		FROM
 			(SELECT
 				d.snapid,
@@ -1065,8 +1066,8 @@ $$
 			 	statsrepo.database d,
 				statsrepo.snapshot s
 			 WHERE
-			 	d.snapid BETWEEN $1 AND $2
-				AND d.snapid = s.snapid
+			 	d.snapid = s.snapid
+			 	AND d.snapid BETWEEN $1 AND $2
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 			 GROUP BY
 			 	d.snapid, d.name, s.time, s.instid) AS de,
@@ -1082,8 +1083,8 @@ $$
 			 	statsrepo.database d,
 				statsrepo.snapshot s
 			 WHERE
-			 	d.snapid BETWEEN $1 AND $2
-				AND d.snapid = s.snapid
+			 	d.snapid = s.snapid
+			 	AND d.snapid BETWEEN $1 AND $2
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 			 GROUP BY
 			 	d.snapid, d.name, s.time, s.instid) AS ds
@@ -1112,16 +1113,17 @@ $$
 	SELECT
 		to_char(time, 'YYYY-MM-DD HH24:MI'),
 		name,
-		"commit/s"::numeric(1000, 3),
-		"rollback/s"::numeric(1000, 3)
+		coalesce(statsrepo.tps(xact_commit, duration), 0)::numeric(1000,3),
+		coalesce(statsrepo.tps(xact_rollback, duration), 0)::numeric(1000,3)
 	FROM
 	(
 		SELECT
 			de.snapid,
 			de.time,
 			de.name,
-			coalesce((de.xact_commit - ds.xact_commit) / extract(epoch FROM de.time - ds.time), 0) AS "commit/s",
-			coalesce((de.xact_rollback - de.xact_rollback) / extract(epoch FROM de.time - ds.time), 0) AS "rollback/s"
+			de.xact_commit - ds.xact_commit AS xact_commit,
+			de.xact_rollback - de.xact_rollback AS xact_rollback,
+			de.time - ds.time AS duration
 		FROM
 			(SELECT
 				d.snapid,
@@ -1135,8 +1137,8 @@ $$
 			 	statsrepo.database d,
 				statsrepo.snapshot s
 			 WHERE
-			 	d.snapid BETWEEN $1 AND $2
-				AND d.snapid = s.snapid
+			 	d.snapid = s.snapid
+			 	AND d.snapid BETWEEN $1 AND $2
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 			 GROUP BY
 			 	d.snapid, d.name, s.time, s.instid) AS de,
@@ -1152,8 +1154,8 @@ $$
 			 	statsrepo.database d,
 				statsrepo.snapshot s
 			 WHERE
-			 	d.snapid BETWEEN $1 AND $2
-				AND d.snapid = s.snapid
+			 	d.snapid = s.snapid
+			 	AND d.snapid BETWEEN $1 AND $2
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 			 GROUP BY
 			 	d.snapid, d.name, s.time, s.instid) AS ds
@@ -1376,7 +1378,7 @@ $$
 		location,
 		xlogfile,
 		(write_size / 1024 / 1024)::numeric(1000, 3),
-		(statsrepo.div(write_size, duration) / 1024 / 1024)::numeric(1000, 3)
+		(statsrepo.tps(write_size, duration) / 1024 / 1024)::numeric(1000, 3)
 	FROM
 	(
 		SELECT
@@ -1385,7 +1387,7 @@ $$
 			xe.location,
 			xe.xlogfile,
 			statsrepo.xlog_location_diff(xe.location, xs.location) AS write_size,
-			extract(epoch FROM xe.time - xs.time)::numeric AS duration
+			xe.time - xs.time AS duration
 		FROM
 		 	(SELECT
 		 		s.snapid,
@@ -1751,28 +1753,25 @@ CREATE FUNCTION statsrepo.get_io_usage_tendency(
 $$
 	SELECT
 		snapid,
-		dev_name,
-		read_size_tps,
-		write_size_tps,
-		read_time_tps,
-		write_time_tps
+		device_name,
+		coalesce(statsrepo.tps(read_size, duration) / 2, 0)::numeric(1000,2),
+		coalesce(statsrepo.tps(write_size, duration) / 2, 0)::numeric(1000,2),
+		coalesce(statsrepo.tps(read_time, duration), 0)::numeric(1000,2),
+		coalesce(statsrepo.tps(write_time, duration), 0)::numeric(1000,2)
 	FROM
 	(
 		SELECT
 			de.snapid,
-			de.dev_name,
-			coalesce((de.rs - ds.rs) / 2 /
-				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS read_size_tps,
-			coalesce((de.ws - ds.ws) / 2 /
-				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS write_size_tps,
-			coalesce((de.rt - ds.rt) /
-				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS read_time_tps,
-			coalesce((de.wt - ds.wt) /
-				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS write_time_tps
+			de.device_name,
+			de.rs - ds.rs AS read_size,
+			de.ws - ds.ws AS write_size,
+			de.rt - ds.rt AS read_time,
+			de.wt - ds.wt AS write_time,
+			de.time - ds.time AS duration
 		FROM
 			(SELECT
 				d.snapid,
-				d.device_name as dev_name,
+				d.device_name,
 				sum(d.device_readsector) + (sum(d.overflow_drs) * 4294967296) AS rs,
 				sum(d.device_writesector) + (sum(d.overflow_dws) * 4294967296) AS ws,
 				sum(d.device_readtime) + (sum(d.overflow_drt) * 4294967296) AS rt,
@@ -1791,7 +1790,7 @@ $$
 				d.snapid, d.device_name, s.time, s.instid) AS de,
 			(SELECT
 				d.snapid,
-				d.device_name as dev_name,
+				d.device_name,
 				sum(d.device_readsector) AS rs,
 				sum(d.device_writesector) AS ws,
 				sum(d.device_readtime) AS rt,
@@ -1810,9 +1809,9 @@ $$
 				d.snapid, d.device_name, s.time, s.instid) AS ds
 		WHERE
 			ds.snapid = de.prev_snapid
-			AND ds.dev_name = de.dev_name
+			AND ds.device_name = de.device_name
 		ORDER BY
-			de.snapid, de.dev_name
+			de.snapid, de.device_name
 	) t
 	WHERE
 		snapid > $1;
@@ -1833,29 +1832,26 @@ CREATE FUNCTION statsrepo.get_io_usage_tendency_report(
 $$
 	SELECT
 		to_char(time, 'YYYY-MM-DD HH24:MI'),
-		dev_name,
-		read_size_tps,
-		write_size_tps,
-		read_time_tps,
-		write_time_tps
+		device_name,
+		coalesce(statsrepo.tps(read_size, duration) / 2, 0)::numeric(1000,2),
+		coalesce(statsrepo.tps(write_size, duration) / 2, 0)::numeric(1000,2),
+		coalesce(statsrepo.tps(read_time, duration), 0)::numeric(1000,2),
+		coalesce(statsrepo.tps(write_time, duration), 0)::numeric(1000,2)
 	FROM
 	(
 		SELECT
 			de.snapid,
 			de.time,
-			de.dev_name,
-			coalesce((de.rs - ds.rs) / 2 /
-				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS read_size_tps,
-			coalesce((de.ws - ds.ws) / 2 /
-				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS write_size_tps,
-			coalesce((de.rt - ds.rt) /
-				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS read_time_tps,
-			coalesce((de.wt - ds.wt) /
-				extract(epoch FROM de.time - ds.time), 0)::numeric(1000,2) AS write_time_tps
+			de.device_name,
+			de.rs - ds.rs AS read_size,
+			de.ws - ds.ws AS write_size,
+			de.rt - ds.rt AS read_time,
+			de.wt - ds.wt AS write_time,
+			de.time - ds.time AS duration
 		FROM
 			(SELECT
 				d.snapid,
-				d.device_name as dev_name,
+				d.device_name,
 				sum(d.device_readsector) + (sum(d.overflow_drs) * 4294967296) AS rs,
 				sum(d.device_writesector) + (sum(d.overflow_dws) * 4294967296) AS ws,
 				sum(d.device_readtime) + (sum(d.overflow_drt) * 4294967296) AS rt,
@@ -1874,7 +1870,7 @@ $$
 				d.snapid, d.device_name, s.time, s.instid) AS de,
 			(SELECT
 				d.snapid,
-				d.device_name as dev_name,
+				d.device_name,
 				sum(d.device_readsector) AS rs,
 				sum(d.device_writesector) AS ws,
 				sum(d.device_readtime) AS rt,
@@ -1893,9 +1889,9 @@ $$
 				d.snapid, d.device_name, s.time, s.instid) AS ds
 		WHERE
 			ds.snapid = de.prev_snapid
-			AND ds.dev_name = de.dev_name
+			AND ds.device_name = de.device_name
 		ORDER BY
-			de.snapid, de.dev_name
+			de.snapid, de.device_name
 	) t
 	WHERE
 		snapid > $1;
