@@ -1,9 +1,9 @@
 \! sh ./sql/setup.sh
-/*---- リポジトリDB初期化 ----*/
+/*---- Initialize repository DB ----*/
 \! sh ./sql/function-report1.sh
-/*---- リポジトリDBへのデータ登録 ----*/
-/*---- レポート作成モード ----*/
-/**--- レポート種別: Summary ---**/
+/*---- Input the repository data ----*/
+/*---- Create report ----*/
+/**--- REPORTID: Summary ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -96,7 +96,7 @@ Total Rollbacks      : 0
 
 exit: 0
 
-/**--- レポート種別: DatabaseStatistics ---**/
+/**--- REPORTID: DatabaseStatistics ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -321,7 +321,7 @@ postgres                            1              2                  3         
 
 exit: 0
 
-/**--- レポート種別: InstanceActivity ---**/
+/**--- REPORTID: InstanceActivity ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -504,7 +504,7 @@ DateTime                  Idle  Idle In Xact       Waiting       Running
 
 exit: 0
 
-/**--- レポート種別: OSResourceUsage ---**/
+/**--- REPORTID: OSResourceUsage ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -772,7 +772,7 @@ DateTime               Memfree       Buffers        Cached          Swap        
 
 exit: 0
 
-/**--- レポート種別: DiskUsage ---**/
+/**--- REPORTID: DiskUsage ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -895,7 +895,7 @@ postgres          public            pgbench_tellers          0 MiB             0
 
 exit: 0
 
-/**--- レポート種別: LongTransactions ---**/
+/**--- REPORTID: LongTransactions ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -968,7 +968,7 @@ PID       Client Address          When To Start    Duration  Query
 
 exit: 0
 
-/**--- レポート種別: NotableTables ---**/
+/**--- REPORTID: NotableTables ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -1156,7 +1156,7 @@ postgres          public            pgbench_accounts  aid                      0
 
 exit: 0
 
-/**--- レポート種別: CheckpointActivity ---**/
+/**--- REPORTID: CheckpointActivity ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -1234,7 +1234,7 @@ Write Duration Maximum   : 49.193 sec
 
 exit: 0
 
-/**--- レポート種別: AutovacuumActivity ---**/
+/**--- REPORTID: AutovacuumActivity ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -1319,7 +1319,7 @@ postgres.public.pgbench_tellers       35.500       0.000       0.500    0.000 Mi
 
 exit: 0
 
-/**--- レポート種別: QueryActivity ---**/
+/**--- REPORTID: QueryActivity ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -1432,7 +1432,7 @@ postgres          postgres             66463       5.554 sec      0.000 sec     
 
 exit: 0
 
-/**--- レポート種別: LockConflicts ---**/
+/**--- REPORTID: LockConflicts ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -1525,7 +1525,7 @@ UPDATE pgbench_accounts SET abalance = abalance + -1975 WHERE aid = 65162;SELECT
 
 exit: 0
 
-/**--- レポート種別: ReplicationActivity ---**/
+/**--- REPORTID: ReplicationActivity ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -1638,7 +1638,7 @@ Sync State            : async
 
 exit: 0
 
-/**--- レポート種別: SettingParameters ---**/
+/**--- REPORTID: SettingParameters ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -1696,7 +1696,7 @@ log_checkpoints                   on                                configuratio
 
 exit: 0
 
-/**--- レポート種別: SchemaInformation ---**/
+/**--- REPORTID: SchemaInformation ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -1824,7 +1824,7 @@ postgres          public            pgbench_tellers_pkey  pgbench_tellers       
 
 exit: 0
 
-/**--- レポート種別: Profiles ---**/
+/**--- REPORTID: Profiles ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -1877,7 +1877,7 @@ Processing                        Executes
 
 exit: 0
 
-/**--- レポート種別: All ---**/
+/**--- REPORTID: All ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -3429,7 +3429,7 @@ Processing                        Executes
 
 exit: 0
 
-/**--- インスタンス指定 (存在するインスタンスIDを指定) ---**/
+/**--- Specify the INSTANCEID that exists in data ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -3450,10 +3450,10 @@ Total Rollbacks      : 0
 
 exit: 0
 
-/**--- インスタンス指定 (存在しないインスタンスIDを指定) ---**/
+/**--- Specify the INSTANCEID that not exists in data ---**/
 exit: 0
 
-/**--- レポート範囲指定 (-e=2) ---**/
+/**--- Specify the report scope (-e=2) ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -3474,7 +3474,7 @@ Total Rollbacks      : 0
 
 exit: 0
 
-/**--- レポート範囲指定 (-b=2, -e=3) ---**/
+/**--- Specify the report scope (-b=2, -e=3) ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -3495,7 +3495,7 @@ Total Rollbacks      : 0
 
 exit: 0
 
-/**--- レポート範囲指定 (-b=3) ---**/
+/**--- Specify the report scope (-b=3) ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -3516,7 +3516,7 @@ Total Rollbacks      : 0
 
 exit: 0
 
-/**--- レポート範囲指定 (-E=<snapid=2>) ---**/
+/**--- Specify the report scope (-E=<snapid=2>) ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -3537,7 +3537,7 @@ Total Rollbacks      : 0
 
 exit: 0
 
-/**--- レポート範囲指定 (-B=<snapid=2>, -E=<snapid=3>) ---**/
+/**--- Specify the report scope (-B=<snapid=2>, -E=<snapid=3>) ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -3558,7 +3558,7 @@ Total Rollbacks      : 0
 
 exit: 0
 
-/**--- レポート範囲指定 (-B=<snapid=3>) ---**/
+/**--- Specify the report scope (-B=<snapid=3>) ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
 ---------------------------------------------
@@ -3579,7 +3579,7 @@ Total Rollbacks      : 0
 
 exit: 0
 
-/**--- ファイル出力指定 ---**/
+/**--- Output the report to a file ---**/
 exit: 0
 
 ---------------------------------------------
@@ -3600,7 +3600,7 @@ Total Database Size  : 26 MiB
 Total Commits        : 66970
 Total Rollbacks      : 0
 
-/**--- ファイル出力指定 (既存ファイル上書き) ---**/
+/**--- Output the report to a file (overwrite) ---**/
 exit: 0
 
 ---------------------------------------------
@@ -3621,8 +3621,8 @@ Total Database Size  : 26 MiB
 Total Commits        : 66970
 Total Rollbacks      : 0
 
-/**--- 準正常系 ---**/
-/***-- スナップショット取得日時が同一のものが含まれる --***/
+/**--- Quasi-normal pattern ---**/
+/***-- Contain the snapshot that is same acquisition date --***/
 UPDATE 4
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
@@ -3943,10 +3943,10 @@ Processing                        Executes
 exit: 0
 
 \! sh ./sql/function-report2.sh
-/*---- リポジトリスキーマ初期化 ----*/
-/*---- 監視対象インスタンス初期化 ----*/
-/*---- スナップショット一覧／サイズ表示モード ----*/
-/**--- スナップショット件数 (0件) ---**/
+/*---- Initialize repository schema ----*/
+/*---- Initialize monitored instance ----*/
+/*---- Show snapshot list / Show snapshot size ----*/
+/**--- Number of snapshots (0) ---**/
 ----------------------------------------
 Snapshot List
 ----------------------------------------
@@ -3961,7 +3961,7 @@ Total Snapshot Size  : 0 bytes
 
 exit: 0
 
-/**--- スナップショット件数 (1件) ---**/
+/**--- Number of snapshots (1) ---**/
 ----------------------------------------
 Snapshot List
 ----------------------------------------
@@ -3986,7 +3986,7 @@ Total Snapshot Size  : 256 KiB
 
 exit: 0
 
-/**--- スナップショット件数 (2件) ---**/
+/**--- Number of snapshots (2) ---**/
 ----------------------------------------
 Snapshot List
 ----------------------------------------
@@ -4012,7 +4012,7 @@ Total Snapshot Size  : 768 KiB
 
 exit: 0
 
-/**--- インスタンスIDを指定 (スナップショット一覧表示モード) ---**/
+/**--- Specify the INSTANCEID that exists in data (list) ---**/
 ----------------------------------------
 Snapshot List
 ----------------------------------------
@@ -4021,7 +4021,7 @@ SnapshotID  InstanceID  Host                                  Port             T
          3           2  statsinfo                             5433   2012-11-01 00:03:00  3rd                       00:00:01   256 KiB
 exit: 0
 
-/**--- 存在しないインスタンスIDを指定 (スナップショット一覧表示モード) ---**/
+/**--- Specify the INSTANCEID that not exists in data (list) ---**/
 ----------------------------------------
 Snapshot List
 ----------------------------------------
@@ -4029,7 +4029,7 @@ SnapshotID  InstanceID  Host                                  Port             T
 -----------------------------------------------------------------------------------------------------------------------------------------
 exit: 0
 
-/**--- 複数のインスタンスが存在する (スナップショットサイズ表示モード) ---**/
+/**--- There are multiple instances data (list) ---**/
 ----------------------------------------
 Snapshot Size Information
 ----------------------------------------
@@ -4055,24 +4055,24 @@ Total Snapshot Size  : 1024 KiB
 
 exit: 0
 
-/*---- スナップショット取得モード ----*/
-/**--- コメントにASCII文字を指定 ---**/
+/*---- Get a snapshot ----*/
+/**--- Specify the ASCII character as a comment of the snapshot ---**/
 exit: 0
 
-/**--- コメントにマルチバイト文字を指定 ---**/
+/**--- Specify the UTF-8 character as a comment of the snapshot ---**/
 exit: 0
 
-/**--- コメントに半角空白を指定 ---**/
+/**--- Specify the blank character as a comment of the snapshot ---**/
 exit: 0
 
-/**--- コメントに空文字列を指定 ---**/
+/**--- Specify the empty character as a comment of the snapshot ---**/
 exit: 0
 
-/*---- スナップショット削除モード ----*/
-/**--- 存在するスナップショットIDを指定 ---**/
+/*---- Delete a snapshot ----*/
+/**--- Specify the INSTANCEID that exists in data ---**/
 exit: 0
 
-/**--- 存在しないスナップショットIDを指定 ---**/
+/**--- Specify the INSTANCEID that not exists in data ---**/
 exit: 0
 
  snapid | instid |          comment           
@@ -4085,8 +4085,8 @@ exit: 0
       7 |      3 | ""
 (6 rows)
 
-/**--- 準正常系 ---**/
-/***-- スナップショット取得日時が同一のものが含まれる --***/
+/**--- Quasi-normal pattern ---**/
+/***-- Contain the snapshot that is same acquisition date --***/
 ----------------------------------------
 Snapshot List
 ----------------------------------------

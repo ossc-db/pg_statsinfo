@@ -18,7 +18,7 @@ PGPORT_SBY=5442
 PGUSER_SBY=postgres
 PGCONFIG_SBY=${CONFIG_DIR}/postgresql-replication-sby.conf
 
-echo "/*---- 監視対象インスタンス初期化 (レプリケーション構成) ----*/"
+echo "/*---- Initialize monitored instance (replication configuration) ----*/"
 setup_dbcluster ${PGDATA_ACT} ${PGUSER_ACT} ${PGPORT_ACT} ${PGCONFIG_ACT} ${ARCHIVE_DIR} "" ${HBACONF_REPLICATION}
 sleep 3
 psql -p ${PGPORT_ACT} -U ${PGUSER_ACT} -c "SELECT pg_start_backup('', true)" > /dev/null
@@ -35,10 +35,8 @@ EOF
 pg_ctl start -w -D ${PGDATA_SBY} -o "-p ${PGPORT_SBY}" > /dev/null
 sleep 3
 
-echo "/**--- 監視対象インスタンスがレプリケーション構成のマスタ ---**/"
+echo "/***-- Statistics of WAL (MASTER) --***/"
 do_snapshot "" ${PGPORT_ACT} ${PGUSER_ACT}
-
-echo "/***-- WAL情報の収集 --***/"
 send_query << EOF
 SELECT
 	snapid,
@@ -50,7 +48,7 @@ WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
 EOF
 
-echo "/***-- レプリケーション情報の収集 --***/"
+echo "/***-- Statistics of replication (MASTER) --***/"
 send_query << EOF
 SELECT
 	snapid,
@@ -76,14 +74,11 @@ WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot)
 EOF
 
-
-echo "/**--- 監視対象インスタンスがレプリケーション構成のスタンバイ ---**/"
+echo "/***-- Statistics of WAL (STANDBY) --***/"
 do_snapshot "" ${PGPORT_SBY} ${PGUSER_SBY}
-
-echo "/***-- WAL情報の収集 --***/"
 send_query -c "SELECT * FROM statsrepo.xlog WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
 
-echo "/***-- レプリケーション情報の収集 --***/"
+echo "/***-- Statistics of replication (STANDBY) --***/"
 send_query -c "SELECT * FROM statsrepo.replication WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
 
 pg_ctl stop -D ${PGDATA_SBY} > /dev/null

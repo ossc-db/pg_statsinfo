@@ -7,7 +7,7 @@ PGCONFIG_ALERT=${CONFIG_DIR}/postgresql-alert.conf
 RELOAD_DELAY=3
 ANALYZE_DELAY=1
 WRITE_DELAY=1
-echo "/*---- 監視対象インスタンス初期化 ----*/"
+echo "/*---- Initialize monitored instance ----*/"
 setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG_ALERT} "" "" ""
 sleep 3
 if [ $(get_version) -ge 80400 ] ; then
@@ -21,8 +21,8 @@ if [ $(get_version) -ge 80400 ] ; then
 	fi
 fi
 
-echo "/*---- アラート機能 ----*/"
-echo "/**--- 秒間ロールバック数の判定 ---**/"
+echo "/*---- Alert Function ----*/"
+echo "/**--- Alert the number of rollbacks per second ---**/"
 do_snapshot
 send_query -c "UPDATE statsrepo.alert SET rollback_tps = 0"
 psql << EOF
@@ -39,7 +39,7 @@ sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g"
 sed "s/[0-9]\+\.[0-9]\+/xxx/"
 send_query -c "UPDATE statsrepo.alert SET rollback_tps = default"
 
-echo "/**--- 秒間コミット数の判定 ---**/"
+echo "/**--- Alert the number of commits per second ---**/"
 send_query -c "UPDATE statsrepo.alert SET commit_tps = 0"
 psql << EOF
 BEGIN;
@@ -56,7 +56,7 @@ sed "s/[0-9]\+\.[0-9]\+/xxx/"
 send_query -c "UPDATE statsrepo.alert SET commit_tps = default"
 
 if [ $(get_version) -ge 80400 ] ; then
-	echo "/**--- クエリの平均レスポンス時間の判定 ---**/"
+	echo "/**--- Alert the response time average of query ---**/"
 	send_query -c "UPDATE statsrepo.alert SET response_avg = 0"
 	psql -c "SELECT pg_sleep(1)" > /dev/null
 	do_snapshot
@@ -66,7 +66,7 @@ if [ $(get_version) -ge 80400 ] ; then
 	sed "s/[0-9]\+\.[0-9]\+/xxx/"
 	send_query -c "UPDATE statsrepo.alert SET response_avg = default"
 
-	echo "/**--- クエリの最長レスポンス時間の判定 ---**/"
+	echo "/**--- Alert the response time max of query ---**/"
 	send_query -c "UPDATE statsrepo.alert SET response_worst = 0"
 	psql -c "SELECT pg_sleep(1)" > /dev/null
 	do_snapshot
@@ -77,7 +77,7 @@ if [ $(get_version) -ge 80400 ] ; then
 	send_query -c "UPDATE statsrepo.alert SET response_worst = default"
 fi
 
-echo "/**--- 不要領域のサイズ／割合の判定 ---**/"
+echo "/**--- Alert the dead tuple size and ratio ---**/"
 send_query -c "UPDATE statsrepo.alert SET (garbage_size, garbage_percent, garbage_percent_table) = (0, 30, 60)"
 psql << EOF
 CREATE TABLE tbl02 (id bigint);

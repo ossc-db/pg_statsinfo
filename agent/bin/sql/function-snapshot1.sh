@@ -6,7 +6,7 @@
 PGCONFIG_SNAPHOT=${CONFIG_DIR}/postgresql-snapshot.conf
 ARCHIVE_DIR=${PGDATA}/archivelog
 
-echo "/*---- 監視対象インスタンス初期化 ----*/"
+echo "/*---- Initialize monitored instance ----*/"
 setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG_SNAPHOT} ${PGDATA}/archivelog ${PGDATA}/xlogdir ""
 sleep 3
 mkdir -p ${PGDATA}/tblspc01
@@ -28,10 +28,10 @@ EOF
 vacuumdb -a -z
 sleep 3
 
-echo "/*---- 統計情報取得機能(スナップショット取得) ----*/"
+echo "/*---- Statistics collection function ----*/"
 do_snapshot
 
-echo "/**--- データベース情報の収集 ---**/"
+echo "/**--- Statistics of database ---**/"
 if [ $(get_version) -ge 90200 ] ; then
 	send_query << EOF
 SELECT
@@ -136,7 +136,7 @@ ORDER BY
 EOF
 fi
 
-echo "/**--- スキーマ情報の収集 ---**/"
+echo "/**--- Statistics of schema ---**/"
 send_query << EOF
 SELECT
 	s.snapid,
@@ -154,7 +154,7 @@ ORDER BY
 	database, schema;
 EOF
 
-echo "/**--- テーブル情報の収集 ---**/"
+echo "/**--- Statistics of table ---**/"
 send_query << EOF
 SELECT
 	t.snapid,
@@ -211,7 +211,7 @@ ORDER BY
 	database, schema, "table";
 EOF
 
-echo "/**--- カラム情報の収集 ---**/"
+echo "/**--- Statistics of column ---**/"
 send_query << EOF
 SELECT
 	c.snapid,
@@ -243,7 +243,7 @@ ORDER BY
 	database, "table", c.attnum;
 EOF
 
-echo "/**--- インデックス情報の収集 ---**/"
+echo "/**--- Statistics of index ---**/"
 send_query << EOF
 SELECT
 	i.snapid,
@@ -286,7 +286,7 @@ ORDER BY
 	database, "table", index;
 EOF
 
-echo "/**--- 継承テーブル情報の収集 ---**/"
+echo "/**--- Statistics of inherits ---**/"
 send_query << EOF
 SELECT
 	i.snapid,
@@ -305,7 +305,7 @@ ORDER BY
 	database, "table";
 EOF
 
-echo "/**--- ユーザ定義関数情報の収集 ---**/"
+echo "/**--- Statistics of SQL function ---**/"
 send_query << EOF
 SELECT
 	f.snapid,
@@ -333,7 +333,7 @@ ORDER BY
 	database, schema, funcname;
 EOF
 
-echo "/**--- CPU情報の収集 ---**/"
+echo "/**--- OS resource usage (CPU) ---**/"
 send_query << EOF
 SELECT
 	snapid,
@@ -352,7 +352,7 @@ WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
 EOF
 
-echo "/**--- ロードアベレージ情報の収集 ---**/"
+echo "/**--- OS resource usage (loadavg) ---**/"
 send_query << EOF
 SELECT
 	snapid,
@@ -365,7 +365,7 @@ WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
 EOF
 
-echo "/**--- メモリ情報の収集 ---**/"
+echo "/**--- OS resource usage (memory) ---**/"
 send_query << EOF
 SELECT
 	snapid,
@@ -380,7 +380,7 @@ WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
 EOF
 
-echo "/**--- ディスクI/O情報の収集 ---**/"
+echo "/**--- OS resource usage (disk I/O) ---**/"
 send_query << EOF
 SELECT
 	snapid,
@@ -405,7 +405,7 @@ WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
 EOF
 
-echo "/**--- テーブルスペース情報の収集 ---**/"
+echo "/**--- Statistics of tablespace ---**/"
 send_query << EOF
 SELECT
 	snapid,
@@ -424,7 +424,7 @@ ORDER BY
 	tablespace;
 EOF
 
-echo "/**--- ロール情報の収集 ---**/"
+echo "/**--- Role information ---**/"
 send_query << EOF
 SELECT
 	snapid,
@@ -438,7 +438,7 @@ ORDER BY
 	role;
 EOF
 
-echo "/**--- データベース設定情報の収集 ---**/"
+echo "/**--- GUC setting ---**/"
 send_query << EOF
 SELECT
 	snapid,
@@ -454,8 +454,8 @@ ORDER BY
 	name;
 EOF
 
-echo "/**--- アクティビティ情報の収集 ---**/"
-echo "/***-- バックエンドの各種状態種別の判別可否 --***/"
+echo "/**--- Instance activity ---**/"
+echo "/***-- Verify that can determine the state type of bakend --***/"
 psql -Atc "CREATE TABLE xxx (col int)"
 psql -Atc "\! sleep 10" &
 psql -Atc "SELECT pg_sleep(10)" > /dev/null &
@@ -482,7 +482,7 @@ WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
 EOF
 
-echo "/***-- ロングトランザクション(1秒以上)が存在しない --***/"
+echo "/***-- There is no transaction of more than 1 second --***/"
 sleep 10
 do_snapshot
 send_query << EOF
@@ -499,7 +499,7 @@ WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
 EOF
 
-echo "/***-- ロングトランザクション(1秒以上)が存在する --***/"
+echo "/***-- There is a transaction of more than 1 second --***/"
 pid=$(psql -Atc "SELECT pg_backend_pid() FROM pg_sleep(10)")
 do_snapshot
 send_query << EOF
@@ -516,8 +516,8 @@ WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
 EOF
 
-echo "/**--- ロック競合情報の収集 ---**/"
-echo "/***-- ロック競合が発生していない状態 --***/"
+echo "/**--- Lock conflicts ---**/"
+echo "/***-- There is no lock conflicts --***/"
 do_snapshot
 send_query << EOF
 SELECT
@@ -543,7 +543,7 @@ ORDER BY
 	datname, nspname, relname;
 EOF
 
-echo "/***-- ロック競合が発生している状態 --***/"
+echo "/***-- There are lock conflicts --***/"
 psql db01 -Atq << EOF &
 BEGIN;
 LOCK TABLE schema01.tbl01 IN ACCESS EXCLUSIVE MODE;
@@ -662,8 +662,8 @@ ORDER BY
 EOF
 fi
 
-echo "/**--- WAL情報の収集 ---**/"
-echo "/***-- 監視対象インスタンスがスタンドアローン構成 --***/"
+echo "/**--- Statistics of WAL ---**/"
+echo "/***-- Monitored instance is a stand-alone configuration --***/"
 send_query << EOF
 SELECT
 	snapid,
@@ -675,16 +675,16 @@ WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
 EOF
 
-echo "/**--- レプリケーション情報の収集 ---**/"
-echo "/***-- 監視対象インスタンスがスタンドアローン構成 --***/"
+echo "/**--- Statistics of replication ---**/"
+echo "/***-- Monitored instance is a stand-alone configuration --***/"
 send_query -c "SELECT * FROM statsrepo.replication WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
 
-echo "/**--- クエリの統計情報の収集 ---**/"
-echo "/***-- pg_stat_statementsがインストールされていない --***/"
+echo "/**--- Statistics of query ---**/"
+echo "/***-- pg_stat_statements is not installed --***/"
 send_query -c "SELECT * FROM statsrepo.statement WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
 
 if [ $(get_version) -ge 80400 ] ; then
-	echo "/***-- pg_stat_statementsがインストールされている --***/"
+	echo "/***-- pg_stat_statements is installed --***/"
 	cat << EOF >> ${PGDATA}/postgresql-statsinfo.conf
 shared_preload_libraries = 'pg_statsinfo, pg_stat_statements'
 pg_statsinfo.stat_statements_max = 1

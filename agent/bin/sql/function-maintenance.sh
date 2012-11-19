@@ -6,15 +6,15 @@
 PGCONFIG_MAINTENANCE=${CONFIG_DIR}/postgresql-maintenance.conf
 RELOAD_DELAY=3
 
-echo "/*---- リポジトリDB初期化 ----*/"
+echo "/*---- Initialize repository schema ----*/"
 send_query -c "DROP SCHEMA statsrepo CASCADE" > /dev/null 2>&1
 
-echo "/*---- 監視対象インスタンス初期化 ----*/"
+echo "/*---- Initialize monitored instance ----*/"
 setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG_MAINTENANCE} "" "" ""
 sleep 3
 
-echo "/*---- 自動メンテナンス機能 ----*/"
-echo "/**--- スナップショット削除 ---**/"
+echo "/*---- Automatic maintenance function ----*/"
+echo "/**--- Delete the snapshot for a certain period of time has elapsed ---**/"
 do_snapshot "2 days ago"
 do_snapshot "1 days ago"
 do_snapshot "today"
@@ -31,7 +31,7 @@ pg_ctl reload && sleep ${RELOAD_DELAY}
 sleep 10
 send_query -c "SELECT snapid, comment FROM statsrepo.snapshot ORDER BY snapid"
 
-echo "/**--- ログファイル整理 ---**/"
+echo "/**--- Server log maintenance ---**/"
 maintenance_time=$(psql -Atc "SELECT (now() + '5sec')::time(0)")
 update_pgconfig ${PGDATA} "<guc_prefix>.enable_maintenance" "log"
 update_pgconfig ${PGDATA} "<guc_prefix>.log_maintenance_command" "'touch %l/ok'"

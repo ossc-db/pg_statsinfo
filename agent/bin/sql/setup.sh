@@ -3,5 +3,5 @@
 . ./sql/environment.sh
 . ./sql/utility.sh
 
-echo "/*---- リポジトリDB初期化 ----*/"
+echo "/*---- Initialize repository DB ----*/"
 setup_repository

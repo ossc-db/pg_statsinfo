@@ -9,7 +9,7 @@
 [ $(get_version) -lt 90000 ] &&
 	send_query -c "CREATE LANGUAGE plpgsql" > /dev/null
 
-echo "/*---- リポジトリDBへのデータ登録 ----*/"
+echo "/*---- Input the repository data ----*/"
 if [ $(get_version) -ge 80400 ] ; then
 	send_query -qf "$(pg_config --sharedir)/contrib/pg_statsrepo_partition.sql"
 	send_query -c "SELECT statsrepo.create_partition('2012-11-01')" > /dev/null
@@ -25,88 +25,88 @@ SELECT statsrepo.input_data(4, '5807946214009601533', 'statsinfo', 5435, '9.1.0'
 SELECT statsrepo.input_data(5, '5807946214009601534', 'statsinfo', 5436, '9.2.0', 17);
 EOF
 
-echo "/*---- レポート作成モード ----*/"
-echo "/**--- レポート種別: Summary ---**/"
+echo "/*---- Create report ----*/"
+echo "/**--- REPORTID: Summary ---**/"
 exec_command "exec_statsinfo -r Summary"
 
-echo "/**--- レポート種別: DatabaseStatistics ---**/"
+echo "/**--- REPORTID: DatabaseStatistics ---**/"
 exec_command "exec_statsinfo -r DatabaseStatistics"
 
-echo "/**--- レポート種別: InstanceActivity ---**/"
+echo "/**--- REPORTID: InstanceActivity ---**/"
 exec_command "exec_statsinfo -r InstanceActivity"
 
-echo "/**--- レポート種別: OSResourceUsage ---**/"
+echo "/**--- REPORTID: OSResourceUsage ---**/"
 exec_command "exec_statsinfo -r OSResourceUsage"
 
-echo "/**--- レポート種別: DiskUsage ---**/"
+echo "/**--- REPORTID: DiskUsage ---**/"
 exec_command "exec_statsinfo -r DiskUsage"
 
-echo "/**--- レポート種別: LongTransactions ---**/"
+echo "/**--- REPORTID: LongTransactions ---**/"
 exec_command "exec_statsinfo -r LongTransactions"
 
-echo "/**--- レポート種別: NotableTables ---**/"
+echo "/**--- REPORTID: NotableTables ---**/"
 exec_command "exec_statsinfo -r NotableTables"
 
-echo "/**--- レポート種別: CheckpointActivity ---**/"
+echo "/**--- REPORTID: CheckpointActivity ---**/"
 exec_command "exec_statsinfo -r CheckpointActivity"
 
-echo "/**--- レポート種別: AutovacuumActivity ---**/"
+echo "/**--- REPORTID: AutovacuumActivity ---**/"
 exec_command "exec_statsinfo -r AutovacuumActivity"
 
-echo "/**--- レポート種別: QueryActivity ---**/"
+echo "/**--- REPORTID: QueryActivity ---**/"
 exec_command "exec_statsinfo -r QueryActivity"
 
-echo "/**--- レポート種別: LockConflicts ---**/"
+echo "/**--- REPORTID: LockConflicts ---**/"
 exec_command "exec_statsinfo -r LockConflicts"
 
-echo "/**--- レポート種別: ReplicationActivity ---**/"
+echo "/**--- REPORTID: ReplicationActivity ---**/"
 exec_command "exec_statsinfo -r ReplicationActivity"
 
-echo "/**--- レポート種別: SettingParameters ---**/"
+echo "/**--- REPORTID: SettingParameters ---**/"
 exec_command "exec_statsinfo -r SettingParameters"
 
-echo "/**--- レポート種別: SchemaInformation ---**/"
+echo "/**--- REPORTID: SchemaInformation ---**/"
 exec_command "exec_statsinfo -r SchemaInformation"
 
-echo "/**--- レポート種別: Profiles ---**/"
+echo "/**--- REPORTID: Profiles ---**/"
 exec_command "exec_statsinfo -r Profiles"
 
-echo "/**--- レポート種別: All ---**/"
+echo "/**--- REPORTID: All ---**/"
 exec_command "exec_statsinfo -r All"
 
-echo "/**--- インスタンス指定 (存在するインスタンスIDを指定) ---**/"
+echo "/**--- Specify the INSTANCEID that exists in data ---**/"
 exec_command "exec_statsinfo -r Summary -i 1"
 
-echo "/**--- インスタンス指定 (存在しないインスタンスIDを指定) ---**/"
+echo "/**--- Specify the INSTANCEID that not exists in data ---**/"
 exec_command "exec_statsinfo -r Summary -i 99"
 
-echo "/**--- レポート範囲指定 (-e=2) ---**/"
+echo "/**--- Specify the report scope (-e=2) ---**/"
 exec_command "exec_statsinfo -r Summary -i 1 -e 2"
 
-echo "/**--- レポート範囲指定 (-b=2, -e=3) ---**/"
+echo "/**--- Specify the report scope (-b=2, -e=3) ---**/"
 exec_command "exec_statsinfo -r Summary -i 1 -b 2 -e 3"
 
-echo "/**--- レポート範囲指定 (-b=3) ---**/"
+echo "/**--- Specify the report scope (-b=3) ---**/"
 exec_command "exec_statsinfo -r Summary -i 1 -b 3"
 
-echo "/**--- レポート範囲指定 (-E=<snapid=2>) ---**/"
+echo "/**--- Specify the report scope (-E=<snapid=2>) ---**/"
 exec_command "exec_statsinfo -r Summary -i 1 -E '2012-11-01 00:01:00'"
 
-echo "/**--- レポート範囲指定 (-B=<snapid=2>, -E=<snapid=3>) ---**/"
+echo "/**--- Specify the report scope (-B=<snapid=2>, -E=<snapid=3>) ---**/"
 exec_command "exec_statsinfo -r Summary -i 1 -B '2012-11-01 00:01:00' -E '2012-11-01 00:02:00'"
 
-echo "/**--- レポート範囲指定 (-B=<snapid=3>) ---**/"
+echo "/**--- Specify the report scope (-B=<snapid=3>) ---**/"
 exec_command "exec_statsinfo -r Summary -i 1 -B '2012-11-01 00:02:00'"
 
-echo "/**--- ファイル出力指定 ---**/"
+echo "/**--- Output the report to a file ---**/"
 exec_command "exec_statsinfo -r Summary -i 1 -o ${REPOSITORY_DATA}/report.log"
 cat ${REPOSITORY_DATA}/report.log
 
-echo "/**--- ファイル出力指定 (既存ファイル上書き) ---**/"
+echo "/**--- Output the report to a file (overwrite) ---**/"
 exec_command "exec_statsinfo -r Summary -i 2 -o ${REPOSITORY_DATA}/report.log"
 cat ${REPOSITORY_DATA}/report.log
 
-echo "/**--- 準正常系 ---**/"
-echo "/***-- スナップショット取得日時が同一のものが含まれる --***/"
+echo "/**--- Quasi-normal pattern ---**/"
+echo "/***-- Contain the snapshot that is same acquisition date --***/"
 send_query -c "UPDATE statsrepo.snapshot SET time = '2012-11-01 00:00:00' WHERE instid = 5"
 exec_command "exec_statsinfo -r All -i 5"
