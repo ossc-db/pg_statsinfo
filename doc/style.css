@@ -1,4 +1,4 @@
-@charset "Shift_JIS";
+@charset "UTF-8";
 
 pre, dl, ol, p, blockquote { line-height:130%; }
 
@@ -597,4 +597,11 @@ div.index {
 	padding-left: 1em;
 	padding-right: 1em;
 	margin-left: 0.5em;
+}
+
+div.index ol { counter-reset: item; }
+div.index li { display: block; }
+div.index li:before {
+	content: counters(item, ".") ". ";
+	counter-increment: item;
 }
