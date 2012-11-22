@@ -15,62 +15,69 @@
 
 <div class="index">
 <ol>
-<li><a href="#name">pg_statsinfoとは？</a></li>
-<li><a href="#description">機能概要</a></li>
-<ol>
-  <li><a href="#features-snapshot">統計情報の取得機能</a></li>
-  <li><a href="#features-log">サーバログ処理機能</a></li>
-  <li><a href="#features-alert">アラート機能</a></li>
-  <li><a href="#features-report">簡易レポート機能</a></li>
-  <li><a href="#features-maintenance">自動メンテナンス機能</a></li>
-</ol>
-<li><a href="#install">インストール</a>
-<ol>
-  <li><a href="#requirement">動作環境</a></li>
-  <li><a href="#linux">Linux</a></li>
-</ol>
-</li>
-<li><a href="#usage">使い方</a></li>
-<ol>
-  <li><a href="#start_or_stop">起動と終了</a></li>
-  <li><a href="#snapshot">スナップショットの取得・削除</a></li>
-  <li><a href="#log">ログファイルの出力について</a></li>
-  <li><a href="#usage-alert">アラート機能の使い方</a></li>
-  <li><a href="#usage-report">簡易レポート機能の使い方</a></li>
-  <li><a href="#usage-maintenance">自動メンテナンス機能の使い方</a></li>
-  <li><a href="#configuration">設定ファイル</a></li>
-  <li><a href="#user-operations">運用上必要となる作業</a></li>
-</ol>
-<li><a href="#uninstall">アンインストール</a></li>
-<li><a href="#restrictions">使用上の注意と制約</a></li>
-<li><a href="#QA">よくあるQ&A</a></li>
-<li><a href="#details">詳細情報</a></li>
-<ol>
-  <li><a href="#many-instances">複数の監視対象インスタンス</a></li>
-  <li><a href="#warm-standby">ウォームスタンバイ</a></li>
-  <li><a href="#internal">内部構成</a></li>
-</ol>
-<li><a href="#seealso">関連項目</a></li>
+  <li><a href="#name">pg_statsinfoとは？</a></li>
+  <li><a href="#description">機能概要</a>
+    <ol>
+      <li><a href="#features-snapshot">統計情報の取得機能</a></li>
+      <li><a href="#features-log">サーバログ処理機能</a></li>
+      <li><a href="#features-alert">アラート機能</a></li>
+      <li><a href="#features-report">簡易レポート機能</a></li>
+      <li><a href="#features-maintenance">自動メンテナンス機能</a></li>
+    </ol>
+  </li>
+  <li><a href="#install">インストール</a>
+    <ol>
+      <li><a href="#requirement">動作環境</a></li>
+      <li><a href="#linux">Linux</a></li>
+    </ol>
+  </li>
+  <li><a href="#usage">使い方</a>
+    <ol>
+      <li><a href="#start_or_stop">起動と終了</a></li>
+      <li><a href="#snapshot">スナップショットの取得・削除</a></li>
+      <li><a href="#log">サーバログのフィルタリング</a></li>
+      <li><a href="#usage-alert">アラート機能の使い方</a></li>
+      <li><a href="#usage-report">簡易レポート機能の使い方</a></li>
+      <li><a href="#usage-maintenance">自動メンテナンス機能の使い方</a></li>
+      <li><a href="#configuration">設定ファイル</a></li>
+      <li><a href="#user-operations">運用上必要となる作業</a></li>
+    </ol>
+  </li>
+  <li><a href="#uninstall">アンインストール</a></li>
+  <li><a href="#restrictions">使用上の注意と制約</a></li>
+  <li><a href="#QA">よくあるQ&A</a></li>
+  <li><a href="#change">pg_statsinfo 2.3 からの変更点</a></li>
+  <li><a href="#details">詳細情報</a>
+    <ol>
+      <li><a href="#many-instances">複数の監視対象インスタンス</a></li>
+      <li><a href="#warm-standby">ウォームスタンバイ</a></li>
+      <li><a href="#internal">内部構成</a></li>
+    </ol>
+  </li>
+  <li><a href="#seealso">関連項目</a></li>
 </ol>
 </div>
 
 <h2 id="name">pg_statsinfoとは？</h2>
-<p>PostgreSQL サーバの利用統計情報を定期的に収集・蓄積することで、DB設計やPostgreSQLの運用(日々の処理傾向の把握、性能劣化などの兆候や問題発生時の原因の把握等)に役立つツールです。起動や終了、パラメータの設定は PostgreSQL と密に連携しており、手間をかけずに導入可能です。</p>
+<p>
+PostgreSQL サーバの利用統計情報を定期的に収集・蓄積することで、DB設計やPostgreSQLの運用(日々の処理傾向の把握、
+性能劣化などの兆候や問題発生時の原因の把握等)に役立つツールです。<br>
+起動や終了、パラメータの設定は PostgreSQL と密に連携しており、手間をかけずに導入可能です。
+</p>
+<p>pg_statsinfo 2.3 からの変更点は<a href="#change">こちら</a>をご覧ください。</p>
 
 <h2 id="description">機能概要</h2>
 <p>pg_statsinfo は、PostgreSQL サーバの統計情報や活動状況を一定の時間間隔毎に定期的に収集し蓄積する機能と、
-PostgreSQLの出力するサーバログを解析することでSQLの性能情報を取得する機能やログ出力を加工する機能があります。
+PostgreSQL の出力するサーバログを解析することでSQLの性能情報を取得する機能やログ出力を加工する機能があります。
 また、蓄積した情報を元にテキスト形式のレポートを出力するコマンドを提供します。
 </p>
 
 <p>
-また、pg_statsinfo で収集した情報は <a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_reporter</a> 
-を用いることでグラフィカルな形で解析・出力することがきます。（pg_reporterの出力例は<a href ="http://pgstatsinfo.projects.postgresql.org/files/details.html">こちら</a>）</p>
-
-<p>
-pg_statsinfo の動作概要のイメージ図を以下に示します。
-
+また、pg_statsinfo で収集した情報は <a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_stats_reporter</a> 
+を用いることでグラフィカルな形で解析・出力することがきます。
 </p>
+
+<p>pg_statsinfo の動作概要のイメージ図を以下に示します。</p>
 <img src="image/pg_statsinfo-ja.png">
 <br><br>
 
@@ -110,7 +117,7 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
 
 <p>
 スナップショットのサイズは、DB内のオブジェクト数に依存しますが、概ね1回のスナップショットで1DBあたり600 - 800KBを消費します。
-デフォルトの取得間隔（10分間隔）の場合、監視対象インスタンス一つあたり1日で90 - 120MBを消費します。
+デフォルトの取得間隔(10分間隔)の場合、監視対象インスタンス一つあたり1日で90 - 120MBを消費します。
 </p>
 
 <h4>リポジトリDBのテーブル構成</h4>
@@ -165,8 +172,8 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
 
 <p>
 簡易レポート機能が出力するレポートの項目については「<a href="files/pg_statsinfo_v2.4_report_infomation.xls">pg_statsinfo v2.4 レポート項目一覧</a>」をご覧ください。<br>
-なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_reporter</a> と同等です。<br>
-グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_reporter</a> を使用してください。
+なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_stats_reporter</a> と同等です。<br>
+グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_stats_reporter</a> を使用してください。
 </p>
 
 <p>
@@ -191,22 +198,24 @@ pg_statsinfo の動作概要のイメージ図を以下に示します。
 </p>
 
 <h2 id="install">インストール</h2>
-<p>pg_statsinfo のインストール方法について説明します。各インストールパッケージは<a href="http://pgfoundry.org/frs/?group_id=1000422">こちら</a>からダウンロードして下さい</p>
+<p>pg_statsinfo のインストール方法について説明します。各インストールパッケージは<a href="http://pgfoundry.org/frs/?group_id=1000422">こちら</a>からダウンロードして下さい。</p>
 
 <h3 id="requirement">動作環境</h3>
 <dl>
-<dt>PostgreSQL</dt>
-<dd>バージョン 8.3, 8.4, 9.0, 9.1, 9.2</dd>
-<dt>動作検証済みOS</dt>
-<dd>RHEL 5.x, RHEL 6.x, CentOS 5.x, CentOS 6.x</dd>
+  <dt>PostgreSQL</dt>
+  <dd>バージョン 8.3, 8.4, 9.0, 9.1, 9.2</dd>
+  <dt>動作検証済みOS</dt>
+  <dd>RHEL 5.x, RHEL 6.x, CentOS 5.x, CentOS 6.x</dd>
 </dl>
+<p>(注1) リポジトリDBの PostgreSQL は、configureオプションに --with-libxml が指定されたビルドである必要があります。 (RPM版の PostgreSQL には --with-libxml が指定されています)</p>
+
 <h3 id="linux">Linux</h3>
 
 <h4>RPM</h4>
-以下はPostgreSQL8.4のRHEL5のx86_64用のrpmをインストールする例です。
+以下はPostgreSQL9.2のRHEL6のx86_64用のrpmをインストールする例です。
 <pre>
 $ su
-# rpm -ivh pg_statsinfo-2.0.1-1.pg84.rhel5.x86_64.rpm
+# rpm -ivh pg_statsinfo-2.4.0-1.pg92.rhel6.x86_64.rpm
 </pre>
 
 <h4>source</h4>
@@ -214,16 +223,15 @@ $ su
 なお、pg_statsinfo の登録スクリプト (sql) を手動でインストールする必要はありません。
 監視対象インスタンス、リポジトリDB共に、初回起動時に必要に応じて pg_statsinfo がスキーマを自動的にインストールします。</p>
 <pre>
-$ tar xzvf pg_statsinfo.tar.gz
-$ cd pg_statsinfo
+$ tar xzvf pg_statsinfo-2.4.0.tar.gz
+$ cd pg_statsinfo-2.4.0
 $ make USE_PGXS=1
 $ su
 # make USE_PGXS=1 install
 </pre>
 pgxsを使用しない場合、contrib配下にpg_statsinfoのフォルダを配置し、make, make installを実施してください。
 
-<p>
-contrib/pg_statsinfo.sql、contrib/pg_statsrepo.sqlは自動的にインストールされるため、手動での実行は不要です。</p>
+<p>contrib/pg_statsinfo.sql、contrib/pg_statsrepo.sqlは自動的にインストールされるため、手動での実行は不要です。</p>
 
 <h3 id="install">設定ファイル</h3>
 
@@ -290,7 +298,7 @@ local   all             postgres                                ident
 
 <h4 id="pg_stat_statements">クエリの統計情報の取得設定</h4>
 <p>
-PostgreSQL のバージョン 8.4 以上を使っている場合、監視対象インスタンスの postgres データベースに <a href="http://www.postgresql.jp/document/current/html/pgstatstatements.html">pg_stat_statements</a> をインストールすることで、クエリの統計情報もスナップショットとして収集できるようになります。<br/>
+PostgreSQL のバージョン 8.4 以上を使っている場合、監視対象インスタンスの postgres データベースに <a href="http://www.postgresql.jp/document/current/html/pgstatstatements.html">pg_stat_statements</a> をインストールすることで、クエリの統計情報もスナップショットとして収集できるようになります。<br>
 利用する場合には、postgresql.conf の shared_preload_libraries に pg_stat_statements を追加し、初回起動時に以下の手順で登録してください。 
 </p>
 <pre>
@@ -331,7 +339,7 @@ smart 以外の終了モード (fast, immediate) ではエラーが出力され�
 <pre>pg_statsinfo.snapshot_interval = 30min </pre>
 
 <h4>手動取得</h4>
-<p>任意のタイミングでスナップショットを取得する場合は、監視対象のインスタンスが存在するDBクラスタのpostgresデータベースに対し、関数 statsinfo.snapshot(text DEFAULT NULL) を実行して下さい。<br/>
+<p>任意のタイミングでスナップショットを取得する場合は、監視対象のインスタンスが存在するDBクラスタのpostgresデータベースに対し、関数 statsinfo.snapshot(text DEFAULT NULL) を実行して下さい。<br>
 引数でスナップショット取得理由をコメントとして記録できます。</p>
 <p>例: 手動でスナップショットを取得します。コメントとして文字列 'comment' を付与します。</p>
 <pre>$ psql -d postgres -c "SELECT statsinfo.snapshot('comment')"</pre>
@@ -348,32 +356,79 @@ smart 以外の終了モード (fast, immediate) ではエラーが出力され�
 <p>例: 取得日時が 2011-02-01 07:00:00 より古いスナップショットを削除します。</p>
 <pre>$ psql -d postgres -c "SELECT statsinfo.maintenance('2010-02-01 07:00:00'::timestamptz);"</pre>
 
-<h3 id="log">ログファイルの出力について</h3>
+<h3 id="log">サーバログのフィルタリング</h3>
 <p>
-pg_statsinfo にはログを加工する機能があります。
-以下では、出力されるログの種類を説明します。
+pg_statsinfo には PostgreSQL のサーバログをフィルタリングにより加工する機能があります。<br>
+以下では、出力されるログファイルの種類とフィルタリングの種類を説明します。
 </p>
 
-<h4>postgresql.log</h4>
-<p>
-本ログは、pg_statsinfo がフィルタリングして出力した最新のログです。
-フィルタリングレベル(pg_statsinfo.textlog_min_messages)を指定していない場合は、warning 以上のログレベルのみが出力されます。
-pg_statsinfo が出力するログは、１日間隔でログローテートされますので、本ログは本日の最新のログということになります。
-postgresql.conf に pg_statsinfo.textlog_filename を指定していた場合は、postgresql.log ではなく、指定されたファイル名で出力されます。
-</p>
+<h4>ログファイルの種類</h4>
+<dl>
+  <dt>CSVログ</dt>
+  <dd>CSVログとは、PostgreSQL が出力する生のログです。CSVログの詳細は<a href="http://www.postgresql.jp/document/current/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG">こちら</a>をご覧ください。</dd>
+  <dd>なお、pg_statsinfo は CSVログを改変しません。</dd>
+  <dt>テキストログ</dt>
+  <dd>テキストログとは、CSVログの情報を基に pg_statsinfo がフィルタリングを行ったログです。</dd>
+  <dd>最新のテキストログのファイル名は常に固定となります。</dd>
+  <dd>固定ファイル名は設定ファイル(postgresql.conf)の下記のパラメータで指定します。</dd>
+  <dd>
+    <ul>
+      <li>pg_statsinfo.textlog_filename</li>
+    </ul>
+  </dd>
+  <dd>なお、サーバログ(CSVログ)のローテートが行われると、ローテート前のCSVログに対応するテキストログがリネームされ、ローテート後のCSVログに対応するテキストログが新たに作成されます。</dd>
+  <dd>テキストログのリネーム後のファイル名は、ローテート前のCSVログのファイル拡張子を「.log」に変更した名前となります。</dd>
+</dl><br>
 
-<h4>postgresql-2011-12-01_000000.log</h4>
-<p>
-本ログは、上記で述べた postgresq.log がローテートされたログになります。
-起動時には、下記で述べる csv ログファイルと拡張子以外同一の名前の空のファイルが作成されますが、正常な動作です。
-</p>
-
-<h4>postgresql-2011-12-01_000000.csv</h4>
-<p>
-本ログは、PostgreSQL が出力する生のログになります。
-pg_statsinfo は、本ログに出力された情報を基に、加工したログ出力を行いますが、
-本ログに関しては全く加工を行いません。
-</p>
+<h4>フィルタリングの種類</h4>
+<dl>
+  <dt>メッセージレベルによる出力制御</dt>
+  <dd>特定のメッセージレベルより低いレベルのログをテキストログに出力しないようにフィルタリングします。</dd>
+  <dd>特定のメッセージレベルは、設定ファイル(postgresql.conf)の下記のパラメータで指定します。</dd>
+  <dd>設定の詳細については、<a href="#configuration">設定ファイル</a>をご覧ください。</dd>
+  <dd>
+    <ul>
+      <li>pg_statsinfo.textlog_min_messages</li>
+    </ul>
+  </dd>
+  <dd>設定例: warning 以上のメッセージレベルのログをテキストログに出力する</dd>
+  <dd>
+    <pre>pg_statsinfo.textlog_min_messages = warning</pre>
+  </dd>
+  <dt>特定ユーザのセッションのログの出力制御</dt>
+  <dd>特定ユーザのセッションのログをテキストログに出力しないようにフィルタリングします。</dd>
+  <dd>特定ユーザは、設定ファイル(postgresql.conf)の下記のパラメータで指定します。</dd>
+  <dd>設定の詳細については、<a href="#configuration">設定ファイル</a>をご覧ください。</dd>
+  <dd>
+    <ul>
+      <li>pg_statsinfo.textlog_nologging_users</li>
+    </ul>
+  </dd>
+  <dd>設定例: postgres ユーザのセッションのログをテキストログに出力しない</dd>
+  <dd>
+    <pre>pg_statsinfo.textlog_nologging_users = 'postgres'</pre>
+  </dd>
+  <dt>メッセージレベルの変更</dt>
+  <dd>特定のSQLSTATEを持つログのメッセージレベルを任意のメッセージレベルに変更します。</dd>
+  <dd>メッセージレベルの変更対象のSQLSTATEおよび変更後のメッセージレベルは、設定ファイル(postgresql.conf)の下記のパラメータで指定します。</dd>
+  <dd>設定の詳細については、<a href="#configuration">設定ファイル</a>をご覧ください。</dd>
+  <dd>
+    <ul>
+      <li>pg_statsinfo.adjust_log_level</li>
+      <li>pg_statsinfo.adjust_log_info</li>
+      <li>pg_statsinfo.adjust_log_notice</li>
+      <li>pg_statsinfo.adjust_log_warning</li>
+      <li>pg_statsinfo.adjust_log_error</li>
+      <li>pg_statsinfo.adjust_log_log</li>
+      <li>pg_statsinfo.adjust_log_fatal</li>
+    </ul>
+  </dd>
+  <dd>設定例: SQLSTATEが '42P01' のログのメッセージレベルを 'INFO' に変更する</dd>
+  <dd>
+    <pre>pg_statsinfo.adjust_log_level = on
+pg_statsinfo.adjust_log_info = '42P01'</pre>
+  </dd>
+</dl>
 
 <h4>自動メンテナンス機能によるログファイル整理</h4>
 <p>自動メンテナンス機能を使用することでログファイルの整理を行うことができます。<br>
@@ -732,7 +787,8 @@ pg_statsinfo.repository_keepday = 3
 <pre>
 pg_statsinfo.enable_maintenance = 'log'     # 自動メンテナンス設定
 pg_statsinfo.maintenance_time = '00:02:00'  # 自動メンテナンス実行時刻設定
-pg_statsinfo.log_maintenance_command = '$PGHOME/bin/archive_pglog.sh %l'  # ログファイル整理コマンド設定 (*1)
+pg_statsinfo.log_maintenance_command = '&ltPGHOME&gt/bin/archive_pglog.sh %l'  # ログファイル整理コマンド設定 (*1)
+※&ltPGHOME&gt: PostgreSQL インストールディレクトリ
 
 (*1) archive_pglog.sh
 archive_pglog.sh は同梱されるシェルスクリプトです。
@@ -840,8 +896,8 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
     <td>track_io_timing</td>
     <td>off</td>
     <td>ブロックの読み込みと書き込み時間に関する統計情報の収集設定。 
-        ブロックの読み書きに関する統計情報を収集する場合は on を設定します。<br/>
-        本パラメータを on に設定した場合、現時点の時刻をオペレーティングシステムに繰り返し問い合わせるので、プラットフォームによっては深刻な負荷の原因になる可能性がある点を留意してください。<br/>
+        ブロックの読み書きに関する統計情報を収集する場合は on を設定します。<br>
+        本パラメータを on に設定した場合、現時点の時刻をオペレーティングシステムに繰り返し問い合わせるので、プラットフォームによっては深刻な負荷の原因になる可能性がある点を留意してください。<br>
         (本パラメータはPostgreSQL 9.2以降から指定可能です)</td>
   </tr>
   <tr>
@@ -883,10 +939,10 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
   <tr>
     <td>custom_variable_classes</td>
     <td>(空文字)</td>
-    <td>独自変数クラス名の設定。<br/>
-        PostgreSQL 8.3で利用する場合は 'statsinfo' を指定してください。<br/>
-        PostgreSQL 8.4 ～ 9.1 で利用する場合には 'pg_statsinfo' を指定してください。<br/>
-        PostgreSQL 9.2以降で利用する場合は当パラメータの設定は不要です。<br/>
+    <td>独自変数クラス名の設定。<br>
+        PostgreSQL 8.3で利用する場合は 'statsinfo' を指定してください。<br>
+        PostgreSQL 8.4 ～ 9.1 で利用する場合には 'pg_statsinfo' を指定してください。<br>
+        PostgreSQL 9.2以降で利用する場合は当パラメータの設定は不要です。<br>
   </tr>
   <tr>
     <td>pg_statsinfo.textlog_min_messages</td>
@@ -1010,7 +1066,7 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
   </tr>
   <tr>
     <td>pg_statsinfo.log_maintenance_command</td>
-    <td>$PGHOME/bin/archive_pglog.sh %l</td>
+    <td>&ltPGHOME&gt/bin/archive_pglog.sh %l</td>
     <td>サーバログのログファイルの整理を実行するシェルコマンドを指定します。文字列内に'%l'を記述した場合は'%l'がログファイル格納ディレクトリの絶対パスに置き換わります。シェルコマンドは正常にコマンドが終了した場合にのみ正常終了値(0)を返してください。</td>
   </tr>
   <tr>
@@ -1088,8 +1144,8 @@ log_line_prefix の値そのものは無視されることに注意して下さ�
 <pre>$ psql -d postgres -c "SELECT pg_rotate_logfile()"</pre>
 
 <h4 id="on-abort">異常終了時の対処</h4>
-<p>pg_statsinfo のみが異常終了しても、PostgreSQL インスタンスには影響はありませんが、pg_statsinfo の機能は停止したままになってしまいます。<br/>
-pg_statsinfo を再起動するには PostgreSQL インスタンスを再起動してください。<br/>
+<p>pg_statsinfo のみが異常終了しても、PostgreSQL インスタンスには影響はありませんが、pg_statsinfo の機能は停止したままになってしまいます。<br>
+pg_statsinfo を再起動するには PostgreSQL インスタンスを再起動してください。<br>
 なお、pg_statsinfo が異常終了してから再起動するまでの間に出力されたサーバログは、再起動時に解析(サーバログの分配のみ)されます。
 </p>
 
@@ -1155,9 +1211,9 @@ PostgreSQL はタイムゾーンを独自に管理しており、外部プログ
 
 <dt>自動メンテナンス(スナップショット削除)の注意点</dt>
 <dd>複数の監視対象インスタンスのスナップショットを同一のリポジトリDBに蓄積する構成では、
-自動メンテナンス設定のスナップショット保持期間の設定に注意してください。<br/>
+自動メンテナンス設定のスナップショット保持期間の設定に注意してください。<br>
 複数の監視対象インスタンスで自動メンテナンスのスナップショット削除を有効とする場合、
-それぞれの監視対象インスタンスのスナップショット保持期間の設定でスナップショット削除が実行されます。<br/>
+それぞれの監視対象インスタンスのスナップショット保持期間の設定でスナップショット削除が実行されます。<br>
 そのため、結果的に監視対象インスタンスの中で最も期間の短いスナップショット保持期間が有効となります。</dd>
 
 <dt>トランザクションログ(WAL)の出力量の統計情報収集に関する制限</dt>
@@ -1181,7 +1237,7 @@ $psql -d postgres -c "SELECT * FROM statsrepo.snapshot WHERE COMMENT = 'test'"
 <h4>Q2. 取得したスナップショットはどのように使えばいいの？</h4>
 <p>
 pg_statsinfo の統計情報の取得機能は、その時点の統計情報をスナップショットとして定期的に取得する機能のみになります。
-取得した統計情報から、有益な情報を見たい場合は <a href="#features-report">簡易レポート機能</a> を利用するか、<a href='http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html'>pg_repoter</a> をお使いください。
+取得した統計情報から、有益な情報を見たい場合は <a href="#features-report">簡易レポート機能</a> を利用するか、<a href='http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html'>pg_stats_reporter</a> をお使いください。
 </p>
 
 <h4>Q3. 自動メンテナンス機能のスナップショット削除が動作しません。</h4>
@@ -1201,27 +1257,7 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
   </dd>
 </dl>
 
-<br>
-
-<h4>Q4. log_statement=all と設定して運用した場合、pg_statsinfo が実行するSQLが大量に出力されてしまいログの可視性が下がります。pg_statsinfo のログを出力しない方法は？</h4>
-<p>pg_statsinfo 2.3.0 以降のバージョンでは log_statement の設定に関わらず pg_statsinfo が実行するSQLのログを一部を除き出力しません。<br>
-pg_statsinfo が実行するSQLのログを完全に出力しないようにする場合は下記の運用手順を実施してください。</p>
-
-<pre>
-1. 監視対象DBに pg_statsinfo 専用のユーザを作成する
-# CREATE ROLE statsinfo WITH LOGIN SUPERUSER;
-
-2. pg_statsinfo 専用のユーザに log_statement = 'none' を設定する
-# ALTER ROLE statsinfo SET log_statement = 'none'
-
-3. 環境変数 PGUSER に pg_statsinfo 専用のユーザを設定する
-$ export PGUSER=statsinfo
-
-4. データベースを再起動する
-$ pg_ctl restart
-</pre>
-
-<h4>Q5. アラート機能が正常に動作しているかの確認方法を教えてください。</h4>
+<h4>Q4. アラート機能が正常に動作しているかの確認方法を教えてください。</h4>
 <p>
 アラート機能を有効に設定、かつ秒間コミット数のアラート条件(閾値)を「0」に設定した状態でスナップショットを取得してください。<br>
 スナップショットの取得時に、サーバログにアラートメッセージが出力されていればアラート機能が正常に動作しています。
@@ -1238,7 +1274,7 @@ $ pg_ctl restart
 アラート機能が正常に動作したことを確認した後は、秒間のコミット数のアラート条件(閾値)を元に戻してください。
 </p>
 
-<h4>Q6. 古いバージョン(2.x)からアップグレードする方法を教えてください。</h4>
+<h4>Q5. 古いバージョン(2.x)からアップグレードする方法を教えてください。</h4>
 <p>
 古いバージョンをアンインストールした後、新しいバージョンをインストールしてください。<br>
 また、古いバージョンで取得済みのスナップショットは新しいバージョンでは利用できません。<br>
@@ -1246,14 +1282,14 @@ $ pg_ctl restart
 上記の操作を行った後、監視対象インスタンスを再起動してください。
 </p>
 
-<h4>Q7. 簡易レポート機能のレポート生成モードを実行したところ、レポートが表示されません。</h4>
+<h4>Q6. 簡易レポート機能のレポート生成モードを実行したところ、レポートが表示されません。</h4>
 <p>
-リポジトリDBに格納されているスナップショットの件数が2件未満である可能性があります。<br/>
+リポジトリDBに格納されているスナップショットの件数が2件未満である可能性があります。<br>
 レポートの作成には2件以上のスナップショットが必要となりますので、スナップショットの取得が2回実行されるのを待ってから簡易レポート機能のレポート生成モードを実行してください。
 </p>
 
 
-<h4>Q8. 簡易レポート機能のレポート生成モードを実行したところ、一部のレポート項目が表示されません。</h4>
+<h4>Q7. 簡易レポート機能のレポート生成モードを実行したところ、一部のレポート項目が表示されません。</h4>
 <dl>
   <dt>Query Activity (Functions)</dt>
   <dd>設定ファイルの「track_functions」が「none」に設定されている可能性があります。</dd>
@@ -1291,6 +1327,29 @@ $ pg_ctl restart
   <dd>一部のデータベースのスキーマ情報が含まれてない場合は、該当のデータベースに接続できる設定になっているか <a href="http://www.postgresql.jp/document/current/html/client-authentication.html">クライアント認証</a> などを確認してください。</dd>
 </dl>
 
+<br>
+
+<h2 id="change">pg_statsinfo 2.3 からの変更点</h2>
+<p>pg_statsinfo 2.3 からの変更点は以下の通りです。</p>
+<ul>
+  <li>PostgreSQL 9.2に対応</li>
+  <li>統計情報の収集対象および簡易レポート機能のレポートに以下の項目を追加</li>
+  <ul>
+    <li>WALの出力量</li>
+    <li>OSリソースのメモリ使用量</li>
+    <li>OSリソースのロードアベレージ</li>
+    <li>Autovacuumのページおよび入出力に関する情報 (PostgreSQL 9.2のみ)</li>
+    <li>データベース毎の一時ファイルの使用量 (PostgreSQL 9.2のみ)</li>
+    <li>データベース毎のデッドロックの総数 (PostgreSQL 9.2のみ)</li>
+    <li>データベース毎のデータファイルの入出力に費やした時間 (PostgreSQL 9.2のみ)</li>
+    <li>SQL文がブロックの入出力に費やした時間 (PostgreSQL 9.2のみ)</li>
+  </ul>
+  <li>特定ユーザのログをテキストログへの出力から除外する設定を追加</li>
+  <li>ログファイル整理を目的とする任意コマンドを実行する設定を追加</li>
+  <li>クエリの統計情報の収集上限と除外ユーザの設定を追加</li>
+  <li>簡易レポート機能のレポート表示を改善</li>
+  <li>pg_statsinfoに障害が発生した場合の信頼性を向上。障害発生時に PostgreSQL のバックエンド再起動が発生しなくなりました</li>
+</ul>
 <br>
 
 <h2 id="details">詳細情報</h2>
@@ -1374,7 +1433,7 @@ pg_statsinfo は、この SystemTap が収集するプロファイリング情�
 <a href="http://www.postgresql.jp/document/current/html/monitoring-stats.html">統計情報コレクタ</a>,
 <a href="http://www.postgresql.jp/document/current/html/catalogs.html">システムカタログ</a>,
 <a href="http://www.postgresql.jp/document/current/html/pgstatstatements.html">pg_stat_statements</a>,
-<a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_reporter</a>
+<a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_stats_reporter</a>
 <hr>
 <div class="navigation">
   <a href="http://pgstatsinfo.projects.postgresql.org/index_ja.html">Top</a> &gt;
