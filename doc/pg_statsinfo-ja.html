@@ -364,7 +364,7 @@ pg_statsinfo には PostgreSQL のサーバログをフィルタリングによ�
 
 <h4>ログファイルの種類</h4>
 <dl>
-  <dt>CSVログ</dt>
+  <dt>CSVログ (*.csv)</dt>
   <dd>CSVログとは、PostgreSQL が出力する生のログです。CSVログの詳細は<a href="http://www.postgresql.jp/document/current/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG">こちら</a>をご覧ください。</dd>
   <dd>なお、pg_statsinfo は CSVログを改変しません。</dd>
   <dt>テキストログ</dt>
@@ -376,8 +376,8 @@ pg_statsinfo には PostgreSQL のサーバログをフィルタリングによ�
       <li>pg_statsinfo.textlog_filename</li>
     </ul>
   </dd>
-  <dd>なお、サーバログ(CSVログ)のローテートが行われると、ローテート前のCSVログに対応するテキストログがリネームされ、ローテート後のCSVログに対応するテキストログが新たに作成されます。</dd>
-  <dd>テキストログのリネーム後のファイル名は、ローテート前のCSVログのファイル拡張子を「.log」に変更した名前となります。</dd>
+  <dd>なお、サーバログ(CSVログ)のローテートが行われると、テキストログがリネームされ、ローテート後のCSVログに対応するテキストログが新たに作成されます。</dd>
+  <dd>リネーム後のテキストログのファイル名は、対応するCSVログの拡張子を「.log」に変更した名前となります。</dd>
 </dl><br>
 
 <h4>フィルタリングの種類</h4>
@@ -1310,6 +1310,10 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
   <dd>設定ファイルの「log_checkpoints」が「off」に設定されている可能性があります。</dd>
   <dd>この場合、当該レポート項目に必要な情報がスナップショットに含まれません。</dd>
   <dd>当該レポート項目を表示するには「log_checkpoints」を「on」に設定してください。</dd>
+  
+  <dt>OS Resource Usage (IO Usage)</dt>
+  <dd>OS管理外の記憶デバイスまたは分散ファイルシステム(NFSなど)を利用した環境では、OSリソースのディスクI/O情報が収集されません。</dd>
+  <dd>そのため、当該レポート項目に必要な情報がスナップショットに存在しない可能性があります。</dd>
   
   <dt>Long Transactions</dt>
   <dd>レポート対象となる情報がスナップショットに存在しない可能性があります。</dd>
