@@ -1,0 +1,16 @@
+How to Regression Test
+=====================================
+
+$ gmake
+$ gmake install
+$ initdb --no-locale -D /tmp/pgdata
+$ pg_ctl start -D /tmp/pgdata -w
+$ make installcheck
+
+Requirements
+-------------------------------------
+* install the pg_stat_statements (PostgreSQL 8.4 or later)
+
+$ cd <postgresql-source>/contrib/pg_stat_statements
+$ make
+$ make install
