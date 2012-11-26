@@ -7,6 +7,7 @@ CONFIG_DIR=${BASE_DIR}/sql/config
 export PGDATA=${DBCLUSTER_DIR}/pgdata
 export PGPORT=5440
 export PGUSER=postgres
+export PGDATABASE=postgres
 export LANG=C
 export PGTZ=JST-9
 export PGDATESTYLE='ISO, MDY'
