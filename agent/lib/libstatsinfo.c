@@ -1378,7 +1378,7 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 		/* extract device information */
 		if (exec_grep(FILE_DISKSTATS, regex, &records) <= 0)
 		{
-			ereport(WARNING,
+			ereport(DEBUG2,
 				(errmsg("device information of \"%s\" used by tablespace \"%s\" does not exist in \"%s\"",
 					device, spcname, FILE_DISKSTATS)));
 			prev_device = NULL;
