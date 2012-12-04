@@ -296,8 +296,6 @@ static const char *elevel_to_str(int elevel);
 #endif
 
 static char *b_trim(char *str);
-static Datum BuildArrayType(List *values, Oid elmtype, Datum(*convert)(void *));
-static Datum _CStringGetTextDatum(void *ptr);
 static HeapTupleHeader search_devicestats(ArrayType *devicestats, const char *device_name);
 
 #if PG_VERSION_NUM < 80400 || defined(WIN32)
@@ -1271,12 +1269,14 @@ statsinfo_devicestats_noarg(PG_FUNCTION_ARGS)
 #define NUM_DISKSTATS_PARTITION_FIELDS	7
 #define SQL_SELECT_TABLESPACES "\
 SELECT \
-	device, name \
+	device, \
+	statsinfo.array_agg(name) \
 FROM \
 	statsinfo.tablespaces \
 WHERE \
 	device IS NOT NULL \
-ORDER BY device"
+GROUP BY \
+	device"
 
 #define ARRNELEMS(x)	ArrayGetNItems(ARR_NDIM(x), ARR_DIMS(x))
 #define ARRPTR(x)		((HeapTupleHeader) ARR_DATA_PTR(x))
@@ -1295,9 +1295,8 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 	SPITupleTable	*tuptable;
 	Datum			 values[NUM_DEVICESTATS_COLS];
 	bool			 nulls[NUM_DEVICESTATS_COLS];
-	List			*spclist = NIL;
-	char			*prev_device = NULL;
 	int				 row;
+	bool			 isnull;
 
 	/* check to see if caller supports us returning a tuplestore */
 	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
@@ -1333,12 +1332,13 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 
 	for (row = 0; row < SPI_processed; row++)
 	{
+		HeapTuple tup = tuptable->vals[row];
+		TupleDesc desc = tuptable->tupdesc;
 		HeapTupleHeader prev_devicestats;
 		char *device;
-		char *spcname;
 		char *dev_major;
 		char *dev_minor;
-		char *dev_name = NULL;
+		char *dev_name;
 		int64 readsector;
 		int64 readtime;
 		int64 writesector;
@@ -1352,26 +1352,19 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 		List *fields = NIL;
 		int   nfield;
 
-		device = SPI_getvalue(tuptable->vals[row], tuptable->tupdesc, 1);
-		spcname = SPI_getvalue(tuptable->vals[row], tuptable->tupdesc, 2);
-
-		if (prev_device)
-		{
-			if (strcmp(device, prev_device) == 0)
-			{
-				spclist = lappend(spclist, spcname);
-				continue;
-			}
-			/* device_tblspaces */
-			values[14] = BuildArrayType(spclist, TYPE_DEVICE_TABLESPACES, _CStringGetTextDatum);
-			tuplestore_putvalues(tupstore, tupdesc, values, nulls);
-		}
+		device = SPI_getvalue(tup, desc, 1);
 
 		/* <device_mejor>:<device_minor> */
 		exec_split(device, ":", &devicenum);
 
 		dev_major = (char *) list_nth(devicenum, 0);
 		dev_minor = (char *) list_nth(devicenum, 1);
+
+		memset(nulls, 0, sizeof(nulls));
+		memset(values, 0, sizeof(values));
+		values[0] = CStringGetTextDatum(dev_major);			/* device_major */
+		values[1] = CStringGetTextDatum(dev_minor);			/* device_minor */
+		values[14] = SPI_getbinval(tup, desc, 2, &isnull);	/* device_tblspaces */
 
 		snprintf(regex, lengthof(regex), "^\\s*%s\\s+%s\\s+", dev_major, dev_minor);
 
@@ -1380,9 +1373,22 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 		{
 			ereport(DEBUG2,
 				(errmsg("device information of \"%s\" used by tablespace \"%s\" does not exist in \"%s\"",
-					device, spcname, FILE_DISKSTATS)));
-			prev_device = NULL;
-			spclist = list_truncate(spclist, 0);
+					device, SPI_getvalue(tup, desc, 2), FILE_DISKSTATS)));
+
+			nulls[2] = true;	/* device_name */
+			nulls[3] = true;	/* device_readsector */
+			nulls[4] = true;	/* device_readtime */
+			nulls[5] = true;	/* device_writesector */
+			nulls[6] = true;	/* device_writetime */
+			nulls[7] = true;	/* device_queue */
+			nulls[8] = true;	/* device_iototaltime */
+			nulls[9] = true;	/* overflow_drs */
+			nulls[10] = true;	/* overflow_drt */
+			nulls[11] = true;	/* overflow_dws */
+			nulls[12] = true;	/* overflow_dwt */
+			nulls[13] = true;	/* overflow_dit */
+
+			tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 			continue;
 		}
 
@@ -1390,77 +1396,37 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 
 		nfield = exec_split(record, "\\s+", &fields);
 
-		memset(nulls, 0, sizeof(nulls));
-		memset(values, 0, sizeof(values));
-		spclist = list_truncate(spclist, 0);
-
 		if (nfield  == NUM_DISKSTATS_FIELDS)
 		{
-			/* device_major */
-			values[0] = CStringGetTextDatum(dev_major);
-
-			/* device_minor */
-			values[1] = CStringGetTextDatum(dev_minor);
-
-			/* device_name */
 			dev_name = list_nth(fields, 2);
-			values[2] = CStringGetTextDatum(dev_name);
-
-			/* device_readsector */
 			parse_int64(list_nth(fields, 5), &readsector);
-			values[3] = Int64GetDatum(readsector);
-
-			/* device_readtime */
 			parse_int64(list_nth(fields, 6), &readtime);
-			values[4] = Int64GetDatum(readtime);
-
-			/* device_writesector */
 			parse_int64(list_nth(fields, 9), &writesector);
-			values[5] = Int64GetDatum(writesector);
-
-			/* device_writetime */
 			parse_int64(list_nth(fields, 10), &writetime);
-			values[6] = Int64GetDatum(writetime);
-
-			/* device_queue */
 			parse_int64(list_nth(fields, 11), &ioqueue);
-			values[7] = Int64GetDatum(ioqueue);
-
-			/* device_iototaltime */
 			parse_int64(list_nth(fields, 13), &iototaltime);
-			values[8] = Int64GetDatum(iototaltime);
+
+			values[2] = CStringGetTextDatum(dev_name);	/* device_name */
+			values[3] = Int64GetDatum(readsector);		/* device_readsector */
+			values[4] = Int64GetDatum(readtime);		/* device_readtime */
+			values[5] = Int64GetDatum(writesector);		/* device_writesector */
+			values[6] = Int64GetDatum(writetime);		/* device_writetime */
+			values[7] = Int64GetDatum(ioqueue);			/* device_queue */
+			values[8] = Int64GetDatum(iototaltime);		/* device_iototaltime */
 		}
 		else if (nfield == NUM_DISKSTATS_PARTITION_FIELDS)
 		{
-			/* device_major */
-			values[0] = CStringGetTextDatum(dev_major);
-
-			/* device_minor */
-			values[1] = CStringGetTextDatum(dev_minor);
-
-			/* device_name */
 			dev_name = list_nth(fields, 2);
-			values[2] = CStringGetTextDatum(dev_name);
-
-			/* device_readsector */
 			parse_int64(list_nth(fields, 4), &readsector);
-			values[3] = Int64GetDatum(readsector);
-
-			/* device_readtime */
-			nulls[4] = true;
-
-			/* device_writesector */
 			parse_int64(list_nth(fields, 6), &writesector);
-			values[5] = Int64GetDatum(writesector);
 
-			/* device_writetime */
-			nulls[6] = true;
-
-			/* device_queue */
-			nulls[7] = true;
-
-			/* device_iototaltime */
-			nulls[8] = true;
+			values[2] = CStringGetTextDatum(dev_name);	/* device_name */
+			values[3] = Int64GetDatum(readsector);		/* device_readsector */
+			nulls[4] = true;							/* device_readtime */
+			values[5] = Int64GetDatum(writesector);		/* device_writesector */
+			nulls[6] = true;							/* device_writetime */
+			nulls[7] = true;							/* device_queue */
+			nulls[8] = true;							/* device_iototaltime */
 		}
 		else
 			ereport(ERROR,
@@ -1478,7 +1444,6 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 			int64 prev_writesector;
 			int64 prev_writetime;
 			int64 prev_iototaltime;
-			bool isnull;
 
 			prev_readsector = DatumGetInt64(GetAttributeByNum(prev_devicestats, 2, &isnull));
 			prev_readtime = DatumGetInt64(GetAttributeByNum(prev_devicestats, 3, &isnull));
@@ -1489,60 +1454,20 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 			/* overflow_drs */
 			if (readsector < prev_readsector)
 				values[9] = Int16GetDatum(1);
-			else
-				values[9] = Int16GetDatum(0);
-
 			/* overflow_drt */
 			if (nfield  == NUM_DISKSTATS_FIELDS && readtime < prev_readtime)
 				values[10] = Int16GetDatum(1);
-			else
-				values[10] = Int16GetDatum(0);
-
 			/* overflow_dws */
 			if (writesector < prev_writesector)
 				values[11] = Int16GetDatum(1);
-			else
-				values[11] = Int16GetDatum(0);
-
 			/* overflow_dwt */
 			if (nfield  == NUM_DISKSTATS_FIELDS && writetime < prev_writetime)
 				values[12] = Int16GetDatum(1);
-			else
-				values[12] = Int16GetDatum(0);
-
 			/* overflow_dit */
 			if (nfield  == NUM_DISKSTATS_FIELDS && iototaltime < prev_iototaltime)
 				values[13] = Int16GetDatum(1);
-			else
-				values[13] = Int16GetDatum(0);
-		}
-		else
-		{
-			/* overflow_drs */
-			values[9] = Int16GetDatum(0);
-
-			/* overflow_drt */
-			values[10] = Int16GetDatum(0);
-
-			/* overflow_dws */
-			values[11] = Int16GetDatum(0);
-
-			/* overflow_dwt */
-			values[12] = Int16GetDatum(0);
-
-			/* overflow_dit */
-			values[13] = Int16GetDatum(0);
 		}
 
-		spclist = lappend(spclist, spcname);
-		prev_device = device;
-	}
-
-	/* store the last tuple */
-	if (list_length(spclist) > 0)
-	{
-		/* device_tblspaces */
-		values[14] = BuildArrayType(spclist, TYPE_DEVICE_TABLESPACES, _CStringGetTextDatum);
 		tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 	}
 
@@ -3162,37 +3087,6 @@ b_trim(char *str)
 	memmove(str, start, strlen(start) + 1);
 
 	return str;
-}
-
-static Datum
-BuildArrayType(List *values, Oid elmtype, Datum(*convert)(void *))
-{
-	ArrayType	*array_t;
-	ListCell	*cell;
-	Datum		*elems;
-	int16		 typlen;
-	bool		 typbyval;
-	char		 typalign;
-	int			 val_size;
-	int			 i;
-
-	val_size = list_length(values);
-	get_typlenbyvalalign(elmtype, &typlen, &typbyval, &typalign);
-
-	elems = palloc(sizeof(Datum) * val_size + 1);
-
-	i = 0;
-	foreach(cell, values)
-		elems[i++] = convert(lfirst(cell));
-
-	array_t = construct_array(elems, val_size, elmtype, typlen, typbyval, typalign);
-	return PointerGetDatum(array_t);
-}
-
-static Datum
-_CStringGetTextDatum(void *ptr)
-{
-	return CStringGetTextDatum((char *) ptr);
 }
 
 static HeapTupleHeader

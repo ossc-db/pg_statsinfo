@@ -269,6 +269,10 @@ get_snapshot(char *comment)
 				int64		 writetime;
 				int64		 iototaltime;
 
+				/* don't record data of an unknown device */
+				if (PQgetisnull(deviceinfo, i, 2))
+					continue;
+
 				device = PQgetvalue(deviceinfo, i, 2); /* device name */
 				parse_int64(PQgetvalue(deviceinfo, i, 3), &readsector);  /* read sector */
 				parse_int64(PQgetvalue(deviceinfo, i, 4), &readtime);    /* read time */

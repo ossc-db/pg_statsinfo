@@ -535,15 +535,26 @@ report_resource_usage(PGconn *conn, ReportScope *scope, FILE *out)
 	res = pgut_execute(conn, SQL_SELECT_IO_USAGE, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-12s  %-24s  %8s MiB  %8s MiB  %14s ms  %14s ms  %16s  %12s ms\n",
-			PQgetvalue(res, i, 0),
-			PQgetvalue(res, i, 1),
-			PQgetvalue(res, i, 2),
-			PQgetvalue(res, i, 3),
-			PQgetvalue(res, i, 4),
-			PQgetvalue(res, i, 5),
-			PQgetvalue(res, i, 6),
-			PQgetvalue(res, i, 7));
+		if (strcmp(PQgetvalue(res, i, 0), "unknown") == 0)
+			fprintf(out, "%-12s  %-24s  %12s  %12s  %17s  %17s  %16s  %15s\n",
+				PQgetvalue(res, i, 0),
+				PQgetvalue(res, i, 1),
+				"(N/A)",
+				"(N/A)",
+				"(N/A)",
+				"(N/A)",
+				"(N/A)",
+				"(N/A)");
+		else
+			fprintf(out, "%-12s  %-24s  %8s MiB  %8s MiB  %14s ms  %14s ms  %16s  %12s ms\n",
+				PQgetvalue(res, i, 0),
+				PQgetvalue(res, i, 1),
+				PQgetvalue(res, i, 2),
+				PQgetvalue(res, i, 3),
+				PQgetvalue(res, i, 4),
+				PQgetvalue(res, i, 5),
+				PQgetvalue(res, i, 6),
+				PQgetvalue(res, i, 7));
 	}
 	fprintf(out, "\n");
 	PQclear(res);

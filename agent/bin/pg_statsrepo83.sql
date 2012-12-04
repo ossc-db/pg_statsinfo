@@ -1676,45 +1676,27 @@ CREATE FUNCTION statsrepo.get_io_usage(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		a.device_name,
-		a.device_tblspaces,
-		statsrepo.sub(a.drs + o.drs_add, b.drs) / 2 / 1024,
-		statsrepo.sub(a.dws + o.dws_add, b.dws) / 2 / 1024,
-		statsrepo.sub(a.drt + o.drt_add, b.drt),
-		statsrepo.sub(a.dwt + o.dwt_add, b.dwt),
-		round((o.diq + b.diq) / (o.cnt + 1), 3),
-		statsrepo.sub(a.dit + o.dit_add, b.dit)
+		DISTINCT ON (de.device_name, de.device_major, de.device_minor)
+		coalesce(de.device_name, 'unknown'),
+		de.device_tblspaces,
+		CASE WHEN de.device_readsector IS NULL THEN NULL ELSE
+			statsrepo.sub(de.device_readsector + dx.drs_add, ds.device_readsector) / 2 / 1024 END,
+		CASE WHEN de.device_writesector IS NULL THEN NULL ELSE
+			statsrepo.sub(de.device_writesector + dx.dws_add, ds.device_writesector) / 2 / 1024 END,
+		CASE WHEN de.device_readtime IS NULL THEN NULL ELSE
+			statsrepo.sub(de.device_readtime + dx.drt_add, ds.device_readtime) END,
+		CASE WHEN de.device_writetime IS NULL THEN NULL ELSE
+			statsrepo.sub(de.device_writetime + dx.dwt_add, ds.device_writetime) END,
+		CASE WHEN de.device_ioqueue IS NULL THEN NULL ELSE
+			round((dx.diq + ds.device_ioqueue) / (dx.cnt + 1), 3) END,
+		CASE WHEN de.device_iototaltime IS NULL THEN NULL ELSE
+			statsrepo.sub(de.device_iototaltime + dx.dit_add, ds.device_iototaltime) END
 	FROM
+		statsrepo.device de,
+		statsrepo.device ds,
 		(SELECT
-			snapid,
-			device_name,
-			device_tblspaces,
-			device_readsector as drs,
-			device_readtime as drt,
-			device_writesector as dws,
-			device_writetime as dwt, 
-			device_ioqueue as diq,
-			device_iototaltime as dit
-		 FROM
-		 	statsrepo.device
-		 WHERE
-		 	snapid = $1) b,
-		(SELECT
-			snapid,
-			device_name,
-			device_tblspaces,
-			device_readsector as drs,
-			device_readtime as drt,
-			device_writesector as dws,
-			device_writetime as dwt, 
-			device_ioqueue as diq,
-			device_iototaltime as dit
-		 FROM
-		 	statsrepo.device
-		 WHERE
-		 	snapid = $2) a,
-		(SELECT
-			d.device_name,
+			d.device_major,
+			d.device_minor,
 			(sum(d.overflow_drs) * 4294967296)::bigint AS drs_add,
 			(sum(d.overflow_drt) * 4294967296)::bigint AS drt_add,
 			(sum(d.overflow_dws) * 4294967296)::bigint AS dws_add,
@@ -1723,19 +1705,20 @@ $$
 			sum(d.device_ioqueue) AS diq,
 			count(*) AS cnt
 		 FROM
-			statsrepo.device d
-			LEFT JOIN statsrepo.snapshot s ON s.snapid = d.snapid
+			statsrepo.device d,
+			statsrepo.snapshot s
 		 WHERE
-			s.snapid > $1 AND s.snapid <= $2
+		 	d.snapid = s.snapid
+			AND s.snapid > $1 AND s.snapid <= $2
 			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 		 GROUP BY
-		 	d.device_name) o,
-		statsrepo.snapshot s
+		 	d.device_major, d.device_minor) dx
 	WHERE
-		a.snapid = s.snapid
-		AND a.device_name = b.device_name
-		AND a.device_name = o.device_name
-		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2);
+		(de.device_major = dx.device_major AND de.device_minor = dx.device_minor)
+		AND ds.snapid = $1
+		AND de.snapid = $2
+	ORDER BY
+		de.device_name;
 $$
 LANGUAGE sql;
 
@@ -1786,6 +1769,7 @@ $$
 				d.snapid BETWEEN $1 AND $2
 				AND d.snapid = s.snapid
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+				AND d.device_name IS NOT NULL
 			 GROUP BY
 				d.snapid, d.device_name, s.time, s.instid) AS de,
 			(SELECT
@@ -1805,6 +1789,7 @@ $$
 				d.snapid BETWEEN $1 AND $2
 				AND d.snapid = s.snapid
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+				AND d.device_name IS NOT NULL
 			 GROUP BY
 				d.snapid, d.device_name, s.time, s.instid) AS ds
 		WHERE
@@ -1866,6 +1851,7 @@ $$
 				d.snapid BETWEEN $1 AND $2
 				AND d.snapid = s.snapid
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+				AND d.device_name IS NOT NULL
 			 GROUP BY
 				d.snapid, d.device_name, s.time, s.instid) AS de,
 			(SELECT
@@ -1885,6 +1871,7 @@ $$
 				d.snapid BETWEEN $1 AND $2
 				AND d.snapid = s.snapid
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+				AND d.device_name IS NOT NULL
 			 GROUP BY
 				d.snapid, d.device_name, s.time, s.instid) AS ds
 		WHERE

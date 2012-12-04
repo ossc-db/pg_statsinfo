@@ -15,6 +15,16 @@ CREATE SCHEMA statsinfo;
 REVOKE ALL ON SCHEMA statsinfo FROM PUBLIC;
 
 --
+-- statsinfo.array_agg()
+--
+CREATE AGGREGATE statsinfo.array_agg(anyelement)
+(
+	SFUNC=array_append,
+	STYPE=anyarray,
+	INITCOND='{}'
+);
+
+--
 -- statsinfo.sample()
 --
 CREATE FUNCTION statsinfo.sample() RETURNS void
