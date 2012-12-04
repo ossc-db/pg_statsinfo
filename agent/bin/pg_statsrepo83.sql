@@ -2507,6 +2507,40 @@ $$
 $$
 LANGUAGE sql;
 
+-- generate information that corresponds to 'Replication Delays'
+CREATE FUNCTION statsrepo.get_replication_delays(
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT "timestamp"			text,
+	OUT client				text,
+	OUT flush_delay_size	numeric,
+	OUT replay_delay_size	numeric,
+	OUT sync_state			text
+) RETURNS SETOF record AS
+$$
+	SELECT
+		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+		host(r.client_addr) || ':' || r.client_port AS client,
+		statsrepo.xlog_location_diff(
+			split_part(r.current_location, ' ', 1),
+			split_part(r.flush_location, ' ', 1)),
+		statsrepo.xlog_location_diff(
+			split_part(r.current_location, ' ', 1),
+			split_part(r.replay_location, ' ', 1)),
+		(SELECT sync_state FROM statsrepo.replication WHERE snapid = $2
+			AND client_addr = r.client_addr AND client_port = r.client_port)
+	FROM
+		statsrepo.replication r,
+		statsrepo.snapshot s
+	WHERE
+		r.snapid = s.snapid
+		AND r.snapid BETWEEN $1 AND $2
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+	ORDER BY
+		s.snapid, client;
+$$
+LANGUAGE sql;
+
 -- generate information that corresponds to 'Setting Parameters'
 CREATE FUNCTION statsrepo.get_setting_parameters(
 	IN snapid_begin	bigint,
