@@ -60,7 +60,39 @@ FROM \
 #define SQL_SELECT_QUERY_ACTIVITY_FUNCTIONS		"SELECT * FROM statsrepo.get_query_activity_functions($1, $2) LIMIT 20"
 #define SQL_SELECT_QUERY_ACTIVITY_STATEMENTS	"SELECT * FROM statsrepo.get_query_activity_statements($1, $2) LIMIT 20"
 #define SQL_SELECT_LOCK_CONFLICTS				"SELECT * FROM statsrepo.get_lock_activity($1, $2) LIMIT 20"
-#define SQL_SELECT_REPLICATION_ACTIVITY			"SELECT * FROM statsrepo.get_replication_activity($1, $2)"
+#define SQL_SELECT_REPLICATION_STATUS			"SELECT * FROM statsrepo.get_replication_activity($1, $2)"
+#define SQL_SELECT_REPLICATION_DELAYS_SYNC "\
+SELECT \
+	timestamp, \
+	client, \
+	flush_delay_size, \
+	replay_delay_size \
+FROM \
+	statsrepo.get_replication_delays($1, $2) \
+WHERE \
+	sync_state = 'sync'"
+#define SQL_SELECT_REPLICATION_DELAYS_ASYNC "\
+SELECT \
+	timestamp, \
+	client, \
+	flush_delay_size, \
+	replay_delay_size \
+FROM \
+	statsrepo.get_replication_delays($1, $2) \
+WHERE \
+	client = \
+	( \
+		SELECT \
+			host(client_addr) || ':' || client_port \
+		FROM \
+			statsrepo.replication \
+		WHERE \
+			snapid = $2 \
+			AND sync_state != 'sync' \
+		ORDER BY \
+			flush_delay_size DESC, client \
+		LIMIT 1 \
+	)"
 #define SQL_SELECT_SETTING_PARAMETERS			"SELECT * FROM statsrepo.get_setting_parameters($1, $2)"
 #define SQL_SELECT_SCHEMA_INFORMATION_TABLES	"SELECT * FROM statsrepo.get_schema_info_tables($1, $2)"
 #define SQL_SELECT_SCHEMA_INFORMATION_INDEXES	"SELECT * FROM statsrepo.get_schema_info_indexes($1, $2)"
@@ -988,9 +1020,12 @@ report_replication_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "----------------------------------------\n");
 	fprintf(out, "/* Replication Activity */\n");
-	fprintf(out, "----------------------------------------\n");
+	fprintf(out, "----------------------------------------\n\n");
 
-	res = pgut_execute(conn, SQL_SELECT_REPLICATION_ACTIVITY, lengthof(params), params);
+	fprintf(out, "/** Current Replication Status **/\n");
+	fprintf(out, "-----------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_REPLICATION_STATUS, lengthof(params), params);
 	for (i = 0; i < PQntuples(res); i++)
 	{
 		fprintf(out, "User Name             : %s\n", PQgetvalue(res, i, 0));
@@ -1006,7 +1041,32 @@ report_replication_activity(PGconn *conn, ReportScope *scope, FILE *out)
 		fprintf(out, "Flush WAL Location    : %s\n", PQgetvalue(res, i, 10));
 		fprintf(out, "Replay WAL Location   : %s\n", PQgetvalue(res, i, 11));
 		fprintf(out, "Sync Priority         : %s\n", PQgetvalue(res, i, 12));
-		fprintf(out, "Sync State            : %s\n", PQgetvalue(res, i, 13));
+		fprintf(out, "Sync State            : %s\n\n", PQgetvalue(res, i, 13));
+	}
+	if (PQntuples(res) == 0)
+		fprintf(out, "\n");
+	PQclear(res);
+
+	fprintf(out, "/** Replication Delays **/\n");
+	fprintf(out, "-----------------------------------\n");
+	fprintf(out, "%-16s  %-18s  %17s  %17s \n",
+		"DateTime", "Client", "Flush Delay Size", "Replay Delay Size");
+	fprintf(out, "-----------------------------------------------------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_REPLICATION_DELAYS_SYNC, lengthof(params), params);
+	if (PQntuples(res) == 0)
+	{
+		PQclear(res);
+		res = pgut_execute(conn, SQL_SELECT_REPLICATION_DELAYS_ASYNC, lengthof(params), params);
+	}
+
+	for (i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "%-16s  %-18s  %12s byte  %12s byte\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1),
+			PQgetvalue(res, i, 2),
+			PQgetvalue(res, i, 3));
 	}
 	fprintf(out, "\n");
 	PQclear(res);
