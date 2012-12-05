@@ -1338,7 +1338,7 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 		char *device;
 		char *dev_major;
 		char *dev_minor;
-		char *dev_name;
+		char *dev_name = NULL;
 		int64 readsector;
 		int64 readtime;
 		int64 writesector;
