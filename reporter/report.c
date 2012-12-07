@@ -90,7 +90,7 @@ WHERE \
 			snapid = $2 \
 			AND sync_state != 'sync' \
 		ORDER BY \
-			flush_delay_size DESC, client \
+			flush_delay_size DESC, client_addr, client_port \
 		LIMIT 1 \
 	)"
 #define SQL_SELECT_SETTING_PARAMETERS			"SELECT * FROM statsrepo.get_setting_parameters($1, $2)"
