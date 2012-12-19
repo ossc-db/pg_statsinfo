@@ -1,22 +1,33 @@
 #!/bin/bash
 
-. ./sql/environment.sh
-. ./sql/utility.sh
+. ./script/common.sh
 
-[ $(get_version) -ge 80400 ] &&
+INPUTDATA_REPOSITORY=${INPUTDATA_DIR}/statsrepo-inputdata.sql
+
+function exec_statsinfo()
+{
+	pg_statsinfo -U ${REPOSITORY_USER} -p ${REPOSITORY_PORT} "${@}"
+}
+
+trap stop_all_database EXIT
+
+echo "/*---- Initialize repository DB ----*/"
+setup_repository ${REPOSITORY_DATA} ${REPOSITORY_USER} ${REPOSITORY_PORT} ${REPOSITORY_CONFIG}
+
+[ $(server_version) -ge 80400 ] &&
 	export PGOPTIONS=' -c intervalstyle=postgres'
 
-[ $(get_version) -lt 90000 ] &&
+[ $(server_version) -lt 90000 ] &&
 	send_query -c "CREATE LANGUAGE plpgsql" > /dev/null
 
 echo "/*---- Input the repository data ----*/"
-if [ $(get_version) -ge 80400 ] ; then
+if [ $(server_version) -ge 80400 ] ; then
 	send_query -qf "$(pg_config --sharedir)/contrib/pg_statsrepo_partition.sql"
 	send_query -c "SELECT statsrepo.create_partition('2012-11-01')" > /dev/null
 else
 	send_query -qf "$(pg_config --sharedir)/contrib/pg_statsrepo83.sql"
 fi
-send_query -qf ${FUNCTION_INPUTDATA}
+send_query -qf ${INPUTDATA_REPOSITORY}
 send_query << EOF > /dev/null
 SELECT statsrepo.input_data(1, '5807946214009601530', 'statsinfo', 5432, '8.3.0', 1);
 SELECT statsrepo.input_data(2, '5807946214009601531', 'statsinfo', 5433, '8.4.0', 5);

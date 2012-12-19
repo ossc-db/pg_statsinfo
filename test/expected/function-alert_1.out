@@ -1,0 +1,32 @@
+/*---- Initialize repository DB ----*/
+/*---- Initialize monitored instance ----*/
+/*---- Alert Function ----*/
+/**--- Alert the number of rollbacks per second ---**/
+UPDATE 1
+BEGIN
+CREATE TABLE
+ROLLBACK
+ANALYZE
+ALERT:  pg_statsinfo: too many rollbacks in snapshots between 'xxx' and 'xxx' --- xxx Rollbacks/sec
+UPDATE 1
+/**--- Alert the number of commits per second ---**/
+UPDATE 1
+BEGIN
+CREATE TABLE
+COMMIT
+ANALYZE
+ALERT:  pg_statsinfo: too many transactions in snapshots between 'xxx' and 'xxx' --- xxx Transactions/sec
+UPDATE 1
+/**--- Alert the dead tuple size and ratio ---**/
+UPDATE 1
+CREATE TABLE
+CREATE TABLE
+INSERT 0 500000
+INSERT 0 500000
+DELETE 400000
+DELETE 300000
+ANALYZE
+ALERT:  pg_statsinfo: dead tuple size exceeds threashold in snapshots between 'xxx' and 'xxx' --- xxx MiB
+ALERT:  pg_statsinfo: dead tuple ratio exceeds threashold in snapshots between 'xxx' and 'xxx' --- xxx %
+ALERT:  pg_statsinfo: dead tuple ratio in postgres.public.tbl02 exceeds threashold in snapshots between 'xxx' and 'xxx' --- xxx %
+UPDATE 1

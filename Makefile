@@ -1,8 +1,18 @@
 #
 # pg_statsinfo: Makefile
 #
-#    Copyright (c) 2010-2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+#    Copyright (c) 2010-2012, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
 #
+SUBDIRS = agent reporter
+REGTEST = \
+	function-snapshot \
+	function-snapshot_replication \
+	function-logger \
+	function-alert \
+	function-maintenance \
+	function-report \
+	function-command_option
+
 ifndef USE_PGXS
 top_builddir = ../..
 makefile_global = $(top_builddir)/src/Makefile.global
@@ -21,16 +31,10 @@ include $(makefile_global)
 include $(top_srcdir)/contrib/contrib-global.mk
 endif
 
-SUBDIRS = agent reporter
-
 all install installdirs uninstall distprep clean distclean maintainer-clean:
 	@for dir in $(SUBDIRS); do \
 		$(MAKE) -C $$dir $@ || exit; \
 	done
 
-# We'd like check operations to run all the subtests before failing.
-check installcheck:
-	@CHECKERR=0; for dir in $(SUBDIRS); do \
-		$(MAKE) -C $$dir $@ || CHECKERR=$$?; \
-	done; \
-	exit $$CHECKERR
+installcheck: install
+	( cd test && ./regress.sh $(REGTEST))

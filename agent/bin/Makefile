@@ -23,7 +23,6 @@ OBJS = $(SRCS:.c=.o)
 DATA = pg_statsrepo83.sql pg_statsrepo_partition.sql pg_statsrepo_alert.sql uninstall_pg_statsrepo.sql
 SCRIPTS = archive_pglog.sh
 PROGRAM = pg_statsinfod
-REGRESS = pg_statsinfo
 
 PG_CPPFLAGS = -I$(libpq_srcdir) -DFRONTEND -DPGUT_MULTI_THREADED -DPGUT_OVERRIDE_ELOG
 PG_LIBS = $(libpq) -lpthread

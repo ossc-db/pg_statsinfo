@@ -1,6 +1,4 @@
-\! sh ./sql/setup.sh
 /*---- Initialize repository DB ----*/
-\! sh ./sql/function-snapshot1.sh
 /*---- Initialize monitored instance ----*/
 CREATE TABLESPACE
 CREATE SCHEMA
@@ -69,9 +67,10 @@ vacuumdb: vacuuming database "template1"
 (1 row)
 
 /**--- Statistics of SQL function ---**/
- snapid | database | schema | funcname | funcid | argtypes | calls | total_time | self_time 
---------+----------+--------+----------+--------+----------+-------+------------+-----------
-(0 rows)
+ snapid | database |  schema  | funcname | funcid | argtypes | calls | total_time | self_time 
+--------+----------+----------+----------+--------+----------+-------+------------+-----------
+      1 | db01     | schema01 | func01   | xxx    | xxx      | xxx   | xxx        | xxx
+(1 row)
 
 /**--- OS resource usage (CPU) ---**/
  snapid | cpu_id | cpu_user | cpu_system | cpu_idle | cpu_iowait | overflow_user | overflow_system | overflow_idle | overflow_iowait 
@@ -118,7 +117,7 @@ vacuumdb: vacuuming database "template1"
  snapid |           name           |   setting    |       source       
 --------+--------------------------+--------------+--------------------
       1 | logging_collector        | on           | override
-      1 | port                     | 5440         | command line
+      1 | port                     | 57400        | command line
       1 | shared_preload_libraries | pg_statsinfo | configuration file
 (3 rows)
 
@@ -153,10 +152,10 @@ DROP TABLE
 (0 rows)
 
 /***-- There are lock conflicts --***/
- snapid | datname | nspname | relname | blocker_appname | blocker_addr | blocker_hostname | blocker_port | blockee_pid | blocker_pid | blocker_gid | duration |                       blockee_query                       | blocker_query 
---------+---------+---------+---------+-----------------+--------------+------------------+--------------+-------------+-------------+-------------+----------+-----------------------------------------------------------+---------------
-      6 | db01    |         |         |                 |              |                  | xxx          | xxx         | xxx         |             | xxx      | LOCK TABLE schema01.tbl01 IN ACCESS SHARE MODE;           | 
-      6 | db01    |         |         |                 |              |                  | xxx          | xxx         | xxx         |             | xxx      | LOCK TABLE schema01.tbl01 IN SHARE UPDATE EXCLUSIVE MODE; | 
+ snapid | datname | nspname | relname | blocker_appname | blocker_addr | blocker_hostname | blocker_port | blockee_pid | blocker_pid | blocker_gid | duration |                       blockee_query                       |                    blocker_query                    
+--------+---------+---------+---------+-----------------+--------------+------------------+--------------+-------------+-------------+-------------+----------+-----------------------------------------------------------+-----------------------------------------------------
+      6 | db01    |         |         | xxx             |              |                  | xxx          | xxx         | xxx         |             | xxx      | LOCK TABLE schema01.tbl01 IN ACCESS SHARE MODE;           | LOCK TABLE schema01.tbl01 IN ACCESS EXCLUSIVE MODE;
+      6 | db01    |         |         | xxx             |              |                  | xxx          | xxx         | xxx         |             | xxx      | LOCK TABLE schema01.tbl01 IN SHARE UPDATE EXCLUSIVE MODE; | LOCK TABLE schema01.tbl01 IN ACCESS EXCLUSIVE MODE;
 (2 rows)
 
 /**--- Statistics of WAL ---**/
@@ -178,144 +177,30 @@ DROP TABLE
 --------+------+--------+-------+-------+------------+------+-----------------+------------------+---------------------+---------------------+----------------+-----------------+--------------------+--------------------+----------------+-------------------+---------------+----------------
 (0 rows)
 
-\! sh ./sql/function-snapshot2.sh
-\! sh ./sql/function-logger.sh
-/*---- Initialize monitored instance ----*/
-CREATE TABLE
+/***-- pg_stat_statements is installed --***/
+SET
 CREATE FUNCTION
-/*---- Server log filter ----*/
-/**--- Sets the textlog's filename and access permission ---**/
-postgresql-statsinfo.log -rw-r--r--(644)
-server signaled
-postgresql.log -rw-rw-rw-(666)
-/**--- Textlog routing (textlog_min_messages = disable) ---**/
-server signaled
-INFO:  textlog routing test (disable)
-NOTICE:  textlog routing test (disable)
-WARNING:  textlog routing test (disable)
-ERROR:  textlog routing test (disable)
-/**--- Textlog routing (textlog_min_messages = error) ---**/
-server signaled
-INFO:  textlog routing test (error)
-NOTICE:  textlog routing test (error)
-WARNING:  textlog routing test (error)
-ERROR:  textlog routing test (error)
-00000 LOG:  textlog routing test (error)
-00000 STATEMENT:  SELECT statsinfo.elog('ALL', 'textlog routing test (error)')
-P0001 ERROR:  textlog routing test (error)
-P0001 STATEMENT:  SELECT statsinfo.elog('ALL', 'textlog routing test (error)')
-/**--- Textlog routing (adjust_log_level = off) ---**/
-server signaled
-42P01 ERROR:  relation "xxx" does not exist
-42P01 STATEMENT:  SELECT * FROM xxx
-/**--- Adjust log level (adjust_log_info = '42P01') ---**/
-server signaled
-42P01 INFO:  relation "xxx" does not exist
-42P01 STATEMENT:  SELECT * FROM xxx
-/**--- Adjust log level (adjust_log_notice = '42P01') ---**/
-server signaled
-42P01 NOTICE:  relation "xxx" does not exist
-42P01 STATEMENT:  SELECT * FROM xxx
-/**--- Adjust log level (adjust_log_warning = '42P01') ---**/
-server signaled
-42P01 WARNING:  relation "xxx" does not exist
-42P01 STATEMENT:  SELECT * FROM xxx
-/**--- Adjust log level (adjust_log_error = '00000') ---**/
-server signaled
-00000 ERROR:  statement: SELECT 1
-/**--- Adjust log level (adjust_log_log = '42P01') ---**/
-server signaled
-42P01 LOG:  relation "xxx" does not exist
-42P01 STATEMENT:  SELECT * FROM xxx
-/**--- Adjust log level (adjust_log_fatal = '42P01') ---**/
-server signaled
-42P01 FATAL:  relation "xxx" does not exist
-42P01 STATEMENT:  SELECT * FROM xxx
-/**--- Sets the nologging filter (textlog_nologging_users = 'user01') ---**/
-server signaled
-00000 LOG:  statement: SELECT 1
-/**--- Sets the nologging filter (textlog_nologging_users = 'user01, user02') ---**/
-server signaled
-00000 LOG:  statement: SELECT 1
-/**--- Collect the CHECKPOINT information ---**/
-CHECKPOINT
+CREATE FUNCTION
+CREATE VIEW
+GRANT
+REVOKE
+ snapid | database |  role  |               query                | calls | total_time | rows | shared_blks_hit | shared_blks_read | shared_blks_dirtied | shared_blks_written | local_blks_hit | local_blks_read | local_blks_dirtied | local_blks_written | temp_blks_read | temp_blks_written | blk_read_time | blk_write_time 
+--------+----------+--------+------------------------------------+-------+------------+------+-----------------+------------------+---------------------+---------------------+----------------+-----------------+--------------------+--------------------+----------------+-------------------+---------------+----------------
+      7 | db01     | user01 | SELECT schema01.func01('yyy', 25); |     1 | xxx        | xxx  | (N/A)           | (N/A)            | (N/A)               | (N/A)               | (N/A)          | (N/A)           | (N/A)              | (N/A)              | (N/A)          | (N/A)             | (N/A)         | (N/A)
+(1 row)
+
+/**--- Collect statistics after database crash recovery ---**/
 INSERT 0 1
- instid |        flags         | start | num_buffers | xlog_added | xlog_removed | xlog_recycled | write_duration | sync_duration | total_duration 
---------+----------------------+-------+-------------+------------+--------------+---------------+----------------+---------------+----------------
-      2 | immediate force wait | xxx   | xxx         | xxx        | xxx          | xxx           | xxx            | xxx           | xxx
-      2 | time                 | xxx   | xxx         | xxx        | xxx          | xxx           | xxx            | xxx           | xxx
-      2 | xlog                 | xxx   | xxx         | xxx        | xxx          | xxx           | xxx            | xxx           | xxx
-(3 rows)
+INSERT 0 1
+ snapid | instid | time | comment | exec_time | snapshot_increase_size 
+--------+--------+------+---------+-----------+------------------------
+      1 |      1 | xxx  |         | xxx       | xxx
+      2 |      1 | xxx  |         | xxx       | xxx
+      3 |      1 | xxx  |         | xxx       | xxx
+      4 |      1 | xxx  |         | xxx       | xxx
+      5 |      1 | xxx  |         | xxx       | xxx
+      6 |      1 | xxx  |         | xxx       | xxx
+      7 |      1 | xxx  |         | xxx       | xxx
+      8 |      1 | xxx  |         | xxx       | xxx
+(8 rows)
 
-/**--- Collect the AUTOANALYZE information ---**/
-server signaled
-INSERT 0 10000
-DELETE 4001
- instid | database | schema | table | start | duration 
---------+----------+--------+-------+-------+----------
-      2 | postgres | public | tbl01 | xxx   | xxx
-(1 row)
-
-/**--- Collect the AUOVACUUM information ---**/
- instid | database | schema | table | start | index_scans | page_removed | page_remain | tup_removed | tup_remain | page_hit | page_miss | page_dirty | read_rate | write_rate | duration 
---------+----------+--------+-------+-------+-------------+--------------+-------------+-------------+------------+----------+-----------+------------+-----------+------------+----------
-      2 | postgres | public | tbl01 | xxx   | xxx         | xxx          | xxx         | xxx         | xxx        | (N/A)    | (N/A)     | (N/A)      | (N/A)     | (N/A)      | xxx
-(1 row)
-
-\! sh ./sql/function-alert.sh
-/*---- Initialize monitored instance ----*/
-/*---- Alert Function ----*/
-/**--- Alert the number of rollbacks per second ---**/
-UPDATE 3
-BEGIN
-CREATE TABLE
-ROLLBACK
-ANALYZE
-ALERT:  pg_statsinfo: too many rollbacks in snapshots between 'xxx' and 'xxx' --- xxx Rollbacks/sec
-UPDATE 3
-/**--- Alert the number of commits per second ---**/
-UPDATE 3
-BEGIN
-CREATE TABLE
-COMMIT
-ANALYZE
-ALERT:  pg_statsinfo: too many transactions in snapshots between 'xxx' and 'xxx' --- xxx Transactions/sec
-UPDATE 3
-/**--- Alert the dead tuple size and ratio ---**/
-UPDATE 3
-CREATE TABLE
-CREATE TABLE
-INSERT 0 500000
-INSERT 0 500000
-DELETE 400000
-DELETE 300000
-ANALYZE
-ALERT:  pg_statsinfo: dead tuple size exceeds threashold in snapshots between 'xxx' and 'xxx' --- xxx MiB
-ALERT:  pg_statsinfo: dead tuple ratio exceeds threashold in snapshots between 'xxx' and 'xxx' --- xxx %
-ALERT:  pg_statsinfo: dead tuple ratio in postgres.public.tbl02 exceeds threashold in snapshots between 'xxx' and 'xxx' --- xxx %
-UPDATE 3
-\! sh ./sql/function-maintenance.sh
-/*---- Initialize repository schema ----*/
-/*---- Initialize monitored instance ----*/
-/*---- Automatic maintenance function ----*/
-/**--- Delete the snapshot for a certain period of time has elapsed ---**/
- snapid |  comment   
---------+------------
-      1 | 2 days ago
-      2 | 1 days ago
-      3 | today
-(3 rows)
-
-UPDATE 1
-UPDATE 1
-server signaled
- snapid |  comment   
---------+------------
-      2 | 1 days ago
-      3 | today
-(2 rows)
-
-/**--- Server log maintenance ---**/
-server signaled
-log maintenance command called
-\! sh ./sql/cleanup.sh

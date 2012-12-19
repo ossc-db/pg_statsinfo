@@ -1,21 +1,31 @@
 #!/bin/bash
 
-. ./sql/environment.sh
-. ./sql/utility.sh
+. ./script/common.sh
 
-PGCONFIG_SNAPHOT=${CONFIG_DIR}/postgresql-snapshot.conf
+PGCONFIG=${CONFIG_DIR}/postgresql-snapshot.conf
 ARCHIVE_DIR=${PGDATA}/archivelog
+XLOG_DIR=${PGDATA}/xlogdir
+
+function get_snapshot()
+{
+	do_snapshot ${PGUSER} ${PGPORT} ${REPOSITORY_USER} ${REPOSITORY_PORT}
+}
+
+trap stop_all_database EXIT
+
+echo "/*---- Initialize repository DB ----*/"
+setup_repository ${REPOSITORY_DATA} ${REPOSITORY_USER} ${REPOSITORY_PORT} ${REPOSITORY_CONFIG}
 
 echo "/*---- Initialize monitored instance ----*/"
-setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG_SNAPHOT} ${PGDATA}/archivelog ${PGDATA}/xlogdir ""
+setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG} ${ARCHIVE_DIR} ${XLOG_DIR} ""
 sleep 3
 mkdir -p ${PGDATA}/tblspc01
 createuser -ldrs user01
 createdb db01
-psql -At << EOF
+psql -d postgres -At << EOF
 CREATE TABLESPACE tblspc01 LOCATION '${PGDATA}/tblspc01';
 EOF
-psql db01 -U user01 -At << EOF
+psql -U user01 -d db01 -At << EOF
 CREATE SCHEMA schema01;
 CREATE TABLE schema01.tbl01 (id serial PRIMARY KEY, name text, age integer) TABLESPACE tblspc01;
 CREATE TABLE schema01.tbl02 (address text) INHERITS (schema01.tbl01);
@@ -29,10 +39,10 @@ vacuumdb -a -z
 sleep 3
 
 echo "/*---- Statistics collection function ----*/"
-do_snapshot
+get_snapshot
 
 echo "/**--- Statistics of database ---**/"
-if [ $(get_version) -ge 90200 ] ; then
+if [ $(server_version) -ge 90200 ] ; then
 	send_query << EOF
 SELECT
 	snapid,
@@ -66,7 +76,7 @@ WHERE
 ORDER BY
 	database;
 EOF
-elif [ $(get_version) -ge 90100 ] ; then
+elif [ $(server_version) -ge 90100 ] ; then
 	send_query << EOF
 SELECT
 	snapid,
@@ -468,7 +478,7 @@ EOF
 sleep 1
 psql -Atc "DROP TABLE xxx" &
 wait
-do_snapshot
+get_snapshot
 send_query << EOF
 SELECT
 	snapid,
@@ -484,7 +494,7 @@ EOF
 
 echo "/***-- There is no transaction of more than 1 second --***/"
 sleep 10
-do_snapshot
+get_snapshot
 send_query << EOF
 SELECT
 	snapid,
@@ -501,7 +511,7 @@ EOF
 
 echo "/***-- There is a transaction of more than 1 second --***/"
 pid=$(psql -Atc "SELECT pg_backend_pid() FROM pg_sleep(10)")
-do_snapshot
+get_snapshot
 send_query << EOF
 SELECT
 	snapid,
@@ -518,7 +528,7 @@ EOF
 
 echo "/**--- Lock conflicts ---**/"
 echo "/***-- There is no lock conflicts --***/"
-do_snapshot
+get_snapshot
 send_query << EOF
 SELECT
 	snapid,
@@ -562,9 +572,9 @@ LOCK TABLE schema01.tbl01 IN SHARE UPDATE EXCLUSIVE MODE;
 END;
 EOF
 sleep 1
-do_snapshot
+get_snapshot
 wait
-if [ $(get_version) -ge 90100 ] ; then
+if [ $(server_version) -ge 90100 ] ; then
 	send_query << EOF
 SELECT
 	snapid,
@@ -588,7 +598,7 @@ WHERE
 ORDER BY
 	datname, nspname, relname, blockee_query;
 EOF
-elif [ $(get_version) -ge 90000 ] ; then
+elif [ $(server_version) -ge 90000 ] ; then
 	send_query << EOF
 SELECT
 	snapid,
@@ -612,7 +622,7 @@ WHERE
 ORDER BY
 	datname, nspname, relname, blockee_query;
 EOF
-elif [ $(get_version) -ge 80400 ] ; then
+elif [ $(server_version) -ge 80400 ] ; then
 	send_query << EOF
 SELECT
 	snapid,
@@ -683,7 +693,7 @@ echo "/**--- Statistics of query ---**/"
 echo "/***-- pg_stat_statements is not installed --***/"
 send_query -c "SELECT * FROM statsrepo.statement WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
 
-if [ $(get_version) -ge 80400 ] ; then
+if [ $(server_version) -ge 80400 ] ; then
 	echo "/***-- pg_stat_statements is installed --***/"
 	cat << EOF >> ${PGDATA}/postgresql-statsinfo.conf
 shared_preload_libraries = 'pg_statsinfo, pg_stat_statements'
@@ -692,7 +702,7 @@ pg_statsinfo.stat_statements_exclude_users = '${PGUSER}'
 EOF
 	pg_ctl restart -w -D ${PGDATA} -o "-p ${PGPORT}" > /dev/null
 	sleep 3
-	if [ $(get_version) -ge 90100 ] ; then
+	if [ $(server_version) -ge 90100 ] ; then
 		psql -c "CREATE EXTENSION pg_stat_statements"
 	else
 		psql -f $(pg_config --sharedir)/contrib/pg_stat_statements.sql
@@ -701,8 +711,8 @@ EOF
 SELECT schema01.func01('yyy', 25);
 SELECT schema01.func01('zzz', 32);
 EOF
-	do_snapshot
-	if [ $(get_version) -ge 90200 ] ; then
+	get_snapshot
+	if [ $(server_version) -ge 90200 ] ; then
 		send_query << EOF
 SELECT
 	s.snapid,
@@ -737,7 +747,7 @@ WHERE
 ORDER BY
 	database, role, query;
 EOF
-	elif [ $(get_version) -ge 90100 ] ; then
+	elif [ $(server_version) -ge 90100 ] ; then
 		send_query << EOF
 SELECT
 	s.snapid,
@@ -810,4 +820,23 @@ EOF
 	fi
 fi
 
-pg_ctl stop -D ${PGDATA} > /dev/null
+echo "/**--- Collect statistics after database crash recovery ---**/"
+psql -U user01 -d db01 -At << EOF
+INSERT INTO schema01.tbl01 (name, age) VALUES ('xxx', 30);
+INSERT INTO schema01.tbl02 (name, age, address) VALUES ('xxx', 30, 'xxx');
+EOF
+pg_ctl stop -m immediate -D ${PGDATA} > /dev/null
+pg_ctl start -w -D ${PGDATA} -o "-p ${PGPORT}" > /dev/null
+sleep 3
+get_snapshot
+send_query << EOF
+SELECT
+	snapid,
+	instid,
+	CASE WHEN time IS NOT NULL THEN 'xxx' END AS time,
+	comment,
+	CASE WHEN exec_time IS NOT NULL THEN 'xxx' END AS exec_time,
+	CASE WHEN snapshot_increase_size IS NOT NULL THEN 'xxx' END AS snapshot_increase_size
+FROM
+	statsrepo.snapshot;
+EOF

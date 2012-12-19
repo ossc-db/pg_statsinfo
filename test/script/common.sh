@@ -1,25 +1,42 @@
 #!/bin/bash
 
-. ./sql/environment.sh
+BASE_DIR=$(pwd)
+DBCLUSTER_DIR=${BASE_DIR}/results/dbcluster
+CONFIG_DIR=${BASE_DIR}/script/config
+INPUTDATA_DIR=${BASE_DIR}/script/inputdata
+
+export PGDATA=${DBCLUSTER_DIR}/pgdata
+export PGPORT=57400
+export PGUSER=postgres
+export PGDATABASE=postgres
+export PGTZ=JST-9
+export PGDATESTYLE='ISO, MDY'
+export LANG=C
+
+REPOSITORY_DATA=${DBCLUSTER_DIR}/repository
+REPOSITORY_CONFIG=${CONFIG_DIR}/postgresql-repository.conf
+REPOSITORY_USER=postgres
+REPOSITORY_PORT=57500
 
 function setup_repository()
 {
-	pg_ctl stop -m immediate -D ${REPOSITORY_DATA} > /dev/null 2>&1
-	rm -fr ${REPOSITORY_DATA}
+	local datadir=${1}
+	local superuser=${2}
+	local port=${3}
+	local pgconfig=${4}
 
-	initdb --no-locale -U ${REPOSITORY_USER} -D ${REPOSITORY_DATA} > /dev/null 2>&1
+	pg_ctl stop -m immediate -D ${datadir} > /dev/null 2>&1
+	rm -fr ${datadir}
+
+	initdb --no-locale -U ${superuser} -D ${datadir} > /dev/null 2>&1
 	if [ ${?} -ne 0 ] ; then
 		echo "ERROR: could not create database cluster of repository" 1>&2
 		exit 1
 	fi
 
-	echo "logging_collector = on" >> ${REPOSITORY_DATA}/postgresql.conf
-	if [ ${?} -ne 0 ] ; then
-		echo "ERROR: could not write setting to config file" 1>&2
-		exit 1
-	fi
+	set_pgconfig ${pgconfig} ${datadir}
 
-	pg_ctl start -w -D ${REPOSITORY_DATA} -o "-p ${REPOSITORY_PORT}" > /dev/null
+	pg_ctl start -w -D ${datadir} -o "-p ${port}" > /dev/null
 	if [ ${?} -ne 0 ] ; then
 		echo "ERROR: could not start database cluster of repository" 1>&2
 		exit 1
@@ -86,7 +103,7 @@ function set_pgconfig()
 	if [ -z ${pgconfig} ] ; then
 		touch ${datadir}/postgresql-statsinfo.conf
 	else
-		local version=$(get_version)
+		local version=$(server_version)
 		local guc_prefix=""
 		local buffer=""
 
@@ -137,7 +154,7 @@ function update_pgconfig()
 	local value=${3}
 	local buffer=""
 
-	if [ $(get_version) -lt 80400 ] ; then
+	if [ $(server_version) -lt 80400 ] ; then
 		param=$(echo "${param}" | sed "s/<guc_prefix>/statsinfo/")
 	else
 		param=$(echo "${param}" | sed "s/<guc_prefix>/pg_statsinfo/")
@@ -159,7 +176,7 @@ function delete_pgconfig()
 	local param=${2}
 	local buffer=""
 
-	if [ $(get_version) -lt 80400 ] ; then
+	if [ $(server_version) -lt 80400 ] ; then
 		param=$(echo "${param}" | sed "s/<guc_prefix>/statsinfo/")
 	else
 		param=$(echo "${param}" | sed "s/<guc_prefix>/pg_statsinfo/")
@@ -169,7 +186,7 @@ function delete_pgconfig()
 	echo "${buffer}" > ${datadir}/postgresql-statsinfo.conf
 }
 
-function get_version()
+function server_version()
 {
 	local pg_version=""
 	local pg_version_num=0
@@ -188,24 +205,26 @@ function get_version()
 
 function do_snapshot()
 {
-	local comment=${1:-""}
-	local port=${2:-${PGPORT}}
-	local user=${3:-${PGUSER}}
+	local user=${1}
+	local port=${2}
+	local repodb_user=${3}
+	local repodb_port=${4}
+	local comment=${5:-""}
 	local prev_count=0
 	local curr_count=0
 	local retry=0
 
-	prev_count=$(send_query -Atc "SELECT count(*) FROM statsrepo.snapshot")
+	prev_count=$(psql -U ${repodb_user} -p ${repodb_port} -d postgres -Atc "SELECT count(*) FROM statsrepo.snapshot")
 	if [ ${?} -ne 0 ] ; then
 		echo "ERROR: could not get snapid from repository" 1>&2
 		exit 1
 	fi
 
-	pg_statsinfo -p ${port} -U ${user} -S "${comment}"
+	pg_statsinfo -U ${user} -p ${port} -d postgres -S "${comment}"
 
 	while [ ${retry} -lt 30 ]
 	do
-		curr_count=$(send_query -Atc "SELECT count(*) FROM statsrepo.snapshot")
+		curr_count=$(psql -U ${repodb_user} -p ${repodb_port} -d postgres -Atc "SELECT count(*) FROM statsrepo.snapshot")
 		if [ ${?} -ne 0 ] ; then
 			echo "ERROR: could not get snapid from repository" 1>&2
 			exit 1
@@ -220,4 +239,25 @@ function do_snapshot()
 
 	echo "ERROR: snapshot has timeout" 1>&2
 	exit 1
+}
+
+function send_query()
+{
+	psql -U ${REPOSITORY_USER} -p ${REPOSITORY_PORT} -d postgres "${@}" <&0
+}
+
+function exec_command()
+{
+	eval "${1}"
+	printf "exit: %d\n\n" ${?}
+}
+
+function stop_all_database()
+{
+	if [ -e ${DBCLUSTER_DIR} ] ; then
+		for datadir in $(find ${DBCLUSTER_DIR} -maxdepth 1 -mindepth 1 -type d)
+		do
+			pg_ctl stop -m fast -D ${datadir} > /dev/null 2>&1
+		done
+	fi
 }

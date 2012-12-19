@@ -1,19 +1,31 @@
 #!/bin/bash
 
-. ./sql/environment.sh
-. ./sql/utility.sh
+. ./script/common.sh
 
-PGCONFIG_REPORT=${CONFIG_DIR}/postgresql-report.conf
+PGCONFIG=${CONFIG_DIR}/postgresql-report.conf
+
 SNAPSHOT_DELAY=3
 
-[ $(get_version) -ge 80400 ] &&
+function exec_statsinfo()
+{
+	pg_statsinfo -U ${REPOSITORY_USER} -p ${REPOSITORY_PORT} "${@}"
+}
+
+function exec_statsinfo2()
+{
+	pg_statsinfo -U ${PGUSER} -p ${PGPORT} "${@}"
+}
+
+trap stop_all_database EXIT
+
+[ $(server_version) -ge 80400 ] &&
 	export PGOPTIONS=' -c intervalstyle=postgres'
 
-echo "/*---- Initialize repository schema ----*/"
-send_query -c "DROP SCHEMA statsrepo CASCADE" > /dev/null 2>&1
+echo "/*---- Initialize repository DB ----*/"
+setup_repository ${REPOSITORY_DATA} ${REPOSITORY_USER} ${REPOSITORY_PORT} ${REPOSITORY_CONFIG}
 
 echo "/*---- Initialize monitored instance ----*/"
-setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG_REPORT} "" "" ""
+setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG} "" "" ""
 sleep 3
 
 echo "/*---- Show snapshot list / Show snapshot size ----*/"
@@ -97,5 +109,3 @@ UPDATE statsrepo.snapshot SET time = '2012-11-01 00:00:00';
 EOF
 exec_command "exec_statsinfo -l"
 exec_command "exec_statsinfo -s"
-
-pg_ctl stop -D ${PGDATA} > /dev/null

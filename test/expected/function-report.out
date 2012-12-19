@@ -1,6 +1,4 @@
-\! sh ./sql/setup.sh
 /*---- Initialize repository DB ----*/
-\! sh ./sql/function-report1.sh
 /*---- Input the repository data ----*/
 /*---- Create report ----*/
 /**--- REPORTID: Summary ---**/
@@ -1533,6 +1531,9 @@ STATSINFO Report (host: statsinfo, port: 5432)
 ----------------------------------------
 /* Replication Activity */
 ----------------------------------------
+
+/** Current Replication Status **/
+-----------------------------------
 User Name             : postgres
 Application Name      : walreceiver
 Client Address        : 127.0.0.1
@@ -1547,6 +1548,15 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
+
+/** Replication Delays **/
+-----------------------------------
+DateTime          Client               Flush Delay Size  Replay Delay Size 
+-----------------------------------------------------------------------------
+2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
+2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
+2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
+2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
@@ -1555,6 +1565,9 @@ STATSINFO Report (host: statsinfo, port: 5433)
 ----------------------------------------
 /* Replication Activity */
 ----------------------------------------
+
+/** Current Replication Status **/
+-----------------------------------
 User Name             : postgres
 Application Name      : walreceiver
 Client Address        : 127.0.0.1
@@ -1569,6 +1582,15 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
+
+/** Replication Delays **/
+-----------------------------------
+DateTime          Client               Flush Delay Size  Replay Delay Size 
+-----------------------------------------------------------------------------
+2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
+2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
+2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
+2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -1577,6 +1599,9 @@ STATSINFO Report (host: statsinfo, port: 5434)
 ----------------------------------------
 /* Replication Activity */
 ----------------------------------------
+
+/** Current Replication Status **/
+-----------------------------------
 User Name             : postgres
 Application Name      : walreceiver
 Client Address        : 127.0.0.1
@@ -1591,6 +1616,15 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
+
+/** Replication Delays **/
+-----------------------------------
+DateTime          Client               Flush Delay Size  Replay Delay Size 
+-----------------------------------------------------------------------------
+2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
+2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
+2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
+2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
@@ -1599,6 +1633,9 @@ STATSINFO Report (host: statsinfo, port: 5435)
 ----------------------------------------
 /* Replication Activity */
 ----------------------------------------
+
+/** Current Replication Status **/
+-----------------------------------
 User Name             : postgres
 Application Name      : walreceiver
 Client Address        : 127.0.0.1
@@ -1613,6 +1650,15 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
+
+/** Replication Delays **/
+-----------------------------------
+DateTime          Client               Flush Delay Size  Replay Delay Size 
+-----------------------------------------------------------------------------
+2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
+2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
+2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
+2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
@@ -1621,6 +1667,9 @@ STATSINFO Report (host: statsinfo, port: 5436)
 ----------------------------------------
 /* Replication Activity */
 ----------------------------------------
+
+/** Current Replication Status **/
+-----------------------------------
 User Name             : postgres
 Application Name      : walreceiver
 Client Address        : 127.0.0.1
@@ -1635,6 +1684,15 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
+
+/** Replication Delays **/
+-----------------------------------
+DateTime          Client               Flush Delay Size  Replay Delay Size 
+-----------------------------------------------------------------------------
+2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
+2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
+2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
+2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
 
 exit: 0
 
@@ -2137,6 +2195,9 @@ UPDATE pgbench_accounts SET abalance = abalance + -1975 WHERE aid = 65162;SELECT
 ----------------------------------------
 /* Replication Activity */
 ----------------------------------------
+
+/** Current Replication Status **/
+-----------------------------------
 User Name             : postgres
 Application Name      : walreceiver
 Client Address        : 127.0.0.1
@@ -2151,6 +2212,15 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
+
+/** Replication Delays **/
+-----------------------------------
+DateTime          Client               Flush Delay Size  Replay Delay Size 
+-----------------------------------------------------------------------------
+2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
+2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
+2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
+2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
 
 ----------------------------------------
 /* Setting Parameters */
@@ -2445,6 +2515,9 @@ UPDATE pgbench_accounts SET abalance = abalance + -1975 WHERE aid = 65162;SELECT
 ----------------------------------------
 /* Replication Activity */
 ----------------------------------------
+
+/** Current Replication Status **/
+-----------------------------------
 User Name             : postgres
 Application Name      : walreceiver
 Client Address        : 127.0.0.1
@@ -2459,6 +2532,15 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
+
+/** Replication Delays **/
+-----------------------------------
+DateTime          Client               Flush Delay Size  Replay Delay Size 
+-----------------------------------------------------------------------------
+2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
+2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
+2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
+2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
 
 ----------------------------------------
 /* Setting Parameters */
@@ -2753,6 +2835,9 @@ UPDATE pgbench_accounts SET abalance = abalance + -1975 WHERE aid = 65162;SELECT
 ----------------------------------------
 /* Replication Activity */
 ----------------------------------------
+
+/** Current Replication Status **/
+-----------------------------------
 User Name             : postgres
 Application Name      : walreceiver
 Client Address        : 127.0.0.1
@@ -2767,6 +2852,15 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
+
+/** Replication Delays **/
+-----------------------------------
+DateTime          Client               Flush Delay Size  Replay Delay Size 
+-----------------------------------------------------------------------------
+2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
+2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
+2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
+2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
 
 ----------------------------------------
 /* Setting Parameters */
@@ -3062,6 +3156,9 @@ UPDATE pgbench_accounts SET abalance = abalance + -1975 WHERE aid = 65162;SELECT
 ----------------------------------------
 /* Replication Activity */
 ----------------------------------------
+
+/** Current Replication Status **/
+-----------------------------------
 User Name             : postgres
 Application Name      : walreceiver
 Client Address        : 127.0.0.1
@@ -3076,6 +3173,15 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
+
+/** Replication Delays **/
+-----------------------------------
+DateTime          Client               Flush Delay Size  Replay Delay Size 
+-----------------------------------------------------------------------------
+2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
+2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
+2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
+2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
 
 ----------------------------------------
 /* Setting Parameters */
@@ -3378,6 +3484,9 @@ UPDATE pgbench_accounts SET abalance = abalance + -1975 WHERE aid = 65162;SELECT
 ----------------------------------------
 /* Replication Activity */
 ----------------------------------------
+
+/** Current Replication Status **/
+-----------------------------------
 User Name             : postgres
 Application Name      : walreceiver
 Client Address        : 127.0.0.1
@@ -3392,6 +3501,15 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
+
+/** Replication Delays **/
+-----------------------------------
+DateTime          Client               Flush Delay Size  Replay Delay Size 
+-----------------------------------------------------------------------------
+2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
+2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
+2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
+2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
 
 ----------------------------------------
 /* Setting Parameters */
@@ -3891,6 +4009,9 @@ UPDATE pgbench_accounts SET abalance = abalance + -1975 WHERE aid = 65162;SELECT
 ----------------------------------------
 /* Replication Activity */
 ----------------------------------------
+
+/** Current Replication Status **/
+-----------------------------------
 User Name             : postgres
 Application Name      : walreceiver
 Client Address        : 127.0.0.1
@@ -3905,6 +4026,15 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
+
+/** Replication Delays **/
+-----------------------------------
+DateTime          Client               Flush Delay Size  Replay Delay Size 
+-----------------------------------------------------------------------------
+2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
+2012-11-01 00:00  127.0.0.1:58145                0 byte           736 byte
+2012-11-01 00:00  127.0.0.1:58145             8568 byte          8568 byte
+2012-11-01 00:00  127.0.0.1:58145              672 byte           672 byte
 
 ----------------------------------------
 /* Setting Parameters */
@@ -3942,174 +4072,3 @@ Processing                        Executes
 
 exit: 0
 
-\! sh ./sql/function-report2.sh
-/*---- Initialize repository schema ----*/
-/*---- Initialize monitored instance ----*/
-/*---- Show snapshot list / Show snapshot size ----*/
-/**--- Number of snapshots (0) ---**/
-----------------------------------------
-Snapshot List
-----------------------------------------
-SnapshotID  InstanceID  Host                                  Port             Timestamp  Comment               Execute Time      Size
------------------------------------------------------------------------------------------------------------------------------------------
-exit: 0
-
-----------------------------------------
-Snapshot Size Information
-----------------------------------------
-Total Snapshot Size  : 0 bytes
-
-exit: 0
-
-/**--- Number of snapshots (1) ---**/
-----------------------------------------
-Snapshot List
-----------------------------------------
-SnapshotID  InstanceID  Host                                  Port             Timestamp  Comment               Execute Time      Size
------------------------------------------------------------------------------------------------------------------------------------------
-         1           1  statsinfo                             5432   2012-11-01 00:00:00  1st                       00:00:01   256 KiB
-exit: 0
-
-----------------------------------------
-Snapshot Size Information
-----------------------------------------
-Instance ID                : 1
-Database System ID         : 5807946214009601530
-Host                       : statsinfo
-Port                       : 5432
-Number Of Snapshots        : 1
-Snapshot Size              : 256 KiB
-Latest Snapshot ID         : 1
-Latest Snapshot Timestamp  : 2012-11-01 00:00:00
-
-Total Snapshot Size  : 256 KiB
-
-exit: 0
-
-/**--- Number of snapshots (2) ---**/
-----------------------------------------
-Snapshot List
-----------------------------------------
-SnapshotID  InstanceID  Host                                  Port             Timestamp  Comment               Execute Time      Size
------------------------------------------------------------------------------------------------------------------------------------------
-         1           1  statsinfo                             5432   2012-11-01 00:00:00  1st                       00:00:01   256 KiB
-         2           1  statsinfo                             5432   2012-11-01 00:01:00  2nd                       00:00:02   512 KiB
-exit: 0
-
-----------------------------------------
-Snapshot Size Information
-----------------------------------------
-Instance ID                : 1
-Database System ID         : 5807946214009601530
-Host                       : statsinfo
-Port                       : 5432
-Number Of Snapshots        : 2
-Snapshot Size              : 768 KiB
-Latest Snapshot ID         : 2
-Latest Snapshot Timestamp  : 2012-11-01 00:01:00
-
-Total Snapshot Size  : 768 KiB
-
-exit: 0
-
-/**--- Specify the INSTANCEID that exists in data (list) ---**/
-----------------------------------------
-Snapshot List
-----------------------------------------
-SnapshotID  InstanceID  Host                                  Port             Timestamp  Comment               Execute Time      Size
------------------------------------------------------------------------------------------------------------------------------------------
-         3           2  statsinfo                             5433   2012-11-01 00:03:00  3rd                       00:00:01   256 KiB
-exit: 0
-
-/**--- Specify the INSTANCEID that not exists in data (list) ---**/
-----------------------------------------
-Snapshot List
-----------------------------------------
-SnapshotID  InstanceID  Host                                  Port             Timestamp  Comment               Execute Time      Size
------------------------------------------------------------------------------------------------------------------------------------------
-exit: 0
-
-/**--- There are multiple instances data (list) ---**/
-----------------------------------------
-Snapshot Size Information
-----------------------------------------
-Instance ID                : 1
-Database System ID         : 5807946214009601530
-Host                       : statsinfo
-Port                       : 5432
-Number Of Snapshots        : 2
-Snapshot Size              : 768 KiB
-Latest Snapshot ID         : 2
-Latest Snapshot Timestamp  : 2012-11-01 00:01:00
-
-Instance ID                : 2
-Database System ID         : 5807946214009601531
-Host                       : statsinfo
-Port                       : 5433
-Number Of Snapshots        : 1
-Snapshot Size              : 256 KiB
-Latest Snapshot ID         : 3
-Latest Snapshot Timestamp  : 2012-11-01 00:03:00
-
-Total Snapshot Size  : 1024 KiB
-
-exit: 0
-
-/*---- Get a snapshot ----*/
-/**--- Specify the ASCII character as a comment of the snapshot ---**/
-exit: 0
-
-/**--- Specify the UTF-8 character as a comment of the snapshot ---**/
-exit: 0
-
-/**--- Specify the blank character as a comment of the snapshot ---**/
-exit: 0
-
-/**--- Specify the empty character as a comment of the snapshot ---**/
-exit: 0
-
-/*---- Delete a snapshot ----*/
-/**--- Specify the INSTANCEID that exists in data ---**/
-exit: 0
-
-/**--- Specify the INSTANCEID that not exists in data ---**/
-exit: 0
-
- snapid | instid |          comment           
---------+--------+----------------------------
-      1 |      1 | "1st"
-      2 |      1 | "2nd"
-      4 |      3 | "COMMENT"
-      5 |      3 | "マルチバイト文字"
-      6 |      3 | " "
-      7 |      3 | ""
-(6 rows)
-
-/**--- Quasi-normal pattern ---**/
-/***-- Contain the snapshot that is same acquisition date --***/
-----------------------------------------
-Snapshot List
-----------------------------------------
-SnapshotID  InstanceID  Host                                  Port             Timestamp  Comment               Execute Time      Size
------------------------------------------------------------------------------------------------------------------------------------------
-         1           1  statsinfo                             5432   2012-11-01 00:00:00  1st                       00:00:01   256 KiB
-         2           1  statsinfo                             5432   2012-11-01 00:00:00  2nd                       00:00:02   512 KiB
-exit: 0
-
-----------------------------------------
-Snapshot Size Information
-----------------------------------------
-Instance ID                : 1
-Database System ID         : 5807946214009601530
-Host                       : statsinfo
-Port                       : 5432
-Number Of Snapshots        : 2
-Snapshot Size              : 768 KiB
-Latest Snapshot ID         : 2
-Latest Snapshot Timestamp  : 2012-11-01 00:00:00
-
-Total Snapshot Size  : 768 KiB
-
-exit: 0
-
-\! sh ./sql/cleanup.sh

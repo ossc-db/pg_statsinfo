@@ -1,29 +1,40 @@
 #!/bin/bash
 
-. ./sql/environment.sh
-. ./sql/utility.sh
+. ./script/common.sh
 
-PGCONFIG_ALERT=${CONFIG_DIR}/postgresql-alert.conf
+PGCONFIG=${CONFIG_DIR}/postgresql-alert.conf
+
 RELOAD_DELAY=3
 ANALYZE_DELAY=1
 WRITE_DELAY=1
+
+function get_snapshot()
+{
+	do_snapshot ${PGUSER} ${PGPORT} ${REPOSITORY_USER} ${REPOSITORY_PORT}
+}
+
+trap stop_all_database EXIT
+
+echo "/*---- Initialize repository DB ----*/"
+setup_repository ${REPOSITORY_DATA} ${REPOSITORY_USER} ${REPOSITORY_PORT} ${REPOSITORY_CONFIG}
+
 echo "/*---- Initialize monitored instance ----*/"
-setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG_ALERT} "" "" ""
+setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG} "" "" ""
 sleep 3
-if [ $(get_version) -ge 80400 ] ; then
+if [ $(server_version) -ge 80400 ] ; then
 	echo "shared_preload_libraries = 'pg_statsinfo, pg_stat_statements'" >> ${PGDATA}/postgresql-statsinfo.conf
 	pg_ctl restart -w -D ${PGDATA} -o "-p ${PGPORT}" > /dev/null
 	sleep 3
-	if [ $(get_version) -ge 90100 ] ; then
-		psql -c "CREATE EXTENSION pg_stat_statements"
+	if [ $(server_version) -ge 90100 ] ; then
+		psql -c "CREATE EXTENSION pg_stat_statements" > /dev/null
 	else
-		psql -f $(pg_config --sharedir)/contrib/pg_stat_statements.sql
+		psql -f $(pg_config --sharedir)/contrib/pg_stat_statements.sql > /dev/null
 	fi
 fi
 
 echo "/*---- Alert Function ----*/"
 echo "/**--- Alert the number of rollbacks per second ---**/"
-do_snapshot
+get_snapshot
 send_query -c "UPDATE statsrepo.alert SET rollback_tps = 0"
 psql << EOF
 BEGIN;
@@ -32,7 +43,7 @@ ROLLBACK;
 ANALYZE;
 EOF
 sleep ${ANALYZE_DELAY}
-do_snapshot
+get_snapshot
 sleep ${WRITE_DELAY}
 tail -n 1 ${PGDATA}/pg_log/postgresql.log |
 sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g" |
@@ -48,18 +59,18 @@ COMMIT;
 ANALYZE;
 EOF
 sleep ${ANALYZE_DELAY}
-do_snapshot
+get_snapshot
 sleep ${WRITE_DELAY}
 tail -n 1 ${PGDATA}/pg_log/postgresql.log |
 sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g" |
 sed "s/[0-9]\+\.[0-9]\+/xxx/"
 send_query -c "UPDATE statsrepo.alert SET commit_tps = default"
 
-if [ $(get_version) -ge 80400 ] ; then
+if [ $(server_version) -ge 80400 ] ; then
 	echo "/**--- Alert the response time average of query ---**/"
 	send_query -c "UPDATE statsrepo.alert SET response_avg = 0"
 	psql -c "SELECT pg_sleep(1)" > /dev/null
-	do_snapshot
+	get_snapshot
 	sleep ${WRITE_DELAY}
 	tail -n 1 ${PGDATA}/pg_log/postgresql.log |
 	sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g" |
@@ -69,7 +80,7 @@ if [ $(get_version) -ge 80400 ] ; then
 	echo "/**--- Alert the response time max of query ---**/"
 	send_query -c "UPDATE statsrepo.alert SET response_worst = 0"
 	psql -c "SELECT pg_sleep(1)" > /dev/null
-	do_snapshot
+	get_snapshot
 	sleep ${WRITE_DELAY}
 	tail -n 1 ${PGDATA}/pg_log/postgresql.log |
 	sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g" |
@@ -89,11 +100,9 @@ DELETE FROM tbl03 WHERE id <= 300000;
 ANALYZE;
 EOF
 sleep ${ANALYZE_DELAY}
-do_snapshot
+get_snapshot
 sleep ${WRITE_DELAY}
 tail -n 3 ${PGDATA}/pg_log/postgresql.log |
 sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g" |
 sed "s/[0-9]\+\.[0-9]\+/xxx/"
 send_query -c "UPDATE statsrepo.alert SET (garbage_size, garbage_percent, garbage_percent_table) = (default, default, default)"
-
-pg_ctl stop -D ${PGDATA} > /dev/null

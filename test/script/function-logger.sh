@@ -1,18 +1,23 @@
 #!/bin/bash
 
-. ./sql/environment.sh
-. ./sql/utility.sh
+. ./script/common.sh
 
-PGCONFIG_LOGGER=${CONFIG_DIR}/postgresql-logger.conf
+PGCONFIG=${CONFIG_DIR}/postgresql-logger.conf
+
 RELOAD_DELAY=3
 WRITE_DELAY=1
 
+trap stop_all_database EXIT
+
+echo "/*---- Initialize repository DB ----*/"
+setup_repository ${REPOSITORY_DATA} ${REPOSITORY_USER} ${REPOSITORY_PORT} ${REPOSITORY_CONFIG}
+
 echo "/*---- Initialize monitored instance ----*/"
-setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG_LOGGER} "" "" ""
+setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG} "" "" ""
 sleep 3
 createuser -SDRl user01
 createuser -SDRl user02
-[ $(get_version) -lt 90000 ] &&
+[ $(server_version) -lt 90000 ] &&
 	createlang plpgsql
 psql << EOF
 CREATE TABLE tbl01 (id bigint);
@@ -75,7 +80,7 @@ sleep ${WRITE_DELAY}
 grep "textlog routing test (error)" ${PGDATA}/pg_log/postgresql.log
 
 echo "/**--- Textlog routing (adjust_log_level = off) ---**/"
-set_pgconfig ${PGCONFIG_LOGGER} ${PGDATA}
+set_pgconfig ${PGCONFIG} ${PGDATA}
 update_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_level" "off"
 update_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_info" "'42P01'"
 pg_ctl reload && sleep ${RELOAD_DELAY}
@@ -134,7 +139,7 @@ sleep ${WRITE_DELAY}
 tail -n 2 ${PGDATA}/pg_log/postgresql.log
 
 echo "/**--- Sets the nologging filter (textlog_nologging_users = 'user01') ---**/"
-set_pgconfig ${PGCONFIG_LOGGER} ${PGDATA}
+set_pgconfig ${PGCONFIG} ${PGDATA}
 update_pgconfig ${PGDATA} "<guc_prefix>.textlog_nologging_users" "'user01'"
 update_pgconfig ${PGDATA} "log_statement" "'all'"
 pg_ctl reload && sleep ${RELOAD_DELAY}
@@ -153,7 +158,7 @@ sleep ${WRITE_DELAY}
 tail -n 1 ${PGDATA}/pg_log/postgresql.log
 
 echo "/**--- Collect the CHECKPOINT information ---**/"
-set_pgconfig ${PGCONFIG_LOGGER} ${PGDATA}
+set_pgconfig ${PGCONFIG} ${PGDATA}
 update_pgconfig ${PGDATA} "log_checkpoints" "on"
 update_pgconfig ${PGDATA} "checkpoint_timeout" "30"
 update_pgconfig ${PGDATA} "checkpoint_segments" "1"
@@ -182,7 +187,7 @@ ORDER BY
 EOF
 
 echo "/**--- Collect the AUTOANALYZE information ---**/"
-set_pgconfig ${PGCONFIG_LOGGER} ${PGDATA}
+set_pgconfig ${PGCONFIG} ${PGDATA}
 update_pgconfig ${PGDATA} "autovacuum" "on"
 update_pgconfig ${PGDATA} "log_autovacuum_min_duration" "0"
 update_pgconfig ${PGDATA} "autovacuum_naptime" "1"
@@ -208,8 +213,8 @@ ORDER BY
 	database, schema, "table";
 EOF
 
-echo "/**--- Collect the AUOVACUUM information ---**/"
-if [ $(get_version) -ge 90200 ] ; then
+echo "/**--- Collect the AUTOVACUUM information ---**/"
+if [ $(server_version) -ge 90200 ] ; then
 	send_query << EOF
 SELECT
 	instid,
@@ -258,5 +263,3 @@ ORDER BY
 	database, schema, "table";
 EOF
 fi
-
-pg_ctl stop -D ${PGDATA} > /dev/null
