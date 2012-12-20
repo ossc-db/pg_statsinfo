@@ -57,6 +57,14 @@ SELECT \
 	avg_write_rate \
 FROM \
 	statsrepo.get_autovacuum_activity2($1, $2)"
+#define SQL_SELECT_AUTOANALYZE_STATS "\
+SELECT \
+	datname || '.' || nspname || '.' || relname, \
+	\"count\", \
+	avg_duration, \
+	max_duration \
+FROM \
+	statsrepo.get_autoanalyze_stats($1, $2)"
 #define SQL_SELECT_QUERY_ACTIVITY_FUNCTIONS		"SELECT * FROM statsrepo.get_query_activity_functions($1, $2) LIMIT 20"
 #define SQL_SELECT_QUERY_ACTIVITY_STATEMENTS	"SELECT * FROM statsrepo.get_query_activity_statements($1, $2) LIMIT 20"
 #define SQL_SELECT_LOCK_CONFLICTS				"SELECT * FROM statsrepo.get_lock_activity($1, $2) LIMIT 20"
@@ -861,7 +869,7 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "/* Autovacuum Activity */\n");
 	fprintf(out, "----------------------------------------\n\n");
 
-	fprintf(out, "/** Basic Statistics (Average) **/\n");
+	fprintf(out, "/** Vacuum Basic Statistics (Average) **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-32s  %8s  %12s  %12s  %12s  %12s  %13s\n",
 		"Table", "Count", "Index Scans", "Removed Rows", "Remain Rows", "Duration", "Duration(Max)");
@@ -884,7 +892,7 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	if (scope->version >= 90200)
 	{
-		fprintf(out, "/** I/O Statistics (Average) **/\n");
+		fprintf(out, "/** Vacuum I/O Statistics (Average) **/\n");
 		fprintf(out, "-----------------------------------\n");
 		fprintf(out, "%-32s  %10s  %10s  %10s  %13s  %13s\n",
 			"Table", "Page Hit", "Page Miss", "Page Dirty", "Read Rate", "Write Rate");
@@ -904,6 +912,24 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 		fprintf(out, "\n");
 		PQclear(res);
 	}
+
+	fprintf(out, "/** Analyze Statistics (Average) **/\n");
+	fprintf(out, "-----------------------------------\n");
+	fprintf(out, "%-32s  %8s  %12s  %13s\n",
+		"Table", "Count", "Duration", "Duration(Max)");
+	fprintf(out, "--------------------------------------------------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_AUTOANALYZE_STATS, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "%-32s  %8s  %10s s  %11s s\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1),
+			PQgetvalue(res, i, 2),
+			PQgetvalue(res, i, 3));
+	}
+	fprintf(out, "\n");
+	PQclear(res);
 }
 
 /*

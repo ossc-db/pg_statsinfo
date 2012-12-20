@@ -2329,6 +2329,39 @@ $$
 $$
 LANGUAGE sql;
 
+-- generate information that corresponds to 'Autovacuum Activity'
+CREATE FUNCTION statsrepo.get_autoanalyze_stats(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT datname			text,
+	OUT nspname			text,
+	OUT relname			text,
+	OUT "count"			bigint,
+	OUT avg_duration	numeric,
+	OUT max_duration	numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		database,
+		schema,
+		"table",
+		count(*),
+		round(avg(duration)::numeric,3),
+		round(max(duration)::numeric,3)
+	FROM
+		statsrepo.autoanalyze a,
+		(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+		(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
+	WHERE
+		a.start BETWEEN b.time AND e.time
+		AND a.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+	GROUP BY
+		database, schema, "table"
+	ORDER BY
+		5 DESC;
+$$
+LANGUAGE sql;
+
 -- generate information that corresponds to 'Query Activity (Functions)'
 CREATE FUNCTION statsrepo.get_query_activity_functions(
 	IN snapid_begin		bigint,
