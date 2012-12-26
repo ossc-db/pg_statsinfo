@@ -178,9 +178,9 @@ And, this command has following function:
 <h3 id="requirement">Requirement</h3>
 <dl>
 <dt>PostgreSQL versions</dt>
-<dd>PostgreSQL 8.3, 8.4, 9.0, 9.1, 9.2 (required --with-xml configure option. RPM's default setting is with --with-xml option.)</dd>
+<dd>PostgreSQL 8.3, 8.4, 9.0, 9.1, 9.2 (required --with-libxml configure option. RPM's default setting is with --with-libxml option.)</dd>
 <dt>OS</dt>
-<dd>RHEL 5.x,6.x, CentOS 5.x,6,x</dd>
+<dd>RHEL 5.x, 6.x, CentOS 5.x, 6.x</dd>
 <dt>Required connections</dt>
 <dd>1 connection for the monitored instance / 1 connections for repository.<br />
 2 connections required if monitored instance and repository are in the same server.</dd>
@@ -195,7 +195,7 @@ $ su
 # rpm -ivh pg_statsinfo-2.4.0-1/pg84.rhel5.x86_64.rpm
 </pre>
 
-<h4>source</h4>
+<h4>Source</h4>
 
 <p>You can use pgxs to bulld the module from the source codes.
 You don't have to run sql files manually because pg_statsinfo installs them automatically for both monitored instances and repositories.</p>
@@ -213,7 +213,7 @@ $ su
 <h3 id="install">Configuration</h3>
 This section is configuration of pg_statsinfo.
 
-<h4 id="install">configuration of postgresql.conf</h4>
+<h4 id="install">Configuration of postgresql.conf</h4>
 First, you check the observation postgresql is stoped.
 This configuration method is that snapshot repository is same instance in a PostgreSQL database. If you want to config other setting, you read <a href="#configuration">this section</a>.
 
@@ -253,7 +253,7 @@ log_autovacuum_min_duration = 0
   <dd>Force-set on.</dd>
 </dl>
 
-<h4>configration of pg_hba.conf</h4>
+<h4>Configration of pg_hba.conf</h4>
 <p>
 Allow the user who run the PostgreSQL server to login the server without any passwords from localhost.
 The recommended method is "ident" authentication here.
@@ -276,7 +276,7 @@ shared_preload_libraries = 'pg_statsinfo' # preload the library</pre>
 <p>
 In addition, contrib/pg_statsinfo.sql and contrib/pg_statsrepo.sql are installed automactically. So, you don't need to install them manually. </p>
 
-<h4>configuration of input query statistic</h4>
+<h4>Configuration of input query statistic</h4>
 <p>
 Also, if you use PostgreSQL 8.4 or later, <a href="http://developer.postgresql.org/pgdocs/postgres/pgstatstatements.html">pg_stat_statements</a> is installed in 'postgres' database in the monitored instance, pg_statsinfo gathers the query statistics and add them into snapshot.
 If you will use it, run the following command only once at the fist server start.
@@ -287,7 +287,7 @@ If you will use it, run the following command only once at the fist server start
 That's all. Install is finished.
 </p>
 
-<h2 id='usage'>usage</h2>
+<h2 id='usage'>Usage</h2>
 <p>This section is explained maintenance and configuration in pg_statsinfo.</p>
 
 <h3 id="start-or-stop">Start or Stop</h3>
@@ -301,8 +301,8 @@ It cannot run in standalone.</p>
 Non-smart shutdown with 'pg_ctl stop -m fast|immediate' might cause some error messages, but you can ignore those errors.</p>
 <pre>$ pg_ctl stop -m smart [OPTIONS]</pre>
 
-<h3 id="snapshot">get or maintenance snapshot</h3>
-<h4>automatic snapshot</h4>
+<h3 id="snapshot">Get or maintenance snapshot</h3>
+<h4>Automatic snapshot</h4>
 <p>
 Pg_statsinfo gets snapshot every interval time.
 Interval time configuration is in the following.
@@ -311,13 +311,13 @@ Interval time configuration is in the following.
 <p>example: snapshot interval time is 30min</p>
 <pre>pg_statsinfo.snapshot_interval = 30min </pre>
 
-<h4>manual snapshot</h4>
+<h4>Manual snapshot</h4>
 <p>
 If you want to get snapshot manualy, you use SQL statsinfo.snapshot function(text DEFAULT NULL).
 </p>
 <pre>$ psql -d postgres -c "SELECT statsinfo.snapshot('comment')"</pre>
 
-<h4>automatic maintenance</h4>
+<h4>Automatic maintenance</h4>
 <p>
 If you want to maintain snapshot repository, you configure automatic maintenance mode in postgresql.conf.
 Auto maintenance is executed every day.
@@ -330,7 +330,7 @@ pg_statsinfo.repository_keepday = 7
 </pre>
 <p>Caution! : If you don't use automatic maintenance mode, repository size will be very large. Plese maintenance repository manualy in every term.</p>
 
-<h4>manual maintenance</h4>
+<h4>Manual maintenance</h4>
 <p>You can use <code>statsrepo.del_snapshot(timestamptz)</code> function to delete snapshots in the repository.
 Snapshots older than the specified timestamp will be deleted.</p>
 
