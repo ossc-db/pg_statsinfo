@@ -40,9 +40,9 @@
 SELECT \
 	datname || '.' || nspname || '.' || relname, \
 	\"count\", \
-	avg_index_scans, \
 	avg_tup_removed, \
 	avg_tup_remain, \
+	avg_index_scans, \
 	avg_duration, \
 	max_duration \
 FROM \
@@ -60,9 +60,10 @@ FROM \
 #define SQL_SELECT_AUTOANALYZE_STATS "\
 SELECT \
 	datname || '.' || nspname || '.' || relname, \
-	\"count\", \
+	total_duration, \
 	avg_duration, \
-	max_duration \
+	max_duration, \
+	\"count\" \
 FROM \
 	statsrepo.get_autoanalyze_stats($1, $2)"
 #define SQL_SELECT_QUERY_ACTIVITY_FUNCTIONS		"SELECT * FROM statsrepo.get_query_activity_functions($1, $2) LIMIT 20"
@@ -872,7 +873,7 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "/** Vacuum Basic Statistics (Average) **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-32s  %8s  %12s  %12s  %12s  %12s  %13s\n",
-		"Table", "Count", "Index Scans", "Removed Rows", "Remain Rows", "Duration", "Duration(Max)");
+		"Table", "Count", "Removed Rows", "Remain Rows", "Index Scans", "Duration", "Duration(Max)");
 	fprintf(out, "--------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_ACTIVITY, lengthof(params), params);
@@ -913,20 +914,21 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 		PQclear(res);
 	}
 
-	fprintf(out, "/** Analyze Statistics (Average) **/\n");
+	fprintf(out, "/** Analyze Statistics **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-32s  %8s  %12s  %13s\n",
-		"Table", "Count", "Duration", "Duration(Max)");
-	fprintf(out, "--------------------------------------------------------------------------\n");
+	fprintf(out, "%-32s  %15s  %15s  %15s  %8s\n",
+		"Table", "Duration(Total)", "Duration(Avg)", "Duration(Max)", "Count");
+	fprintf(out, "------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_AUTOANALYZE_STATS, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-32s  %8s  %10s s  %11s s\n",
+		fprintf(out, "%-32s  %13s s  %13s s  %13s s  %8s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
-			PQgetvalue(res, i, 3));
+			PQgetvalue(res, i, 3),
+			PQgetvalue(res, i, 4));
 	}
 	fprintf(out, "\n");
 	PQclear(res);

@@ -2064,9 +2064,9 @@ CREATE FUNCTION statsrepo.get_autovacuum_activity(
 	OUT nspname			text,
 	OUT relname			text,
 	OUT "count"			bigint,
-	OUT avg_index_scans	numeric,
 	OUT avg_tup_removed	numeric,
 	OUT avg_tup_remain	numeric,
+	OUT avg_index_scans	numeric,
 	OUT avg_duration	numeric,
 	OUT max_duration	numeric
 ) RETURNS SETOF record AS
@@ -2076,9 +2076,9 @@ $$
 		schema,
 		"table",
 		count(*),
-		round(avg(index_scans)::numeric,3),
 		round(avg(tup_removed)::numeric,3),
 		round(avg(tup_remain)::numeric,3),
+		round(avg(index_scans)::numeric,3),
 		round(avg(duration)::numeric,3),
 		round(max(duration)::numeric,3)
 	FROM
@@ -2139,18 +2139,20 @@ CREATE FUNCTION statsrepo.get_autoanalyze_stats(
 	OUT datname			text,
 	OUT nspname			text,
 	OUT relname			text,
-	OUT "count"			bigint,
+	OUT total_duration	numeric,
 	OUT avg_duration	numeric,
-	OUT max_duration	numeric
+	OUT max_duration	numeric,
+	OUT "count"			bigint
 ) RETURNS SETOF record AS
 $$
 	SELECT
 		database,
 		schema,
 		"table",
-		count(*),
+		round(sum(duration)::numeric,3),
 		round(avg(duration)::numeric,3),
-		round(max(duration)::numeric,3)
+		round(max(duration)::numeric,3),
+		count(*)
 	FROM
 		statsrepo.autoanalyze a,
 		(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
@@ -2161,7 +2163,7 @@ $$
 	GROUP BY
 		database, schema, "table"
 	ORDER BY
-		5 DESC;
+		4 DESC;
 $$
 LANGUAGE sql;
 
