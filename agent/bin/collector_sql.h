@@ -161,6 +161,7 @@ ORDER BY dbid"
 SELECT \
 	name, \
 	setting, \
+	unit, \
 	source \
 FROM \
 	pg_settings \
@@ -173,6 +174,7 @@ AND \
 SELECT \
 	name, \
 	setting, \
+	unit, \
 	source \
 FROM \
 	pg_settings \

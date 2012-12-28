@@ -44,7 +44,7 @@ INSERT INTO statsrepo.replication VALUES \
 INSERT INTO statsrepo.xlog VALUES ($1, $2, $3)"
 
 #define SQL_INSERT_SETTING "\
-INSERT INTO statsrepo.setting VALUES ($1, $2, $3, $4)"
+INSERT INTO statsrepo.setting VALUES ($1, $2, $3, $4, $5)"
 
 #define SQL_INSERT_ROLE "\
 INSERT INTO statsrepo.role VALUES ($1, $2, $3)"

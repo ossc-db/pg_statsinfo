@@ -1115,17 +1115,18 @@ report_setting_parameters(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "----------------------------------------\n");
 	fprintf(out, "/* Setting Parameters */\n");
 	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "%-32s  %-32s  %-s\n",
-		"Name", "Setting", "Source");
-	fprintf(out, "-----------------------------------------------------------------------------------------------\n");
+	fprintf(out, "%-32s  %-32s  %-6s  %-s\n",
+		"Name", "Setting", "Unit", "Source");
+	fprintf(out, "-------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_SETTING_PARAMETERS, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-32s  %-32s  %-s\n",
+		fprintf(out, "%-32s  %-32s  %-6s  %-s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
-			PQgetvalue(res, i, 2));
+			PQgetvalue(res, i, 2),
+			PQgetvalue(res, i, 3));
 	}
 	fprintf(out, "\n");
 	PQclear(res);

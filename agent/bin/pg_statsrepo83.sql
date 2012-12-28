@@ -211,6 +211,7 @@ CREATE TABLE statsrepo.setting
 	snapid			bigint,
 	name			text,
 	setting			text,
+	unit			text,
 	source			text,
 	PRIMARY KEY (snapid, name),
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
@@ -2569,22 +2570,28 @@ CREATE FUNCTION statsrepo.get_setting_parameters(
 	IN snapid_end	bigint,
 	OUT name		text,
 	OUT setting		text,
+	OUT unit		text,
 	OUT source		text
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		so.name,
-		CASE WHEN sa.setting = so.setting THEN
-			so.setting
+		se.name,
+		CASE WHEN se.setting <> sb.setting THEN
+			coalesce(sb.setting, '(default)') || ' -> ' || coalesce(se.setting, '(default)')
 		ELSE
-			coalesce(sa.setting, '(default)') || ' -> ' || coalesce(so.setting, '(default)')
+			se.setting
 		END,
-		so.source
+		se.unit,
+		se.source
 	FROM
-		statsrepo.setting so LEFT JOIN statsrepo.setting sa
-			ON so.name = sa.name AND sa.snapid = $1
+		statsrepo.setting sb,
+		statsrepo.setting se
 	WHERE
-		so.snapid = (SELECT MIN(snapid) FROM statsrepo.setting WHERE snapid >= $2);
+		sb.name = se.name
+		AND sb.snapid = $1
+		AND se.snapid = $2
+	ORDER BY
+		se.name;
 $$
 LANGUAGE sql;
 
