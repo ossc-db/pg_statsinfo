@@ -454,12 +454,13 @@ SELECT
 	snapid,
 	name,
 	setting,
+	unit,
 	source
 FROM
 	statsrepo.setting
 WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot)
-	AND name IN ('logging_collector', 'shared_preload_libraries', 'port')
+	AND name IN ('logging_collector', 'shared_buffers', 'port')
 ORDER BY
 	name;
 EOF

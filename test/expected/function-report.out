@@ -1241,12 +1241,21 @@ STATSINFO Report (host: statsinfo, port: 5432)
 /* Autovacuum Activity */
 ----------------------------------------
 
-/** Basic Statistics (Average) **/
+/** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count   Index Scans  Removed Rows   Remain Rows      Duration  Duration(Max)
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
 --------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches         2         1.000         2.000         0.500       0.000 s        0.000 s
-postgres.public.pgbench_tellers          2         0.500       207.000        19.500       0.000 s        0.000 s
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+
+/** Analyze Statistics **/
+-----------------------------------
+Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
+------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
+postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
+postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
+postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
@@ -1256,12 +1265,21 @@ STATSINFO Report (host: statsinfo, port: 5433)
 /* Autovacuum Activity */
 ----------------------------------------
 
-/** Basic Statistics (Average) **/
+/** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count   Index Scans  Removed Rows   Remain Rows      Duration  Duration(Max)
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
 --------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches         2         1.000         2.000         0.500       0.000 s        0.000 s
-postgres.public.pgbench_tellers          2         0.500       207.000        19.500       0.000 s        0.000 s
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+
+/** Analyze Statistics **/
+-----------------------------------
+Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
+------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
+postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
+postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
+postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -1271,12 +1289,21 @@ STATSINFO Report (host: statsinfo, port: 5434)
 /* Autovacuum Activity */
 ----------------------------------------
 
-/** Basic Statistics (Average) **/
+/** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count   Index Scans  Removed Rows   Remain Rows      Duration  Duration(Max)
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
 --------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches         2         1.000         2.000         0.500       0.000 s        0.000 s
-postgres.public.pgbench_tellers          2         0.500       207.000        19.500       0.000 s        0.000 s
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+
+/** Analyze Statistics **/
+-----------------------------------
+Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
+------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
+postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
+postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
+postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
@@ -1286,12 +1313,21 @@ STATSINFO Report (host: statsinfo, port: 5435)
 /* Autovacuum Activity */
 ----------------------------------------
 
-/** Basic Statistics (Average) **/
+/** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count   Index Scans  Removed Rows   Remain Rows      Duration  Duration(Max)
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
 --------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches         2         1.000         2.000         0.500       0.000 s        0.000 s
-postgres.public.pgbench_tellers          2         0.500       207.000        19.500       0.000 s        0.000 s
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+
+/** Analyze Statistics **/
+-----------------------------------
+Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
+------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
+postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
+postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
+postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
@@ -1301,19 +1337,28 @@ STATSINFO Report (host: statsinfo, port: 5436)
 /* Autovacuum Activity */
 ----------------------------------------
 
-/** Basic Statistics (Average) **/
+/** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count   Index Scans  Removed Rows   Remain Rows      Duration  Duration(Max)
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
 --------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches         2         1.000         2.000         0.500       0.000 s        0.000 s
-postgres.public.pgbench_tellers          2         0.500       207.000        19.500       0.000 s        0.000 s
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
 
-/** I/O Statistics (Average) **/
+/** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                               Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate
 -----------------------------------------------------------------------------------------------------
 postgres.public.pgbench_branches      57.500       0.000       1.000    0.000 MiB/s   15.259 MiB/s
 postgres.public.pgbench_tellers       35.500       0.000       0.500    0.000 MiB/s    8.798 MiB/s
+
+/** Analyze Statistics **/
+-----------------------------------
+Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
+------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
+postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
+postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
+postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
 
 exit: 0
 
@@ -1704,9 +1749,9 @@ STATSINFO Report (host: statsinfo, port: 5432)
 ----------------------------------------
 /* Setting Parameters */
 ----------------------------------------
-Name                              Setting                           Source
------------------------------------------------------------------------------------------------
-log_checkpoints                   on                                configuration file
+Name                              Setting                           Unit    Source
+-------------------------------------------------------------------------------------------------------
+shared_buffers                    4096                              8kB     configuration file
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
@@ -1715,9 +1760,9 @@ STATSINFO Report (host: statsinfo, port: 5433)
 ----------------------------------------
 /* Setting Parameters */
 ----------------------------------------
-Name                              Setting                           Source
------------------------------------------------------------------------------------------------
-log_checkpoints                   on                                configuration file
+Name                              Setting                           Unit    Source
+-------------------------------------------------------------------------------------------------------
+shared_buffers                    4096                              8kB     configuration file
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -1726,9 +1771,9 @@ STATSINFO Report (host: statsinfo, port: 5434)
 ----------------------------------------
 /* Setting Parameters */
 ----------------------------------------
-Name                              Setting                           Source
------------------------------------------------------------------------------------------------
-log_checkpoints                   on                                configuration file
+Name                              Setting                           Unit    Source
+-------------------------------------------------------------------------------------------------------
+shared_buffers                    4096                              8kB     configuration file
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
@@ -1737,9 +1782,9 @@ STATSINFO Report (host: statsinfo, port: 5435)
 ----------------------------------------
 /* Setting Parameters */
 ----------------------------------------
-Name                              Setting                           Source
------------------------------------------------------------------------------------------------
-log_checkpoints                   on                                configuration file
+Name                              Setting                           Unit    Source
+-------------------------------------------------------------------------------------------------------
+shared_buffers                    4096                              8kB     configuration file
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
@@ -1748,9 +1793,9 @@ STATSINFO Report (host: statsinfo, port: 5436)
 ----------------------------------------
 /* Setting Parameters */
 ----------------------------------------
-Name                              Setting                           Source
------------------------------------------------------------------------------------------------
-log_checkpoints                   on                                configuration file
+Name                              Setting                           Unit    Source
+-------------------------------------------------------------------------------------------------------
+shared_buffers                    4096                              8kB     configuration file
 
 exit: 0
 
@@ -2153,12 +2198,21 @@ Write Duration Maximum   : 49.193 sec
 /* Autovacuum Activity */
 ----------------------------------------
 
-/** Basic Statistics (Average) **/
+/** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count   Index Scans  Removed Rows   Remain Rows      Duration  Duration(Max)
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
 --------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches         2         1.000         2.000         0.500       0.000 s        0.000 s
-postgres.public.pgbench_tellers          2         0.500       207.000        19.500       0.000 s        0.000 s
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+
+/** Analyze Statistics **/
+-----------------------------------
+Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
+------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
+postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
+postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
+postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
 
 ----------------------------------------
 /* Query Activity */
@@ -2225,9 +2279,9 @@ DateTime          Client               Flush Delay Size  Replay Delay Size
 ----------------------------------------
 /* Setting Parameters */
 ----------------------------------------
-Name                              Setting                           Source
------------------------------------------------------------------------------------------------
-log_checkpoints                   on                                configuration file
+Name                              Setting                           Unit    Source
+-------------------------------------------------------------------------------------------------------
+shared_buffers                    4096                              8kB     configuration file
 
 ----------------------------------------
 /* Schema Information */
@@ -2473,12 +2527,21 @@ Write Duration Maximum   : 49.193 sec
 /* Autovacuum Activity */
 ----------------------------------------
 
-/** Basic Statistics (Average) **/
+/** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count   Index Scans  Removed Rows   Remain Rows      Duration  Duration(Max)
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
 --------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches         2         1.000         2.000         0.500       0.000 s        0.000 s
-postgres.public.pgbench_tellers          2         0.500       207.000        19.500       0.000 s        0.000 s
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+
+/** Analyze Statistics **/
+-----------------------------------
+Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
+------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
+postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
+postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
+postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
 
 ----------------------------------------
 /* Query Activity */
@@ -2545,9 +2608,9 @@ DateTime          Client               Flush Delay Size  Replay Delay Size
 ----------------------------------------
 /* Setting Parameters */
 ----------------------------------------
-Name                              Setting                           Source
------------------------------------------------------------------------------------------------
-log_checkpoints                   on                                configuration file
+Name                              Setting                           Unit    Source
+-------------------------------------------------------------------------------------------------------
+shared_buffers                    4096                              8kB     configuration file
 
 ----------------------------------------
 /* Schema Information */
@@ -2793,12 +2856,21 @@ Write Duration Maximum   : 49.193 sec
 /* Autovacuum Activity */
 ----------------------------------------
 
-/** Basic Statistics (Average) **/
+/** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count   Index Scans  Removed Rows   Remain Rows      Duration  Duration(Max)
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
 --------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches         2         1.000         2.000         0.500       0.000 s        0.000 s
-postgres.public.pgbench_tellers          2         0.500       207.000        19.500       0.000 s        0.000 s
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+
+/** Analyze Statistics **/
+-----------------------------------
+Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
+------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
+postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
+postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
+postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
 
 ----------------------------------------
 /* Query Activity */
@@ -2865,9 +2937,9 @@ DateTime          Client               Flush Delay Size  Replay Delay Size
 ----------------------------------------
 /* Setting Parameters */
 ----------------------------------------
-Name                              Setting                           Source
------------------------------------------------------------------------------------------------
-log_checkpoints                   on                                configuration file
+Name                              Setting                           Unit    Source
+-------------------------------------------------------------------------------------------------------
+shared_buffers                    4096                              8kB     configuration file
 
 ----------------------------------------
 /* Schema Information */
@@ -3114,12 +3186,21 @@ Write Duration Maximum   : 49.193 sec
 /* Autovacuum Activity */
 ----------------------------------------
 
-/** Basic Statistics (Average) **/
+/** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count   Index Scans  Removed Rows   Remain Rows      Duration  Duration(Max)
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
 --------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches         2         1.000         2.000         0.500       0.000 s        0.000 s
-postgres.public.pgbench_tellers          2         0.500       207.000        19.500       0.000 s        0.000 s
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+
+/** Analyze Statistics **/
+-----------------------------------
+Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
+------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
+postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
+postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
+postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
 
 ----------------------------------------
 /* Query Activity */
@@ -3186,9 +3267,9 @@ DateTime          Client               Flush Delay Size  Replay Delay Size
 ----------------------------------------
 /* Setting Parameters */
 ----------------------------------------
-Name                              Setting                           Source
------------------------------------------------------------------------------------------------
-log_checkpoints                   on                                configuration file
+Name                              Setting                           Unit    Source
+-------------------------------------------------------------------------------------------------------
+shared_buffers                    4096                              8kB     configuration file
 
 ----------------------------------------
 /* Schema Information */
@@ -3435,19 +3516,28 @@ Write Duration Maximum   : 49.193 sec
 /* Autovacuum Activity */
 ----------------------------------------
 
-/** Basic Statistics (Average) **/
+/** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count   Index Scans  Removed Rows   Remain Rows      Duration  Duration(Max)
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
 --------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches         2         1.000         2.000         0.500       0.000 s        0.000 s
-postgres.public.pgbench_tellers          2         0.500       207.000        19.500       0.000 s        0.000 s
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
 
-/** I/O Statistics (Average) **/
+/** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                               Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate
 -----------------------------------------------------------------------------------------------------
 postgres.public.pgbench_branches      57.500       0.000       1.000    0.000 MiB/s   15.259 MiB/s
 postgres.public.pgbench_tellers       35.500       0.000       0.500    0.000 MiB/s    8.798 MiB/s
+
+/** Analyze Statistics **/
+-----------------------------------
+Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
+------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
+postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
+postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
+postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
 
 ----------------------------------------
 /* Query Activity */
@@ -3514,9 +3604,9 @@ DateTime          Client               Flush Delay Size  Replay Delay Size
 ----------------------------------------
 /* Setting Parameters */
 ----------------------------------------
-Name                              Setting                           Source
------------------------------------------------------------------------------------------------
-log_checkpoints                   on                                configuration file
+Name                              Setting                           Unit    Source
+-------------------------------------------------------------------------------------------------------
+shared_buffers                    4096                              8kB     configuration file
 
 ----------------------------------------
 /* Schema Information */
@@ -3960,19 +4050,28 @@ Write Duration Maximum   : 49.193 sec
 /* Autovacuum Activity */
 ----------------------------------------
 
-/** Basic Statistics (Average) **/
+/** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count   Index Scans  Removed Rows   Remain Rows      Duration  Duration(Max)
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
 --------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches         2         1.000         2.000         0.500       0.000 s        0.000 s
-postgres.public.pgbench_tellers          2         0.500       207.000        19.500       0.000 s        0.000 s
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
 
-/** I/O Statistics (Average) **/
+/** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                               Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate
 -----------------------------------------------------------------------------------------------------
 postgres.public.pgbench_branches      57.500       0.000       1.000    0.000 MiB/s   15.259 MiB/s
 postgres.public.pgbench_tellers       35.500       0.000       0.500    0.000 MiB/s    8.798 MiB/s
+
+/** Analyze Statistics **/
+-----------------------------------
+Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
+------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
+postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
+postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
+postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
 
 ----------------------------------------
 /* Query Activity */
@@ -4039,9 +4138,9 @@ DateTime          Client               Flush Delay Size  Replay Delay Size
 ----------------------------------------
 /* Setting Parameters */
 ----------------------------------------
-Name                              Setting                           Source
------------------------------------------------------------------------------------------------
-log_checkpoints                   on                                configuration file
+Name                              Setting                           Unit    Source
+-------------------------------------------------------------------------------------------------------
+shared_buffers                    4096                              8kB     configuration file
 
 ----------------------------------------
 /* Schema Information */

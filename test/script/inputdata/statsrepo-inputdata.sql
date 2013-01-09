@@ -36,12 +36,12 @@ $$
 	--
 	-- Data for Name: autoanalyze; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
-	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_branches', 0);
-	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_tellers', 0);
+	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_branches', 0.841124545);
+	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_tellers', 0.0154855544);
 	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_history', 0.0700000003);
 	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_accounts', 0.389999986);
-	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_branches', 0);
-	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_tellers', 0);
+	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_branches', 0.845144487);
+	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_tellers', 0.0154854855);
 	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_history', 0.159999996);
 	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_accounts', 0.280000001);
 
@@ -260,10 +260,10 @@ $$
 	--
 	-- Data for Name: setting; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
-	INSERT INTO statsrepo.setting VALUES ($6, 'log_checkpoints', 'on', 'configuration file');
-	INSERT INTO statsrepo.setting VALUES ($6 + 1, 'log_checkpoints', 'on', 'configuration file');
-	INSERT INTO statsrepo.setting VALUES ($6 + 2, 'log_checkpoints', 'on', 'configuration file');
-	INSERT INTO statsrepo.setting VALUES ($6 + 3, 'log_checkpoints', 'on', 'configuration file');
+	INSERT INTO statsrepo.setting VALUES ($6, 'shared_buffers', '4096', '8kB', 'configuration file');
+	INSERT INTO statsrepo.setting VALUES ($6 + 1, 'shared_buffers', '4096', '8kB', 'configuration file');
+	INSERT INTO statsrepo.setting VALUES ($6 + 2, 'shared_buffers', '4096', '8kB', 'configuration file');
+	INSERT INTO statsrepo.setting VALUES ($6 + 3, 'shared_buffers', '4096', '8kB', 'configuration file');
 
 	--
 	-- Data for Name: statement; Type: TABLE DATA; Schema: statsrepo; Owner: postgres

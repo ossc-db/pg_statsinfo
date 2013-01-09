@@ -113,11 +113,11 @@ vacuumdb: vacuuming database "template1"
 (2 rows)
 
 /**--- GUC setting ---**/
- snapid |           name           |   setting    |       source       
---------+--------------------------+--------------+--------------------
-      1 | logging_collector        | on           | override
-      1 | port                     | 57400        | command line
-      1 | shared_preload_libraries | pg_statsinfo | configuration file
+ snapid |       name        | setting | unit |       source       
+--------+-------------------+---------+------+--------------------
+      1 | logging_collector | on      |      | override
+      1 | port              | 57400   |      | command line
+      1 | shared_buffers    | 4096    | 8kB  | configuration file
 (3 rows)
 
 /**--- Instance activity ---**/
