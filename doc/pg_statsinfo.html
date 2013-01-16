@@ -824,14 +824,6 @@ Take a snapshot in manual with a comment 'comment'.
 <p>if you want to rotate logs in arbitrary time, execute the following function on the monitored instance.</p>
 <pre>$ psql -d postgres -c "SELECT pg_rotate_logfile()"</pre>
 
-<h3 id="on-abort">Restart after Crash</h3>
-<p>PostgreSQL instance will still run even if pg_statsinfo daemon crashes.
-To restart pg_statsinfo daemon, you need to restart PostgreSQL instance or execute the following command on the monitored instance.</p>
-<pre>$ psql -d postgres -c "SELECT statsinfo.restart()"</pre>
-<p>Note that rotated logs during pg_statsinfo stops are not parsed even after daemon's restart.
-Please read csvlog files directly for messages during no daemons.
-</p>
-
 <h2 id="restrictions">Restrictions</h2>
 <p>There are still some restrictions and limitations in pg_statsinfo.</p>
 
@@ -870,7 +862,7 @@ PostgreSQL uses own timezone implementation, but we cannot use it from an extern
 </dl>
 
 <h2 id="QA">Q&A</h2>
-<h4>Q1. How confirm the method if pg_statsinfo works normal?</h4>
+<h4>Q1. How to confirm the method if pg_statsinfo works normal?</h4>
 <p>
 Pg_statsinfo gets snapshot and stores it in statsrepo schema. 
 If you want to confirm if pg_statsinfo waorks normal, you can use under following SQL.
