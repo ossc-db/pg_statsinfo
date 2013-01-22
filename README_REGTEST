@@ -2,7 +2,9 @@ How to run the regression tests.
 =====================================
 
 $ gmake
-$ gmake install
+$ su
+# gmake install
+# exit
 $ gmake installcheck
 
 Requirements
@@ -13,4 +15,5 @@ Requirements
 
 $ cd <postgresql-source>/contrib/pg_stat_statements
 $ gmake
-$ gmake install
+$ su
+# gmake install

@@ -36,5 +36,5 @@ all install installdirs uninstall distprep clean distclean maintainer-clean:
 		$(MAKE) -C $$dir $@ || exit; \
 	done
 
-installcheck: install
+installcheck:
 	( cd test && ./regress.sh $(REGTEST))
