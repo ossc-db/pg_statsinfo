@@ -16,7 +16,7 @@ DATA = uninstall_pg_statsinfo.sql
 MODULE_big = pg_statsinfo
 
 ifndef USE_PGXS
-top_builddir = ../../..
+top_builddir = ../../../..
 makefile_global = $(top_builddir)/src/Makefile.global
 ifeq "$(wildcard $(makefile_global))" ""
 USE_PGXS = 1    # use pgxs if not in contrib directory

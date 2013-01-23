@@ -28,7 +28,7 @@ PG_CPPFLAGS = -I$(libpq_srcdir) -DFRONTEND -DPGUT_MULTI_THREADED -DPGUT_OVERRIDE
 PG_LIBS = $(libpq) -lpthread
 
 ifndef USE_PGXS
-top_builddir = ../../..
+top_builddir = ../../../..
 makefile_global = $(top_builddir)/src/Makefile.global
 ifeq "$(wildcard $(makefile_global))" ""
 USE_PGXS = 1    # use pgxs if not in contrib directory
