@@ -43,6 +43,7 @@ trigger_file = '${PGDATA_SBY}/trigger'
 EOF
 pg_ctl start -w -D ${PGDATA_SBY} -o "-p ${PGPORT_SBY}" > /dev/null
 sleep 3
+psql -p ${PGPORT_ACT} -U ${PGUSER} -d postgres -c "CREATE TABLE xxx (col int)" > /dev/null
 
 echo "/***-- Statistics of WAL (MASTER) --***/"
 get_snapshot ${PGPORT_ACT}
