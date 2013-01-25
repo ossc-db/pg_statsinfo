@@ -219,7 +219,7 @@ WHERE \
 	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
 ORDER BY \
 	s.total_time DESC LIMIT $2"
-#elif PG_VERSION_NUM >= 90100
+#elif PG_VERSION_NUM >= 90000
 #define SQL_SELECT_STATEMENT "\
 SELECT \
 	s.dbid, \

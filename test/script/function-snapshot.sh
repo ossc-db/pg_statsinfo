@@ -748,7 +748,7 @@ WHERE
 ORDER BY
 	database, role, query;
 EOF
-	elif [ $(server_version) -ge 90100 ] ; then
+	elif [ $(server_version) -ge 90000 ] ; then
 		send_query << EOF
 SELECT
 	s.snapid,
