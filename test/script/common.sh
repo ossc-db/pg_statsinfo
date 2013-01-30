@@ -120,19 +120,19 @@ function set_pgconfig()
 		fi
 
 		if [ ${version} -ge 90200 ] ; then
-			buffer=$(echo "${buffer}" | grep -v "^\s*custom_variable_classes\s*=")
+			buffer=$(echo "${buffer}" | grep -Pv "^\s*custom_variable_classes\s*=")
 		fi
 
 		if [ ${version} -lt 90200 ] ; then
-			buffer=$(echo "${buffer}" | grep -v "^\s*track_io_timing\s*=")
+			buffer=$(echo "${buffer}" | grep -Pv "^\s*track_io_timing\s*=")
 		fi
 
 		if [ ${version} -lt 90000 ] ; then
-			buffer=$(echo "${buffer}" | grep -v "^\s*wal_level\s*=")
+			buffer=$(echo "${buffer}" | grep -Pv "^\s*wal_level\s*=")
 		fi
 
 		if [ ${version} -lt 80400 ] ; then
-			buffer=$(echo "${buffer}" | grep -v "^\s*track_functions\s*=")
+			buffer=$(echo "${buffer}" | grep -Pv "^\s*track_functions\s*=")
 		fi
 
 		echo "${buffer}" |
@@ -160,7 +160,7 @@ function update_pgconfig()
 		param=$(echo "${param}" | sed "s/<guc_prefix>/pg_statsinfo/")
 	fi
 
-	grep -q "^\s*${param}\s*=" ${datadir}/postgresql-statsinfo.conf
+	grep -Pq "^\s*${param}\s*=" ${datadir}/postgresql-statsinfo.conf
 	if [ ${?} -ne 0 ] ; then
 		echo "${param} = ${value}" >> ${datadir}/postgresql-statsinfo.conf
 		return
@@ -182,7 +182,7 @@ function delete_pgconfig()
 		param=$(echo "${param}" | sed "s/<guc_prefix>/pg_statsinfo/")
 	fi
 
-	buffer=$(grep -v "^\s*${param}\s*=.\+" ${datadir}/postgresql-statsinfo.conf)
+	buffer=$(grep -Pv "^\s*${param}\s*=.\+" ${datadir}/postgresql-statsinfo.conf)
 	echo "${buffer}" > ${datadir}/postgresql-statsinfo.conf
 }
 
