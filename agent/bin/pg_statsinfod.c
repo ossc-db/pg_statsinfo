@@ -108,7 +108,7 @@ static void after_readopt(void);
 static bool decode_time(const char *field, int *hour, int *min, int *sec);
 static int strtoi(const char *nptr, char **endptr, int base);
 static bool execute_script(PGconn *conn, const char *script_file);
-static bool check_repository(void);
+static bool check_repository(PGconn *conn);
 
 /* parameters */
 static struct ParamMap PARAM_MAP[] =
@@ -184,6 +184,7 @@ isTTY(int fd)
 int
 main(int argc, char *argv[])
 {
+	PGconn	*conn;
 	void	*logger_retval;
 
 	shutdown_state = STARTUP;
@@ -248,9 +249,22 @@ main(int argc, char *argv[])
 	 */
 	pgut_abort_level = FATAL;
 
-	/* check the state of repository database */
-	if (!check_repository())
-		return STATSINFO_EXIT_FAILED;
+	/* wait until repository database is ready to accept connection */
+	for (;;)
+	{
+		if (!postmaster_is_alive())
+			return STATSINFO_EXIT_FAILED;
+
+		if ((conn = pgut_connect(repository_server, NO, ERROR)))
+		{
+			/* check the state of repository database */
+			if (!check_repository(conn))
+				return STATSINFO_EXIT_FAILED;
+			break;
+		}
+		sleep(10);	/* 10s */
+	}
+	pgut_disconnect(conn);
 
 	/* init logger, collector, and writer module */
 	pthread_mutex_init(&shutdown_state_lock, NULL);
@@ -927,15 +941,10 @@ execute_script(PGconn *conn, const char *script_file)
  *  - statsrepo schema version
  */
 static bool
-check_repository(void)
+check_repository(PGconn *conn)
 {
-	PGconn		*conn;
 	PGresult	*res;
 	uint32		 version;
-
-	/* connect to the repository database */
-	if ((conn = pgut_connect(repository_server, NO, ERROR)) == NULL)
-		return false;
 
 	/* check statsrepo schema exists */
 	res = pgut_execute(conn,
@@ -969,11 +978,9 @@ check_repository(void)
 
 done:
 	PQclear(res);
-	pgut_disconnect(conn);
 	return true;
 
 error:
 	PQclear(res);
-	pgut_disconnect(conn);
 	return false;
 }
