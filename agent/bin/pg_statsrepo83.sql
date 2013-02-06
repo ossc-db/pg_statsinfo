@@ -2559,6 +2559,8 @@ $$
 		r.snapid = s.snapid
 		AND r.snapid BETWEEN $1 AND $2
 		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+		AND r.flush_location IS NOT NULL
+		AND r.replay_location IS NOT NULL
 	ORDER BY
 		s.snapid, client;
 $$

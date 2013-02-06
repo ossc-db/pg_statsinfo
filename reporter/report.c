@@ -98,6 +98,8 @@ WHERE \
 		WHERE \
 			snapid = $2 \
 			AND sync_state != 'sync' \
+			AND flush_location IS NOT NULL \
+			AND replay_location IS NOT NULL \
 		ORDER BY \
 			statsrepo.xlog_location_diff( \
 				split_part(current_location, ' ', 1), \
