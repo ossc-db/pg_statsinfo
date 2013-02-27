@@ -39,6 +39,7 @@ CREATE FUNCTION statsinfo.activity(
 	OUT idle_in_xact	float8,
 	OUT waiting			float8,
 	OUT running			float8,
+	OUT backends		integer,
 	OUT client			text,
 	OUT pid				integer,
 	OUT start			timestamptz,

@@ -195,6 +195,7 @@ CREATE TABLE statsrepo.activity
 	idle_in_xact		float8,
 	waiting				float8,
 	running				float8,
+	max_backends		integer,
 	max_xact_client		inet,
 	max_xact_pid		integer,
 	max_xact_start		timestamptz,

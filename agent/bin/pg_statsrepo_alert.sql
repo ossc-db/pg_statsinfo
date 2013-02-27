@@ -17,13 +17,22 @@ SET LOCAL client_min_messages = WARNING;
 CREATE TABLE statsrepo.alert
 (
 	instid					bigint,
-	rollback_tps			bigint	NOT NULL DEFAULT 100   CHECK (rollback_tps >= 0),
-	commit_tps				bigint	NOT NULL DEFAULT 1000  CHECK (commit_tps >= 0),
-	garbage_size			bigint	NOT NULL DEFAULT 20000 CHECK (garbage_size >= 0),
-	garbage_percent			integer	NOT NULL DEFAULT 30    CHECK (garbage_percent >= 0 AND garbage_percent <= 100),
-	garbage_percent_table	integer	NOT NULL DEFAULT 30    CHECK (garbage_percent_table >= 0 AND garbage_percent_table <= 100),
-	response_avg			bigint	NOT NULL DEFAULT 10    CHECK (response_avg >= 0),
-	response_worst			bigint	NOT NULL DEFAULT 60    CHECK (response_worst >= 0),
+	rollback_tps			bigint	NOT NULL DEFAULT 100     CHECK (rollback_tps >= -1),
+	commit_tps				bigint	NOT NULL DEFAULT 1000    CHECK (commit_tps >= -1),
+	garbage_size			bigint	NOT NULL DEFAULT 20000   CHECK (garbage_size >= -1),
+	garbage_percent			integer	NOT NULL DEFAULT 30      CHECK (garbage_percent >= -1 AND garbage_percent <= 100),
+	garbage_percent_table	integer	NOT NULL DEFAULT 30      CHECK (garbage_percent_table >= -1 AND garbage_percent_table <= 100),
+	response_avg			bigint	NOT NULL DEFAULT 10      CHECK (response_avg >= -1),
+	response_worst			bigint	NOT NULL DEFAULT 60      CHECK (response_worst >= -1),
+	backend_max				integer	NOT NULL DEFAULT 100     CHECK (backend_max >= -1),
+	fragment_percent		integer	NOT NULL DEFAULT 70      CHECK (fragment_percent >= -1 AND fragment_percent <= 100),
+	disk_remain_percent		integer	NOT NULL DEFAULT 20      CHECK (disk_remain_percent >= -1 AND disk_remain_percent <= 100),
+	loadavg_1min			real	NOT NULL DEFAULT 7.0     CHECK (loadavg_1min = -1 OR loadavg_1min >= 0),
+	loadavg_5min			real	NOT NULL DEFAULT 6.0     CHECK (loadavg_5min = -1 OR loadavg_5min >= 0),
+	loadavg_15min			real	NOT NULL DEFAULT 5.0     CHECK (loadavg_15min = -1 OR loadavg_15min >= 0),
+	swap_size				integer NOT NULL DEFAULT 1000000 CHECK (swap_size >= -1),
+	rep_flush_delay			integer	NOT NULL DEFAULT 100     CHECK (rep_flush_delay >= -1),
+	rep_replay_delay		integer	NOT NULL DEFAULT 200     CHECK (rep_replay_delay >= -1),
 	enable_alert			boolean	NOT NULL DEFAULT TRUE,
 	PRIMARY KEY (instid),
 	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid)
@@ -43,168 +52,384 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER regist_alert AFTER INSERT ON statsrepo.instance FOR EACH ROW
 EXECUTE PROCEDURE statsrepo.regist_alert();
 
+------------------------------------------------------------------------------
 -- alert function
-CREATE OR REPLACE FUNCTION statsrepo.alert(snap_id bigint) RETURNS SETOF text AS
+------------------------------------------------------------------------------
+
+-- alert function for check the condition of transaction
+CREATE FUNCTION statsrepo.alert_xact(
+	statsrepo.snapshot,
+	statsrepo.snapshot,
+	statsrepo.alert
+) RETURNS SETOF text AS
 $$
 DECLARE
-
-  -- for threshold
-  th_rollback      float8;
-  th_tps           float8;
-  th_gb_size       float8;
-  th_gb_pct        float8;
-  th_gb_pct_table  float8;
-  th_res_avg       float8;
-  th_res_max       float8;
-
-  -- inner variables
-  curr      statsrepo.snapshot; -- latest snapshot
-  prev      statsrepo.snapshot; -- previous snapshot
-  duration_in_sec  float8;
-  val_rollback     float8;
-  val_tps          float8;
-  val_gb_size      float8;
-  val_gb_pct       float8;
-  val_res_avg      float8;
-  val_res_max      float8;
-  val_gb_pct_table record; -- relname and garbage-ratio
-
+	duration_in_sec  bigint;
+	val_rollback     float8;
+	val_commit       float8;
 BEGIN
-  -- exclusive control for don't run concurrently with the maintenance
-  LOCK TABLE statsrepo.instance IN SHARE MODE;
+	-- calculate duration for the two shapshots in sec.
+	duration_in_sec :=
+		extract(epoch FROM $1.time::timestamp(0)) - extract(epoch FROM $2.time::timestamp(0));
 
-  -- retrieve latest snapshot
-  SELECT * INTO curr FROM statsrepo.snapshot WHERE snapid = snap_id;
+	-- calculate the number of commits/rollbacks per sec.
+	SELECT
+		statsrepo.div((c.rollbacks - p.rollbacks), duration_in_sec),
+		statsrepo.div((c.commits - p.commits), duration_in_sec)
+	INTO val_rollback, val_commit
+	FROM (SELECT sum(xact_rollback) AS rollbacks, sum(xact_commit) AS commits
+			FROM statsrepo.database WHERE snapid = $1.snapid) AS c,
+		 (SELECT sum(xact_rollback) AS rollbacks, sum(xact_commit) AS commits
+			FROM statsrepo.database WHERE snapid = $2.snapid) AS p;
 
-  -- retrieve previous snapshot
-  SELECT * INTO prev FROM statsrepo.snapshot WHERE snapid < curr.snapid AND instid = curr.instid
-   ORDER BY snapid DESC LIMIT 1;
-  IF NOT FOUND THEN
-    RETURN; -- no previous snapshot
-  END IF;
+	-- alert if rollbacks/sec is higher than threshold.
+	IF $3.rollback_tps >= 0 AND val_rollback > $3.rollback_tps THEN
+		RETURN NEXT 'too many rollbacks in snapshots between ''' ||
+			$2.time::timestamp(0) || ''' and ''' || $1.time::timestamp(0) ||
+			''' --- ' || val_rollback || ' Rollbacks/sec (threshold = ' ||
+			$3.rollback_tps || ' Rollbacks/sec)';
+	END IF;
 
-  -- retrieve threshold from current-settings
-  SELECT
-    rollback_tps::float8,
-    commit_tps::float8,
-    (garbage_size::float8),
-    garbage_percent::float8,
-    garbage_percent_table::float8,
-    response_avg::float8,
-    response_worst::float8
-  INTO
-    th_rollback,
-    th_tps,
-    th_gb_size,
-    th_gb_pct,
-    th_gb_pct_table,
-    th_res_avg,
-    th_res_max
-  FROM statsrepo.alert WHERE instid = curr.instid AND enable_alert = true;
-  IF NOT FOUND THEN
-    RETURN; -- alert is disabled
-  END IF;
+	-- alert if throughput(commit/sec) is higher than threshold.
+	IF $3.commit_tps >= 0 AND val_commit > $3.commit_tps THEN
+		RETURN NEXT 'too many transactions in snapshots between ''' ||
+			$2.time::timestamp(0) || ''' and ''' || $1.time::timestamp(0) ||
+			''' --- ' || val_commit || ' Transactions/sec (threshold = ' ||
+			$3.commit_tps || ' Transactions/sec)';
+	END IF;
+END;
+$$
+LANGUAGE plpgsql;
 
-  -- calculate duration for the two shapshots in sec.
-  duration_in_sec :=
-    extract(epoch FROM curr.time) - extract(epoch FROM prev.time);
+-- alert function for check the condition of garbage space
+CREATE FUNCTION statsrepo.alert_garbage(
+	statsrepo.snapshot,
+	statsrepo.alert
+) RETURNS SETOF text AS
+$$
+DECLARE
+	val_gb_size   float8;
+	val_gb_pct    float8;
+	val_gb_table  text;
+BEGIN
+	-- calculate the garbage size and garbage ratio.
+	SELECT
+		statsrepo.div(sum(c.garbage_size), 1024 * 1024),
+		statsrepo.div((100 * sum(c.garbage_size)), sum(c.size))
+	INTO val_gb_size, val_gb_pct
+	FROM
+		(SELECT
+			size * statsrepo.div(n_dead_tup, (n_live_tup + n_dead_tup)) AS garbage_size,
+		 	size
+		 FROM statsrepo.tables WHERE snapid = $1.snapid) AS c;
 
-  -- alert if rollbacks/sec is higher than th_rollback.
-  SELECT CASE WHEN duration_in_sec = 0 THEN 0
-          ELSE (c.rollbacks - p.rollbacks) / duration_in_sec END
-    INTO val_rollback
-    FROM (SELECT sum(xact_rollback) AS rollbacks
-            FROM statsrepo.database
-           WHERE snapid = curr.snapid) AS c,
-         (SELECT sum(xact_rollback) AS rollbacks
-            FROM statsrepo.database
-           WHERE snapid = prev.snapid) AS p;
-  IF val_rollback > th_rollback THEN
-     RETURN NEXT 'too many rollbacks in snapshots between ''' ||
-     prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
-     ''' --- ' || val_rollback::numeric(10,2) || ' Rollbacks/sec';
-  END IF;
+	-- alert if garbage size is higher than threshold.
+	IF $2.garbage_size >= 0 AND val_gb_size > $2.garbage_size THEN
+		RETURN NEXT 'dead tuple size exceeds threshold in snapshot ''' ||
+			$1.time::timestamp(0) || ''' --- ' || (val_gb_size) || ' MiB (threshold = ' ||
+			$2.garbage_size || ' MiB)';
+	END IF;
 
+	-- alert if garbage ratio is higher than threshold.
+	IF $2.garbage_percent >= 0 AND val_gb_pct > $2.garbage_percent THEN
+		RETURN NEXT 'dead tuple ratio exceeds threshold in snapshot ''' ||
+			$1.time::timestamp(0) || ''' --- ' || val_gb_pct || ' % (threshold = ' ||
+			$2.garbage_percent || ' %)';
+	END IF;
 
-  -- alert if throughput(commit/sec) is higher than th_tps.
-  SELECT CASE WHEN duration_in_sec = 0 THEN 0
-          ELSE (c.commits - p.commits) / duration_in_sec END
-    INTO val_tps
-    FROM (SELECT sum(xact_commit) AS commits
-            FROM statsrepo.database
-           WHERE snapid = curr.snapid) AS c,
-         (SELECT sum(xact_commit) AS commits
-            FROM statsrepo.database
-           WHERE snapid = prev.snapid) AS p;
-  IF val_tps > th_tps THEN
-     RETURN NEXT 'too many transactions in snapshots between ''' ||
-     prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
-     ''' --- ' || val_tps::numeric(10,2) || ' Transactions/sec';
-  END IF;
+	-- alert if garbage ratio of each tables is higher than threshold.
+	FOR val_gb_table, val_gb_pct IN
+		SELECT
+			database || '.' || schema || '.' || "table",
+			100 * statsrepo.div(n_dead_tup, (n_live_tup + n_dead_tup))
+		FROM statsrepo.tables WHERE relpages > 1000 AND snapid = $1.snapid
+	LOOP
+		IF $2.garbage_percent_table >= 0 AND val_gb_pct > $2.garbage_percent_table THEN
+			RETURN NEXT 'dead tuple ratio in ''' || val_gb_table ||
+				''' exceeds threshold in snapshot ''' || $1.time::timestamp(0) ||
+				''' --- ' || val_gb_pct || ' % (threshold = ' ||
+				$2.garbage_percent_table || ' %)';
+		END IF;
+	END LOOP;
+END;
+$$
+LANGUAGE plpgsql;
 
+-- alert function for check the response time of query
+CREATE FUNCTION statsrepo.alert_query(
+	statsrepo.snapshot,
+	statsrepo.snapshot,
+	statsrepo.alert
+) RETURNS SETOF text AS
+$$
+DECLARE
+	val_res_avg  float8;
+	val_res_max  float8;
+BEGIN
+	-- calculate the average and maximum of the query-response-time.
+	SELECT
+		avg((c.total_time - coalesce(p.total_time, 0)) / (c.calls - coalesce(p.calls, 0))),
+		max((c.total_time - coalesce(p.total_time, 0)) / (c.calls - coalesce(p.calls, 0)))
+	INTO val_res_avg, val_res_max
+	FROM (SELECT dbid, userid, total_time, calls, query
+			FROM statsrepo.statement WHERE snapid = $1.snapid) AS c
+		 LEFT OUTER JOIN
+		 (SELECT dbid, userid, total_time, calls, query
+		 	FROM statsrepo.statement WHERE snapid = $2.snapid) AS p
+		 ON c.dbid = p.dbid AND c.userid = p.userid AND c.query = p.query
+	WHERE c.calls <> coalesce(p.calls, 0);
 
-  -- alert if garbage(ratio or size) is higher than th_gb_pct/th_ga_size.
-  SELECT sum(c.garbage_size) / 1024 / 1024,
-         CASE WHEN sum(size) = 0 THEN 0
-          ELSE 100 * sum(c.garbage_size) / sum(size) END
-    INTO val_gb_size, val_gb_pct
-    FROM
-      (SELECT 
-         CASE WHEN n_live_tup = 0 THEN 0
-          ELSE size * (n_dead_tup::float8 / (n_live_tup + n_dead_tup)::float8) END AS garbage_size,
-         size
-       FROM statsrepo.tables WHERE snapid=curr.snapid) AS c;
-  IF val_gb_size > th_gb_size THEN
-     RETURN NEXT 'dead tuple size exceeds threashold in snapshots between ''' ||
-     prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
-     ''' --- ' || (val_gb_size)::numeric(8,2) || ' MiB';
-  END IF;
-  IF val_gb_pct > th_gb_pct THEN
-     RETURN NEXT 'dead tuple ratio exceeds threashold in snapshots between ''' ||
-     prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
-     ''' --- ' || val_gb_pct::numeric(5,2) || ' %';
-  END IF;
+	-- alert if average of the query-response-time is higher than threshold.
+	IF $3.response_avg >= 0 AND val_res_avg > $3.response_avg THEN
+		RETURN NEXT 'Query average response exceeds threshold in snapshots between ''' ||
+			$2.time::timestamp(0) || ''' and ''' || $1.time::timestamp(0) ||
+			''' --- ' || val_res_avg::numeric(10,2) || ' sec (threshold = ' ||
+			$3.response_avg || ' sec)';
+	END IF;
 
+	-- alert if maximum of the query-response-time is higher than threshold.
+	IF $3.response_worst >= 0 AND val_res_max > $3.response_worst THEN
+		RETURN NEXT 'Query worst response exceeds threshold in snapshots between ''' ||
+			$2.time::timestamp(0) || ''' and ''' || $1.time::timestamp(0) ||
+			''' --- ' || val_res_max::numeric(10,2) || ' sec (threshold = ' ||
+			$3.response_worst || ' sec)';
+	END IF;
+END;
+$$
+LANGUAGE plpgsql;
 
-  -- alert if garbage ratio of each tables is higher than th_gb_pct_table
-  FOR val_gb_pct_table IN 
-    SELECT "database" || '.' || "schema" || '.' || "table" AS relname,
-      CASE WHEN (n_live_tup + n_dead_tup) = 0 THEN 0
-       ELSE 100 * n_dead_tup::float8 / (n_live_tup + n_dead_tup)::float8 END AS gb_pct
-      FROM statsrepo.tables WHERE relpages > 1000 AND snapid=curr.snapid
-  LOOP
-    IF val_gb_pct_table.gb_pct > th_gb_pct_table THEN
-       RETURN NEXT 'dead tuple ratio in ' || val_gb_pct_table.relname || ' exceeds threashold in snapshots between ''' ||
-       prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
-       ''' --- ' || val_gb_pct_table.gb_pct::numeric(5,2) || ' %';
-    END IF;
-  END LOOP;
+-- alert function for check the condition of backend process
+CREATE FUNCTION statsrepo.alert_activity(
+	statsrepo.snapshot,
+	statsrepo.alert
+) RETURNS SETOF text AS
+$$
+DECLARE
+	val_be_max  integer;
+BEGIN
+	-- alert if number of backend is higher than threshold.
+	SELECT max_backends INTO val_be_max
+	FROM statsrepo.activity WHERE snapid = $1.snapid;
+	IF $2.backend_max >= 0 AND val_be_max > $2.backend_max THEN
+		RETURN NEXT 'too many backends in snapshot ''' || $1.time::timestamp(0) ||
+			''' --- ' || val_be_max || ' (threshold = ' || $2.backend_max || ')';
+	END IF;
+END;
+$$
+LANGUAGE plpgsql;
 
+-- alert function for check the fragmentation of table
+CREATE FUNCTION statsrepo.alert_fragment(
+	statsrepo.snapshot,
+	statsrepo.alert
+) RETURNS SETOF text AS
+$$
+DECLARE
+	val_fragment_table  text;
+	val_fragment_pct    float8;
+BEGIN
+	-- alert if fragment ratio of the clustered index data table is higher than threshold.
+	FOR val_fragment_table, val_fragment_pct IN
+		SELECT
+			i.database || '.' || i.schema || '.' || i.table,
+			(100 * abs(c.correlation))::numeric(4,2)
+		FROM
+			statsrepo.indexes i,
+			statsrepo.column c
+		WHERE
+			i.snapid = c.snapid
+			AND i.tbl = c.tbl
+			AND i.isclustered = true
+			AND c.attnum = i.indkey[0]
+			AND c.correlation IS NOT NULL
+			AND c.snapid = $1.snapid
+	LOOP
+		IF $2.fragment_percent >= 0 AND val_fragment_pct > $2.fragment_percent THEN
+			RETURN NEXT 'correlation of the clustered table fell below threshold in snapshot ''' ||
+				$1.time::timestamp(0) || ''' --- ''' || val_fragment_table || ''', ' ||
+				val_fragment_pct || ' % (threshold = ' || $2.fragment_percent || ' %)';
+		END IF;
+	END LOOP;
+END;
+$$
+LANGUAGE plpgsql;
 
-  -- alert if query-response-time(avg or max) is higher than th_res_avg/th_res_max.
-  SELECT avg((c.total_time - coalesce(p.total_time, 0)) / (c.calls - coalesce(p.calls, 0))),
-         max((c.total_time - coalesce(p.total_time, 0)) / (c.calls - coalesce(p.calls, 0)))
-    INTO val_res_avg, val_res_max
-    FROM (SELECT dbid, userid, total_time, calls, query FROM statsrepo.statement
-           WHERE snapid = curr.snapid) AS c
-         LEFT OUTER JOIN
-         (SELECT dbid, userid, total_time, calls, query FROM statsrepo.statement
-           WHERE snapid = prev.snapid) AS p
-         ON c.dbid = p.dbid AND c.userid = p.userid AND c.query = p.query
-    WHERE c.calls <> coalesce(p.calls, 0);
-    
-  IF val_res_avg > th_res_avg THEN
-     RETURN NEXT 'Query average response exceeds threshold in snapshots between ''' ||
-     prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
-     ''' --- ' || val_res_avg::numeric(10,2) || ' sec';
-  END IF;
-  IF val_res_max > th_res_max THEN
-     RETURN NEXT 'Query worst response exceeds threshold in snapshots between ''' ||
-     prev.time::timestamp(0) || ''' and ''' || curr.time::timestamp(0) ||
-     ''' --- ' || val_res_max::numeric(10,2) || ' sec';
-  END IF;
+-- alert function for check the condition of OS resource
+CREATE FUNCTION statsrepo.alert_resource(
+	statsrepo.snapshot,
+	statsrepo.alert
+) RETURNS SETOF text AS
+$$
+DECLARE
+	val_tablespace  text;
+	val_disk_pct    float8;
+	val_loadavg1    float8;
+	val_loadavg5    float8;
+	val_loadavg15   float8;
+	val_swap_size   bigint;
+BEGIN
+	-- alert if free-disk-space ratio of each tablespaces is higher than threshold.
+	FOR val_tablespace, val_disk_pct IN
+		SELECT
+			name,
+			(100 * (1 - statsrepo.div(avail, total)))::numeric(4,2)
+		FROM statsrepo.tablespace WHERE snapid = $1.snapid
+	LOOP
+		IF $2.disk_remain_percent >= 0 AND val_disk_pct < $2.disk_remain_percent THEN
+			RETURN NEXT 'free disk space ratio at ''' || val_tablespace ||
+				''' fell below threshold in snapshot ''' || $1.time::timestamp(0) ||
+				''' --- ' || val_disk_pct || ' % (threshold = ' || $2.disk_remain_percent || ' %)';
+		END IF;
+	END LOOP;
 
+	-- alert if load average is higher than threshold.
+	SELECT loadavg1, loadavg5, loadavg15 INTO val_loadavg1, val_loadavg5, val_loadavg15
+	FROM statsrepo.loadavg WHERE snapid = $1.snapid;
+	IF $2.loadavg_1min >= 0 AND val_loadavg1 > $2.loadavg_1min THEN
+		RETURN NEXT 'load average 1min exceeds threshold in snapshot ''' || $1.time::timestamp(0) ||
+			''' --- ' || val_loadavg1 || ' (threshold = ' || $2.loadavg_1min || ')';
+	END IF;
+	IF $2.loadavg_5min >= 0 AND val_loadavg5 > $2.loadavg_5min THEN
+		RETURN NEXT 'load average 5min exceeds threshold in snapshot ''' || $1.time::timestamp(0) ||
+			''' --- ' || val_loadavg5 || ' (threshold = ' || $2.loadavg_5min || ')';
+	END IF;
+	IF $2.loadavg_15min >= 0 AND val_loadavg15 > $2.loadavg_15min THEN
+		RETURN NEXT 'load average 15min exceeds threshold in snapshot ''' || $1.time::timestamp(0) ||
+			''' --- ' || val_loadavg15 || ' (threshold = ' || $2.loadavg_15min || ')';
+	END IF;
 
+	-- alert if memory swap size is higher than threshold.
+	SELECT swap INTO val_swap_size FROM statsrepo.memory WHERE snapid = $1.snapid;
+	IF $2.swap_size >= 0 AND val_swap_size > $2.swap_size THEN
+		RETURN NEXT 'memory swap size exceeds threshold in snapshot ''' || $1.time::timestamp(0) ||
+			''' --- ' || val_swap_size || ' KiB (threshold = ' || $2.swap_size || ' KiB)';
+	END IF;
+END;
+$$
+LANGUAGE plpgsql;
+
+-- alert function for check the condition of replication
+CREATE FUNCTION statsrepo.alert_replication(
+	statsrepo.snapshot,
+	statsrepo.alert
+) RETURNS SETOF text AS
+$$
+DECLARE
+	val_client        text;
+	val_flush_delay   float8;
+	val_replay_delay  float8;
+BEGIN
+	-- alert if replication-delay(flush or replay) is higher than threshold.
+	FOR val_client, val_flush_delay, val_replay_delay IN
+		SELECT
+			host(client_addr) || ':' || client_port,
+			statsrepo.div(
+				statsrepo.xlog_location_diff(
+					split_part(current_location, ' ', 1),
+					split_part(flush_location, ' ', 1)
+				),
+				1024 * 1024
+			),
+			statsrepo.div(
+				statsrepo.xlog_location_diff(
+					split_part(current_location, ' ', 1),
+					split_part(replay_location, ' ', 1)
+				),
+				1024 * 1024
+			)
+		FROM
+			statsrepo.replication
+		WHERE
+			snapid = $1.snapid
+			AND flush_location IS NOT NULL
+			AND replay_location IS NOT NULL
+	LOOP
+		IF $2.rep_flush_delay >= 0 AND val_flush_delay > $2.rep_flush_delay THEN
+			RETURN NEXT 'WAL flush-delay in ''' || val_client ||
+				''' exceeds threshold in snapshot ''' || $1.time::timestamp(0) ||
+				''' --- ' || val_flush_delay || ' MiB (threshold = ' ||
+				$2.rep_flush_delay || ' MiB)';
+		END IF;
+		IF $2.rep_replay_delay >= 0 AND val_replay_delay > $2.rep_replay_delay THEN
+			RETURN NEXT 'replay-delay in ''' || val_client ||
+				''' exceeds threshold in snapshot ''' || $1.time::timestamp(0) ||
+				''' --- ' || val_replay_delay || ' MiB (threshold = ' ||
+				$2.rep_replay_delay || ' MiB)';
+		END IF;
+	END LOOP;
+END;
+$$
+LANGUAGE plpgsql;
+
+-- alert function main
+CREATE FUNCTION statsrepo.alert(bigint) RETURNS SETOF text AS
+$$
+DECLARE
+	curr     statsrepo.snapshot; -- latest snapshot
+	prev     statsrepo.snapshot; -- previous snapshot
+	setting  statsrepo.alert;    -- alert settings
+	message  text;
+BEGIN
+	-- exclusive control for don't run concurrently with the maintenance
+	LOCK TABLE statsrepo.instance IN SHARE MODE;
+
+	-- retrieve latest snapshot
+	SELECT * INTO curr FROM statsrepo.snapshot WHERE snapid = $1;
+
+	-- retrieve previous snapshot
+	SELECT * INTO prev FROM statsrepo.snapshot
+		WHERE snapid < curr.snapid AND instid = curr.instid ORDER BY snapid DESC LIMIT 1;
+	IF NOT FOUND THEN
+		RETURN; -- no previous snapshot
+	END IF;
+
+	-- retrieve threshold from current-settings
+	SELECT * INTO setting FROM statsrepo.alert WHERE instid = curr.instid AND enable_alert = true;
+	IF NOT FOUND THEN
+		RETURN; -- alert is disabled
+	END IF;
+
+	-- check the frequency of occurrence of throughput and rollback
+	FOR message IN SELECT statsrepo.alert_xact(curr, prev, setting)
+	LOOP
+		RETURN NEXT message;
+	END LOOP;
+
+	-- check the condition of the garbage space of tables
+	FOR message IN SELECT statsrepo.alert_garbage(curr, setting)
+	LOOP
+		RETURN NEXT message;
+	END LOOP;
+
+	-- check the response time of the query
+	FOR message IN SELECT statsrepo.alert_query(curr, prev, setting)
+	LOOP
+		RETURN NEXT message;
+	END LOOP;
+
+	-- check the condition of the backend processes
+	FOR message IN SELECT statsrepo.alert_activity(curr, setting)
+	LOOP
+		RETURN NEXT message;
+	END LOOP;
+
+	-- check the fragmentation of tables
+	FOR message IN SELECT statsrepo.alert_fragment(curr, setting)
+	LOOP
+		RETURN NEXT message;
+	END LOOP;
+
+	-- check the condition of OS resources
+	FOR message IN SELECT statsrepo.alert_resource(curr, setting)
+	LOOP
+		RETURN NEXT message;
+	END LOOP;
+
+	-- check the condition of the replication
+	FOR message IN SELECT statsrepo.alert_replication(curr, setting)
+	LOOP
+		RETURN NEXT message;
+	END LOOP;
 END;
 $$
 LANGUAGE plpgsql VOLATILE;

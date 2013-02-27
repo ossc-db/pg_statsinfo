@@ -326,6 +326,7 @@ typedef struct Stats
 	int			idle_in_xact;
 	int			waiting;
 	int			running;
+	int			max_backends;
 
 	/* longest transaction */
 	int			max_xact_pid;
@@ -455,6 +456,9 @@ statsinfo_sample(PG_FUNCTION_ARGS)
 	stats->waiting += waiting;
 	stats->running += running;
 
+	if (stats->max_backends < (backends - 1))
+		stats->max_backends = backends - 1;
+
 	stats->samples++;
 
 	PG_RETURN_VOID();
@@ -487,7 +491,7 @@ inet_to_cstring(const SockAddr *addr, char host[NI_MAXHOST])
 	}
 }
 
-#define NUM_ACTIVITY_COLS		9
+#define NUM_ACTIVITY_COLS		10
 
 /*
  * statsinfo_activity - accumulate sampled counters.
@@ -520,6 +524,7 @@ statsinfo_activity(PG_FUNCTION_ARGS)
 		values[i++] = Float8GetDatum(stats->idle_in_xact / samples);
 		values[i++] = Float8GetDatum(stats->waiting / samples);
 		values[i++] = Float8GetDatum(stats->running / samples);
+		values[i++] = Int32GetDatum(stats->max_backends);
 
 		if (stats->max_xact_client[0])
 			values[i++] = CStringGetTextDatum(stats->max_xact_client);
