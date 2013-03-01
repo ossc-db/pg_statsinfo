@@ -390,43 +390,43 @@ BEGIN
 	END IF;
 
 	-- check the frequency of occurrence of throughput and rollback
-	FOR message IN SELECT statsrepo.alert_xact(curr, prev, setting)
+	FOR message IN SELECT * FROM statsrepo.alert_xact(curr, prev, setting)
 	LOOP
 		RETURN NEXT message;
 	END LOOP;
 
 	-- check the condition of the garbage space of tables
-	FOR message IN SELECT statsrepo.alert_garbage(curr, setting)
+	FOR message IN SELECT * FROM statsrepo.alert_garbage(curr, setting)
 	LOOP
 		RETURN NEXT message;
 	END LOOP;
 
 	-- check the response time of the query
-	FOR message IN SELECT statsrepo.alert_query(curr, prev, setting)
+	FOR message IN SELECT * FROM statsrepo.alert_query(curr, prev, setting)
 	LOOP
 		RETURN NEXT message;
 	END LOOP;
 
 	-- check the condition of the backend processes
-	FOR message IN SELECT statsrepo.alert_activity(curr, setting)
+	FOR message IN SELECT * FROM statsrepo.alert_activity(curr, setting)
 	LOOP
 		RETURN NEXT message;
 	END LOOP;
 
 	-- check the fragmentation of tables
-	FOR message IN SELECT statsrepo.alert_fragment(curr, setting)
+	FOR message IN SELECT * FROM statsrepo.alert_fragment(curr, setting)
 	LOOP
 		RETURN NEXT message;
 	END LOOP;
 
 	-- check the condition of OS resources
-	FOR message IN SELECT statsrepo.alert_resource(curr, setting)
+	FOR message IN SELECT * FROM statsrepo.alert_resource(curr, setting)
 	LOOP
 		RETURN NEXT message;
 	END LOOP;
 
 	-- check the condition of the replication
-	FOR message IN SELECT statsrepo.alert_replication(curr, setting)
+	FOR message IN SELECT * FROM statsrepo.alert_replication(curr, setting)
 	LOOP
 		RETURN NEXT message;
 	END LOOP;
