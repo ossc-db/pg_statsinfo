@@ -272,7 +272,7 @@ BEGIN
 	FOR val_tablespace, val_disk_pct IN
 		SELECT
 			name,
-			(100 * (1 - statsrepo.div(avail, total)))::numeric(4,2)
+			100 * statsrepo.div(avail, total)
 		FROM statsrepo.tablespace WHERE snapid = $1.snapid
 	LOOP
 		IF $2.disk_remain_percent >= 0 AND val_disk_pct < $2.disk_remain_percent THEN
