@@ -244,7 +244,7 @@ BEGIN
 			AND c.correlation IS NOT NULL
 			AND c.snapid = $1.snapid
 	LOOP
-		IF $2.fragment_percent >= 0 AND val_fragment_pct > $2.fragment_percent THEN
+		IF $2.fragment_percent >= 0 AND val_fragment_pct < $2.fragment_percent THEN
 			RETURN NEXT 'correlation of the clustered table fell below threshold in snapshot ''' ||
 				$1.time::timestamp(0) || ''' --- ''' || val_fragment_table || ''', ' ||
 				val_fragment_pct || ' % (threshold = ' || $2.fragment_percent || ' %)';
