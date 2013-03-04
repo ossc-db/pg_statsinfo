@@ -127,9 +127,9 @@ BEGIN
 LOCK TABLE
 COMMIT
 DROP TABLE
- snapid | idle | idle_in_xact | waiting | running 
---------+------+--------------+---------+---------
-      2 | OK   | OK           | OK      | OK
+ snapid | idle | idle_in_xact | waiting | running | max_backends 
+--------+------+--------------+---------+---------+--------------
+      2 | OK   | OK           | OK      | OK      | OK
 (1 row)
 
 /***-- There is no transaction of more than 1 second --***/

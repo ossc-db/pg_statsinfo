@@ -486,7 +486,8 @@ SELECT
 	CASE WHEN idle > 0 THEN 'OK' ELSE 'FAILED' END AS idle,
 	CASE WHEN idle_in_xact > 0 THEN 'OK' ELSE 'FAILED' END AS idle_in_xact,
 	CASE WHEN waiting > 0 THEN 'OK' ELSE 'FAILED' END AS waiting,
-	CASE WHEN running > 0 THEN 'OK' ELSE 'FAILED' END AS running
+	CASE WHEN running > 0 THEN 'OK' ELSE 'FAILED' END AS running,
+	CASE WHEN max_backends = 4 THEN 'OK' ELSE 'FAILED' END AS max_backends
 FROM
 	statsrepo.activity
 WHERE
