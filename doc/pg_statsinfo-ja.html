@@ -6,7 +6,7 @@
 <link rel="stylesheet" type="text/css" href="style.css">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head><body>
-<h1 id="pg_statsinfo">pg_statsinfo 2.4</h1>
+<h1 id="pg_statsinfo">pg_statsinfo 2.5</h1>
 <div class="navigation">
   <a href="http://pgstatsinfo.projects.postgresql.org/index_ja.html">Top</a> &gt;
   <a href="http://pgstatsinfo.projects.postgresql.org/pg_statsinfo-ja.html">pg_statsinfo</a>
@@ -46,7 +46,7 @@
   <li><a href="#uninstall">アンインストール</a></li>
   <li><a href="#restrictions">使用上の注意と制約</a></li>
   <li><a href="#QA">よくあるQ&A</a></li>
-  <li><a href="#change">pg_statsinfo 2.3 からの変更点</a></li>
+  <li><a href="#change">pg_statsinfo 2.4 からの変更点</a></li>
   <li><a href="#details">詳細情報</a>
     <ol>
       <li><a href="#many-instances">複数の監視対象インスタンス</a></li>
@@ -64,7 +64,7 @@ PostgreSQL サーバの利用統計情報を定期的に収集・蓄積するこ
 性能劣化などの兆候や問題発生時の原因の把握等)に役立つツールです。<br>
 起動や終了、パラメータの設定は PostgreSQL と密に連携しており、手間をかけずに導入可能です。
 </p>
-<p>pg_statsinfo 2.3 からの変更点は<a href="#change">こちら</a>をご覧ください。</p>
+<p>pg_statsinfo 2.4 からの変更点は<a href="#change">こちら</a>をご覧ください。</p>
 
 <h2 id="description">機能概要</h2>
 <p>pg_statsinfo は、PostgreSQL サーバの統計情報や活動状況を一定の時間間隔毎に定期的に収集し蓄積する機能と、
@@ -73,7 +73,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </p>
 
 <p>
-また、pg_statsinfo で収集した情報は <a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_stats_reporter</a> 
+また、pg_statsinfo で収集した情報は <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter-ja.html">pg_stats_reporter</a> 
 を用いることでグラフィカルな形で解析・出力することがきます。
 </p>
 
@@ -121,7 +121,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </p>
 
 <h4>リポジトリDBのテーブル構成</h4>
-<p>リポジトリDBのテーブル構成に関しては、「<a href="files/pg_statsinfo_v2.4_repository_infomation.xls">pg_statsinfo v2.4 リポジトリDB構成</a>」を参照してください。</p>
+<p>リポジトリDBのテーブル構成に関しては、「<a href="files/pg_statsinfo_v2.5_repository_infomation.xls">pg_statsinfo v2.5 リポジトリDB構成</a>」を参照してください。</p>
 
 <h3 id="features-log">サーバログ処理機能</h3>
 <ul>
@@ -151,7 +151,17 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
   <li>各テーブルに占める不要領域の割合 (%)</li>
   <li>クエリの平均レスポンス時間 (秒)</li>
   <li>クエリの最長レスポンス時間 (秒)</li>
+  <li>各テーブルの断片化率(correlation) (%)</li>
+  <li>バックエンドの最大数</li>
+  <li>テーブルスペースのディスク空き容量 (%)</li>
+  <li>ロードアベレージ</li>
+  <li>スワップ使用量 (KB)</li>
+  <li>レプリケーションの遅延量 (MB)</li>
 </ul>
+
+<p>
+(注1) テーブルの断片化率は、クラスタ化テーブル(クラスタインデックスが存在するテーブル)を対象に判定が行われます。
+</p>
 
 <p>
 アラート機能の設定方法は<a href="#usage-alert">こちら</a>をご覧ください。
@@ -171,9 +181,9 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </ul>
 
 <p>
-簡易レポート機能が出力するレポートの項目については「<a href="files/pg_statsinfo_v2.4_report_infomation.xls">pg_statsinfo v2.4 レポート項目一覧</a>」をご覧ください。<br>
-なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_stats_reporter</a> と同等です。<br>
-グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_stats_reporter</a> を使用してください。
+簡易レポート機能が出力するレポートの項目については「<a href="files/pg_statsinfo_v2.5_report_infomation.xls">pg_statsinfo v2.5 レポート項目一覧</a>」をご覧ください。<br>
+なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter-ja.html">pg_stats_reporter</a> と同等です。<br>
+グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter-ja.html">pg_stats_reporter</a> を使用してください。
 </p>
 
 <p>
@@ -215,7 +225,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 以下はPostgreSQL9.2のRHEL6のx86_64用のrpmをインストールする例です。
 <pre>
 $ su
-# rpm -ivh pg_statsinfo-2.4.0-1.pg92.rhel6.x86_64.rpm
+# rpm -ivh pg_statsinfo-2.5.0-1.pg92.rhel6.x86_64.rpm
 </pre>
 
 <h4>source</h4>
@@ -223,8 +233,8 @@ $ su
 なお、pg_statsinfo の登録スクリプト (sql) を手動でインストールする必要はありません。
 監視対象インスタンス、リポジトリDB共に、初回起動時に必要に応じて pg_statsinfo がスキーマを自動的にインストールします。</p>
 <pre>
-$ tar xzvf pg_statsinfo-2.4.0.tar.gz
-$ cd pg_statsinfo-2.4.0
+$ tar xzvf pg_statsinfo-2.5.0.tar.gz
+$ cd pg_statsinfo-2.5.0
 $ make USE_PGXS=1
 $ su
 # make USE_PGXS=1 install
@@ -278,7 +288,7 @@ log_autovacuum_min_duration = 0                 # 自動バキュームを記録
   <dd>'csvlog'が追加され、'stderr'は除去されます。</dd>
   <dt>logging_collector</dt>
   <dd>'on' に設定されます。</dd>
-<dl>
+</dl>
 
 <br>
 
@@ -442,21 +452,24 @@ pg_statsinfo.adjust_log_info = '42P01'</pre>
 <p>
 
 <h4>アラート設定の変更</h4>
-<p>
-監視対象インスタンス毎に、アラート機能の有効／無効およびアラート条件(閾値)を変更することができます。<br>
-アラート設定を変更するには、アラート設定テーブルから変更したいアラート項目のカラムの値を変更してください。<br>
-なお、アラート設定の変更を行うには、アラート設定を変更する監視対象インスタンスの初回スナップショットが完了している必要があることに注意してください。
-</p>
+<p>監視対象インスタンス毎に、アラート機能の有効／無効およびアラート条件(閾値)を変更することができます。<br>
+また、アラート条件(閾値)を「-1」に設定することで一部のアラート項目のみ無効とすることができます。<br><p>
 
-<p>
-アラート設定を変更する際、監視対象インスタンスを選択するためにカラム「instid」を使用します。<br>
+<p>アラート設定を変更するには、アラート設定テーブルから変更したいアラート項目のカラムの値を変更してください。<br>
+なお、アラート設定の変更を行うには、アラート設定を変更する監視対象インスタンスの初回スナップショットが完了している必要があることに注意してください。</p>
+
+<p>アラート設定を変更する際、監視対象インスタンスを選択するためにカラム「instid」を使用します。<br>
 当該カラムには監視対象インスタンス毎に割り当てられた識別子 (監視対象インスタンスID) を指定します。<br>
-監視対象インスタンスIDは、簡易レポート機能のスナップショットサイズ表示モードを実行することで確認できます。
-</p>
+監視対象インスタンスIDは、簡易レポート機能のスナップショットサイズ表示モードを実行することで確認できます。</p>
 
 設定例: 秒間ロールバック数の閾値を「3000」に変更する場合
 <pre>
-# UPDATE statsrepo.alert SET commit_tps = 3000 WHERE instid = <変更対象の監視対象インスタンスID>
+# UPDATE statsrepo.alert SET rollback_tps = 3000 WHERE instid = <変更対象の監視対象インスタンスID>
+</pre>
+
+設定例: 秒間ロールバック数のアラートを無効にする場合
+<pre>
+# UPDATE statsrepo.alert SET rollback_tps = -1 WHERE instid = <変更対象の監視対象インスタンスID>
 </pre>
 
 設定例: アラート機能を無効にする場合
@@ -530,6 +543,60 @@ pg_statsinfo.adjust_log_info = '42P01'</pre>
     <td>クエリの最長レスポンス時間(秒)</td>
   </tr>
   <tr>
+    <td>fragment_percent</td>
+    <td>integer</td>
+    <td>70</td>
+    <td>各テーブルの断片化率(correlation)(%)</td>
+  </tr>
+  <tr>
+    <td>backend_max</td>
+    <td>integer</td>
+    <td>100</td>
+    <td>バックエンドの最大数</td>
+  </tr>
+  <tr>
+    <td>disk_remain_percent</td>
+    <td>integer</td>
+    <td>20</td>
+    <td>テーブルスペースのディスク空き容量の割合(%)</td>
+  </tr>
+  <tr>
+    <td>loadavg_1min</td>
+    <td>real</td>
+    <td>7.0</td>
+    <td>過去1分間のロードアベレージ</td>
+  </tr>
+  <tr>
+    <td>loadavg_5min</td>
+    <td>real</td>
+    <td>6.0</td>
+    <td>過去5分間のロードアベレージ</td>
+  </tr>
+  <tr>
+    <td>loadavg_15min</td>
+    <td>real</td>
+    <td>7.0</td>
+    <td>過去15分間のロードアベレージ</td>
+  </tr>
+  <tr>
+    <td>swap_size</td>
+    <td>integer</td>
+    <td>1000000</td>
+    <td>スワップ使用量(KB)</td>
+  </tr>
+  <tr>
+    <td>rep_flush_delay</td>
+    <td>integer</td>
+    <td>100</td>
+    <td>マスタとスタンバイ間のWAL書き込み遅延量(MB)</td>
+  </tr>
+  <tr>
+    <td>rep_replay_delay</td>
+    <td>integer</td>
+    <td>200</td>
+    <td>スタンバイのリカバリ遅延量(MB)</td>
+  </tr>
+  <tr>
     <td>enable_alert</td>
     <td>boolean</td>
     <td>true</td>
@@ -570,7 +637,7 @@ $ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -r All
   <dt>-r, --report=REPORTID</dt>
   <dd>レポート種別IDを指定します。</dd>
   <dd>レポート種別IDに指定できる値は以下のとおりです。</dd>
-  <dd>レポート種別IDとレポートの内容についての対応は「<a href="files/pg_statsinfo_v2.4_report_infomation.xls">pg_statsinfo v2.4 レポート項目一覧</a>」をご覧ください。</dd>
+  <dd>レポート種別IDとレポートの内容についての対応は「<a href="files/pg_statsinfo_v2.5_report_infomation.xls">pg_statsinfo v2.5 レポート項目一覧</a>」をご覧ください。</dd>
   <dd>
     <ul>
       <li>Summary</li>
@@ -1221,8 +1288,11 @@ PostgreSQL はタイムゾーンを独自に管理しており、外部プログ
 
 <dt>トランザクションログ(WAL)の出力量のレポートに関する制限</dt>
 <dd>監視対象インスタンスのWALセグメントサイズ(XLOG_SEG_SIZE)がデフォルト(16MB)以外の場合は、当該インスタンスに対するWALの出力量のレポート(WAL Statistics)の値が正しい値とならない。</dd>
-<br>
+
+<dt>レポート全般に関する注意点</dt>
+<dd>データサイズなどを示す一部の項目の値は、単位換算での数値の切り捨てにより微小な値が存在するにもかかわらずゼロと表示される可能性がある。</dd>
 </dl>
+<br>
 
 <h2 id="QA">よくあるQ&A</h2>
 <h4>Q1. pg_statsinfo が正常に動作しているかの確認方法を教えてください。</h4>
@@ -1237,7 +1307,7 @@ $psql -d postgres -c "SELECT * FROM statsrepo.snapshot WHERE COMMENT = 'test'"
 <h4>Q2. 取得したスナップショットはどのように使えばいいの？</h4>
 <p>
 pg_statsinfo の統計情報の取得機能は、その時点の統計情報をスナップショットとして定期的に取得する機能のみになります。
-取得した統計情報から、有益な情報を見たい場合は <a href="#features-report">簡易レポート機能</a> を利用するか、<a href='http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html'>pg_stats_reporter</a> をお使いください。
+取得した統計情報から、有益な情報を見たい場合は <a href="#features-report">簡易レポート機能</a> を利用するか、<a href='http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter-ja.html'>pg_stats_reporter</a> をお使いください。
 </p>
 
 <h4>Q3. 自動メンテナンス機能のスナップショット削除が動作しません。</h4>
@@ -1333,26 +1403,30 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
 
 <br>
 
-<h2 id="change">pg_statsinfo 2.3 からの変更点</h2>
-<p>pg_statsinfo 2.3 からの変更点は以下の通りです。</p>
+<h2 id="change">pg_statsinfo 2.4 からの変更点</h2>
+<p>pg_statsinfo 2.4 からの変更点は以下の通りです。</p>
 <ul>
-  <li>PostgreSQL 9.2に対応</li>
-  <li>統計情報の収集対象および簡易レポート機能のレポートに以下の項目を追加</li>
+  <li>統計情報の収集対象に以下の項目を追加</li>
   <ul>
-    <li>WALの出力量</li>
-    <li>OSリソースのメモリ使用量</li>
-    <li>OSリソースのロードアベレージ</li>
-    <li>Autovacuumのページおよび入出力に関する情報 (PostgreSQL 9.2のみ)</li>
-    <li>データベース毎の一時ファイルの使用量 (PostgreSQL 9.2のみ)</li>
-    <li>データベース毎のデッドロックの総数 (PostgreSQL 9.2のみ)</li>
-    <li>データベース毎のデータファイルの入出力に費やした時間 (PostgreSQL 9.2のみ)</li>
-    <li>SQL文がブロックの入出力に費やした時間 (PostgreSQL 9.2のみ)</li>
+    <li>バックエンドの最大数</li>
+    <li>PostgreSQLの設定パラメータの単位</li>
   </ul>
-  <li>特定ユーザのログをテキストログへの出力から除外する設定を追加</li>
-  <li>ログファイル整理を目的とする任意コマンドを実行する設定を追加</li>
-  <li>クエリの統計情報の収集上限と除外ユーザの設定を追加</li>
-  <li>簡易レポート機能のレポート表示を改善</li>
-  <li>pg_statsinfoに障害が発生した場合の信頼性を向上。障害発生時に PostgreSQL のバックエンド再起動が発生しなくなりました</li>
+  <li>アラート機能の実行有無をアラート項目単位で切り替える設定を追加</li>
+  <li>アラート機能の判定対象に以下の項目を追加</li>
+  <ul>
+    <li>テーブルの断片化率(correlation)</li>
+    <li>バックエンドの最大数</li>
+    <li>テーブルスペースのディスク空き容量</li>
+    <li>ロードアベレージ</li>
+    <li>スワップ使用量</li>
+    <li>レプリケーションの遅延量</li>
+  </ul>
+  <li>簡易レポート機能のレポートに以下の項目を追加</li>
+  <ul>
+    <li>レプリケーションの遅延量</li>
+    <li>Autoanalyzeの実行回数と処理時間</li>
+    <li>データベース設定のパラメータの単位</li>
+  </ul>
 </ul>
 <br>
 
@@ -1437,13 +1511,13 @@ pg_statsinfo は、この SystemTap が収集するプロファイリング情�
 <a href="http://www.postgresql.jp/document/current/html/monitoring-stats.html">統計情報コレクタ</a>,
 <a href="http://www.postgresql.jp/document/current/html/catalogs.html">システムカタログ</a>,
 <a href="http://www.postgresql.jp/document/current/html/pgstatstatements.html">pg_stat_statements</a>,
-<a href="http://pgstatsinfo.projects.postgresql.org/pg_reporter-ja.html">pg_stats_reporter</a>
+<a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter-ja.html">pg_stats_reporter</a>
 <hr>
 <div class="navigation">
   <a href="http://pgstatsinfo.projects.postgresql.org/index_ja.html">Top</a> &gt;
   <a href="http://pgstatsinfo.projects.postgresql.org/pg_statsinfo-ja.html">pg_statsinfo</a>
 <div>
-<p class="footer">Copyright (c) 2009-2012, NIPPON TELEGRAPH AND TELEPHONE CORPORATION</p>
+<p class="footer">Copyright (c) 2009-2013, NIPPON TELEGRAPH AND TELEPHONE CORPORATION</p>
 
 <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
