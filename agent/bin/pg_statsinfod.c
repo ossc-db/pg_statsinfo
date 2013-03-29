@@ -416,7 +416,7 @@ do_connect(PGconn **conn, const char *info, const char *schema)
 		return *conn;
 
 	pgut_disconnect(*conn);
-	*conn = pgut_connect(info, NO, DEBUG2);
+	*conn = pgut_connect(info, NO, ERROR);
 
 	if (PQstatus(*conn) == CONNECTION_OK)
 	{
