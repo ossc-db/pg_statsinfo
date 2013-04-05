@@ -18,13 +18,33 @@
 #define SQL_SELECT_XACT_TENDENCY				"SELECT * FROM statsrepo.get_xact_tendency_report($1, $2)"
 #define SQL_SELECT_DBSIZE_TENDENCY				"SELECT * FROM statsrepo.get_dbsize_tendency_report($1, $2)"
 #define SQL_SELECT_RECOVERY_CONFLICTS 			"SELECT * FROM statsrepo.get_recovery_conflicts($1, $2)"
-#define SQL_SELECT_INSTANCE_PROC_RATIO			"SELECT * FROM statsrepo.get_proc_ratio($1, $2)"
-#define SQL_SELECT_INSTANCE_PROC_TENDENCY		"SELECT * FROM statsrepo.get_proc_tendency_report($1, $2)"
+#define SQL_SELECT_INSTANCE_PROC_TENDENCY "\
+SELECT * FROM statsrepo.get_proc_tendency_report($1, $2) \
+UNION ALL \
+SELECT \
+	'Average', \
+	avg(idle)::numeric(5,2), \
+	avg(idle_in_xact)::numeric(5,2), \
+	avg(waiting)::numeric(5,2), \
+	avg(running)::numeric(5,2) \
+FROM \
+	statsrepo.get_proc_tendency_report($1, $2)"
 #define SQL_SELECT_WALSTATS						"SELECT * FROM statsrepo.get_xlog_stats($1, $2)"
 #define SQL_SELECT_WALSTATS_TENDENCY			"SELECT * FROM statsrepo.get_xlog_tendency($1, $2)"
-#define SQL_SELECT_CPU_USAGE					"SELECT * FROM statsrepo.get_cpu_usage($1, $2)"
-#define SQL_SELECT_CPU_USAGE_TENDENCY			"SELECT * FROM statsrepo.get_cpu_usage_tendency_report($1, $2)"
-#define SQL_SELECT_LOADAVG_TENDENCY				"SELECT * FROM statsrepo.get_loadavg_tendency($1, $2)"
+#define SQL_SELECT_CPU_LOADAVG_TENDENCY "\
+SELECT * FROM statsrepo.get_cpu_loadavg_tendency($1, $2) \
+UNION ALL \
+SELECT \
+	'Average', \
+	avg(\"user\")::numeric(5,2), \
+	avg(system)::numeric(5,2), \
+	avg(idle)::numeric(5,2), \
+	avg(iowait)::numeric(5,2), \
+	avg(loadavg1)::numeric(6,3), \
+	avg(loadavg5)::numeric(6,3), \
+	avg(loadavg15)::numeric(6,3) \
+FROM \
+	statsrepo.get_cpu_loadavg_tendency($1, $2)"
 #define SQL_SELECT_MEMORY_TENDENCY				"SELECT * FROM statsrepo.get_memory_tendency($1, $2)"
 #define SQL_SELECT_IO_USAGE						"SELECT * FROM statsrepo.get_io_usage($1, $2)"
 #define SQL_SELECT_IO_USAGE_TENDENCY			"SELECT * FROM statsrepo.get_io_usage_tendency_report($1, $2)"
@@ -476,18 +496,6 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-	fprintf(out, "/** Instance Processes Ratio **/\n");
-	fprintf(out, "-----------------------------------\n");
-
-	res = pgut_execute(conn, SQL_SELECT_INSTANCE_PROC_RATIO, lengthof(params), params);
-	if (PQntuples(res) == 0)
-		return;
-	fprintf(out, "Back-end Idle Ratio          : %s %%\n", PQgetvalue(res, 0, 0));
-	fprintf(out, "Back-end Idle In Xact Ratio  : %s %%\n", PQgetvalue(res, 0, 1));
-	fprintf(out, "Back-end Waiting Ratio       : %s %%\n", PQgetvalue(res, 0, 2));
-	fprintf(out, "Back-end Running Ratio       : %s %%\n\n", PQgetvalue(res, 0, 3));
-	PQclear(res);
-
 	fprintf(out, "/** Instance Processes **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %12s  %12s  %12s  %12s\n",
@@ -522,50 +530,24 @@ report_resource_usage(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "/* OS Resource Usage */\n");
 	fprintf(out, "----------------------------------------\n\n");
 
-	fprintf(out, "/** CPU Usage **/\n");
+	fprintf(out, "/** CPU Usage + Load Average **/\n");
 	fprintf(out, "-----------------------------------\n");
+	fprintf(out, "%-16s  %8s  %8s  %8s  %8s  %8s  %8s  %9s\n",
+		"DateTime", "User", "System", "Idle", "IOwait", "Loadavg1", "Loadavg5", "Loadavg15");
+	fprintf(out, "------------------------------------------------------------------------------------------\n");
 
-	res = pgut_execute(conn, SQL_SELECT_CPU_USAGE, lengthof(params), params);
-	if (PQntuples(res) == 0)
-		return;
-	fprintf(out, "User Mode Ratio    : %s %%\n", PQgetvalue(res, 0, 0));
-	fprintf(out, "System Mode Ratio  : %s %%\n", PQgetvalue(res, 0, 1));
-	fprintf(out, "Idle Mode Ratio    : %s %%\n", PQgetvalue(res, 0, 2));
-	fprintf(out, "IOwait Mode Ratio  : %s %%\n\n", PQgetvalue(res, 0, 3));
-	PQclear(res);
-
-	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %10s  %10s  %10s  %10s\n",
-		"DateTime", "User", "System", "Idle", "IOwait");
-	fprintf(out, "-------------------------------------------------------------------\n");
-
-	res = pgut_execute(conn, SQL_SELECT_CPU_USAGE_TENDENCY, lengthof(params), params);
+	res = pgut_execute(conn, SQL_SELECT_CPU_LOADAVG_TENDENCY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %8s %%  %8s %%  %8s %%  %8s %%\n",
+		fprintf(out, "%-16s  %6s %%  %6s %%  %6s %%  %6s %%  %8s  %8s  %9s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
 			PQgetvalue(res, i, 3),
-			PQgetvalue(res, i, 4));
-	}
-	fprintf(out, "\n");
-	PQclear(res);
-
-	fprintf(out, "/** Load Average **/\n");
-	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %7s  %7s  %7s\n",
-		"DateTime", "1 Min", "5 Min", "15 Min");
-	fprintf(out, "----------------------------------------------\n");
-
-	res = pgut_execute(conn, SQL_SELECT_LOADAVG_TENDENCY, lengthof(params), params);
-	for(i = 0; i < PQntuples(res); i++)
-	{
-		fprintf(out, "%-16s  %7s  %7s  %7s\n",
-			PQgetvalue(res, i, 0),
-			PQgetvalue(res, i, 1),
-			PQgetvalue(res, i, 2),
-			PQgetvalue(res, i, 3));
+			PQgetvalue(res, i, 4),
+			PQgetvalue(res, i, 5),
+			PQgetvalue(res, i, 6),
+			PQgetvalue(res, i, 7));
 	}
 	fprintf(out, "\n");
 	PQclear(res);

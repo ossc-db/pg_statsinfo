@@ -1663,6 +1663,41 @@ $$
 $$
 LANGUAGE sql;
 
+-- generate information that corresponds to 'CPU Usage + Load Average'
+CREATE FUNCTION statsrepo.get_cpu_loadavg_tendency(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT "timestamp"		text,
+	OUT "user"			numeric,
+	OUT system			numeric,
+	OUT idle			numeric,
+	OUT iowait			numeric,
+	OUT loadavg1		numeric,
+	OUT loadavg5		numeric,
+	OUT loadavg15		numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+		c.user,
+		c.system,
+		c.idle,
+		c.iowait,
+		l.loadavg1::numeric(6,3),
+		l.loadavg5::numeric(6,3),
+		l.loadavg15::numeric(6,3)
+	FROM
+		statsrepo.get_cpu_usage_tendency($1, $2) c,
+		statsrepo.loadavg l,
+		statsrepo.snapshot s
+	WHERE
+		c.snapid = l.snapid
+		AND c.snapid = s.snapid
+	ORDER BY
+		c.snapid;
+$$
+LANGUAGE sql;
+
 -- generate information that corresponds to 'IO Usage'
 CREATE FUNCTION statsrepo.get_io_usage(
 	IN snapid_begin			bigint,
@@ -1899,9 +1934,9 @@ CREATE FUNCTION statsrepo.get_loadavg_tendency(
 $$
 	SELECT
 		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
-		l.loadavg1::numeric(1000, 3),
-		l.loadavg5::numeric(1000, 3),
-		l.loadavg15::numeric(1000, 3)
+		l.loadavg1::numeric(6,3),
+		l.loadavg5::numeric(6,3),
+		l.loadavg15::numeric(6,3)
 	FROM
 		statsrepo.loadavg l,
 		statsrepo.snapshot s
