@@ -17,11 +17,12 @@ CREATE SCHEMA statsrepo;
 
 CREATE TABLE statsrepo.instance
 (
-	instid			bigserial,
-	name			text NOT NULL,
-	hostname		text NOT NULL,
-	port			integer NOT NULL,
-	pg_version		text,
+	instid				bigserial,
+	name				text NOT NULL,
+	hostname			text NOT NULL,
+	port				integer NOT NULL,
+	pg_version			text,
+	xlog_file_size		bigint,
 	PRIMARY KEY (instid),
 	UNIQUE (name, hostname, port)
 );
@@ -504,12 +505,12 @@ $$
 LANGUAGE sql IMMUTABLE STRICT;
 
 -- xlog_location_diff() - compute the difference in bytes between two WAL locations
-CREATE FUNCTION statsrepo.xlog_location_diff(text, text)
+CREATE FUNCTION statsrepo.xlog_location_diff(text, text, bigint)
 RETURNS numeric AS
 $$
 	/* XLogFileSize * (xlogid1 - xlogid2) + xrecoff1 - xrecoff2 */
 	SELECT
-		(X'FF000000'::bigint * (t.xlogid1 - t.xlogid2)::numeric + t.xrecoff1 - t.xrecoff2)
+		($3 * (t.xlogid1 - t.xlogid2)::numeric + t.xrecoff1 - t.xrecoff2)
 	FROM
 	(
 		SELECT
@@ -1322,14 +1323,16 @@ $$
 			x.location,
 			x.xlogfile,
 			statsrepo.xlog_location_diff(
-				x.location, lag(x.location) OVER w) AS write_size,
+				x.location, lag(x.location) OVER w, i.xlog_file_size) AS write_size,
 			s.time - lag(s.time) OVER w AS duration
 		 FROM
 			statsrepo.xlog x,
-			statsrepo.snapshot s
+			statsrepo.snapshot s,
+			statsrepo.instance i
 		 WHERE
 			x.snapid BETWEEN $1 AND $2
 			AND x.snapid = s.snapid
+			AND s.instid = i.instid
 			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 		 WINDOW w AS (ORDER BY s.snapid)
 		 ORDER BY
@@ -2385,17 +2388,21 @@ $$
 		host(r.client_addr) || ':' || r.client_port AS client,
 		statsrepo.xlog_location_diff(
 			split_part(r.current_location, ' ', 1),
-			split_part(r.flush_location, ' ', 1)),
+			split_part(r.flush_location, ' ', 1),
+			i.xlog_file_size),
 		statsrepo.xlog_location_diff(
 			split_part(r.current_location, ' ', 1),
-			split_part(r.replay_location, ' ', 1)),
+			split_part(r.replay_location, ' ', 1),
+			i.xlog_file_size),
 		(SELECT sync_state FROM statsrepo.replication WHERE snapid = $2
 			AND client_addr = r.client_addr AND client_port = r.client_port)
 	FROM
 		statsrepo.replication r,
-		statsrepo.snapshot s
+		statsrepo.snapshot s,
+		statsrepo.instance i
 	WHERE
 		r.snapid = s.snapid
+		AND s.instid = i.instid
 		AND r.snapid BETWEEN $1 AND $2
 		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 		AND r.flush_location IS NOT NULL

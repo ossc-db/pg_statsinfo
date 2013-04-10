@@ -71,6 +71,11 @@ FROM \
 	LEFT JOIN pg_settings s \
 	ON t.name = s.name"
 
+/* reworked from access/xlog_internal.h */
+#define XLogSegSize    ((uint32) XLOG_SEG_SIZE)
+#define XLogSegsPerFile (((uint32) 0xffffffff) / XLogSegSize)
+#define XLogFileSize  (XLogSegsPerFile * XLogSegSize)
+
 /* shutdown state */
 typedef enum ShutdownState
 {

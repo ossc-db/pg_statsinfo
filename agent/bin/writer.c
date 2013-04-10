@@ -269,7 +269,7 @@ static char *
 get_instid(PGconn *conn)
 {
 	PGresult	   *res = NULL;
-	const char	   *params[4];
+	const char	   *params[5];
 	char		   *instid;
 
 	if (pgut_command(conn, "BEGIN TRANSACTION READ WRITE", 0, NULL) != PGRES_COMMAND_OK)
@@ -309,13 +309,18 @@ get_instid(PGconn *conn)
 	else
 	{
 		/* register as a new instance */
+		char	xlog_file_size[32];
+
 		PQclear(res);
+		snprintf(xlog_file_size, sizeof(xlog_file_size), "%u", XLogFileSize);
 
 		params[3] = server_version_string;
+		params[4] = xlog_file_size;
 		res = pgut_execute(conn,
-			"INSERT INTO statsrepo.instance (name, hostname, port, pg_version)"
-			" VALUES ($1, $2, $3, $4) RETURNING instid",
-			4, params);
+			"INSERT INTO statsrepo.instance" 
+			" (name, hostname, port, pg_version, xlog_file_size)"
+			" VALUES ($1, $2, $3, $4, $5) RETURNING instid",
+			5, params);
 		if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) < 1)
 			goto error;
 

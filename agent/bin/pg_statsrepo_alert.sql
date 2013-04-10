@@ -322,27 +322,33 @@ BEGIN
 	-- alert if replication-delay(flush or replay) is higher than threshold.
 	FOR val_client, val_flush_delay, val_replay_delay IN
 		SELECT
-			host(client_addr) || ':' || client_port,
+			host(r.client_addr) || ':' || r.client_port,
 			statsrepo.div(
 				statsrepo.xlog_location_diff(
-					split_part(current_location, ' ', 1),
-					split_part(flush_location, ' ', 1)
+					split_part(r.current_location, ' ', 1),
+					split_part(r.flush_location, ' ', 1),
+					i.xlog_file_size
 				),
 				1024 * 1024
 			),
 			statsrepo.div(
 				statsrepo.xlog_location_diff(
-					split_part(current_location, ' ', 1),
-					split_part(replay_location, ' ', 1)
+					split_part(r.current_location, ' ', 1),
+					split_part(r.replay_location, ' ', 1),
+					i.xlog_file_size
 				),
 				1024 * 1024
 			)
 		FROM
-			statsrepo.replication
+			statsrepo.replication r,
+			statsrepo.snapshot s,
+			statsrepo.instance i
 		WHERE
-			snapid = $1.snapid
-			AND flush_location IS NOT NULL
-			AND replay_location IS NOT NULL
+			r.snapid = s.snapid
+			AND s.instid = i.instid
+			AND r.snapid = $1.snapid
+			AND r.flush_location IS NOT NULL
+			AND r.replay_location IS NOT NULL
 	LOOP
 		IF $2.rep_flush_delay >= 0 AND val_flush_delay > $2.rep_flush_delay THEN
 			RETURN NEXT 'WAL flush-delay in ''' || val_client ||

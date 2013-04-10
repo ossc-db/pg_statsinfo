@@ -15,7 +15,7 @@ $$
 	--
 	-- Data for Name: instance; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
-	INSERT INTO statsrepo.instance VALUES ($1, $2, $3, $4, $5);
+	INSERT INTO statsrepo.instance VALUES ($1, $2, $3, $4, $5, X'FF000000'::bigint);
 
 	--
 	-- Data for Name: snapshot; Type: TABLE DATA; Schema: statsrepo; Owner: postgres

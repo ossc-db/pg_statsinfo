@@ -112,18 +112,23 @@ WHERE \
 	client = \
 	( \
 		SELECT \
-			host(client_addr) || ':' || client_port \
+			host(r.client_addr) || ':' || r.client_port \
 		FROM \
-			statsrepo.replication \
+			statsrepo.replication r, \
+			statsrepo.snapshot s, \
+			statsrepo.instance i \
 		WHERE \
-			snapid = $2 \
-			AND sync_state != 'sync' \
-			AND flush_location IS NOT NULL \
-			AND replay_location IS NOT NULL \
+			r.snapid = s.snapid \
+			AND s.instid = i.instid \
+			AND r.snapid = $2 \
+			AND r.sync_state != 'sync' \
+			AND r.flush_location IS NOT NULL \
+			AND r.replay_location IS NOT NULL \
 		ORDER BY \
 			statsrepo.xlog_location_diff( \
-				split_part(current_location, ' ', 1), \
-				split_part(flush_location, ' ', 1)) DESC, client_addr, client_port \
+				split_part(r.current_location, ' ', 1), \
+				split_part(r.flush_location, ' ', 1), \
+				i.xlog_file_size) DESC, client_addr, client_port \
 		LIMIT 1 \
 	)"
 #define SQL_SELECT_SETTING_PARAMETERS			"SELECT * FROM statsrepo.get_setting_parameters($1, $2)"
