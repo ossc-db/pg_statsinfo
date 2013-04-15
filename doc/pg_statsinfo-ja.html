@@ -1174,14 +1174,14 @@ log_line_prefix の値そのものは無視されることに注意して下さ�
 
 <dt>*4 : 接続文字列</dt>
 <dd>
-例えば 'hostaddr=127.0.0.1 port=5432 dbname=mydb user=postgres' といったlibpq形式の接続情報文字列です。
+例えば 'host=127.0.0.1 port=5432 dbname=mydb user=postgres' といったlibpq形式の接続情報文字列です。
 詳細は<a href="http://www.postgresql.jp/document/current/html/libpq-connect.html">データベース接続制御関数</a>のPQconnectdbを参照して下さい。
 この他、libpq が使用する環境変数の影響を受けますので、「<a href="http://www.postgresql.jp/document/current/html/libpq-envars.html">環境変数</a>」も参照して下さい。
 </dd>
 <dd>
 リポジトリDBに接続する際にパスワードの入力待ちにならないようにする必要があります。
 パスワード認証が必要な場合には、PostgreSQL インスタンス起動ユーザに <a href="http://www.postgresql.jp/document/current/html/libpq-pgpass.html">.pgpass</a> を設定し、パスワードの入力を自動化してください。
-なお、.pgpassを用いる場合、リポジトリDBへの接続文字列のホスト名は"host=xxxx"で指定して下さい。
+なお、.pgpassを用いる場合、リポジトリDBへの接続文字列のホスト指定にhostaddrは使用しないで下さい。
 </dd>
 
 <dt>*5 : SQLSTATE 指定</dt>
@@ -1441,7 +1441,7 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
 各監視対象インスタンスの設定ファイルに、同一のリポジトリDBを参照する内容で「pg_statsinfo.repository_server」を設定します。<br>
 以下に設定例を示します。
 <p>
-<pre>pg_statsinfo.repository_server = 'hostaddr=192.168.0.32 port=5432 user=postgres dbname=postgres'</pre>
+<pre>pg_statsinfo.repository_server = 'host=192.168.0.32 port=5432 user=postgres dbname=postgres'</pre>
 
 <p>
 リポジトリDBは各監視対象インスタンスから上記で設定したデータベースにパスワード入力なしに接続できる必要があります。<br>
