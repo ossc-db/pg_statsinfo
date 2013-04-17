@@ -97,7 +97,7 @@ static void logger_parse(Logger *logger, const char *pg_log, bool only_routing);
 static void logger_route(Logger *logger, const Log *log);
 
 static void init_log(Log *log, const char *buf, size_t len, const size_t fields[]);
-static bool logger_open(Logger *logger, const char *csvlog);
+static bool logger_open(Logger *logger, const char *csvlog, long offset);
 static void logger_close(Logger *logger);
 static bool logger_next(Logger *logger, const char *pg_log);
 static void get_csvlog(char csvlog[], const char *prev, const char *pg_log);
@@ -159,7 +159,7 @@ logger_main(void *arg)
 	ControlFile.state = STATSINFO_RUNNING;
 
 	/* perform the log routing until end of the latest csvlog */
-	logger_open(&logger, logger.csv_path);
+	logger_open(&logger, logger.csv_path, logger.csv_offset);
 	logger_parse(&logger, my_log_directory, true);
 
 	/*
@@ -688,14 +688,14 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 }
 
 static bool
-logger_open(Logger *logger, const char *csvlog)
+logger_open(Logger *logger, const char *csvlog, long offset)
 {
 	mode_t	mask;
 
 	Assert(!logger->fp);
 	Assert(!logger->textlog);
 
-	assign_csvlog_path(logger, my_log_directory, csvlog, 0);
+	assign_csvlog_path(logger, my_log_directory, csvlog, offset);
 	assign_textlog_path(logger, my_log_directory);
 
 	/* open csvlog file */
@@ -794,7 +794,7 @@ logger_next(Logger *logger, const char *pg_log)
 		 }
 
 		logger_close(logger);
-		if (!logger_open(logger, csvlog))
+		if (!logger_open(logger, csvlog, 0))
 			return false;
 
 		elog(DEBUG2, "read csvlog \"%s\"", logger->csv_path);
