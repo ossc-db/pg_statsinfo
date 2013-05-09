@@ -1066,16 +1066,23 @@ static int
 csvfilter(const struct dirent *dp)
 {
 	const char	*extension;
-
-	if (dp->d_type != DT_REG)
-		return 0;
+	struct stat	 entry_stat;
+	char		 entry_path[MAXPGPATH];
 
 	/* check the extension is .csv */
 	extension = strrchr(dp->d_name, '.');
 	if (extension && strcmp(extension, ".csv") == 0)
-		return 1;
-	else
-		return 0;
+	{
+		/* do lstat() for matching extensions */
+		join_path_components(entry_path, my_log_directory, dp->d_name);
+		if (lstat(entry_path, &entry_stat) == 0)
+		{
+			/* is this a regular file? */
+			if (S_ISREG(entry_stat.st_mode))
+				return 1;
+		}
+	}
+	return 0;
 }
 
 static void
