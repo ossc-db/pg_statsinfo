@@ -7,6 +7,7 @@ SRCS = \
 	pg_statsinfo.c \
 	snapshot.c \
 	report.c \
+	control.c \
 	pgut/pgut.c \
 	pgut/pgut-fe.c \
 	pgut/pgut-list.c

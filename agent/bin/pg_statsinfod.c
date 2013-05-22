@@ -6,9 +6,7 @@
 
 #include "pg_statsinfod.h"
 
-#include <signal.h>
-
-#include "miscadmin.h"
+#include <fcntl.h>
 
 const char *PROGRAM_VERSION	= "2.5.0";
 const char *PROGRAM_URL		= "http://pgstatsinfo.projects.postgresql.org/";
@@ -109,6 +107,8 @@ static bool decode_time(const char *field, int *hour, int *min, int *sec);
 static int strtoi(const char *nptr, char **endptr, int base);
 static bool execute_script(PGconn *conn, const char *script_file);
 static bool check_repository(PGconn *conn);
+static void create_lock_file(void);
+static void unlink_lock_file(void);
 
 /* parameters */
 static struct ParamMap PARAM_MAP[] =
@@ -242,6 +242,9 @@ main(int argc, char *argv[])
 	/* setup libpq default parameters */
 	pgut_putenv("PGCONNECT_TIMEOUT", "2");
 	pgut_putenv("PGCLIENTENCODING", pg_encoding_to_char(server_encoding));
+
+	/* create lock file */
+	create_lock_file();
 
 	/*
 	 * set the abort level to FATAL so that the daemon should not be
@@ -983,4 +986,143 @@ done:
 error:
 	PQclear(res);
 	return false;
+}
+
+/*
+ * create the lock file.
+ * store our own PID in the lock file.
+ */
+static void
+create_lock_file(void)
+{
+	int		fd;
+	char	lockfile[MAXPGPATH];
+	char	buffer[64];
+	pid_t	my_pid;
+
+	my_pid = getpid();
+
+	join_path_components(lockfile, data_directory, STATSINFO_LOCK_FILE);
+
+	/* create the lockfile */
+	fd = open(lockfile, O_WRONLY | O_CREAT | O_EXCL, 0600);
+	if (fd < 0)
+	{
+		FILE	*fp;
+		pid_t	 lock_si_pid;
+		pid_t	 lock_pg_pid;
+
+		if (errno != EEXIST && errno != EACCES)
+			ereport(FATAL,
+				(errcode_errno(),
+				 errmsg("could not create lock file \"%s\": %m", lockfile)));
+
+		/*
+		 * if lockfile already exists, do the check to avoid multiple boot.
+		 * and if another process still exists, terminate it.
+		 */
+		fd = open(lockfile, O_RDWR, 0600);
+		if (fd < 0)
+		{
+			ereport(FATAL,
+				(errcode_errno(),
+				 errmsg("could not open lock file \"%s\": %m", lockfile)));
+		}
+
+		fp = fdopen(fd, "r+");
+		if (fp == NULL)
+			ereport(FATAL,
+				(errcode_errno(),
+				 errmsg("could not open lock file \"%s\": %m", lockfile)));
+
+		errno = 0;
+		if (fscanf(fp, "%d\n%d\n", &lock_si_pid, &lock_pg_pid) != 2)
+		{
+			if (errno == 0)
+				elog(FATAL, "bogus data in lock file \"%s\"", lockfile);
+			else
+				ereport(FATAL,
+					(errcode_errno(),
+					 errmsg("could not read lock file \"%s\": %m", lockfile)));
+		}
+
+		if (kill(lock_si_pid, 0) == 0)	/* process is alive */
+		{
+			/* check the postmaster PID */
+			if (lock_pg_pid == postmaster_pid)
+				elog(FATAL, "is another pg_statsinfod (PID %d) running",
+					lock_si_pid);
+
+			/* terminate the another process still exists */
+			elog(NOTICE, "terminate the another process still exists (PID %d)",
+				lock_si_pid);
+			if (kill(lock_si_pid, SIGKILL) != 0)
+				elog(ERROR, "could not send kill signal (PID %d): %m",
+					lock_si_pid);
+		}
+
+		/* reset the seek position in order to write the lock file */
+		lseek(fd, (off_t) 0, SEEK_SET);
+	}
+
+	/* write content to the lockfile */
+	snprintf(buffer, sizeof(buffer), "%d\n%d\n", my_pid, postmaster_pid);
+
+	errno = 0;
+	if (write(fd, buffer, strlen(buffer)) != strlen(buffer))
+	{
+		int		save_errno = errno;
+
+		close(fd);
+		unlink(lockfile);
+		/* if write didn't set errno, assume problem is no disk space */
+		errno = save_errno ? save_errno : ENOSPC;
+		ereport(FATAL,
+			(errcode_errno(),
+			 errmsg("could not write lock file \"%s\": %m", lockfile)));
+	}
+	if (fsync(fd) != 0)
+	{
+		int		save_errno = errno;
+
+		close(fd);
+		unlink(lockfile);
+		errno = save_errno;
+		ereport(FATAL,
+			(errcode_errno(),
+			 errmsg("could not write lock file \"%s\": %m", lockfile)));
+	}
+	if (close(fd) != 0)
+	{
+		int		save_errno = errno;
+
+		unlink(lockfile);
+		errno = save_errno;
+		ereport(FATAL,
+			(errcode_errno(),
+			 errmsg("could not write lock file \"%s\": %m", lockfile)));
+	}
+
+	/* automatic removal of the lock file at exit */
+	atexit(unlink_lock_file);
+}
+
+/*
+ * atexit() callback to remove a lock file.
+ */
+static void
+unlink_lock_file(void)
+{
+	char	lockfile[MAXPGPATH];
+
+	join_path_components(lockfile, data_directory, STATSINFO_LOCK_FILE);
+
+	if (unlink(lockfile) != 0)
+	{
+		if (errno != ENOENT)
+			ereport(FATAL,
+				(errcode_errno(),
+				 errmsg("could not remove lock file \"%s\": %m",
+				 	lockfile)));
+	}
 }

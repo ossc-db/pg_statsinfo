@@ -12,6 +12,8 @@ const char *PROGRAM_EMAIL	= "pgstatsinfo-general@pgfoundry.org";
 
 static bool			 mode_list;
 static bool			 mode_size;
+static bool			 mode_start;
+static bool			 mode_stop;
 static char			*mode_report = NULL;
 static char			*mode_snapshot = NULL;
 static char			*mode_delete = NULL;
@@ -27,6 +29,8 @@ static struct pgut_option options[] =
 {
 	{ 'b', 'l', "list", &mode_list },
 	{ 'b', 's', "size", &mode_size },
+	{ 'b', 0x0, "start", &mode_start },
+	{ 'b', 0x1, "stop", &mode_stop },
 	{ 's', 'r', "report", &mode_report },
 	{ 's', 'S', "snapshot", &mode_snapshot },
 	{ 's', 'D', "delete", &mode_delete },
@@ -45,6 +49,7 @@ main(int argc, char *argv[])
 	PGconn			*conn;
 	StringInfoData	 conn_info;
 	int				 num_options;
+	int				 mode_cnt;
 
 	num_options = pgut_getopt(argc, argv, options);
 
@@ -54,11 +59,20 @@ main(int argc, char *argv[])
 			(errcode(EINVAL),
 			 errmsg("too many argumetns")));
 
-	/* can't specified the mode two or more */
-	if ((mode_list && (mode_size || mode_report || mode_snapshot || mode_delete)) ||
-		(mode_size && (mode_report || mode_snapshot || mode_delete)) ||
-		(mode_report && (mode_snapshot || mode_delete)) ||
-		(mode_snapshot && mode_delete))
+	/* validity check of the mode option */
+	mode_cnt = 0;
+	mode_cnt += mode_list     ? 1 : 0;
+	mode_cnt += mode_size     ? 1 : 0;
+	mode_cnt += mode_report   ? 1 : 0;
+	mode_cnt += mode_snapshot ? 1 : 0;
+	mode_cnt += mode_delete   ? 1 : 0;
+	mode_cnt += mode_start    ? 1 : 0;
+	mode_cnt += mode_stop     ? 1 : 0;
+	if (mode_cnt == 0)
+		ereport(ERROR,
+			(errcode(EINVAL),
+			 errmsg("please specify operation option (-l, -s, -r, -S, -D)")));
+	else if (mode_cnt > 1)
 		ereport(ERROR,
 			(errcode(EINVAL),
 			 errmsg("can't specify two or more mode")));
@@ -89,10 +103,10 @@ main(int argc, char *argv[])
 		do_snapshot(conn, mode_snapshot);
 	else if (mode_delete)
 		do_delete(conn, mode_delete);
-	else
-		ereport(ERROR,
-			(errcode(EINVAL),
-			 errmsg("please specify operation option (-l, -s, -r, -S, -D)")));
+	else if (mode_start)
+		do_start(conn);
+	else if (mode_stop)
+		do_stop(conn);
 
 	pgut_disconnect(conn);
 	return 0;
@@ -109,13 +123,13 @@ pgut_help(bool details)
 	printf("  pg_statsinfo -s          [connection-options]\n");
 	printf("  pg_statsinfo -S COMMENT  [connection-options]\n");
 	printf("  pg_statsinfo -D SNAPID   [connection-options]\n");
+	printf("  pg_statsinfo --start     [connection-options]\n");
+	printf("  pg_statsinfo --stop      [connection-options]\n");
 
 	if (!details)
 		return;
 
 	printf("\nGeneral options:\n");
-	printf("  -l, --list             show the snapshot list\n");
-	printf("  -s, --size             show the snapshot size\n");
 	printf("  -r, --report=REPORTID  generate a report that specified by REPORTID\n");
 	printf("                         ---------------------------\n");
 	printf("                          * Summary\n");
@@ -136,13 +150,17 @@ pgut_help(bool details)
 	printf("                          * All\n");
 	printf("                         ---------------------------\n");
 	printf("                         (can prefix match. For example, \"su\" means 'Summary')\n");
-	printf("  -S, --snapshot=COMMENT get a snapshot\n");
-	printf("  -D, --delete=SNAPID    delete a snapshot\n");
 	printf("  -i, --instid           limit to instances of specified instance ID\n");
 	printf("  -b, --beginid          begin point of report scope (specify by snapshot ID)\n");
 	printf("  -B, --begindate        begin point of report scope (specify by timestamp)\n");
 	printf("  -e, --endid            end point of report scope (specify by snapshot ID)\n");
 	printf("  -E, --enddate          end point of report scope (specify by timestamp)\n");
+	printf("  -l, --list             show the snapshot list\n");
+	printf("  -s, --size             show the snapshot size\n");
+	printf("  -S, --snapshot=COMMENT get a snapshot\n");
+	printf("  -D, --delete=SNAPID    delete a snapshot\n");
+	printf("  --start                start the pg_statsinfo agent\n");
+	printf("  --stop                 stop the pg_statsinfo agent\n");
 	printf("\nOutput options:\n");
 	printf("  -o, --output=FILENAME  destination file path for report\n");
 }

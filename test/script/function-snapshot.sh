@@ -828,6 +828,7 @@ INSERT INTO schema01.tbl01 (name, age) VALUES ('xxx', 30);
 INSERT INTO schema01.tbl02 (name, age, address) VALUES ('xxx', 30, 'xxx');
 EOF
 pg_ctl stop -m immediate -D ${PGDATA} > /dev/null
+sleep 3
 pg_ctl start -w -D ${PGDATA} -o "-p ${PGPORT}" > /dev/null
 sleep 3
 get_snapshot

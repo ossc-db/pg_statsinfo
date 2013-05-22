@@ -86,6 +86,20 @@ CREATE VIEW statsinfo.tablespaces AS
 	SELECT * FROM statsinfo.tablespaces();
 
 --
+-- statsinfo.start()
+--
+CREATE FUNCTION statsinfo.start(timeout integer) RETURNS void
+AS 'MODULE_PATHNAME', 'statsinfo_start'
+LANGUAGE C;
+
+--
+-- statsinfo.stop()
+--
+CREATE FUNCTION statsinfo.stop(timeout integer) RETURNS void
+AS 'MODULE_PATHNAME', 'statsinfo_stop'
+LANGUAGE C;
+
+--
 -- statsinfo.restart()
 --
 /*

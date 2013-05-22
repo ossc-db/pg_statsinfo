@@ -54,6 +54,12 @@
 #include "linux/version.h"
 #endif
 
+#define INVALID_PID			(-1)
+#define START_WAIT_MIN		(10)
+#define START_WAIT_MAX		(300)
+#define STOP_WAIT_MIN		(10)
+#define STOP_WAIT_MAX		(300)
+
 /* also adjust non-critial setting parameters? */
 /* #define ADJUST_NON_CRITICAL_SETTINGS */
 
@@ -225,6 +231,8 @@ PG_FUNCTION_INFO_V1(statsinfo_activity);
 PG_FUNCTION_INFO_V1(statsinfo_snapshot);
 PG_FUNCTION_INFO_V1(statsinfo_maintenance);
 PG_FUNCTION_INFO_V1(statsinfo_tablespaces);
+PG_FUNCTION_INFO_V1(statsinfo_start);
+PG_FUNCTION_INFO_V1(statsinfo_stop);
 PG_FUNCTION_INFO_V1(statsinfo_restart);
 PG_FUNCTION_INFO_V1(statsinfo_cpustats);
 PG_FUNCTION_INFO_V1(statsinfo_cpustats_noarg);
@@ -239,6 +247,8 @@ extern Datum PGUT_EXPORT statsinfo_activity(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_snapshot(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_maintenance(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_tablespaces(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_start(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_stop(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_restart(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_cpustats(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_cpustats_noarg(PG_FUNCTION_ARGS);
@@ -258,8 +268,9 @@ extern PGUT_EXPORT void	fini_last_xact_activity(void);
 static void inet_to_cstring(const SockAddr *addr, char host[NI_MAXHOST]);
 static void StartStatsinfoLauncher(void);
 static void StatsinfoLauncherMain(void);
+static void sil_sigusr1_handler(SIGNAL_ARGS);
+static void sil_sigusr2_handler(SIGNAL_ARGS);
 static void sil_sigchld_handler(SIGNAL_ARGS);
-static void sil_exit(SIGNAL_ARGS);
 static pid_t exec_background_process(char cmd[]);
 static uint64 get_sysident(void);
 static void must_be_superuser(void);
@@ -271,17 +282,8 @@ static pid_t get_postmaster_pid(void);
 static bool verify_log_filename(const char *filename);
 static bool verify_timestr(const char *timestr);
 static bool postmaster_is_alive(void);
-
-#if PG_VERSION_NUM >= 90100
-static bool check_textlog_filename(char **newval, void **extra, GucSource source);
-static bool check_enable_maintenance(char **newval, void **extra, GucSource source);
-static bool check_maintenance_time(char **newval, void **extra, GucSource source);
-#else
-static const char *assign_textlog_filename(const char *newval, bool doit, GucSource source);
-static const char *assign_enable_maintenance(const char *newval, bool doit, GucSource source);
-static const char *assign_maintenance_time(const char *newval, bool doit, GucSource source);
-#endif
-
+static bool is_shared_preload(const char *library);
+static pid_t get_statsinfo_pid(const char *pid_file);
 static Datum get_cpustats(FunctionCallInfo fcinfo,
 	int64 prev_cpu_user, int64 prev_cpu_system, int64 prev_cpu_idle, int64 prev_cpu_iowait);
 static Datum get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats);
@@ -289,21 +291,12 @@ static int exec_grep(const char *filename, const char *regex, List **records);
 static int exec_split(const char *rawstring, const char *regex, List **fields);
 static bool parse_int64(const char *value, int64 *result);
 static bool parse_float8(const char *value, double *result);
+static char *b_trim(char *str);
+static HeapTupleHeader search_devicestats(ArrayType *devicestats, const char *device_name);
 
 #if PG_VERSION_NUM < 80400
 static bool parse_bool(const char *value, bool *result);
 static const char *elevel_to_str(int elevel);
-#endif
-
-static char *b_trim(char *str);
-static HeapTupleHeader search_devicestats(ArrayType *devicestats, const char *device_name);
-
-#if PG_VERSION_NUM < 80400 || defined(WIN32)
-static int str_to_elevel(const char *name, const char *str,
-						 const struct config_enum_entry *options);
-#endif
-
-#if PG_VERSION_NUM < 80400
 static char	   *syslog_min_messages_str;
 static char	   *textlog_min_messages_str;
 static const char *assign_syslog_min_messages(const char *newval, bool doit, GucSource source);
@@ -313,7 +306,21 @@ static const char *assign_elevel(const char *name, int *var, const char *newval,
 /* 8.3 or earlier versions can work only with PGC_USERSET */
 #undef PGC_SIGHUP
 #define PGC_SIGHUP		PGC_USERSET
+#endif
 
+#if PG_VERSION_NUM < 80400 || defined(WIN32)
+static int str_to_elevel(const char *name, const char *str,
+						 const struct config_enum_entry *options);
+#endif
+
+#if PG_VERSION_NUM >= 90100
+static bool check_textlog_filename(char **newval, void **extra, GucSource source);
+static bool check_enable_maintenance(char **newval, void **extra, GucSource source);
+static bool check_maintenance_time(char **newval, void **extra, GucSource source);
+#else
+static const char *assign_textlog_filename(const char *newval, bool doit, GucSource source);
+static const char *assign_enable_maintenance(const char *newval, bool doit, GucSource source);
+static const char *assign_maintenance_time(const char *newval, bool doit, GucSource source);
 #endif
 
 /* sampled statistics */
@@ -338,9 +345,11 @@ typedef struct Stats
 
 static Stats	*stats;
 
-/* flags for pg_statsinfo launcher */
-static volatile bool need_exit = false;
-static volatile bool got_SIGCHLD = false;
+/* variables for pg_statsinfo launcher */
+static volatile bool	got_SIGCHLD = false;
+static volatile bool	got_SIGUSR1 = false;
+static volatile bool	got_SIGUSR2 = false;
+static pid_t			sil_pid = INVALID_PID;
 
 /*
  * statsinfo_sample - sample statistics for server instance.
@@ -1061,6 +1070,155 @@ _PG_fini(void)
 	/* Uninstall xact_last_activity */
 	fini_last_xact_activity();
 #endif
+}
+
+/*
+ * statsinfo_start - start statsinfo background process.
+ */
+Datum
+statsinfo_start(PG_FUNCTION_ARGS)
+{
+	int32	timeout;
+	char	pid_file[MAXPGPATH];
+	pid_t	pid;
+	int		cnt;
+	int		save_client_min_messages = client_min_messages;
+	int		save_log_min_messages = log_min_messages;
+
+	must_be_superuser();
+
+	if (PG_ARGISNULL(0))
+		elog(ERROR, "argument must not be NULL");
+
+	timeout = PG_GETARG_INT32(0);
+	if (timeout < START_WAIT_MIN || timeout > START_WAIT_MAX)
+		elog(ERROR, "%d is outside the valid range for parameter (%d .. %d)",
+			timeout, START_WAIT_MIN, START_WAIT_MAX);
+
+	/* pg_statsinfo library must been preload as shared library */
+	if (!is_shared_preload("pg_statsinfo"))
+		elog(ERROR, "pg_statsinfo is not preloaded as shared library");
+
+	/*
+	 * adjust elevel to LOG so that message be output to client console only,
+	 * not write to server log.
+	 */
+	client_min_messages = LOG;
+	log_min_messages = FATAL;
+
+	join_path_components(pid_file, DataDir, STATSINFO_LOCK_FILE);
+
+	if ((pid = get_statsinfo_pid(pid_file)) != 0)	/* pid file exists */
+	{
+		if (kill(pid, 0) == 0)	/* process is alive */
+		{
+			elog(WARNING, "pg_statsinfod (PID %d) might be running", pid);
+			goto done;
+		}
+
+		/* remove PID file */
+		if (unlink(pid_file) != 0)
+			elog(ERROR, "could not remove file \"%s\": %s",
+				pid_file, strerror(errno));
+	}
+
+	/* send signal that instruct start the statsinfo background process */
+	if (kill(sil_pid, SIGUSR2) != 0)
+		elog(ERROR, "could not send start signal (PID %d): %m", sil_pid);
+
+	elog(LOG, "waiting for pg_statsinfod to start");
+
+	pid = get_statsinfo_pid(pid_file);
+	for (cnt = 0; pid == 0 && cnt < timeout; cnt++)
+	{
+		pg_usleep(1000000);		/* 1 sec */
+		pid = get_statsinfo_pid(pid_file);
+	}
+
+	if (pid == 0)	/* pid file still not exists */
+		elog(WARNING, "timed out waiting for pg_statsinfod startup");
+	else
+		elog(LOG, "pg_statsinfod started");
+
+done:
+	client_min_messages = save_client_min_messages;
+	log_min_messages = save_log_min_messages;
+	PG_RETURN_VOID();
+}
+
+/*
+ * statsinfo_stop - stop statsinfo background process.
+ */
+Datum
+statsinfo_stop(PG_FUNCTION_ARGS)
+{
+	int32	timeout;
+	char	pid_file[MAXPGPATH];
+	pid_t	pid;
+	int		cnt;
+	int		save_client_min_messages = client_min_messages;
+	int		save_log_min_messages = log_min_messages;
+
+	must_be_superuser();
+
+	if (PG_ARGISNULL(0))
+		elog(ERROR, "argument must not be NULL");
+
+	timeout = PG_GETARG_INT32(0);
+	if (timeout < STOP_WAIT_MIN || timeout > STOP_WAIT_MAX)
+		elog(ERROR, "%d is outside the valid range for parameter (%d .. %d)",
+			timeout, STOP_WAIT_MIN, STOP_WAIT_MAX);
+
+	/* pg_statsinfo library must been preload as shared library */
+	if (!is_shared_preload("pg_statsinfo"))
+		elog(ERROR, "pg_statsinfo is not preloaded as shared library");
+
+	Assert(sil_pid != INVALID_PID);
+
+	/*
+	 * adjust elevel to LOG so that message be output to client console only,
+	 * not write to server log.
+	 */
+	client_min_messages = LOG;
+	log_min_messages = FATAL;
+
+	join_path_components(pid_file, DataDir, STATSINFO_LOCK_FILE);
+
+	if ((pid = get_statsinfo_pid(pid_file)) == 0)	/* no pid file */
+	{
+		elog(WARNING, "PID file \"%s\" does not exist; is pg_statsinfod running?",
+			pid_file);
+		goto done;
+	}
+
+	if (kill(pid, 0) != 0)	/* process is not alive */
+	{
+		elog(WARNING, "pg_statsinfod is not running (PID %d)", pid);
+		goto done;
+	}
+
+	/* send signal that instruct stop the statsinfo background process */
+	if (kill(sil_pid, SIGUSR1) != 0)
+		elog(ERROR, "could not send stop signal (PID %d): %m", sil_pid);
+
+	elog(LOG, "waiting for pg_statsinfod to shut down");
+
+	pid = get_statsinfo_pid(pid_file);
+	for (cnt = 0; pid != 0 && cnt < timeout; cnt++)
+	{
+		pg_usleep(1000000);		/* 1 sec */
+		pid = get_statsinfo_pid(pid_file);
+	}
+
+	if (pid != 0)	/* pid file still exists */
+		elog(WARNING, "timed out waiting for pg_statsinfod shut down");
+	else
+		elog(LOG, "pg_statsinfod stopped");
+
+done:
+	client_min_messages = save_client_min_messages;
+	log_min_messages = save_log_min_messages;
+	PG_RETURN_VOID();
 }
 
 /*
@@ -1859,7 +2017,7 @@ StartStatsinfoLauncher(void)
 	/*
 	 * invoke pg_statsinfo launcher processs
 	 */
-	switch (fork_process())
+	switch ((sil_pid = fork_process()))
 	{
 		case -1:
 			ereport(LOG,
@@ -1906,14 +2064,8 @@ StatsinfoLauncherMain(void)
 		(errmsg("pg_statsinfo launcher started")));
 
 	/* Set up signal handlers */
-	pqsignal(SIGHUP, sil_exit);
-	pqsignal(SIGINT, sil_exit);
-	pqsignal(SIGTERM, sil_exit);
-	pqsignal(SIGQUIT, sil_exit);
-	pqsignal(SIGALRM, sil_exit);
-	pqsignal(SIGPIPE, sil_exit);
-	pqsignal(SIGUSR1, sil_exit);
-	pqsignal(SIGUSR2, sil_exit);
+	pqsignal(SIGUSR1, sil_sigusr1_handler);
+	pqsignal(SIGUSR2, sil_sigusr2_handler);
 	pqsignal(SIGCHLD, sil_sigchld_handler);
 
 	/* launch a pg_statsinfod process */
@@ -1926,49 +2078,82 @@ StatsinfoLauncherMain(void)
 		if (!postmaster_is_alive())
 			break;
 
-		/* have received a signal that terminate process */
-		if (need_exit)
-			break;
+		/* instruct to stop pg_statsinfod process */
+		if (got_SIGUSR1)
+		{
+			got_SIGUSR1 = false;
+
+			if (StatsinfoPID == INVALID_PID)	/* not running */
+			{
+				ereport(WARNING,
+					(errmsg("pg_statsinfod is not running")));
+				continue;
+			}
+
+			/* send signal that instruct to shut down */
+			if (kill(StatsinfoPID, SIGUSR1) != 0)
+				ereport(WARNING,
+					(errmsg("could not send stop signal (PID %d): %m",
+						StatsinfoPID)));
+		}
+
+		/* instruct to start pg_statsinfod process */
+		if (got_SIGUSR2)
+		{
+			got_SIGUSR2 = false;
+
+			if (StatsinfoPID != INVALID_PID)	/* already running */
+			{
+				ereport(WARNING,
+					(errmsg("another pg_statsinfod might be running")));
+				continue;
+			}
+
+			/* launch the pg_statsinfo background process */
+			StatsinfoPID = exec_background_process(cmd);
+			launch_time = (pg_time_t) time(NULL);
+			launch_retry = 0;
+		}
 
 		/* pg_statsinfod process died */
 		if (got_SIGCHLD)
 		{
 			int status;
 
+			got_SIGCHLD = false;
+
 			waitpid(StatsinfoPID, &status, WNOHANG);
+			StatsinfoPID = INVALID_PID;
 
-			/* pg_statsinfod normally end, terminate the pg_statsinfo launcher */
-			if (status == 0)
-				break;
-
-			/* 
-			 * if the pg_statsinfod was aborted with fatal error,
-			 * then terminate the pg_statsinfo launcher
-			 */
-			if (WIFEXITED(status) && WEXITSTATUS(status) == STATSINFO_EXIT_FAILED)
+			if (WIFEXITED(status))
 			{
-				ereport(WARNING,
-					(errmsg("pg_statsinfod is aborted with fatal error, "
-							"terminate the pg_statsinfo launcher")));
-				break;
+				/* pg_statsinfod is normally end */
+				if (WEXITSTATUS(status) == STATSINFO_EXIT_SUCCESS)
+					continue;
+
+				/* pg_statsinfod is aborted with fatal error */
+				if (WEXITSTATUS(status) == STATSINFO_EXIT_FAILED)
+				{
+					ereport(WARNING,
+						(errmsg("pg_statsinfod is aborted with fatal error")));
+					continue;
+				}
 			}
 
-			/* pg_statsinfod abnormally end, relaunch new pg_statsinfod process */
-			ereport(WARNING,
-				(errmsg("pg_statsinfod is aborted")));
-
 			/* 
+			 * pg_statsinfod abnormally end, relaunch new pg_statsinfod process.
 			 * if the pg_statsinfod was aborted continuously,
-			 * then terminate the pg_statsinfo launcher
+			 * then not relaunch pg_statsinfod process.
 			 */
+			ereport(WARNING, (errmsg("pg_statsinfod is aborted")));
+
 			if (((pg_time_t) time(NULL) - launch_time) <= LAUNCH_RETRY_PERIOD)
 			{
 				if (launch_retry >= LAUNCH_RETRY_MAX)
 				{
 					ereport(WARNING,
-					(errmsg("pg_statsinfod is aborted continuously, "
-							"terminate the pg_statsinfo launcher")));
-					break;
+						(errmsg("pg_statsinfod is aborted continuously")));
+					continue;
 				}
 			}
 			else
@@ -1977,10 +2162,8 @@ StatsinfoLauncherMain(void)
 			ereport(LOG,
 				(errmsg("relaunch a pg_statsinfod process")));
 
-			got_SIGCHLD = false;
 			StatsinfoPID = exec_background_process(cmd);
 			launch_time = (pg_time_t) time(NULL);
-
 			launch_retry++;
 		}
 
@@ -2063,17 +2246,25 @@ exec_background_process(char cmd[])
 	return fpid;
 }
 
+/* SIGUSR1: instructs to stop the pg_statsinfod process */
+static void
+sil_sigusr1_handler(SIGNAL_ARGS)
+{
+	got_SIGUSR1 = true;
+}
+
+/* SIGUSR2: instructs to start the pg_statsinfod process */
+static void
+sil_sigusr2_handler(SIGNAL_ARGS)
+{
+	got_SIGUSR2 = true;
+}
+
 /* SIGCHLD: pg_statsinfod process died */
 static void
 sil_sigchld_handler(SIGNAL_ARGS)
 {
 	got_SIGCHLD = true;
-}
-
-static void
-sil_exit(SIGNAL_ARGS)
-{
-	need_exit = true;
 }
 
 /*
@@ -3161,4 +3352,60 @@ postmaster_is_alive(void)
 #else							/* WIN32 */
 	return (WaitForSingleObject(PostmasterHandle, 0) == WAIT_TIMEOUT);
 #endif   /* WIN32 */
+}
+
+/*
+ * is_shared_preload - check the library is preloaded as shared library
+ */
+static bool
+is_shared_preload(const char *library)
+{
+	char		*rawstring;
+	List		*elemlist;
+	ListCell	*cell;
+	bool		 find = false;
+
+	if (shared_preload_libraries_string == NULL ||
+		shared_preload_libraries_string[0] == '\0')
+		return false;
+
+	/* need a modifiable copy of string */
+	rawstring = pstrdup(shared_preload_libraries_string);
+
+	/* parse string into list of identifiers */
+	SplitIdentifierString(rawstring, ',', &elemlist);
+
+	foreach (cell, elemlist)
+	{
+		if (strcmp((char *) lfirst(cell), library) == 0)
+		{
+			find = true;
+			break;
+		}
+	}
+
+	pfree(rawstring);
+	list_free(elemlist);
+	return find;
+}
+
+static pid_t
+get_statsinfo_pid(const char *pid_file)
+{
+	FILE	*fp;
+	pid_t	 pid;
+
+	if ((fp = fopen(pid_file, "r")) == NULL)
+	{
+		/* No pid file, not an error */
+		if (errno == ENOENT)
+			return 0;
+		elog(ERROR,
+			"could not open PID file \"%s\": %s", pid_file, strerror(errno));
+	}
+
+	if (fscanf(fp, "%d\n", &pid) != 1)
+		elog(ERROR, "invalid data in PID file \"%s\"", pid_file);
+	fclose(fp);
+	return pid;
 }

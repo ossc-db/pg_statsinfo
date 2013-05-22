@@ -40,6 +40,9 @@
 #define STATSINFO_EXIT_SUCCESS		0x00
 #define STATSINFO_EXIT_FAILED		0xff
 
+/* lock file */
+#define STATSINFO_LOCK_FILE		"pg_statsinfo.pid"
+
 extern bool readControlFile(ControlFileData *ctrl, const char *pgdata);
 
 #endif   /* PG_STATSINFO_COMMON_H */

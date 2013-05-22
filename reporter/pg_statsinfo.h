@@ -44,4 +44,8 @@ extern void do_size(PGconn *conn);
 extern void do_snapshot(PGconn *conn, const char *comment);
 extern void do_delete(PGconn *conn, const char *targetid);
 
+/* control.c */
+extern void do_start(PGconn *conn);
+extern void do_stop(PGconn *conn);
+
 #endif   /* PG_STATSINFO_H */

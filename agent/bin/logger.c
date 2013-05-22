@@ -6,6 +6,8 @@
 
 #include "pg_statsinfod.h"
 
+#include "libpq/pqsignal.h"
+
 #include <dirent.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -116,6 +118,17 @@ static bool ReadControlFile(void);
 static void RewriteControlFile(Logger *logger);
 static void logger_shutdown(Logger *logger);
 
+static volatile bool	stop_request = false;
+
+/* SIGUSR1: instructs to stop the pg_statsinfod process */
+static void
+logger_sigusr1_handler(SIGNAL_ARGS)
+{
+	stop_request = true;
+	if (shutdown_state < SHUTDOWN_REQUESTED)
+		shutdown_progress(SHUTDOWN_REQUESTED);
+}
+
 void
 logger_init(void)
 {
@@ -134,6 +147,9 @@ logger_main(void *arg)
 	Logger			  logger;
 	int				  entry;
 	struct dirent	**dplist;
+
+	/* Set up signal handlers */
+	pqsignal(SIGUSR1, logger_sigusr1_handler);
 
 	memset(&logger, 0, sizeof(logger));
 	initStringInfo(&logger.buf);
@@ -167,7 +183,7 @@ logger_main(void *arg)
 	 * or postmaster exists unless shutdown log is not found.
 	 */
 	while (shutdown_state < WRITER_SHUTDOWN ||
-		   (!shutdown_message_found && postmaster_is_alive()))
+		   (!shutdown_message_found && postmaster_is_alive() && !stop_request))
 	{
 		/* update settings if reloaded */
 		if (logger_reload_time < collector_reload_time)
@@ -197,7 +213,7 @@ logger_main(void *arg)
 	}
 
 	/* exit after some delay */
-	if (!shutdown_message_found)
+	if (!shutdown_message_found && !stop_request)
 	{
 		time_t	until = time(NULL) + LOGGER_EXIT_DELAY;
 
@@ -214,12 +230,17 @@ logger_main(void *arg)
 	/* final shutdown message */
 	if (shutdown_message_found)
 		elog(LOG, "shutdown");
+	else if (stop_request)
+		elog(LOG, "shutdown by stop request");
 	else
 		elog(WARNING, "shutdown because server process exited abnormally");
 	logger_recv(&logger);
 
 	/* update pg_statsinfo.control */
-	ControlFile.state = STATSINFO_SHUTDOWNED;
+	if (shutdown_message_found || !stop_request)
+		ControlFile.state = STATSINFO_SHUTDOWNED;
+	else
+		ControlFile.state = STATSINFO_STOPPED;
 	RewriteControlFile(&logger);
 
 	logger_close(&logger);
@@ -1119,9 +1140,10 @@ load_controlfile(Logger *logger)
 
 	/*
 	 * if state value of pg_statsinfo.control is not "STATSINFO_SHUTDOWNED",
-	 * that means the previous pg_statsinfod was abnormally end.
-	 * in that case, parse the csvlog between csvlog of the point of abnormal
-	 * termination and latest csvlog.
+	 * that means the previous pg_statsinfod was abnormally end or stopped by
+	 * request.
+	 * in this case, parse the csvlog between last parsed position and
+	 * latest position.
 	 */
 	if (ReadControlFile())
 	{
@@ -1133,11 +1155,29 @@ load_controlfile(Logger *logger)
 		join_path_components(
 			prev_csvlog, my_log_directory, ControlFile.csv_name);
 
+		/*
+		 * if state of pg_statsinfo.control is "STATSINFO_STOPPED",
+		 * restore the latest textlog from previous textlog that was renamed.
+		 */
+		if (ControlFile.state == STATSINFO_STOPPED)
+		{
+			char prev_textlog[MAXPGPATH];
+
+			strlcpy(prev_textlog, prev_csvlog, MAXPGPATH);
+			replace_extension(prev_textlog, ".log");
+
+			if (rename(prev_textlog, logger->textlog_path) != 0)
+				ereport(ERROR,
+					(errcode_errno(),
+					 errmsg("could not rename file \"%s\" to \"%s\": %m",
+					 	prev_textlog, logger->textlog_path)));
+		}
+
 		if (stat(prev_csvlog, &st) == 0 && ControlFile.csv_offset <= st.st_size)
 		{
 			/* set the csvlog path and the csvlog offset to the logger */
 			assign_csvlog_path(logger, my_log_directory,
-			ControlFile.csv_name, ControlFile.csv_offset);
+				ControlFile.csv_name, ControlFile.csv_offset);
 			return;
 		}
 

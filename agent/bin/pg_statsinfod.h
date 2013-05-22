@@ -11,6 +11,8 @@
 #define PG_STATSINFOD_H
 
 #include "postgres_fe.h"
+#include "miscadmin.h"
+#include "libpq/pqsignal.h"
 #include "pgut/pgut.h"
 #include "pgut/pgut-list.h"
 #include "pgut/pgut-pthread.h"
@@ -102,6 +104,7 @@ typedef enum WriterQueueType
 typedef enum StatsinfoState
 {
 	STATSINFO_RUNNING,
+	STATSINFO_STOPPED,
 	STATSINFO_SHUTDOWNED
 } StatsinfoState;
 
