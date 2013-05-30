@@ -1085,6 +1085,13 @@ statsinfo_start(PG_FUNCTION_ARGS)
 	int		save_client_min_messages = client_min_messages;
 	int		save_log_min_messages = log_min_messages;
 
+	/*
+	 * adjust elevel to LOG so that message be output to client console only,
+	 * not write to server log.
+	 */
+	client_min_messages = LOG;
+	log_min_messages = FATAL;
+
 	must_be_superuser();
 
 	if (PG_ARGISNULL(0))
@@ -1099,12 +1106,7 @@ statsinfo_start(PG_FUNCTION_ARGS)
 	if (!is_shared_preload("pg_statsinfo"))
 		elog(ERROR, "pg_statsinfo is not preloaded as shared library");
 
-	/*
-	 * adjust elevel to LOG so that message be output to client console only,
-	 * not write to server log.
-	 */
-	client_min_messages = LOG;
-	log_min_messages = FATAL;
+	Assert(sil_pid != INVALID_PID);
 
 	join_path_components(pid_file, DataDir, STATSINFO_LOCK_FILE);
 
@@ -1159,6 +1161,13 @@ statsinfo_stop(PG_FUNCTION_ARGS)
 	int		save_client_min_messages = client_min_messages;
 	int		save_log_min_messages = log_min_messages;
 
+	/*
+	 * adjust elevel to LOG so that message be output to client console only,
+	 * not write to server log.
+	 */
+	client_min_messages = LOG;
+	log_min_messages = FATAL;
+
 	must_be_superuser();
 
 	if (PG_ARGISNULL(0))
@@ -1174,13 +1183,6 @@ statsinfo_stop(PG_FUNCTION_ARGS)
 		elog(ERROR, "pg_statsinfo is not preloaded as shared library");
 
 	Assert(sil_pid != INVALID_PID);
-
-	/*
-	 * adjust elevel to LOG so that message be output to client console only,
-	 * not write to server log.
-	 */
-	client_min_messages = LOG;
-	log_min_messages = FATAL;
 
 	join_path_components(pid_file, DataDir, STATSINFO_LOCK_FILE);
 
