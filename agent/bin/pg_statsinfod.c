@@ -940,34 +940,62 @@ execute_script(PGconn *conn, const char *script_file)
 
 /*
  * check the state of repository database.
- *  - connect to the repository database
+ *  - supported XML feature
  *  - statsrepo schema version
+ * Note:
+ * Not use pgut_execute() in this function, because don't want to write
+ * the error message defined by pgut_execute() to console.
  */
 static bool
 check_repository(PGconn *conn)
 {
 	PGresult	*res;
+	char		*query;
 	uint32		 version;
 
-	/* check statsrepo schema exists */
-	res = pgut_execute(conn,
-		"SELECT nspname FROM pg_namespace WHERE nspname = 'statsrepo'", 0, NULL);
+	/* check supported XML feature */
+	query = "SELECT xmlcomment('')";
+	res = PQexec(conn, query);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-		goto error;
+	{
+		char *sqlstate;
+
+		sqlstate = PQresultErrorField(res, PG_DIAG_SQLSTATE);
+		if (sqlstate && strcmp(sqlstate, "0A000") == 0)	/* feature not supported */
+		{
+			ereport(ERROR,
+				(errmsg("repository server is not supported XML feature"),
+				 errdetail("%s", PQresultErrorField(res, PG_DIAG_MESSAGE_DETAIL))));
+			goto bad;
+		}
+		goto error;	/* query failed */
+	}
+	PQclear(res);
+
+	/* check statsrepo schema exists */
+	query = "SELECT nspname FROM pg_namespace WHERE nspname = 'statsrepo'";
+	res = PQexec(conn, query);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		goto error;	/* query failed */
 	if (PQntuples(res) == 0)
-		goto done;	/* not installed */
+		goto ok;	/* not installed */
 	PQclear(res);
 
 	/* check the statsrepo schema version */
-	res = pgut_execute(conn, "SELECT statsrepo.get_version()", 0, NULL);
+	query = "SELECT statsrepo.get_version()";
+	res = PQexec(conn, query);
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
 		char *sqlstate;
 
 		sqlstate = PQresultErrorField(res, PG_DIAG_SQLSTATE);
 		if (sqlstate && strcmp(sqlstate, "42883") == 0)	/* undefined function */
-			elog(ERROR, "incompatible statsrepo schema: version mismatch");
-		goto error;
+		{
+			ereport(ERROR,
+				(errmsg("incompatible statsrepo schema: version mismatch")));
+			goto bad;
+		}
+		goto error;	/* query failed */
 	}
 
 	/* verify the version of statsrepo schema */
@@ -975,15 +1003,24 @@ check_repository(PGconn *conn)
 	if (version != STATSREPO_SCHEMA_VERSION &&
 		((version / 100) != (STATSREPO_SCHEMA_VERSION / 100)))
 	{
-		elog(ERROR, "incompatible statsrepo schema: version mismatch");
-		goto error;
+		ereport(ERROR,
+			(errmsg("incompatible statsrepo schema: version mismatch")));
+		goto bad;
 	}
 
-done:
+ok:
 	PQclear(res);
 	return true;
 
+bad:
+	PQclear(res);
+	return false;
+
 error:
+	ereport(ERROR,
+		(errmsg("query failed: %s",
+			PQresultErrorField(res, PG_DIAG_MESSAGE_PRIMARY)),
+		 errdetail("query was: %s", query)));
 	PQclear(res);
 	return false;
 }
