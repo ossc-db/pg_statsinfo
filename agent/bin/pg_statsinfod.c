@@ -1018,8 +1018,7 @@ bad:
 
 error:
 	ereport(ERROR,
-		(errmsg("query failed: %s",
-			PQresultErrorField(res, PG_DIAG_MESSAGE_PRIMARY)),
+		(errmsg("query failed: %s", PQerrorMessage(conn)),
 		 errdetail("query was: %s", query)));
 	PQclear(res);
 	return false;
