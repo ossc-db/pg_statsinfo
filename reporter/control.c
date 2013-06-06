@@ -14,7 +14,12 @@ do_start(PGconn *conn)
 {
 	PGresult	*res;
 
-	/* call a function that start pg_statsinfo background process */
+	/*
+	 * call a function that start pg_statsinfo background process.
+	 * Note:
+	 * Not use pgut_command(), because don't want to write the error message
+	 * defined by pgut_command() to console.
+	 */
 	res = PQexec(conn, "SELECT statsinfo.start(60)");
 
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
@@ -31,7 +36,12 @@ do_stop(PGconn *conn)
 {
 	PGresult	*res;
 
-	/* call a function that stop pg_statsinfo background process */
+	/*
+	 * call a function that stop pg_statsinfo background process.
+	 * Note:
+	 * Not use pgut_command(), because don't want to write the error message
+	 * defined by pgut_command() to console.
+	 */
 	res = PQexec(conn, "SELECT statsinfo.stop(60)");
 
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
