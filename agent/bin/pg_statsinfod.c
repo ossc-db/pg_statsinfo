@@ -964,7 +964,7 @@ check_repository(PGconn *conn)
 		if (sqlstate && strcmp(sqlstate, "0A000") == 0)	/* feature not supported */
 		{
 			ereport(ERROR,
-				(errmsg("repository server is not supported XML feature"),
+				(errmsg("repository server does not supported XML feature"),
 				 errdetail("%s", PQresultErrorField(res, PG_DIAG_MESSAGE_DETAIL))));
 			goto bad;
 		}
