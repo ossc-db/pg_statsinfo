@@ -1,4 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD html 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
 <html><head>
 
 <title>pg_statsinfo</title>
@@ -21,7 +22,7 @@
       <li><a href="#features-snapshot">統計情報の取得機能</a></li>
       <li><a href="#features-log">サーバログ処理機能</a></li>
       <li><a href="#features-alert">アラート機能</a></li>
-      <li><a href="#features-report">簡易レポート機能</a></li>
+      <li><a href="#features-cmdline">コマンドライン機能</a></li>
       <li><a href="#features-maintenance">自動メンテナンス機能</a></li>
     </ol>
   </li>
@@ -37,7 +38,7 @@
       <li><a href="#snapshot">スナップショットの取得・削除</a></li>
       <li><a href="#log">サーバログのフィルタリング</a></li>
       <li><a href="#usage-alert">アラート機能の使い方</a></li>
-      <li><a href="#usage-report">簡易レポート機能の使い方</a></li>
+      <li><a href="#usage-cmdline">コマンドライン機能の使い方</a></li>
       <li><a href="#usage-maintenance">自動メンテナンス機能の使い方</a></li>
       <li><a href="#configuration">設定ファイル</a></li>
       <li><a href="#user-operations">運用上必要となる作業</a></li>
@@ -77,9 +78,17 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 を用いることでグラフィカルな形で解析・出力することがきます。
 </p>
 
-<p>pg_statsinfo の動作概要のイメージ図を以下に示します。</p>
-<img src="image/pg_statsinfo-ja.png">
-<br><br>
+<p>pg_statsinfo のシステム構成例と動作概要のイメージ図を以下に示します。</p>
+
+<div class="imagebox">
+  <p class="image"><img src="image/system_structure-ja.png"></p>
+  <p class="caption">図1: システム構成例</p>
+</div>
+<div class="imagebox">
+  <p class="image"><img src="image/pg_statsinfo-ja.png"></p>
+  <p class="caption">図2: 動作概要イメージ</p>
+</div>
+<p class="clear"/>
 
 <h3 id="features-snapshot">統計情報の取得機能</h3>
 <p>
@@ -167,7 +176,13 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 アラート機能の設定方法は<a href="#usage-alert">こちら</a>をご覧ください。
 </p>
 
-<h3 id="features-report">簡易レポート機能</h3>
+<h3 id="features-cmdline">コマンドライン機能</h3>
+<p>
+コマンドライン機能はレポート生成および運用管理を行うためのコマンドを提供します。<br>
+※コマンドライン機能の使用方法は<a href="#usage-cmdline">こちら</a>をご覧ください。
+</p>
+
+<h4>簡易レポート機能</h4>
 <p>
 リポジトリDBに保存されたスナップショットから任意の期間のレポートをテキスト形式で出力するコマンドを提供します。<br>
 また、レポートの出力以外に以下の操作を行うことができます。
@@ -176,8 +191,6 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 <ul>
   <li>スナップショットの一覧の表示</li>
   <li>スナップショットの合計サイズの表示</li>
-  <li>スナップショットの取得</li>
-  <li>スナップショットの削除</li>
 </ul>
 
 <p>
@@ -186,9 +199,19 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter-ja.html">pg_stats_reporter</a> を使用してください。
 </p>
 
+<h4>運用管理機能</h4>
 <p>
-簡易レポート機能の使用方法は<a href="#usage-report">こちら</a>をご覧ください。
+pg_statsinfo の運用管理向けの操作を行うコマンドを提供します。<br>
+運用管理機能で行うことができる操作は以下のとおりです。
 </p>
+
+<ul>
+  <li>スナップショットの取得</li>
+  <li>スナップショットの削除</li>
+  <li>エージェントの停止</li>
+  <li>エージェントの起動</li>
+</ul>
+<br>
 
 <h3 id="features-maintenance">自動メンテナンス機能</h3>
 <p>1日1回、任意の時刻に下記のメンテナンス操作を行うことができます。
@@ -199,8 +222,8 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 
 <p>本機能はデフォルトは ON であり、上記の操作を自動メンテナンス実行時刻に実行します。</p>
 <p>
-(注1) スナップショットの削除が無効な場合、古いスナップショットは自動的に削除されないため、ユーザ操作で定期的に削除してください。<br>
-(注2) ログファイルの整理が無効な場合、古いログファイルは自動的には削除されないため、ユーザ操作で定期的に削除して下さい。
+(注1) スナップショットの自動削除が停止している場合、古いスナップショットは自動的に削除されません。必要に応じてユーザ操作で定期的に削除してください。<br>
+(注2) ログファイルの自動整理が停止している場合、古いログファイルは自動的には削除されません。必要に応じてユーザ操作で定期的に削除してください。
 </p>
 
 <p>
@@ -217,7 +240,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
   <dt>動作検証済みOS</dt>
   <dd>RHEL 5.x, RHEL 6.x, CentOS 5.x, CentOS 6.x</dd>
 </dl>
-<p>(注1) リポジトリDBの PostgreSQL は、configureオプションに --with-libxml が指定されたビルドである必要があります。 (RPM版の PostgreSQL には --with-libxml が指定されています)</p>
+<p><b>(注1) リポジトリDBの PostgreSQL は、configureオプションに --with-libxml が指定されたビルドである必要があります。 (RPM版の PostgreSQL には --with-libxml が指定されています)</b></p>
 
 <h3 id="linux">Linux</h3>
 
@@ -231,7 +254,7 @@ $ su
 <h4>source</h4>
 <p>ソースコードからビルドするには、pgxs を使用します。
 なお、pg_statsinfo の登録スクリプト (sql) を手動でインストールする必要はありません。
-監視対象インスタンス、リポジトリDB共に、初回起動時に必要に応じて pg_statsinfo がスキーマを自動的にインストールします。</p>
+監視対象インスタンス、リポジトリDB共に、初回起動時に必要に応じて エージェントがスキーマを自動的にインストールします。</p>
 <pre>
 $ tar xzvf pg_statsinfo-2.5.0.tar.gz
 $ cd pg_statsinfo-2.5.0
@@ -334,13 +357,21 @@ $ psql -d postgres -f $PGSHARE/contrib/pg_stat_statements.sql
 <h3 id="start_or_stop">起動と終了</h3>
 
 <p>起動は、通常どおりPostgreSQLを起動するだけです。
-PostgreSQL の起動と連動して pg_statsinfo も自動的に起動します。
-pg_statsinfo を実行ファイル単体で起動することはできません。</p>
+PostgreSQL の起動と連動して エージェントが自動的に起動します。
+エージェント単体で起動することはできません。</p>
 <pre>$ pg_ctl start [OPTIONS]</pre>
 
 <p>終了も同様に、PostgresSQL サーバの終了に連動します。
-smart 以外の終了モード (fast, immediate) ではエラーが出力される場合がありますが、正常な動作です。</p>
+smart 以外の終了モード (fast, immediate) ではサーバログにエラーが出力される場合がありますが、正常な動作です。</p>
 <pre>$ pg_ctl stop -m smart [OPTIONS]</pre>
+
+<p>また、PostgreSQL サーバを終了せずに エージェントのみを停止するには以下のコマンドを実行します。</p>
+<pre>$ pg_statsinfo --stop [OPTIONS]</pre>
+
+<p>停止中のエージェントを起動するには以下のコマンドを実行します。</p>
+<pre>$ pg_statsinfo --start [OPTIONS]</pre>
+
+<p><b>(注1) PostgreSQLの設定パラメータに「shared_preload_libraries = 'pg_statsinfo'」が設定されていない場合は、エージェントの停止／起動が実行できません。</b></p>
 
 <h3 id="snapshot">スナップショットの取得・削除</h3>
 <h4>自動取得</h4>
@@ -460,7 +491,7 @@ pg_statsinfo.adjust_log_info = '42P01'</pre>
 
 <p>アラート設定を変更する際、監視対象インスタンスを選択するためにカラム「instid」を使用します。<br>
 当該カラムには監視対象インスタンス毎に割り当てられた識別子 (監視対象インスタンスID) を指定します。<br>
-監視対象インスタンスIDは、簡易レポート機能のスナップショットサイズ表示モードを実行することで確認できます。</p>
+監視対象インスタンスIDは、簡易レポート機能でスナップショットサイズ表示を実行することで確認できます。</p>
 
 設定例: 秒間ロールバック数の閾値を「3000」に変更する場合
 <pre>
@@ -575,7 +606,7 @@ pg_statsinfo.adjust_log_info = '42P01'</pre>
   <tr>
     <td>loadavg_15min</td>
     <td>real</td>
-    <td>7.0</td>
+    <td>5.0</td>
     <td>過去15分間のロードアベレージ</td>
   </tr>
   <tr>
@@ -611,9 +642,9 @@ pg_statsinfo.adjust_log_info = '42P01'</pre>
 タプルを削除した場合、削除したタプルに該当する監視対象インスタンスの設定ができなくなります。
 </p>
 
-<h3 id="usage-report">簡易レポート機能の使い方</h3>
+<h3 id="usage-cmdline">コマンドライン機能の使い方</h3>
 
-<h4>レポート生成モード</h4>
+<h4>レポート生成</h4>
 <pre>
 $ pg_statsinfo -r REPORTID [-i INSTANCEID] [-b SNAPID] [-e SNAPID] [-B DATE] [-E DATE] [-o FILENAME] [connection-options]
 </pre>
@@ -630,7 +661,7 @@ $ pg_statsinfo -r REPORTID [-i INSTANCEID] [-b SNAPID] [-e SNAPID] [-B DATE] [-E
 </ul>
 
 <pre>
-$ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -r All
+$ pg_statsinfo  -r All -h localhost -d postgres -p 5432 -U postgres
 </pre>
 
 <dl>
@@ -692,7 +723,7 @@ $ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -r All
 
 <br>
 
-<h4>スナップショット一覧表示モード</h4>
+<h4>スナップショット一覧表示</h4>
 <pre>
 $ pg_statsinfo -l [-i INSTANCEID] [connection-options]
 </pre>
@@ -703,7 +734,7 @@ $ pg_statsinfo -l [-i INSTANCEID] [connection-options]
 </p>
 
 <pre>
-$ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -l
+$ pg_statsinfo -l -h localhost -d postgres -p 5432 -U postgres
 </pre>
 
 <dl>
@@ -717,7 +748,7 @@ $ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -l
 
 <br>
 
-<h4>スナップショットサイズ表示モード</h4>
+<h4>スナップショットサイズ表示</h4>
 <pre>
 $ pg_statsinfo -s [connection-options]
 </pre>
@@ -728,7 +759,7 @@ $ pg_statsinfo -s [connection-options]
 </p>
 
 <pre>
-$ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -s
+$ pg_statsinfo -s -h localhost -d postgres -p 5432 -U postgres
 </pre>
 
 <dl>
@@ -738,7 +769,7 @@ $ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -s
 
 <br>
 
-<h4>スナップショット取得モード</h4>
+<h4>スナップショット取得</h4>
 <pre>
 $ pg_statsinfo -S COMMENT [connection-options]
 </pre>
@@ -749,7 +780,7 @@ $ pg_statsinfo -S COMMENT [connection-options]
 </p>
 
 <pre>
-$ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -S 'COMMENT'
+$ pg_statsinfo -S 'COMMENT' -h localhost -d postgres -p 5432 -U postgres
 </pre>
 
 <dl>
@@ -760,7 +791,7 @@ $ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -S 'COMMENT'
 
 <br>
 
-<h4>スナップショット削除モード</h4>
+<h4>スナップショット削除</h4>
 <pre>
 $ pg_statsinfo -D SNAPID [connection-options]
 </pre>
@@ -771,7 +802,7 @@ $ pg_statsinfo -D SNAPID [connection-options]
 </p>
 
 <pre>
-$ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -D 123
+$ pg_statsinfo -D 123 -h localhost -d postgres -p 5432 -U postgres
 </pre>
 
 <dl>
@@ -782,10 +813,52 @@ $ pg_statsinfo -h localhost -d postgres -p 5432 -U postgres -D 123
 
 <br>
 
+<h4>エージェント停止</h4>
+<pre>
+$ pg_statsinfo --stop [connection-options]
+</pre>
+
+<p>
+以下にコマンド例を示します。<br>
+以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動している監視対象インスタンスに対して、postgres データベースに、postgres ユーザで接続し、エージェントを停止します。
+</p>
+
+<pre>
+$ pg_statsinfo --stop -h localhost -d postgres -p 5432 -U postgres
+</pre>
+
+<dl>
+  <dt>--stop</dt>
+  <dd>本オプションが指定された場合は エージェントを停止します。</dd>
+</dl>
+
+<br>
+
+<h4>エージェント起動</h4>
+<pre>
+$ pg_statsinfo --start [connection-options]
+</pre>
+
+<p>
+以下にコマンド例を示します。<br>
+以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動している監視対象インスタンスに対して、postgres データベースに、postgres ユーザで接続し、エージェントを起動します。
+</p>
+
+<pre>
+$ pg_statsinfo --start -h localhost -d postgres -p 5432 -U postgres
+</pre>
+
+<dl>
+  <dt>--start</dt>
+  <dd>本オプションが指定された場合は エージェントを起動します。</dd>
+</dl>
+
+<br>
+
 <h4>共通オプション (connection-options)</h4>
 <p>
 データベース接続に関するオプションです。<br>
-スナップショット取得モードを実行する場合は監視対象インスタンス、それ以外はリポジトリDBへの接続情報を指定します。
+スナップショット取得を実行する場合は監視対象インスタンス、それ以外はリポジトリDBへの接続情報を指定します。
 </p>
 
 <dl>
@@ -925,12 +998,12 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
   <tr>
     <td>log_destination</td>
     <td>'csvlog' 必須 / 'syslog', 'eventlog' を追加可能</td>
-    <td>他の値であっても、pg_statsinfo 起動時に強制的に 'csvlog' が追加され、'stderr' は除去されます。</td>
+    <td>他の値であっても、エージェント起動時に強制的に 'csvlog' が追加され、'stderr' は除去されます。</td>
   </tr>
   <tr>
     <td>logging_collector</td>
     <td>on</td>
-    <td>他の値であっても、pg_statsinfo 起動時に強制的にこの値に設定されます。</td>
+    <td>他の値であっても、エージェント起動時に強制的にこの値に設定されます。</td>
   </tr>
 </tbody>
 </table>
@@ -1035,7 +1108,7 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
     <td>pg_statsinfo.syslog_line_prefix</td>
     <td>'%t %p '</td>
     <td>syslog の各行の先頭に追加される書式 (*2).
-        syslog がデフォルトで付与する時刻とプロセスIDは、pg_statsinfo のものに置き換わってしまうため、元の値を記録するために %t や %p が必要なことに注意してください。
+        syslog がデフォルトで付与する時刻とプロセスIDは、エージェントのものに置き換わってしまうため、元の値を記録するために %t や %p が必要なことに注意してください。
     </td>
   </tr>
   <tr>
@@ -1211,9 +1284,9 @@ log_line_prefix の値そのものは無視されることに注意して下さ�
 <pre>$ psql -d postgres -c "SELECT pg_rotate_logfile()"</pre>
 
 <h4 id="on-abort">異常終了時の対処</h4>
-<p>pg_statsinfo のみが異常終了しても、PostgreSQL インスタンスには影響はありませんが、pg_statsinfo の機能は停止したままになってしまいます。<br>
-pg_statsinfo を再起動するには PostgreSQL インスタンスを再起動してください。<br>
-なお、pg_statsinfo が異常終了してから再起動するまでの間に出力されたサーバログは、再起動時に解析(サーバログの分配のみ)されます。
+<p>エージェントのみが異常終了しても、PostgreSQL インスタンスには影響はありませんが、エージェントの機能は停止したままになってしまいます。<br>
+エージェントを再起動するには PostgreSQL インスタンスを再起動してください。<br>
+なお、エージェントが異常終了してから再起動するまでの間に出力されたサーバログは、再起動時に解析(サーバログの分配のみ)されます。
 </p>
 
 <h2 id="uninstall">アンインストール</h2>
@@ -1261,7 +1334,7 @@ PostgreSQL はタイムゾーンを独自に管理しており、外部プログ
 
 <dt>fast 及び immediate シャットダウン時のエラーメッセージ</dt>
 <dd>PostgreSQL サーバのシャットダウンの際、停止モードの指定が smart モード以外の場合は接続エラーが発生する場合があります。
-これは pg_statsinfo のデータベース切断を待たずにサーバがシャットダウンされるためです。
+これは エージェントのデータベース切断を待たずにサーバがシャットダウンされるためです。
 終了時にエラーメッセージが出力されても問題はありません。
 また、smart シャットダウンであればエラーは発生しません。</dd>
 
@@ -1304,7 +1377,7 @@ $psql -d postgres -c "SELECT * FROM statsrepo.snapshot WHERE COMMENT = 'test'"
 <h4>Q2. 取得したスナップショットはどのように使えばいいの？</h4>
 <p>
 pg_statsinfo の統計情報の取得機能は、その時点の統計情報をスナップショットとして定期的に取得する機能のみになります。
-取得した統計情報から、有益な情報を見たい場合は <a href="#features-report">簡易レポート機能</a> を利用するか、<a href='http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter-ja.html'>pg_stats_reporter</a> をお使いください。
+取得した統計情報から、有益な情報を見たい場合は <a href="#features-cmdline">簡易レポート機能</a> を利用するか、<a href='http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter-ja.html'>pg_stats_reporter</a> をお使いください。
 </p>
 
 <h4>Q3. 自動メンテナンス機能のスナップショット削除が動作しません。</h4>
@@ -1349,14 +1422,14 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
 上記の操作を行った後、監視対象インスタンスを再起動してください。
 </p>
 
-<h4>Q6. 簡易レポート機能のレポート生成モードを実行したところ、レポートが表示されません。</h4>
+<h4>Q6. 簡易レポート機能でレポート生成を実行したところ、レポートが表示されません。</h4>
 <p>
 リポジトリDBに格納されているスナップショットの件数が2件未満である可能性があります。<br>
-レポートの作成には2件以上のスナップショットが必要となりますので、スナップショットの取得が2回実行されるのを待ってから簡易レポート機能のレポート生成モードを実行してください。
+レポートの作成には2件以上のスナップショットが必要となりますので、スナップショットの取得が2回実行されるのを待ってからレポート生成を実行してください。
 </p>
 
 
-<h4>Q7. 簡易レポート機能のレポート生成モードを実行したところ、一部のレポート項目が表示されません。</h4>
+<h4>Q7. 簡易レポート機能でレポート生成を実行したところ、一部のレポート項目が表示されません。</h4>
 <dl>
   <dt>Query Activity (Functions)</dt>
   <dd>設定ファイルの「track_functions」が「none」に設定されている可能性があります。</dd>
@@ -1418,11 +1491,17 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
     <li>スワップ使用量</li>
     <li>レプリケーションの遅延量</li>
   </ul>
-  <li>簡易レポート機能のレポートに以下の項目を追加</li>
+  <li>簡易レポート機能の名称をコマンドライン機能に変更</li>
+  <li>コマンドライン機能が生成するレポートに以下の項目を追加</li>
   <ul>
     <li>レプリケーションの遅延量</li>
     <li>Autoanalyzeの実行回数と処理時間</li>
     <li>データベース設定のパラメータの単位</li>
+  </ul>
+  <li>コマンドライン機能が提供する操作に以下の項目を追加</li>
+  <ul>
+    <li>エージェント停止</li>
+    <li>エージェント起動</li>
   </ul>
 </ul>
 <br>
@@ -1492,8 +1571,8 @@ pg_statsinfo は、この SystemTap が収集するプロファイリング情�
 つまり、商用などでは使用をまだ推奨せず、あくまで検証環境などでの使用を前提としています。</p>
 
 <h3 id="internal">内部構成</h3>
-<p>pg_statsinfo はPostgreSQLのサーバサイドで動作する pg_statsinfo ライブラリと、クライアントとして動作する pg_statsinfo デーモンの2つのモジュールで構成されています。
-ライブラリはロード直後に呼ばれるフック関数からデーモンを起動するため、ユーザがデーモンを明示的に起動することはありません。
+<p>pg_statsinfo はPostgreSQLのサーバサイドで動作する pg_statsinfo ライブラリと、エージェントとして動作する実行プログラムの2つのモジュールで構成されています。
+ライブラリはロード直後に呼ばれるフック関数からエージェントを起動するため、ユーザがエージェントを明示的に起動することはありません。
 詳細は "<a href="http://pgstatsinfo.projects.postgresql.org/pg_statsinfo-internal-ja.html">pg_statsinfo: internal</a>" を参照してください。
 </p>
 
@@ -1527,3 +1606,22 @@ pageTracker._trackPageview();
 } catch(err) {}
 </script>
 </div></div></div></div></body></html>
+
+<style type="text/css">
+div.imagebox {
+float: left;
+text-align: center;
+margin: 0.5em 3px 1em 3px;
+}
+p.image, p.caption {
+text-align: center;
+margin: 5px;
+}
+p.caption {
+font-size: 80%;
+color: #000000;
+}
+p.clear {
+clear: both;
+}
+</style>
