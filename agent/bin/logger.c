@@ -597,25 +597,9 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 
 		init_log(&log, logger->buf.data, logger->buf.len, logger->fields);
 
-		/* parse performance logs; those messages are NOT routed. */
+		/* parse operation request logs; those messages are NOT routed. */
 		if (log.elevel == LOG)
 		{
-			/* checkpoint ? */
-			if (is_checkpoint(log.message))
-			{
-				if (!only_routing)
-					parse_checkpoint(log.message, log.timestamp);
-				continue;
-			}
-
-			/* autovacuum ? */
-			if (is_autovacuum(log.message))
-			{
-				if (!only_routing)
-					parse_autovacuum(log.message, log.timestamp);
-				continue;
-			}
-
 			/* snapshot requested ? */
 			if (strcmp(log.message, LOGMSG_SNAPSHOT) == 0)
 			{
@@ -682,6 +666,20 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 
 		if (!only_routing && save_elevel == LOG)
 		{
+			/* checkpoint ? */
+			if (is_checkpoint(log.message))
+			{
+				parse_checkpoint(log.message, log.timestamp);
+				continue;
+			}
+
+			/* autovacuum ? */
+			if (is_autovacuum(log.message))
+			{
+				parse_autovacuum(log.message, log.timestamp);
+				continue;
+			}
+
 			/* setting parameters reloaded ? */
 			if (strcmp(log.message, msg_sighup) == 0)
 			{
