@@ -79,7 +79,6 @@ char		   *msg_autovacuum;
 char		   *msg_autoanalyze;
 char		   *msg_checkpoint_starting;
 char		   *msg_checkpoint_complete;
-size_t			checkpoint_starting_prefix_len;
 /*--------------------------------------*/
 
 /* current shutdown state */
@@ -102,7 +101,6 @@ static bool assign_bool(const char *value, void *var);
 static bool assign_time(const char *value, void *var);
 static bool connect_test(const char *conninfo);
 static void readopt(void);
-static void after_readopt(void);
 static bool decode_time(const char *field, int *hour, int *min, int *sec);
 static int strtoi(const char *nptr, char **endptr, int base);
 static bool execute_script(PGconn *conn, const char *script_file);
@@ -715,8 +713,6 @@ error:
 done:
 	termStringInfo(&name);
 	termStringInfo(&value);
-
-	after_readopt();
 }
 
 /*
@@ -737,30 +733,9 @@ readopt_from_db(PGresult *res)
 		assign_param(name, value);
 	}
 
-	after_readopt();
-
 	if (!(enable_maintenance & MAINTENANCE_MODE_SNAPSHOT))
 		elog(NOTICE,
 			"automatic maintenance is disable. Please note the data size of the repository");
-}
-
-/*
- * called after parameters are reloaded.
- */
-static void
-after_readopt(void)
-{
-	/*
-	 * We hope the message format for checkpoint starting ends with
-	 * "%s%s%s%s%s%s%s" on all locales.
-	 */
-	checkpoint_starting_prefix_len = 0;
-	if (msg_checkpoint_starting)
-	{
-		const char *flags = strstr(msg_checkpoint_starting, "%s%s%s%s%s%s%s");
-		if (flags)
-			checkpoint_starting_prefix_len = flags - msg_checkpoint_starting;
-	}
 }
 
 /*

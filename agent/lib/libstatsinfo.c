@@ -111,18 +111,18 @@
 
 /* log_checkpoints: staring */
 #define MSG_CHECKPOINT_STARTING \
-	"checkpoint starting:%s%s%s%s%s%s%s"
+	"%s starting: %s"
 
 /* log_checkpoints: complete */
 #if PG_VERSION_NUM >= 90100
 #define MSG_CHECKPOINT_COMPLETE \
-	"checkpoint complete: wrote %d buffers (%.1f%%); " \
+	"%s complete: wrote %d buffers (%.1f%%); " \
 	"%d transaction log file(s) added, %d removed, %d recycled; " \
 	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
 	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s"
 #else
 #define MSG_CHECKPOINT_COMPLETE \
-	"checkpoint complete: wrote %d buffers (%.1f%%); " \
+	"%s complete: wrote %d buffers (%.1f%%); " \
 	"%d transaction log file(s) added, %d removed, %d recycled; " \
 	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s"
 #endif

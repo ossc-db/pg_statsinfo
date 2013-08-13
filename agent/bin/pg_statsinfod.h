@@ -166,7 +166,6 @@ extern char		   *msg_autovacuum;
 extern char		   *msg_autoanalyze;
 extern char		   *msg_checkpoint_starting;
 extern char		   *msg_checkpoint_complete;
-extern size_t		checkpoint_starting_prefix_len;
 /*--------------------------------------*/
 
 extern volatile ShutdownState	shutdown_state;
