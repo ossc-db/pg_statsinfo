@@ -109,21 +109,34 @@
 #define MSG_AUTOANALYZE \
 	"automatic analyze of table \"%s.%s.%s\" system usage: %s"
 
-/* log_checkpoints: staring */
+/* log_checkpoint: staring */
 #define MSG_CHECKPOINT_STARTING \
 	"%s starting: %s"
 
-/* log_checkpoints: complete */
+/* log_checkpoint: complete */
 #if PG_VERSION_NUM >= 90100
 #define MSG_CHECKPOINT_COMPLETE \
-	"%s complete: wrote %d buffers (%.1f%%); " \
+	"checkpoint complete: wrote %d buffers (%.1f%%); " \
 	"%d transaction log file(s) added, %d removed, %d recycled; " \
 	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
 	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s"
 #else
 #define MSG_CHECKPOINT_COMPLETE \
-	"%s complete: wrote %d buffers (%.1f%%); " \
+	"checkpoint complete: wrote %d buffers (%.1f%%); " \
 	"%d transaction log file(s) added, %d removed, %d recycled; " \
+	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s"
+#endif
+
+/* log_restartpoint: complete */
+#if PG_VERSION_NUM >= 90100
+#define MSG_RESTARTPOINT_COMPLETE \
+	"restartpoint complete: wrote %d buffers (%.1f%%); " \
+	"%d transaction log file(s) added, %d removed, %d recycled; " \
+	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
+	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s"
+#else
+#define MSG_RESTARTPOINT_COMPLETE \
+	"restartpoint complete: wrote %d buffers (%.1f%%); " \
 	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s"
 #endif
 
@@ -2242,6 +2255,7 @@ exec_background_process(char cmd[])
 	send_str(fd, ":autoanalyze", _(MSG_AUTOANALYZE));
 	send_str(fd, ":checkpoint_starting", _(MSG_CHECKPOINT_STARTING));
 	send_str(fd, ":checkpoint_complete", _(MSG_CHECKPOINT_COMPLETE));
+	send_str(fd, ":restartpoint_complete", _(MSG_RESTARTPOINT_COMPLETE));
 	send_end(fd);
 	close(fd);
 

@@ -13,19 +13,28 @@ INSERT INTO statsrepo.checkpoint VALUES \
 #define NUM_CHECKPOINT_STARTING		2
 
 #if PG_VERSION_NUM >= 90100
-#define NUM_CHECKPOINT_COMPLETE		17
+#define NUM_CHECKPOINT_COMPLETE		16
+#define NUM_RESTARTPOINT_COMPLETE	16
 #else
-#define NUM_CHECKPOINT_COMPLETE		12
+#define NUM_CHECKPOINT_COMPLETE		11
+#define NUM_RESTARTPOINT_COMPLETE	8
 #endif
+
+typedef enum CheckpointType
+{
+	CKPT_TYPE_CHECKPOINT,
+	CKPT_TYPE_RESTARTPOINT
+} CheckpointType;
 
 /* checkpoint log data */
 typedef struct CheckpointLog
 {
 	QueueItem	base;
 
-	char	start[LOGTIME_LEN];
-	char	flags[128];
-	List   *params;
+	char			start[LOGTIME_LEN];
+	char			flags[128];
+	CheckpointType	type;
+	List		   *params;
 } CheckpointLog;
 
 static void Checkpoint_free(CheckpointLog *ckpt);
@@ -45,6 +54,10 @@ is_checkpoint(const char *message)
 	if (match(message, msg_checkpoint_complete))
 		return true;
 
+	/* log for restartpoint complete */
+	if (match(message, msg_restartpoint_complete))
+		return true;
+
 	return false;
 }
 
@@ -62,11 +75,15 @@ parse_checkpoint(const char *message, const char *timestamp)
 	{
 		/* log for checkpoint starting */
 
-		const char *type = (char *) list_nth(params, 0);
-		const char *flags = (char *) list_nth(params, 1);
+		const char		*type = (char *) list_nth(params, 0);
+		const char		*flags = (char *) list_nth(params, 1);
+		CheckpointType	 ckpt_type;
 
-		if (strcmp(type, "checkpoint") != 0 &&
-			strcmp(type, "restartpoint") != 0)
+		if (strcmp(type, "checkpoint") == 0)
+			ckpt_type = CKPT_TYPE_CHECKPOINT;
+		else if (strcmp(type, "restartpoint") == 0)
+			ckpt_type = CKPT_TYPE_RESTARTPOINT;
+		else
 		{
 			/* not a checkpoint log */
 			list_free_deep(params);
@@ -85,7 +102,8 @@ parse_checkpoint(const char *message, const char *timestamp)
 		if (ckpt == NULL)
 			ckpt = pgut_new(CheckpointLog);
 
-		/* copy flags and start timestamp */
+		/* copy type, flags and start timestamp */
+		ckpt->type = ckpt_type;
 		strlcpy(ckpt->flags, flags, sizeof(ckpt->flags));
 		strlcpy(ckpt->start, timestamp, sizeof(ckpt->start));
 
@@ -93,7 +111,8 @@ parse_checkpoint(const char *message, const char *timestamp)
 		return true;
 	}
 
-	if ((params = capture(message, msg_checkpoint_complete, NUM_CHECKPOINT_COMPLETE)) != NIL)
+	if ((params = capture(message, msg_checkpoint_complete, NUM_CHECKPOINT_COMPLETE)) != NIL ||
+		(params = capture(message, msg_restartpoint_complete, NUM_RESTARTPOINT_COMPLETE)) != NIL)
 	{
 		/* log for checkpoint complete */
 
@@ -139,28 +158,64 @@ Checkpoint_exec(CheckpointLog *ckpt, PGconn *conn, const char *instid)
 	char			total_duration[32];
 
 	elog(DEBUG2, "write (checkpoint)");
-	Assert(list_length(ckpt->params) == NUM_CHECKPOINT_COMPLETE);
-
-	snprintf(write_duration, lengthof(write_duration), "%s.%s",
-		(const char *) list_nth(ckpt->params, 6),
-		(const char *) list_nth(ckpt->params, 7));
-	snprintf(sync_duration, lengthof(sync_duration), "%s.%s",
-		(const char *) list_nth(ckpt->params, 8),
-		(const char *) list_nth(ckpt->params, 9));
-	snprintf(total_duration, lengthof(total_duration), "%s.%s",
-		(const char *) list_nth(ckpt->params, 10),
-		(const char *) list_nth(ckpt->params, 11));
 
 	params[0] = instid;						/* instid */
 	params[1] = ckpt->start;				/* start */
 	params[2] = ckpt->flags;				/* flags */
-	params[3] = list_nth(ckpt->params, 1);	/* num_buffers */
-	params[4] = list_nth(ckpt->params, 3);	/* xlog_added */
-	params[5] = list_nth(ckpt->params, 4);	/* xlog_removed */
-	params[6] = list_nth(ckpt->params, 5);	/* xlog_recycled */
-	params[7] = write_duration;				/* write_duration */
-	params[8] = sync_duration;				/* sync_duration */
-	params[9] = total_duration;				/* total_duration */
+	params[3] = list_nth(ckpt->params, 0);	/* num_buffers */
+
+#if PG_VERSION_NUM >= 90100
+	params[4] = list_nth(ckpt->params, 2);	/* xlog_added */
+	params[5] = list_nth(ckpt->params, 3);	/* xlog_removed */
+	params[6] = list_nth(ckpt->params, 4);	/* xlog_recycled */
+
+	snprintf(write_duration, lengthof(write_duration), "%s.%s",
+		(const char *) list_nth(ckpt->params, 5),
+		(const char *) list_nth(ckpt->params, 6));
+	snprintf(sync_duration, lengthof(sync_duration), "%s.%s",
+		(const char *) list_nth(ckpt->params, 7),
+		(const char *) list_nth(ckpt->params, 8));
+	snprintf(total_duration, lengthof(total_duration), "%s.%s",
+		(const char *) list_nth(ckpt->params, 9),
+		(const char *) list_nth(ckpt->params, 10));
+#else
+	if (ckpt->type == CKPT_TYPE_RESTARTPOINT)
+	{
+		params[4] = NULL;	/* xlog_added */
+		params[5] = NULL;	/* xlog_removed */
+		params[6] = NULL;	/* xlog_recycled */
+
+		snprintf(write_duration, lengthof(write_duration), "%s.%s",
+			(const char *) list_nth(ckpt->params, 2),
+			(const char *) list_nth(ckpt->params, 3));
+		snprintf(sync_duration, lengthof(sync_duration), "%s.%s",
+			(const char *) list_nth(ckpt->params, 4),
+			(const char *) list_nth(ckpt->params, 5));
+		snprintf(total_duration, lengthof(total_duration), "%s.%s",
+			(const char *) list_nth(ckpt->params, 6),
+			(const char *) list_nth(ckpt->params, 7));
+	}
+	else
+	{
+		params[4] = list_nth(ckpt->params, 2);	/* xlog_added */
+		params[5] = list_nth(ckpt->params, 3);	/* xlog_removed */
+		params[6] = list_nth(ckpt->params, 4);	/* xlog_recycled */
+
+		snprintf(write_duration, lengthof(write_duration), "%s.%s",
+			(const char *) list_nth(ckpt->params, 5),
+			(const char *) list_nth(ckpt->params, 6));
+		snprintf(sync_duration, lengthof(sync_duration), "%s.%s",
+			(const char *) list_nth(ckpt->params, 7),
+			(const char *) list_nth(ckpt->params, 8));
+		snprintf(total_duration, lengthof(total_duration), "%s.%s",
+			(const char *) list_nth(ckpt->params, 9),
+			(const char *) list_nth(ckpt->params, 10));
+	}
+#endif
+
+	params[7] = write_duration;	/* write_duration */
+	params[8] = sync_duration;	/* sync_duration */
+	params[9] = total_duration;	/* total_duration */
 
 	return pgut_command(conn,
 				SQL_INSERT_CHECKPOINT, 10, params) == PGRES_COMMAND_OK;

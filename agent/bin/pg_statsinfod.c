@@ -79,6 +79,7 @@ char		   *msg_autovacuum;
 char		   *msg_autoanalyze;
 char		   *msg_checkpoint_starting;
 char		   *msg_checkpoint_complete;
+char		   *msg_restartpoint_complete;
 /*--------------------------------------*/
 
 /* current shutdown state */
@@ -166,6 +167,7 @@ static struct ParamMap PARAM_MAP[] =
 	{":autoanalyze", assign_string, &msg_autoanalyze},
 	{":checkpoint_starting", assign_string, &msg_checkpoint_starting},
 	{":checkpoint_complete", assign_string, &msg_checkpoint_complete},
+	{":restartpoint_complete", assign_string, &msg_restartpoint_complete},
 	{NULL}
 };
 
