@@ -87,13 +87,15 @@ volatile ShutdownState	shutdown_state;
 bool					shutdown_message_found;
 static pthread_mutex_t	shutdown_state_lock;
 
+/* current writer state */
+volatile WriterState	writer_state;
+
 /* threads */
 pthread_t	th_collector;
 pthread_t	th_logger;
 pthread_t	th_writer;
 
 static int help(void);
-static bool ensure_schema(PGconn *conn, const char *schema);
 static bool assign_int(const char *value, void *var);
 static bool assign_elevel(const char *value, void *var);
 static bool assign_syslog(const char *value, void *var);
@@ -105,7 +107,6 @@ static void readopt(void);
 static bool decode_time(const char *field, int *hour, int *min, int *sec);
 static int strtoi(const char *nptr, char **endptr, int base);
 static bool execute_script(PGconn *conn, const char *script_file);
-static bool check_repository(PGconn *conn);
 static void create_lock_file(void);
 static void unlink_lock_file(void);
 
@@ -184,7 +185,6 @@ isTTY(int fd)
 int
 main(int argc, char *argv[])
 {
-	PGconn	*conn;
 	void	*logger_retval;
 
 	shutdown_state = STARTUP;
@@ -251,23 +251,6 @@ main(int argc, char *argv[])
 	 * terminated by ERRORs.
 	 */
 	pgut_abort_level = FATAL;
-
-	/* wait until repository database is ready to accept connection */
-	for (;;)
-	{
-		if (!postmaster_is_alive())
-			return STATSINFO_EXIT_FAILED;
-
-		if ((conn = pgut_connect(repository_server, NO, ERROR)))
-		{
-			/* check the state of repository database */
-			if (!check_repository(conn))
-				return STATSINFO_EXIT_FAILED;
-			break;
-		}
-		sleep(10);	/* 10s */
-	}
-	pgut_disconnect(conn);
 
 	/* init logger, collector, and writer module */
 	pthread_mutex_init(&shutdown_state_lock, NULL);
@@ -441,7 +424,7 @@ do_connect(PGconn **conn, const char *info, const char *schema)
 /*
  * requires $PGDATA/contrib/pg_{schema}.sql
  */
-static bool
+bool
 ensure_schema(PGconn *conn, const char *schema)
 {
 	PGresult	   *res;
@@ -913,92 +896,6 @@ execute_script(PGconn *conn, const char *script_file)
 	fclose(fp);
 	termStringInfo(&buf);
 	return ok;
-}
-
-/*
- * check the state of repository database.
- *  - supported XML feature
- *  - statsrepo schema version
- * Note:
- * Not use pgut_execute() in this function, because don't want to write
- * the error message defined by pgut_execute() to console.
- */
-static bool
-check_repository(PGconn *conn)
-{
-	PGresult	*res;
-	char		*query;
-	uint32		 version;
-
-	/* check supported XML feature */
-	query = "SELECT xmlcomment('')";
-	res = PQexec(conn, query);
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-	{
-		char *sqlstate;
-
-		sqlstate = PQresultErrorField(res, PG_DIAG_SQLSTATE);
-		if (sqlstate && strcmp(sqlstate, "0A000") == 0)	/* feature not supported */
-		{
-			ereport(ERROR,
-				(errmsg("repository server does not support XML feature"),
-				 errdetail("%s", PQresultErrorField(res, PG_DIAG_MESSAGE_DETAIL))));
-			goto bad;
-		}
-		goto error;	/* query failed */
-	}
-	PQclear(res);
-
-	/* check statsrepo schema exists */
-	query = "SELECT nspname FROM pg_namespace WHERE nspname = 'statsrepo'";
-	res = PQexec(conn, query);
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-		goto error;	/* query failed */
-	if (PQntuples(res) == 0)
-		goto ok;	/* not installed */
-	PQclear(res);
-
-	/* check the statsrepo schema version */
-	query = "SELECT statsrepo.get_version()";
-	res = PQexec(conn, query);
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-	{
-		char *sqlstate;
-
-		sqlstate = PQresultErrorField(res, PG_DIAG_SQLSTATE);
-		if (sqlstate && strcmp(sqlstate, "42883") == 0)	/* undefined function */
-		{
-			ereport(ERROR,
-				(errmsg("incompatible statsrepo schema: version mismatch")));
-			goto bad;
-		}
-		goto error;	/* query failed */
-	}
-
-	/* verify the version of statsrepo schema */
-	parse_uint32(PQgetvalue(res, 0, 0), &version);
-	if (version != STATSREPO_SCHEMA_VERSION &&
-		((version / 100) != (STATSREPO_SCHEMA_VERSION / 100)))
-	{
-		ereport(ERROR,
-			(errmsg("incompatible statsrepo schema: version mismatch")));
-		goto bad;
-	}
-
-ok:
-	PQclear(res);
-	return true;
-
-bad:
-	PQclear(res);
-	return false;
-
-error:
-	ereport(ERROR,
-		(errmsg("query failed: %s", PQerrorMessage(conn)),
-		 errdetail("query was: %s", query)));
-	PQclear(res);
-	return false;
 }
 
 /*

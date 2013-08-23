@@ -12,6 +12,15 @@
 #include <time.h>
 
 #define WRITER_CONN_KEEP_SECS			60	/* secs */
+#define WRITER_RECONNECT_DELAY			10	/* secs */
+
+/* repository state */
+typedef enum RepositoryState
+{
+	REPOSITORY_OK,
+	REPOSITORY_CONNECT_FAILURE,
+	REPOSITORY_INVALID_DATABASE
+} RepositoryState;
 
 static pthread_mutex_t	writer_queue_lock;
 static List			   *writer_queue = NIL;
@@ -29,11 +38,15 @@ static char	   *my_repository_server = NULL;
 static void reload_params(void);
 static int recv_writer_queue(void);
 static PGconn *writer_connect(bool superuser);
+static void writer_disconnect(void);
 static char *get_instid(PGconn *conn);
 static const char *get_nodename(void);
 static void destroy_writer_queue(QueueItem *item);
 static void set_connect_privileges(void);
-
+static RepositoryState validate_repository(void);
+static bool check_repository(PGconn *conn);
+static void set_writer_state(WriterState state);
+static void writer_delay(void);
 
 void
 writer_init(void)
@@ -41,6 +54,7 @@ writer_init(void)
 	pthread_mutex_init(&writer_queue_lock, NULL);
 	writer_queue = NIL;
 	writer_reload_time = 0;	/* any values ok as far as before now */
+	set_writer_state(WRITER_READY);
 }
 
 /*
@@ -49,20 +63,40 @@ writer_init(void)
 void *
 writer_main(void *arg)
 {
-	int		items;
-
-	reload_params();
-	set_connect_privileges();
+	int	items;
+	int	rstate = -1;
 
 	while (shutdown_state < COLLECTOR_SHUTDOWN)
 	{
 		/* update settings if reloaded */
 		if (writer_reload_time < collector_reload_time)
 		{
-			writer_reload_time = collector_reload_time;
-			pthread_mutex_lock(&reload_lock);
 			reload_params();
-			pthread_mutex_unlock(&reload_lock);
+
+			/* validate a state of the repository server */
+			rstate = validate_repository();
+			switch (rstate)
+			{
+				case REPOSITORY_OK:
+					set_writer_state(WRITER_NORMAL);
+					break;
+				case REPOSITORY_CONNECT_FAILURE:
+				case REPOSITORY_INVALID_DATABASE:
+					if (shutdown_state < SHUTDOWN_REQUESTED)
+						set_writer_state(WRITER_FALLBACK);
+					break;
+			}
+		}
+
+		/*
+		 * if the repository state is in connect failure,
+		 * re-validate a state of the repository server.
+		 */
+		if (rstate == REPOSITORY_CONNECT_FAILURE)
+		{
+			rstate = validate_repository();
+			if (rstate == REPOSITORY_OK)
+				set_writer_state(WRITER_NORMAL);
 		}
 
 		/* send queued items into the repository server */
@@ -72,8 +106,7 @@ writer_main(void *arg)
 			if (writer_conn != NULL &&
 				writer_conn_last_used + WRITER_CONN_KEEP_SECS < time(NULL))
 			{
-				pgut_disconnect(writer_conn);
-				writer_conn = NULL;
+				writer_disconnect();
 				elog(DEBUG2, "disconnect unused writer connection");
 			}
 		}
@@ -85,8 +118,7 @@ writer_main(void *arg)
 	if ((items = recv_writer_queue()) > 0)
 		elog(WARNING, "writer discards %d items", items);
 
-	pgut_disconnect(writer_conn);
-	writer_conn = NULL;
+	writer_disconnect();
 	shutdown_progress(WRITER_SHUTDOWN);
 
 	return NULL;
@@ -140,19 +172,13 @@ writer_has_queue(WriterQueueType type)
 static void
 reload_params(void)
 {
-	pgut_disconnect(writer_conn);
-	writer_conn = NULL;
-
-	if (my_repository_server != NULL &&
-		strcmp(my_repository_server, repository_server) != 0)
-	{
-		free(my_repository_server);
-		my_repository_server = pgut_strdup(repository_server);
-		set_connect_privileges();
-	}
+	writer_reload_time = collector_reload_time;
+	pthread_mutex_lock(&reload_lock);
 
 	free(my_repository_server);
 	my_repository_server = pgut_strdup(repository_server);
+
+	pthread_mutex_unlock(&reload_lock);
 }
 
 /*
@@ -161,7 +187,6 @@ reload_params(void)
 static int
 recv_writer_queue(void)
 {
-	PGconn	   *conn;
 	List	   *queue;
 	int			ret;
 	char	   *instid = NULL;
@@ -175,22 +200,17 @@ recv_writer_queue(void)
 	if (list_length(queue) == 0)
 		return 0;
 
-	/* install writer schema */
-	if ((conn = writer_connect(superuser_connect)) == NULL)
+	if (writer_state == WRITER_FALLBACK ||
+		writer_connect(superuser_connect) == NULL)
 	{
-		elog(ERROR, "could not connect to repository");
-
-		/* discard current queue if can't connect to repository */
-		if (list_length(queue) > 0)
-		{
-			elog(WARNING, "writer discards %d items", list_length(queue));
-			list_destroy(queue, destroy_writer_queue);
-		}
+		/* discard current queue */
+		elog(WARNING, "writer discards %d items", list_length(queue));
+		list_destroy(queue, destroy_writer_queue);
 		return 0;
 	}
 
 	/* do the writer queue process */
-	if ((instid = get_instid(conn)) != NULL)
+	if ((instid = get_instid(writer_conn)) != NULL)
 	{
 		connection_used = true;
 
@@ -198,7 +218,7 @@ recv_writer_queue(void)
 		{
 			QueueItem  *item = (QueueItem *) linitial(queue);
 
-			if (!item->exec(item, conn, instid))
+			if (!item->exec(item, writer_conn, instid))
 			{
 				if (++item->retry < DB_MAX_RETRY)
 					break;	/* retry the item */
@@ -237,13 +257,13 @@ recv_writer_queue(void)
 }
 
 /*
- * connect to the repository server.
+ * connect to repository server.
  */
 static PGconn *
 writer_connect(bool superuser)
 {
 	char	info[1024];
-	int		retry = 0;
+	int		retry;
 
 	if (superuser)
 #ifdef DEBUG
@@ -257,12 +277,22 @@ writer_connect(bool superuser)
 
 	do
 	{
-		if (do_connect(&writer_conn, info, "statsrepo"))
+		if (do_connect(&writer_conn, info, NULL))
 			return writer_conn;
-		delay();
-	} while(shutdown_state < SHUTDOWN_REQUESTED && ++retry < DB_MAX_RETRY);
+		writer_delay();
+	} while (shutdown_state < SHUTDOWN_REQUESTED && ++retry < DB_MAX_RETRY);
 
 	return NULL;
+}
+
+/*
+ * disconnect from the repository server.
+ */
+static void
+writer_disconnect(void)
+{
+	pgut_disconnect(writer_conn);
+	writer_conn = NULL;
 }
 
 static char *
@@ -378,12 +408,7 @@ set_connect_privileges(void)
 {
 	PGresult	*res;
 
-	/* connect to repository */
-	if (writer_connect(false) == NULL)
-	{
-		elog(ERROR, "could not connect to repository");
-		return;
-	}
+	Assert(writer_conn != NULL);
 
 	res = pgut_execute(writer_conn,
 		"SELECT rolsuper FROM pg_roles WHERE rolname = current_user", 0, NULL);
@@ -396,6 +421,150 @@ set_connect_privileges(void)
 		superuser_connect = false;
 
 	PQclear(res);
-	pgut_disconnect(writer_conn);
-	writer_conn = NULL;
+}
+
+static RepositoryState
+validate_repository(void)
+{
+	/* connect to repository server */
+	if (writer_connect(false) == NULL)
+		return REPOSITORY_CONNECT_FAILURE;
+
+	/* get a privileges of the database connect user */
+	set_connect_privileges();
+
+	/*
+	 * re-connect to repository server
+	 * if privileges of the database connect user is superuser.
+	 */
+	if (superuser_connect)
+	{
+		writer_disconnect();
+		if (writer_connect(superuser_connect) == NULL)
+			return REPOSITORY_CONNECT_FAILURE;
+	}
+
+	/* check the condition of repository server */
+	if (!check_repository(writer_conn))
+		return REPOSITORY_INVALID_DATABASE;
+
+	/* install statsrepo schema if not installed yet */
+	ensure_schema(writer_conn, "statsrepo");
+
+	writer_disconnect();
+	return REPOSITORY_OK;
+}
+
+/*
+ * check the condition of repository server.
+ *  - supported XML feature
+ *  - statsrepo schema version
+ * Note:
+ * Not use pgut_execute() in this function, because don't want to write
+ * the error message defined by pgut_execute().
+ */
+static bool
+check_repository(PGconn *conn)
+{
+	PGresult	*res;
+	char		*query;
+	uint32		 version;
+
+	/* check supported XML feature */
+	query = "SELECT xmlcomment('')";
+	res = PQexec(conn, query);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		char *sqlstate;
+
+		sqlstate = PQresultErrorField(res, PG_DIAG_SQLSTATE);
+		if (sqlstate && strcmp(sqlstate, "0A000") == 0)	/* feature not supported */
+		{
+			ereport(ERROR,
+				(errmsg("repository server must support XML feature. "
+						"you need to rebuild PostgreSQL using "
+						"\"./configure --with-libxml\"")));
+			goto bad;
+		}
+		goto error;	/* query failed */
+	}
+	PQclear(res);
+
+	/* check statsrepo schema exists */
+	query = "SELECT nspname FROM pg_namespace WHERE nspname = 'statsrepo'";
+	res = PQexec(conn, query);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		goto error;	/* query failed */
+	if (PQntuples(res) == 0)
+		goto ok;	/* not installed */
+	PQclear(res);
+
+	/* check the statsrepo schema version */
+	query = "SELECT statsrepo.get_version()";
+	res = PQexec(conn, query);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		char *sqlstate;
+
+		sqlstate = PQresultErrorField(res, PG_DIAG_SQLSTATE);
+		if (sqlstate && strcmp(sqlstate, "42883") == 0)	/* undefined function */
+		{
+			ereport(ERROR,
+				(errmsg("incompatible statsrepo schema: version mismatch")));
+			goto bad;
+		}
+		goto error;	/* query failed */
+	}
+
+	/* verify the version of statsrepo schema */
+	parse_uint32(PQgetvalue(res, 0, 0), &version);
+	if (version != STATSREPO_SCHEMA_VERSION &&
+		((version / 100) != (STATSREPO_SCHEMA_VERSION / 100)))
+	{
+		ereport(ERROR,
+			(errmsg("incompatible statsrepo schema: version mismatch")));
+		goto bad;
+	}
+
+ok:
+	PQclear(res);
+	return true;
+
+bad:
+	PQclear(res);
+	return false;
+
+error:
+	ereport(ERROR,
+		(errmsg("query failed: %s", PQerrorMessage(conn)),
+		 errdetail("query was: %s", query)));
+	PQclear(res);
+	return false;
+}
+
+static void
+set_writer_state(WriterState state)
+{
+	switch (state)
+	{
+		case WRITER_READY:
+			break;
+		case WRITER_NORMAL:
+			elog(writer_state > WRITER_NORMAL ? LOG : DEBUG2,
+				"pg_statsinfo is starting in normal mode");
+			break;
+		case WRITER_FALLBACK:
+			elog(writer_state < WRITER_FALLBACK ? LOG : DEBUG2,
+				"pg_statsinfo is starting in fallback mode");
+			break;
+	}
+
+	writer_state = state;
+}
+
+static void
+writer_delay(void)
+{
+	if (shutdown_state < SHUTDOWN_REQUESTED)
+		sleep(WRITER_RECONNECT_DELAY);
 }

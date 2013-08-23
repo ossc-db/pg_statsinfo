@@ -89,6 +89,14 @@ typedef enum ShutdownState
 	LOGGER_SHUTDOWN
 } ShutdownState;
 
+/* writer state */
+typedef enum WriterState
+{
+	WRITER_READY,
+	WRITER_NORMAL,
+	WRITER_FALLBACK
+} WriterState;
+
 /* writer queue type */
 typedef enum WriterQueueType
 {
@@ -170,6 +178,7 @@ extern char		   *msg_restartpoint_complete;
 /*--------------------------------------*/
 
 extern volatile ShutdownState	shutdown_state;
+extern volatile WriterState		writer_state;
 extern bool						shutdown_message_found;
 
 /* threads */
@@ -277,6 +286,7 @@ bool check_maintenance_log(pid_t log_maintenance_pid, int fd_err);
 /* pg_statsinfod.c */
 extern bool postmaster_is_alive(void);
 extern PGconn *do_connect(PGconn **conn, const char *info, const char *schema);
+extern bool ensure_schema(PGconn *conn, const char *schema);
 extern int str_to_elevel(const char *value);
 extern const char *elevel_to_str(int elevel);
 extern void shutdown_progress(ShutdownState state);

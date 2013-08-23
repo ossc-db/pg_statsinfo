@@ -816,6 +816,16 @@ logger_next(Logger *logger, const char *pg_log)
 		if (!logger_open(logger, csvlog, 0))
 			return false;
 
+		/*
+		 * if writer thread working in fallback mode,
+		 * write in the textlog that agent is working in fallback mode.
+		 */
+		if (writer_state == WRITER_FALLBACK)
+		{
+			elog(LOG, "*** pg_statsinfo is working in fallback mode ***");
+			logger_recv(logger);
+		}
+
 		elog(DEBUG2, "read csvlog \"%s\"", logger->csv_path);
 	}
 
