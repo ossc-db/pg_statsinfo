@@ -263,7 +263,7 @@ static PGconn *
 writer_connect(bool superuser)
 {
 	char	info[1024];
-	int		retry;
+	int		retry = 0;
 
 	if (superuser)
 #ifdef DEBUG
