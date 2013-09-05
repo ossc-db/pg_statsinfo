@@ -45,6 +45,7 @@
     <ol>
       <li><a href="#many-instances">複数の監視対象インスタンス</a></li>
       <li><a href="#warm-standby">ウォームスタンバイ</a></li>
+      <li><a href="#fallback-mode">フォールバックモード</a></li>
       <li><a href="#internal">内部構成</a></li>
     </ol>
   </li>
@@ -1217,6 +1218,11 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
     <td>-</td>
     <td>pg_stat_statementsで収集する情報のフィルタリング設定。収集対象から除外するユーザを設定します。複数のユーザを設定する場合はカンマ区切りで指定します。</td>
   </tr>
+  <tr>
+    <td>pg_statsinfo.controlfile_fsync_interval</td>
+    <td>1min</td>
+    <td>pg_statsinfoの制御ファイルの更新をストレージデバイスに同期書き出し(fsync)する間隔を設定します。</td>
+  </tr>
 </tbody>
 </table>
 
@@ -1486,6 +1492,7 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
   </ul>
   <li>チェックポイントおよび自動バキュームのログがサーバログのフィルタリングで分配されるように変更</li>
   <li>スタンバイで実行されたチェックポイント(リスタートポイント)の統計情報を収集するように変更</li>
+  <li>リポジトリDBに不備がある場合は、フォールバックモード(一部機能を無効化した状態)で動作するように変更</li>
   <li>簡易レポート機能の名称をコマンドライン機能に変更</li>
   <li>コマンドライン機能が生成するレポートに以下の項目を追加</li>
   <ul>
@@ -1537,6 +1544,64 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
   <li>稼動系、待機系と独立したインスタンスにリポジトリDBを配置</li>
   <li>稼動系、待機系それぞれのインスタンスにリポジトリDBを配置</li>
 </ol>
+
+<h3 id="fallback-mode">フォールバックモード</h3>
+<p>エージェント起動時および設定リロード時にリポジトリDBの正当性チェックを行います。<br/>
+正当性チェックを実施した結果、不備が検出された場合は一部の機能を無効化した状態で動作するモード(フォールバックモード)に移行します。</p>
+
+<p>リポジトリDBの正当性チェックの内容およびフォールバックモードで無効化される機能を以下に示します。</p>
+<h4>リポジトリDBの正当性チェックの内容</h4>
+<ul>
+  <li>リポジトリDBに接続できるか</li>
+  <li>リポジトリDBに登録されている statsrepo スキーマのバージョンが正しいか</li>
+  <li>リポジトリDBの PostgreSQL が XML をサポートしているか (configure オプションに --with-libxml が指定されたビルドであるか)</li>
+</ul>
+
+<h4>フォールバックモードで無効化される機能</h4>
+<ul>
+  <li>統計情報の取得機能</li>
+  <li>アラート機能</li>
+  <li>コマンドライン機能でのスナップショット取得</li>
+  <li>自動メンテナンス機能でのスナップショット削除</li>
+</ul>
+
+<h4>復旧手順</h4>
+<p>リポジトリDBに接続できないことが原因でフォールバックモードの移行した場合は、リポジトリDBを復旧した時点で自動的に通常モードに復旧します。<br/>
+他の原因によりフォールバックモードに移行した場合は、リポジトリDBを復旧した後で設定リロードを実行してください。</p>
+
+<p>フォールバックモードに移行した原因はログ(テキストログ or syslog)に出力された内容から判断できます。<br/>
+フォールバックモードに移行した時のログの出力例を以下に示します。</p>
+<pre>
+# リポジトリDBに接続できない
+ERROR:  pg_statsinfo: could not connect to database with "host=192.168.0.1 user=postgres": timeout expired
+LOG:  pg_statsinfo: pg_statsinfo is starting in fallback mode
+
+# statsrepo スキーマのバージョンが合わない
+ERROR:  pg_statsinfo: incompatible statsrepo schema: version mismatch
+LOG:  pg_statsinfo: pg_statsinfo is starting in fallback mode
+
+# リポジトリDBの PostgreSQL が XML をサポートしていない
+ERROR:  pg_statsinfo: repository server must support XML feature. you need to rebuild PostgreSQL using "./configure --with-libxml"
+LOG:  pg_statsinfo: pg_statsinfo is starting in fallback mode
+</pre>
+
+<p>リポジトリDBの復旧に関する点検事項と対処方法を以下に示します。</p>
+<dl>
+  <dt>リポジトリDBに接続できない場合</dt>
+  <ul>
+    <li>リポジトリDBの稼動状態を確認し、リポジトリDBが停止している場合はリポジトリDBを起動してください。</li>
+    <li>設定ファイルのリポジトリDBへの接続文字列(pg_statsinfo.repository_server)を確認し、設定が誤っている場合は修正してください。(要設定リロード)</li>
+  </ul>
+  <dt>statsrepo スキーマのバージョンが合わない場合</dt>
+  <ul>
+    <li>statsrepo スキーマを削除するか、リポジトリDBのデータベースを別に作成してください。</li>
+  </ul>
+  <dd>(正しいバージョンの statsrepo スキーマは設定リロード時に自動的に登録されます)</dd>
+  <dt>PostgreSQL が XML をサポートしていない場合</dt>
+  <ul>
+    <li>configure オプションに --with-libxml が指定されたビルドの PostgreSQL をインストールした後、リポジトリDBを再起動してください。</li>
+  </ul>
+</dl>
 
 <h3 id="systemtap">SystemTap 連携</h3>
 <p>Linux 系 OS には、様々なトレーシング／プロファイリングツールが備わっています。
