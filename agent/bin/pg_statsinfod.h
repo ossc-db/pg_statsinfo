@@ -69,7 +69,8 @@ FROM \
 		('" GUC_PREFIX ".enable_maintenance'), \
 		('" GUC_PREFIX ".maintenance_time'), \
 		('" GUC_PREFIX ".repository_keepday'), \
-		('" GUC_PREFIX ".log_maintenance_command')) AS t(name) \
+		('" GUC_PREFIX ".log_maintenance_command'), \
+		('" GUC_PREFIX ".controlfile_fsync_interval')) AS t(name) \
 	LEFT JOIN pg_settings s \
 	ON t.name = s.name"
 
@@ -150,6 +151,7 @@ extern char		   *adjust_log_error;
 extern char		   *adjust_log_log;
 extern char		   *adjust_log_fatal;
 extern char		   *textlog_nologging_users;
+extern int			controlfile_fsync_interval;
 /*---- GUC variables (writer) ----------*/
 extern char		   *repository_server;
 extern int		    enable_maintenance;

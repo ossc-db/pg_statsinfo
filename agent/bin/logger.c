@@ -15,6 +15,7 @@
 
 #ifndef WIN32
 #include <dirent.h>
+#include <linux/version.h>
 #endif
 
 /* pg_statsinfo.control values */
@@ -43,6 +44,7 @@ static char		   *my_adjust_log_error;
 static char		   *my_adjust_log_log;
 static char		   *my_adjust_log_fatal;
 static List		   *my_textlog_nologging_users;
+static int		    my_controlfile_fsync_interval;
 /*-----------------------*/
 
 #if PG_VERSION_NUM < 90000
@@ -116,6 +118,9 @@ static void open_controlfile(Logger *logger, int flags, mode_t mode);
 static void load_controlfile(Logger *logger);
 static bool ReadControlFile(void);
 static void RewriteControlFile(Logger *logger);
+static void FsyncControlFile(void);
+static void FlushControlFile(void);
+static time_t get_next_time(time_t now, int interval);
 static void logger_shutdown(Logger *logger);
 
 static volatile bool	stop_request = false;
@@ -147,6 +152,8 @@ logger_main(void *arg)
 	Logger			  logger;
 	int				  entry;
 	struct dirent	**dplist;
+	time_t			  now;
+	time_t			  next_fsync;
 
 	/* Set up signal handlers */
 	pqsignal(SIGUSR1, logger_sigusr1_handler);
@@ -154,6 +161,9 @@ logger_main(void *arg)
 	memset(&logger, 0, sizeof(logger));
 	initStringInfo(&logger.buf);
 	reload_params();
+
+	now = time(NULL);
+	next_fsync = get_next_time(now, my_controlfile_fsync_interval);
 
 	/* sets latest csvlog to the elements of logger */
 	for (;;)
@@ -178,6 +188,8 @@ logger_main(void *arg)
 	logger_open(&logger, logger.csv_path, logger.csv_offset);
 	logger_parse(&logger, my_log_directory, true);
 
+	FsyncControlFile();
+
 	/*
 	 * Logger should not shutdown before any other threads are alive,
 	 * or postmaster exists unless shutdown log is not found.
@@ -185,6 +197,8 @@ logger_main(void *arg)
 	while (shutdown_state < WRITER_SHUTDOWN ||
 		   (!shutdown_message_found && postmaster_is_alive() && !stop_request))
 	{
+		now = time(NULL);
+
 		/* update settings if reloaded */
 		if (logger_reload_time < collector_reload_time)
 		{
@@ -200,10 +214,24 @@ logger_main(void *arg)
 			}
 			else
 				assign_textlog_path(&logger, my_log_directory);
+
+			if (my_controlfile_fsync_interval >= 0)
+			{
+				now = time(NULL);
+				next_fsync = get_next_time(now, my_controlfile_fsync_interval);
+			}
 		}
 
 		logger_parse(&logger, my_log_directory, false);
 		usleep(200 * 1000);	/* 200ms */
+
+		/* fsync control file */
+		if (my_controlfile_fsync_interval >= 0 && now >= next_fsync)
+		{
+			FlushControlFile();
+			now = time(NULL);
+			next_fsync = get_next_time(now, my_controlfile_fsync_interval);
+		}
 
 		/* check postmaster pid. */
 		if (shutdown_state < SHUTDOWN_REQUESTED && !postmaster_is_alive())
@@ -227,6 +255,14 @@ logger_main(void *arg)
 		}
 	}
 
+	/* update pg_statsinfo.control */
+	if (shutdown_message_found || !stop_request)
+		ControlFile.state = STATSINFO_SHUTDOWNED;
+	else
+		ControlFile.state = STATSINFO_STOPPED;
+	RewriteControlFile(&logger);
+	FsyncControlFile();
+
 	/* final shutdown message */
 	if (shutdown_message_found)
 		elog(LOG, "shutdown");
@@ -235,13 +271,6 @@ logger_main(void *arg)
 	else
 		elog(WARNING, "shutdown because server process exited abnormally");
 	logger_recv(&logger);
-
-	/* update pg_statsinfo.control */
-	if (shutdown_message_found || !stop_request)
-		ControlFile.state = STATSINFO_SHUTDOWNED;
-	else
-		ControlFile.state = STATSINFO_STOPPED;
-	RewriteControlFile(&logger);
 
 	logger_close(&logger);
 	shutdown_progress(LOGGER_SHUTDOWN);
@@ -472,6 +501,9 @@ reload_params(void)
 		adjust_log_list = add_adlog(adjust_log_list, NOTICE, my_adjust_log_notice);
 		adjust_log_list = add_adlog(adjust_log_list, INFO, my_adjust_log_info);
 	}
+
+	/* fsync interval of control file */
+	my_controlfile_fsync_interval = controlfile_fsync_interval;
 
 	pgut_log_level = Min(textlog_min_messages, syslog_min_messages);
 
@@ -1317,6 +1349,56 @@ RewriteControlFile(Logger *logger)
 		/* shutdown due to fatal error */
 		logger_shutdown(logger);
 	}
+}
+
+static void
+FsyncControlFile(void)
+{
+	Assert(cf_fd >= 0);	/* have not been opened the pg_statsinfo.control */
+
+	elog(DEBUG2, "fsync control file \"%s\" (fsync method=\"%s\")",
+		STATSINFO_CONTROL_FILE, "fsync");
+	if (fsync(cf_fd) != 0)
+		ereport(ERROR,
+			(errcode_errno(),
+				errmsg("could not fsync control file \"%s\": %m",
+				STATSINFO_CONTROL_FILE)));
+}
+
+static void
+FlushControlFile(void)
+{
+	Assert(cf_fd >= 0);	/* have not been opened the pg_statsinfo.control */
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,17) && defined(_GNU_SOURCE)
+	elog(DEBUG2, "fsync control file \"%s\" (fsync method=\"%s\")",
+		STATSINFO_CONTROL_FILE, "sync_file_range");
+	if (sync_file_range(cf_fd, 0, 0,
+			SYNC_FILE_RANGE_WAIT_BEFORE | SYNC_FILE_RANGE_WRITE) != 0)
+#elif defined(HAVE_FDATASYNC)
+	elog(DEBUG2, "fsync control file \"%s\" (fsync method=\"%s\")",
+		STATSINFO_CONTROL_FILE, "fdatasync");
+	if (fdatasync(cf_fd) != 0)
+#else
+	elog(DEBUG2, "fsync control file \"%s\" (fsync method=\"%s\")",
+		STATSINFO_CONTROL_FILE, "fsync");
+	if (fsync(cf_fd) != 0)
+#endif
+	{
+		ereport(ERROR,
+			(errcode_errno(),
+				errmsg("could not fsync control file \"%s\": %m",
+				STATSINFO_CONTROL_FILE)));
+	}
+}
+
+static time_t
+get_next_time(time_t now, int interval)
+{
+	if (interval > 0)
+		return (now / interval) * interval + interval;
+	else
+		return now;
 }
 
 static void

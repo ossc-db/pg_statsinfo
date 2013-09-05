@@ -55,6 +55,7 @@ char		   *adjust_log_error;
 char		   *adjust_log_log;
 char		   *adjust_log_fatal;
 char		   *textlog_nologging_users;
+int				controlfile_fsync_interval;
 /*---- GUC variables (writer) ----------*/
 char		   *repository_server;
 int			    enable_maintenance;
@@ -151,6 +152,7 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".maintenance_time", assign_time, &maintenance_time},
 	{GUC_PREFIX ".repository_keepday", assign_int, &repository_keepday},
 	{GUC_PREFIX ".log_maintenance_command", assign_string, &log_maintenance_command},
+	{GUC_PREFIX ".controlfile_fsync_interval", assign_int, &controlfile_fsync_interval},
 	{":debug", assign_string, &msg_debug},
 	{":info", assign_string, &msg_info},
 	{":notice", assign_string, &msg_notice},
