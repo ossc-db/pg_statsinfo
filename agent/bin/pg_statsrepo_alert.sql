@@ -232,7 +232,7 @@ BEGIN
 	FOR val_fragment_table, val_fragment_pct IN
 		SELECT
 			i.database || '.' || i.schema || '.' || i.table,
-			(100 * abs(c.correlation))::numeric(4,2)
+			(100 * abs(c.correlation))::numeric(5,2)
 		FROM
 			statsrepo.indexes i,
 			statsrepo.column c
