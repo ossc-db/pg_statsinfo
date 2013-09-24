@@ -12,6 +12,22 @@
 
 #include "catalog/pg_control.h"
 
+#ifndef WIN32
+#include "linux/version.h"
+#endif
+
+#define LINUX_VERSION_AT_LEAST(major, minor, patch) \
+	(LINUX_VERSION_CODE >= KERNEL_VERSION(major, minor, patch))
+
+#define GLIBC_VERSION_AT_LEAST(major, minor) \
+	(__GLIBC__ > major || (__GLIBC__ == major && __GLIBC_MINOR__ >= minor))
+
+#ifndef HAVE_SYNC_FILE_RANGE
+#if (LINUX_VERSION_AT_LEAST(2,6,17) && GLIBC_VERSION_AT_LEAST(2,6))
+#define HAVE_SYNC_FILE_RANGE
+#endif
+#endif
+
 /* Error level */
 #define ALERT		(PANIC + 1)
 #define DISABLE		(PANIC + 2)

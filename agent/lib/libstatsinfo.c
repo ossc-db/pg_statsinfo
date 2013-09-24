@@ -50,10 +50,6 @@
 #include "pgut/pgut-spi.h"
 #include "../common.h"
 
-#ifndef WIN32
-#include "linux/version.h"
-#endif
-
 #define INVALID_PID			(-1)
 #define START_WAIT_MIN		(10)
 #define START_WAIT_MAX		(300)
@@ -1307,7 +1303,7 @@ statsinfo_restart(PG_FUNCTION_ARGS)
 #define NUM_STAT_FIELDS_MIN		6
 
 /* not support a kernel that does not have the required fields at "/proc/stat" */
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,41)
+#if !LINUX_VERSION_AT_LEAST(2,5,41)
 #error kernel version 2.5.41 or later is required
 #endif
 

@@ -120,6 +120,7 @@ static bool ReadControlFile(void);
 static void RewriteControlFile(Logger *logger);
 static void FsyncControlFile(void);
 static void FlushControlFile(void);
+static int SyncFile(int fd);
 static time_t get_next_time(time_t now, int interval);
 static void logger_shutdown(Logger *logger);
 
@@ -1356,8 +1357,7 @@ FsyncControlFile(void)
 {
 	Assert(cf_fd >= 0);	/* have not been opened the pg_statsinfo.control */
 
-	elog(DEBUG2, "fsync control file \"%s\" (fsync method=\"%s\")",
-		STATSINFO_CONTROL_FILE, "fsync");
+	elog(DEBUG2, "fsync control file (fsync method=\"fsync\")");
 	if (fsync(cf_fd) != 0)
 		ereport(ERROR,
 			(errcode_errno(),
@@ -1370,26 +1370,27 @@ FlushControlFile(void)
 {
 	Assert(cf_fd >= 0);	/* have not been opened the pg_statsinfo.control */
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,17) && defined(_GNU_SOURCE)
-	elog(DEBUG2, "fsync control file \"%s\" (fsync method=\"%s\")",
-		STATSINFO_CONTROL_FILE, "sync_file_range");
-	if (sync_file_range(cf_fd, 0, 0,
-			SYNC_FILE_RANGE_WAIT_BEFORE | SYNC_FILE_RANGE_WRITE) != 0)
-#elif defined(HAVE_FDATASYNC)
-	elog(DEBUG2, "fsync control file \"%s\" (fsync method=\"%s\")",
-		STATSINFO_CONTROL_FILE, "fdatasync");
-	if (fdatasync(cf_fd) != 0)
-#else
-	elog(DEBUG2, "fsync control file \"%s\" (fsync method=\"%s\")",
-		STATSINFO_CONTROL_FILE, "fsync");
-	if (fsync(cf_fd) != 0)
-#endif
-	{
+	if (SyncFile(cf_fd) != 0)
 		ereport(ERROR,
 			(errcode_errno(),
 				errmsg("could not fsync control file \"%s\": %m",
 				STATSINFO_CONTROL_FILE)));
-	}
+}
+
+static int
+SyncFile(int fd)
+{
+#if defined(HAVE_SYNC_FILE_RANGE)
+	elog(DEBUG2, "fsync file (fsync method=\"sync_file_range\")");
+	return sync_file_range(fd, 0, 0,
+		SYNC_FILE_RANGE_WAIT_BEFORE | SYNC_FILE_RANGE_WRITE);
+#elif defined(HAVE_FDATASYNC)
+	elog(DEBUG2, "fsync file (fsync method=\"fdatasync\")");
+	return fdatasync(fd);
+#else
+	elog(DEBUG2, "fsync file (fsync method=\"fsync\")");
+	return fsync(cf_fd);
+#endif
 }
 
 static time_t
