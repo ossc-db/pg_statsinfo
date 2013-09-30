@@ -46,6 +46,10 @@
 #include "utils/rel.h"
 #endif
 
+#if PG_VERSION_NUM >= 90300
+#include "access/htup_details.h"
+#endif
+
 #include "pgut/pgut-be.h"
 #include "pgut/pgut-spi.h"
 #include "../common.h"
@@ -85,7 +89,15 @@
 	"received SIGHUP, reloading configuration files"
 
 /* log_autovacuum_min_duration: vacuum */
-#if PG_VERSION_NUM >= 90200
+#if PG_VERSION_NUM >= 90300
+#define MSG_AUTOVACUUM \
+	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
+	"pages: %d removed, %d remain\n" \
+	"tuples: %.0f removed, %.0f remain\n" \
+	"buffer usage: %d hits, %d misses, %d dirtied\n" \
+	"avg read rate: %.3f MB/s, avg write rate: %.3f MB/s\n" \
+	"system usage: %s"
+#elif PG_VERSION_NUM >= 90200
 #define MSG_AUTOVACUUM \
 	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
 	"pages: %d removed, %d remain\n" \

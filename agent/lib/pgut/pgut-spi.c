@@ -8,6 +8,7 @@
  */
 
 #include "postgres.h"
+#include "lib/stringinfo.h"
 #include "pgut-spi.h"
 
 #define EXEC_FAILED(ret, expected) \

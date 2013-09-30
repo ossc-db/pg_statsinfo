@@ -1,9 +1,8 @@
 /*---- Initialize repository DB ----*/
 /*---- Initialize monitored instance ----*/
 CREATE TABLESPACE
+SET
 CREATE SCHEMA
-NOTICE:  CREATE TABLE will create implicit sequence "tbl01_id_seq" for serial column "tbl01.id"
-NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "tbl01_pkey" for table "tbl01"
 CREATE TABLE
 CREATE TABLE
 CREATE FUNCTION

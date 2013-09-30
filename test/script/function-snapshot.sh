@@ -26,6 +26,7 @@ psql -d postgres -At << EOF
 CREATE TABLESPACE tblspc01 LOCATION '${PGDATA}/tblspc01';
 EOF
 psql -U user01 -d db01 -At << EOF
+SET client_min_messages TO warning;
 CREATE SCHEMA schema01;
 CREATE TABLE schema01.tbl01 (id serial PRIMARY KEY, name text, age integer) TABLESPACE tblspc01;
 CREATE TABLE schema01.tbl02 (address text) INHERITS (schema01.tbl01);

@@ -8,14 +8,19 @@ function server_version()
 {
 	local version=""
 	local version_num=0
-	local vmaj=0
-	local vmin=0
-	local vrev=0
+	local vmaj=
+	local vmin=
+	local vrev=
 
 	version=$(postgres --version | sed 's/postgres\s(PostgreSQL)\s//')
 	vmaj=$(echo ${version} | cut -d '.' -f 1)
 	vmin=$(echo ${version} | cut -d '.' -f 2)
 	vrev=$(echo ${version} | cut -d '.' -f 3)
+
+	if [ -x ${vrev} ] ; then
+		vmin=$(echo "${vmin}" | sed 's/\([0-9]\+\).*/\1/')
+		vrev=0
+	fi
 
 	version_num=$(expr \( 100 \* ${vmaj} + ${vmin} \) \* 100 + ${vrev})
 	echo ${version_num}

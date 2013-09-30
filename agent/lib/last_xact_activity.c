@@ -18,6 +18,10 @@
 #include "pgstat.h"
 #include "utils/memutils.h"
 
+#if PG_VERSION_NUM >= 90300
+#include "access/htup_details.h"
+#endif
+
 #include "../common.h"
 #include "pgut/pgut-be.h"
 
@@ -98,12 +102,16 @@ static void make_status_snapshot(void);
 static statEntry *get_snapshot_entry(int beid);
 static Size buffer_size(int nbackends);
 #if PG_VERSION_NUM >= 90000
+static void myProcessUtility0(Node *parsetree, const char *queryString);
+#if PG_VERSION_NUM >= 90300
+static void myProcessUtility(Node *parsetree, const char *queryString,
+			   ProcessUtilityContext context, ParamListInfo params,
+			   DestReceiver *dest, char *completionTag);
+#else
 static void myProcessUtility(Node *parsetree,
 			   const char *queryString, ParamListInfo params, bool isTopLevel,
 			   DestReceiver *dest, char *completionTag);
-static void myProcessUtility0(Node *parsetree,
-			   const char *queryString, ParamListInfo params, bool isTopLevel,
-			   DestReceiver *dest, char *completionTag);
+#endif
 #endif
 #endif
 
@@ -324,45 +332,8 @@ exit_transaction_if_needed()
 	}
 }
 
-/*
- * myProcessUtility() -
- *
- * Processing transaction state change.
- */
 static void
-myProcessUtility(Node *parsetree, const char *queryString,
-				 ParamListInfo params, bool isTopLevel,
-				 DestReceiver *dest, char *completionTag)
-{
-	/*
-	 * Do my process before other hook runs.
-	 */
-	myProcessUtility0(parsetree, queryString, params, isTopLevel, dest,
-					  completionTag);
-
-	PG_TRY();
-	{
-		if (prev_ProcessUtility_hook)
-			prev_ProcessUtility_hook(parsetree, queryString, params,
-									 isTopLevel, dest, completionTag);
-		else
-			standard_ProcessUtility(parsetree, queryString, params,
-									isTopLevel, dest, completionTag);
-	}
-	PG_CATCH();
-	{
-		exit_transaction_if_needed();
-		PG_RE_THROW();
-	}
-	PG_END_TRY();
-
-	exit_transaction_if_needed();
-}
-
-static void
-myProcessUtility0(Node *parsetree, const char *queryString,
-					ParamListInfo params, bool isTopLevel,
-					DestReceiver *dest, char *completionTag)
+myProcessUtility0(Node *parsetree, const char *queryString)
 {
 	statEntry *entry;
 	TransactionStmt *stmt;
@@ -440,6 +411,71 @@ myProcessUtility0(Node *parsetree, const char *queryString,
 	entry->change_count++;
 	Assert((entry->change_count & 1) == 0);
 }
+
+/*
+ * myProcessUtility() -
+ *
+ * Processing transaction state change.
+ */
+#if PG_VERSION_NUM >= 90300
+static void
+myProcessUtility(Node *parsetree, const char *queryString,
+				 ProcessUtilityContext context, ParamListInfo params,
+				 DestReceiver *dest, char *completionTag)
+{
+	/*
+	 * Do my process before other hook runs.
+	 */
+	myProcessUtility0(parsetree, queryString);
+
+	PG_TRY();
+	{
+		if (prev_ProcessUtility_hook)
+			prev_ProcessUtility_hook(parsetree, queryString, context, params,
+									 dest, completionTag);
+		else
+			standard_ProcessUtility(parsetree, queryString, context, params,
+									dest, completionTag);
+	}
+	PG_CATCH();
+	{
+		exit_transaction_if_needed();
+		PG_RE_THROW();
+	}
+	PG_END_TRY();
+
+	exit_transaction_if_needed();
+}
+#else
+static void
+myProcessUtility(Node *parsetree, const char *queryString,
+				 ParamListInfo params, bool isTopLevel,
+				 DestReceiver *dest, char *completionTag)
+{
+	/*
+	 * Do my process before other hook runs.
+	 */
+	myProcessUtility0(parsetree, queryString);
+
+	PG_TRY();
+	{
+		if (prev_ProcessUtility_hook)
+			prev_ProcessUtility_hook(parsetree, queryString, params,
+									 isTopLevel, dest, completionTag);
+		else
+			standard_ProcessUtility(parsetree, queryString, params,
+									isTopLevel, dest, completionTag);
+	}
+	PG_CATCH();
+	{
+		exit_transaction_if_needed();
+		PG_RE_THROW();
+	}
+	PG_END_TRY();
+
+	exit_transaction_if_needed();
+}
+#endif
 #endif
 #endif
 

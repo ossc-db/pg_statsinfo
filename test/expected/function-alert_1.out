@@ -31,7 +31,7 @@ ALERT:  pg_statsinfo: dead tuple ratio exceeds threshold in snapshot 'xxx' --- x
 ALERT:  pg_statsinfo: dead tuple ratio in 'postgres.public.tbl02' exceeds threshold in snapshot 'xxx' --- xxx % (threshold = 60 %)
 /**--- Alert the fragmentation table ---**/
 UPDATE 1
-NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "tbl04_pkey" for table "tbl04"
+SET
 CREATE TABLE
 ALTER TABLE
 INSERT 0 1

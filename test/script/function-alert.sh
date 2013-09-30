@@ -138,6 +138,7 @@ EOF
 echo "/**--- Alert the fragmentation table ---**/"
 send_query -c "UPDATE statsrepo.alert SET fragment_percent = 100"
 psql << EOF
+SET client_min_messages TO warning;
 CREATE TABLE tbl04 (id bigint PRIMARY KEY);
 ALTER TABLE tbl04 CLUSTER ON tbl04_pkey;
 INSERT INTO tbl04 VALUES (5);

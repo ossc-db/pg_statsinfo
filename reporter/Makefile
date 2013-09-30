@@ -35,3 +35,6 @@ subdir = contrib/$(MODULE_big)
 include $(makefile_global)
 include $(top_srcdir)/contrib/contrib-global.mk
 endif
+
+# exclude libraries which are not required
+LIBS := $(filter -lpgport -lpgcommon, $(LIBS))
