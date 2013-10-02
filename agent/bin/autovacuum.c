@@ -20,7 +20,7 @@ INSERT INTO statsrepo.autoanalyze VALUES \
 	"CPU %fs/%fu sec elapsed %f sec"
 
 #if PG_VERSION_NUM >= 90200
-#define NUM_AUTOVACUUM		14
+#define NUM_AUTOVACUUM		16
 #else
 #define NUM_AUTOVACUUM		9
 #endif
@@ -134,7 +134,7 @@ Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 	params[11] = list_nth(av->params, 9);	/* page_miss */
 	params[12] = list_nth(av->params, 10);	/* page_dirty */
 	params[13] = list_nth(av->params, 11);	/* read_rate */
-	params[14] = list_nth(av->params, 12);	/* write_rate */
+	params[14] = list_nth(av->params, 13);	/* write_rate */
 #endif
 	params[15] = list_nth(av->params, NUM_AUTOVACUUM + 2);	/* duration */
 

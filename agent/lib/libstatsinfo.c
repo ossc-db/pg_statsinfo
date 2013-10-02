@@ -89,21 +89,13 @@
 	"received SIGHUP, reloading configuration files"
 
 /* log_autovacuum_min_duration: vacuum */
-#if PG_VERSION_NUM >= 90300
+#if PG_VERSION_NUM >= 90200
 #define MSG_AUTOVACUUM \
 	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
 	"pages: %d removed, %d remain\n" \
 	"tuples: %.0f removed, %.0f remain\n" \
 	"buffer usage: %d hits, %d misses, %d dirtied\n" \
-	"avg read rate: %.3f MB/s, avg write rate: %.3f MB/s\n" \
-	"system usage: %s"
-#elif PG_VERSION_NUM >= 90200
-#define MSG_AUTOVACUUM \
-	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain\n" \
-	"tuples: %.0f removed, %.0f remain\n" \
-	"buffer usage: %d hits, %d misses, %d dirtied\n" \
-	"avg read rate: %.3f MiB/s, avg write rate: %.3f MiB/s\n" \
+	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
 	"system usage: %s"
 #else
 #define MSG_AUTOVACUUM \
