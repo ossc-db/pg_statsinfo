@@ -687,7 +687,7 @@ _PG_init(void)
 							   "Sets the latest file name for textlog.",
 							   NULL,
 							   &textlog_filename,
-							   "postgresql.log",
+							   "pg_statsinfo.log",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
 #if PG_VERSION_NUM >= 90100

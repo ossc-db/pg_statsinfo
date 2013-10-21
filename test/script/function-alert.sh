@@ -65,7 +65,7 @@ EOF
 sleep ${ANALYZE_DELAY}
 get_snapshot
 sleep ${WRITE_DELAY}
-tail -n 1 ${PGDATA}/pg_log/postgresql.log |
+tail -n 1 ${PGDATA}/pg_log/pg_statsinfo.log |
 sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g" |
 sed "s#--- .\+ Rollbacks/sec #--- xxx Rollbacks/sec #"
 send_query -c "UPDATE statsrepo.alert SET rollback_tps = -1" > /dev/null
@@ -81,7 +81,7 @@ EOF
 sleep ${ANALYZE_DELAY}
 get_snapshot
 sleep ${WRITE_DELAY}
-tail -n 1 ${PGDATA}/pg_log/postgresql.log |
+tail -n 1 ${PGDATA}/pg_log/pg_statsinfo.log |
 sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g" |
 sed "s#--- .\+ Transactions/sec #--- xxx Transactions/sec #"
 send_query -c "UPDATE statsrepo.alert SET commit_tps = -1" > /dev/null
@@ -92,7 +92,7 @@ if [ $(server_version) -ge 80400 ] ; then
 	psql -c "SELECT pg_sleep(1)" > /dev/null
 	get_snapshot
 	sleep ${WRITE_DELAY}
-	tail -n 1 ${PGDATA}/pg_log/postgresql.log |
+	tail -n 1 ${PGDATA}/pg_log/pg_statsinfo.log |
 	sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g" |
 	sed "s/--- .\+ sec /--- xxx sec /"
 	send_query -c "UPDATE statsrepo.alert SET response_avg = -1" > /dev/null
@@ -102,7 +102,7 @@ if [ $(server_version) -ge 80400 ] ; then
 	psql -c "SELECT pg_sleep(1)" > /dev/null
 	get_snapshot
 	sleep ${WRITE_DELAY}
-	tail -n 1 ${PGDATA}/pg_log/postgresql.log |
+	tail -n 1 ${PGDATA}/pg_log/pg_statsinfo.log |
 	sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g" |
 	sed "s/--- .\+ sec /--- xxx sec /"
 	send_query -c "UPDATE statsrepo.alert SET response_worst = -1" > /dev/null
@@ -126,7 +126,7 @@ EOF
 sleep ${ANALYZE_DELAY}
 get_snapshot
 sleep ${WRITE_DELAY}
-tail -n 3 ${PGDATA}/pg_log/postgresql.log |
+tail -n 3 ${PGDATA}/pg_log/pg_statsinfo.log |
 sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g" |
 sed "s/--- .\+ \(MiB\|%\) /--- xxx \1 /"
 send_query << EOF > /dev/null
@@ -151,7 +151,7 @@ EOF
 sleep ${ANALYZE_DELAY}
 get_snapshot
 sleep ${WRITE_DELAY}
-tail -n 1 ${PGDATA}/pg_log/postgresql.log |
+tail -n 1 ${PGDATA}/pg_log/pg_statsinfo.log |
 sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g"
 send_query -c "UPDATE statsrepo.alert SET fragment_percent = -1" > /dev/null
 
@@ -160,7 +160,7 @@ send_query -c "UPDATE statsrepo.alert SET backend_max = 0"
 psql -c "SELECT pg_sleep(${SAMPLING_DELAY})" > /dev/null
 get_snapshot
 sleep ${WRITE_DELAY}
-tail -n 1 ${PGDATA}/pg_log/postgresql.log |
+tail -n 1 ${PGDATA}/pg_log/pg_statsinfo.log |
 sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g"
 send_query -c "UPDATE statsrepo.alert SET backend_max = -1" > /dev/null
 

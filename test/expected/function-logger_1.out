@@ -6,7 +6,7 @@ CREATE FUNCTION
 /**--- Sets the textlog's filename and access permission ---**/
 postgresql-statsinfo.log -rw-r--r--(644)
 server signaled
-postgresql.log -rw-rw-rw-(666)
+pg_statsinfo.log -rw-rw-rw-(666)
 /**--- Textlog routing (textlog_min_messages = disable) ---**/
 server signaled
 INFO:  textlog routing test (disable)
