@@ -129,7 +129,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 <h3 id="features-log">サーバログ処理機能</h3>
 <ul>
   <li>メッセージレベル (エラー種別) に応じたサーバログの分配。CSVログ、テキストログ、syslog に個別で出力閾値を設定できます。</li>
-  <li>最新テキストログのファイル名を固定。常に同じ名前 (デフォルト $PGDATA/pg_log/pg_statsinfo.log) で最新のサーバログを閲覧でき、ログ監視ソフトウェアとの連携が容易になります。</li>
+  <li>テキストログのファイル名を固定。常に同じ名前 (デフォルト $PGDATA/pg_log/pg_statsinfo.log) で最新のサーバログを閲覧でき、ログ監視ソフトウェアとの連携が容易になります。</li>
   <li>テキストログファイルのアクセス権の設定。テキストログのファイル権限を 600 以外にも設定できるため、運用が柔軟になります。</li>
   <li>テキストログ、syslog に出力されるサーバログのメッセージレベルを任意のレベルに変更可能。例えば、オペレーションミスなどで発生する ERROR レベルのログを INFO レベルに変更して出力できます。</li>
   <li>テキストログのフィルタリング設定。特定のユーザのサーバログをテキストログに出力しないようにすることができます。</li>
@@ -399,21 +399,54 @@ pg_statsinfo には PostgreSQL のサーバログをフィルタリングによ�
 
 <h4>ログファイルの種類</h4>
 <dl>
-  <dt>CSVログ (*.csv)</dt>
-  <dd>CSVログとは、PostgreSQL が出力する生のログです。CSVログの詳細は<a href="http://www.postgresql.jp/document/current/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG">こちら</a>をご覧ください。</dd>
-  <dd>なお、pg_statsinfo は CSVログを改変しません。</dd>
-  <dt>テキストログ</dt>
-  <dd>テキストログとは、CSVログの情報を基に pg_statsinfo がフィルタリングを行ったログです。</dd>
-  <dd>最新のテキストログのファイル名は常に固定となります。</dd>
-  <dd>固定ファイル名は設定ファイル(postgresql.conf)の下記のパラメータで指定します。</dd>
-  <dd>
+  <dt>CSVログ (*.csv) (例: postgresql-2013-10-01_000000.csv)</dt>
+  <dd>CSVログとは、PostgreSQL が出力する生のログとなります。(CSVログの詳細は<a href="http://www.postgresql.jp/document/current/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG"> こちら </a>をご覧ください)</dd>
+  <dd>pg_statsinfo は本ログの情報を元に加工したログの出力を行いますが、本ログに関しては全く加工を行いません。</dd>
+  <dt>テキストログ (pg_statsinfo.log)</dt>
+  <dd>テキストログとは、PostgreSQL が出力したログ(CSVログ)の情報を元に pg_statsinfo が加工を行ったログです。</dd>
+  <dd>テキストログには以下の特徴があります。
     <ul>
-      <li>pg_statsinfo.textlog_filename</li>
+      <li>テキストログの書式を任意の形式に設定することができます。</li>
+      <li>テキストログのファイルアクセス権限を設定することができます。</li>
+      <li>テキストログのファイル名を設定することができます。</li>
+      <li>特定のユーザのログを除外した内容で出力することができます。</li>
+      <li>特定のSQLSTATEを持つログのメッセージレベルを変更した内容で出力することができます。</li>
+    </ul>
+  <dd>テキストログの書式、ファイル名およびファイルアクセス権限は、設定ファイルの下記のパラメータで指定します。(詳細は<a href="#configuration"> こちら </a>をご覧ください)
+    <ul>
+      <li>pg_statsinfo.textlog_line_prefix</li>
+      <li>pg_statsinfo.textlog_permission</li>
+      <li>pg_statsinfo.textlog_filename</li>      
     </ul>
   </dd>
-  <dd>なお、サーバログ(CSVログ)のローテートが行われると、テキストログがリネームされ、ローテート後のCSVログに対応するテキストログが新たに作成されます。</dd>
-  <dd>リネーム後のテキストログのファイル名は、対応するCSVログの拡張子を「.log」に変更した名前となります。</dd>
-</dl><br>
+  <dt>ログローテート時の動作</dt>
+  <dd>PostgreSQL のログ(CSVログ)がローテートされた場合、テキストログはCSVログの拡張子を「.log」とした名前にリネームされ、新規にテキストログが作成されます。</dd>
+</dl>
+
+<p>
+(注1) ログローテート前に将来リネーム予定のパスに既にファイルが存在する場合がありますが、これは正常な状態です。<br/>
+(注2) 上記のファイル(以降、コンソールログと呼びます)には、アーカイブコマンドなどがコンソールに出力した内容が記録されていますが、コンソールログはログローテート時にテキストログで上書きされます。
+</p>
+
+<p>ログファイルの出力例を以下に示します。</p>
+<pre>
+$ ls -l $PGDATA/pg_log
+-rw------- 1 postgres postgres 433644 Oct  1 23:59 postgresql-2013-10-01_000000.csv
+-rw------- 1 postgres postgres 322167 Oct  1 23:59 postgresql-2013-10-01_000000.log
+-rw------- 1 postgres postgres 425449 Oct  2 23:59 postgresql-2013-10-02_000000.csv
+-rw------- 1 postgres postgres 321695 Oct  2 23:59 postgresql-2013-10-02_000000.log
+-rw------- 1 postgres postgres 255424 Oct  3 13:40 postgresql-2013-10-03_000000.csv
+-rw------- 1 postgres postgres      0 Oct  3 00:00 postgresql-2013-10-03_000000.log
+-rw------- 1 postgres postgres 190786 Oct  3 13:40 pg_statsinfo.log
+
+postgresql-2013-10-01_000000.csv ... ログローテート済みのCSVログ
+postgresql-2013-10-01_000000.log ... ログローテート済みのテキストログ (上記のCSVログの情報を元に加工したログ)
+postgresql-2013-10-02_000000.csv ... ログローテート済みのCSVログ
+postgresql-2013-10-02_000000.log ... ログローテート済みのテキストログ (上記のCSVログの情報を元に加工したログ)
+postgresql-2013-10-03_000000.csv ... 最新のCSVログ
+postgresql-2013-10-03_000000.log ... コンソールログ
+pg_statsinfo.log ................... テキストログ (最新のCSVログの情報を元に加工したログ)
+</pre>
 
 <h4>フィルタリングの種類</h4>
 <dl>
@@ -1091,7 +1124,7 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
   <tr>
     <td>pg_statsinfo.textlog_filename</td>
     <td>'pg_statsinfo.log'</td>
-    <td>最新のテキストログファイル名。空文字はエラー。</td>
+    <td>テキストログファイル名。空文字はエラー。</td>
   </tr>
   <tr>
     <td>pg_statsinfo.textlog_line_prefix</td>
