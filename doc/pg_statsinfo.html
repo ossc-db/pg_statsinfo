@@ -16,8 +16,8 @@
   <li><a href="#features-snapshot">Statistics Snapshot</a></li>
   <li><a href="#features-log">Server Log Filter</a></li>
   <li><a href="#features-alert">Alert Function</a></li>
-  <li><a href="#features-cmdline">@コマンドライン機能</a></li>
-  <li><a href="#features-maintenance">@自動メンテナンス機能</a></li>
+  <li><a href="#features-cmdline">Feature of Command-line</a></li>
+  <li><a href="#features-maintenance">auto-maintenanced repository</a></li>
 </ol>
 <li><a href="#install">Install</a>
 <ol>
@@ -31,20 +31,20 @@
   <li><a href="#snapshot">Get Snapshot</a></li>
   <li><a href="#log">Output of Logfile</a></li>
   <li><a href="#usage-alert">Alert Function</a></li>
-  <li><a href="#usage-cmdline">@コマンドライン機能の使い方</a></li>
-  <li><a href="#usage-maintenance">@自動メンテナンス機能の使い方</a></li>
+  <li><a href="#usage-cmdline">How to Use Feature of Command-line</a></li>
+  <li><a href="#usage-maintenance">How tou Use Feature of Auto-maintenaced Repository</a></li>
   <li><a href="#configuration">Configuration</a></li>
-  <li><a href="#user-operations">@運用上必要となる作業</a></li>
+  <li><a href="#user-operations">Needed Your Work in Operations</a></li>
 </ol>
 <li><a href="#uninstall">Uninstall</a></li>
 <li><a href="#restrictions">Restrictions</a></li>
 <li><a href="#QA">Q&A</a></li>
-<li><a href="#change">@pg_statsinfo 2.4 からの変更点</a></li>
+<li><a href="#change">Changes from pg_statsinfo 2.4</a></li>
 <li><a href="#details">Details</a></li>
 <ol>
   <li><a href="#many-instances">Multiple Instance and One Repository</a></li>
   <li><a href="#warm-standby">Warm Standby</a></li>
-  <li><a href="#fallback-mode">@フォールバックモード</a></li>
+  <li><a href="#fallback-mode">Fall-Back Mode</a></li>
   <li><a href="#internal">Internals</a></li>
 </ol>
 <li><a href="#seealso">See Also</a></li>
@@ -60,22 +60,22 @@ It is easy to use pg_statsinfo that pg_statsinfo is working with PostgreSQL star
 <h2 id="description">Description</h2>
 <p>pg_statsinfo monitors an instance of PostgreSQL server and gather the statistics and activities of the server as snapshots.
 The snapshots will be stored in the same or another repository database.
-It also parses PostgreSQL's CSV server log filesm and extracts performance logs from them.
-Error messages are routed into textlog and syslog according to the message levels.</p>
+It also parses PostgreSQL's CSV server log files and extracts performance logs from them.
+Error messages are routed into text log and syslog according to the message levels.</p>
 
 <p>pg_statsinfo can be easily installed and maintained because it starts or stops automatically when PostgreSQL server starts or stops.
-Also etting parameters are integrated with setting files of the server.
+Also configuration parameters are integrated with setting files of the server.
 Statistics counters from pg_statsinfo can be displayed with <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter.html">pg_stats_reporter</a> as graphical reports.</p>
 
-<p>@pg_statsinfo のシステム構成例と動作概要のイメージ図を以下に示します。</p>
+<p>Represent a system structure image which is installed pg_statsinfo</p>
 
 <div class="imagebox">
   <p class="image"><img src="image/system_structure.png"></p>
-  <p class="caption">@図1: システム構成例</p>
+  <p class="caption">pic1: Example of system installed with pg_statsinfo</p>
 </div>
 <div class="imagebox">
   <p class="image"><img src="image/pg_statsinfo.png"></p>
-  <p class="caption">@図2: 動作概要イメージ</p>
+  <p class="caption">pic2: Image of Functionary in pg_statsinfo</p>
 </div>
 <p class="clear"/>
 
@@ -87,7 +87,7 @@ Also, one repository can store snapshots from multiple monitored instances.
 </p>
 
 <ul>
-  <li>Snapshots are gathered periodically (default: every 10 minites) or by manual.</li>
+  <li>Snapshots are gathered periodically (default: every 10 minutes) or by manual.</li>
   <li>An event handler function is called after every snapshots taken.
       The function can be defined by users.
       A new snapshot can be compared with previous snapshots and raise alert messages in the function.
@@ -100,14 +100,14 @@ Also, one repository can store snapshots from multiple monitored instances.
       For example, numbers of INSERT/UPDATE/DELETE and buffer access counters.</li>
   <li>Disk usages of each tablespace, pg_xlog, and archive log directory.</li>
   <li>Long transactions and their query strings.</li>
-  <li>Process status in running, waiting for locks, idle in transaction, and idle.</li>
-  <li>Output IO size of WAL.</li>
-  <li>Number of checkpoint ,VACUUM execution time and access of buffers.</li>
+  <li>Process status in running, waiting for locks, idles in transaction, and idle.</li>
+  <li>Amount of WAL output size.</li>
+  <li>Number of CHECKPOINT ,VACUUM execution time and access of buffers.</li>
   <li>SQLs and functions that take long time.</li>
   <li>PostgreSQL configuration parameters.</li>
-  <li>@OS リソース情報 (CPU使用量、メモリ使用量、ディスクI/O、ロードアベレージ)。</li>
-  <li>Lock infomation</li>
-  <li>@リカバリとの競合によるクエリのキャンセル数</li>
+  <li>OS resource information(Usage of CPU, Memory, Disk I/O, Load Average)</li>
+  <li>Lock information</li>
+  <li>Number of canceled queries which conflicts recovery</li>
   <li>State fo replication</li>
 </ul>
 
@@ -125,11 +125,11 @@ Please delete them manually.</p>
       You can set different message threshold for csvlog, textlog, and syslog.</li>
   <li>Fix filename of the textlog.
       The default is $PGDATA/pg_log/pg_statsinfo.log.
-      You can always read the latestlog in the same filename and setup of log monitoring tools would be easier.</li>
+      You can always read the latest log in the same filename and setup of log monitoring tools would be easier.</li>
   <li>Set arbitrary access permission for each textlog files.
       You can control the default permission not only 600.</li>
-  <li>@テキストログ、syslog に出力されるサーバログのメッセージレベルを任意のレベルに変更可能。例えば、オペレーションミスなどで発生する ERROR レベルのログを INFO レベルに変更して出力できます。</li>
-  <li>@テキストログのフィルタリング設定。特定のユーザのサーバログをテキストログに出力しないようにすることができます。</li>
+  <li>Can change log level which was outputted Text log or syslog freely. For example, it can change log message ERROR level to INFO level. It is useful in missed operations.</li>
+  <li>We can set not to output log message which is specified user which is like database admin.</li>
 </ul>
 
 <h3 id="features-alert">Alert Function</h3>
@@ -141,81 +141,81 @@ If database statistics is over threshold which was set by user, pg_statsinfo det
 Alert function can set following alert parameter:
 </p>
 <ul>
-  <li>Rollback / secounds </li>
-  <li>Commit / secounds</li>
+  <li>rollback / seconds </li>
+  <li>commit / seconds</li>
   <li>garbage data size (MB)</li>
   <li>garbage data size ratio(%)</li>
   <li>garbage data size ratio in each tables (%)</li>
   <li>average response time of queries (sec)</li>
   <li>longest response time of queries (sec)</li>
-  <li>@各テーブルの断片化率(correlation) (%)</li>
-  <li>@バックエンドの最大数</li>
-  <li>@テーブルスペースのディスク空き容量 (%)</li>
-  <li>@ロードアベレージ</li>
-  <li>@スワップ使用量 (KB)</li>
-  <li>@レプリケーションの遅延量 (MB)</li>
+  <li>correlations of each tables (%)</li>
+  <li>maximum number of backends</li>
+  <li>empty disk space in table space (%)</li>
+  <li>load average</li>
+  <li>usage of disk swap (KB)</li>
+  <li>amount of replication delay (MB)</li>
 </ul>
 
 <p>
-@(注1) テーブルの断片化率は、クラスタ化テーブル(クラスタインデックスが存在するテーブル)を対象に判定が行われます。
+(*1) Correlation of table is judged by only clustered table which is in cluster index.
 </p>
 
 <p>
 How to set alert function, Please read <a href="#usage-alert">following passage</a>.
 </p>
 
-<h3 id="features-cmdline">@コマンドライン機能</h3>
+<h3 id="features-cmdline">Features of Command-line</h3>
 <p>
-@コマンドライン機能はレポート生成および運用管理を行うためのコマンドを提供します。<br>
-※コマンドライン機能の使用方法は<a href="#usage-cmdline">こちら</a>をご覧ください。
+pg_statsinfo provide features that are creating reports and operations in command-line.<br>
+* How to use feature of command-line, Read <a href="#usage-cmdline">this section</a>.
 </p>
 
-<h4>@簡易レポート機能</h4>
+<h4>Feature of creating report in command-line</h4>
 <p>
-@リポジトリDBに保存されたスナップショットから任意の期間のレポートをテキスト形式で出力するコマンドを提供します。<br>
-また、レポートの出力以外に以下の操作を行うことができます。
+This feature provide the create reporting command which create report from a repository database in your set period.<br>
+And it can also manage snapshots management in repository database.
 </p>
 
 <ul>
-  <li>@スナップショットの一覧の表示</li>
-  <li>@スナップショットの合計サイズの表示</li>
+  <li>Show list of snapshot</li>
+  <li>Show sum of snapshot size</li>
 </ul>
 
 <p>
-@簡易レポート機能が出力するレポートの項目については「<a href="files/pg_statsinfo_v2.5_report_infomation.xls">pg_statsinfo v2.5 レポート項目一覧</a>」をご覧ください。<br>
-なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter-ja.html">pg_stats_reporter</a> と同等です。<br>
-グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter-ja.html">pg_stats_reporter</a> を使用してください。
+Introduction of feature of creating report in command-line is <a href="files/pg_statsinfo_v2.5_report_infomation.xls">"report item list of pg_statsinfo v2.5".</a><br>
+And outputted report items are same as <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter-ja.html">pg_stats_reporter</a>.<br>
+If you would like to output graphical reports, please use <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter-ja.html">pg_stats_reporter</a>.
 </p>
 
-<h4>@運用管理機能</h4>
+<h4>Operation feature</h4>
 <p>
-@pg_statsinfo の運用管理向けの操作を行うコマンドを提供します。<br>
-運用管理機能で行うことができる操作は以下のとおりです。
+pg_statsinfo also provide operation for repository server in command-line.<br>
+Providing features are under following.
 </p>
 
 <ul>
-  <li>@スナップショットの取得</li>
-  <li>@スナップショットの削除</li>
-  <li>@エージェントの停止</li>
-  <li>@エージェントの起動</li>
+  <li>Get snapshot manually</li>
+  <li>Delete snapshot in repository server</li>
+  <li>Stop pg_statsinfo's agent</li>
+  <li>Start pg_statsinfo's agent</li>
 </ul>
 <br>
 
-<h3 id="features-maintenance">@自動メンテナンス機能</h3>
-<p>@1日1回、任意の時刻に下記のメンテナンス操作を行うことができます。
+<h3 id="features-maintenance">Auto maintenance feature</h3>
+<p>pg_statsinfo execute auto maintenance at once every day. Executing operation is under following.
 <ul>
-  <li>@保持期間を経過した古いスナップショットの削除</li>
-  <li>@サーバログのログファイルの整理</li>
+  <li>Delete old snapshots which are over stored period.</li>
+  <li>Arrangement PostgreSQL log files</li>
 </ul>
 
-<p>@本機能はデフォルトは ON であり、上記の操作を自動メンテナンス実行時刻に実行します。</p>
+<p>It is default ON and is executed in regular time.</p>
 <p>
-@(注1) スナップショットの自動削除が停止している場合、古いスナップショットは自動的に削除されません。必要に応じてユーザ操作で定期的に削除してください。<br>
-@(注2) ログファイルの自動整理が停止している場合、古いログファイルは自動的には削除されません。必要に応じてユーザ操作で定期的に削除してください。
+(*1) When stopping feature of auto deleting snapshots, old snapshots are not deleted in repository server. So please delete snapshot manually in regularly.<br>
+(*2) When stopping feature of auto maintenance log files, old log files are not deleted in repository server. Please delete log files manually in regularly.
 </p>
 
 <p>
-@自動メンテナンス機能の使用方法は<a href="#usage-maintenance">こちら</a>をご覧ください。
+How to use feature of auto maintence is <a href="#usage-maintenance">here</a>.
 </p>
 
 <h2 id="install">Install</h2>
@@ -260,7 +260,7 @@ $ su
 This section is configuration of pg_statsinfo.
 
 <h4 id="install">Configuration of postgresql.conf</h4>
-First, you check the observation postgresql is stoped.
+First, you check the observation postgresql is stopped.
 This configuration method is that snapshot repository is same instance in a PostgreSQL database. If you want to config other setting, you read <a href="#configuration">this section</a>.
 
 <pre>
@@ -291,7 +291,7 @@ log_autovacuum_min_duration = 0
 #pg_statsinfo.long_lock_threashold = 30s        #threthold parameter for getting LOCK infomation
 </pre>
 
-<p>Attention!</p>
+<p>Attention in pg_statsinfo</p>
 <dl>
   <dt>log_destination</dt>
   <dd>Force-set 'csvlog', stderr is eliminated.</dd>
@@ -333,19 +333,19 @@ If you will use it, run the following command only once at the fist server start
 </p>
 
 <pre>
-# @PostgreSQL のバージョンが 9.1 以降の場合
+# If you use PostgreSQL 9.1 or higher,
 $ psql -d postgres -c "CREATE EXTENSION pg_stat_statements"
 
-# @PostgreSQL のバージョンが 9.0 以前の場合
+# If you use PostgreSQL 9.0 or lower,
 $ psql -d postgres -f $PGSHARE/contrib/pg_stat_statements.sql
 </pre>
 
-<p>@また、必要に応じて設定ファイルに下記のパラメータを設定してください。</p>
+<p>Please set under following parameters in postgresql.conf, if it is needed.</p>
 <ul>
   <li>pg_statsinfo.stat_statements_max</li>
   <li>pg_statsinfo.stat_statements_exclude_users</li>
 </ul>
-<p>@上記のパラメータの説明は<a href="#configuration">設定ファイル</a>をご覧ください。</p>
+<p>Explanation of above parameters are <a href="#configuration">Configuration</a>.</p>
 
 <p>That's all. Install is finished.</p>
 
@@ -363,13 +363,13 @@ It cannot run in standalone.</p>
 Non-smart shutdown with 'pg_ctl stop -m fast|immediate' might cause some error messages, but you can ignore those errors.</p>
 <pre>$ pg_ctl stop -m smart [OPTIONS]</pre>
 
-<p>@また、PostgreSQL サーバを終了せずに エージェントのみを停止するには以下のコマンドを実行します。</p>
+<p>If you would like to stop only pg_statsinfo's agent not with PostgreSQL server, execute under following command.</p>
 <pre>$ pg_statsinfo --stop [OPTIONS]</pre>
 
-<p>@停止中のエージェントを起動するには以下のコマンドを実行します。</p>
+<p>If you would like to start agent again, execute under following command.</p>
 <pre>$ pg_statsinfo --start [OPTIONS]</pre>
 
-<p><b>@(注1) PostgreSQLの設定パラメータに「shared_preload_libraries = 'pg_statsinfo'」が設定されていない場合は、エージェントの停止／起動が実行できません。</b></p>
+<p><b>(*1) If you don't set "shared_preload_libraries = 'pg_statsinfo'" in postgresql.conf before starting postgres, you cannot stop and start pg_statsinfo's agent.</b></p>
 
 <h3 id="snapshot">Get or maintenance snapshot</h3>
 <h4>Automatic snapshot</h4>
@@ -387,129 +387,22 @@ If you want to get snapshot manualy, you use SQL statsinfo.snapshot function(tex
 </p>
 <pre>$ psql -d postgres -c "SELECT statsinfo.snapshot('comment')"</pre>
 
-<h4>@自動削除</h4>
-<p>@自動メンテナンス機能を使用することで保持期間を経過したスナップショット削除を自動的に削除することができます。<br>
-自動メンテナンスのスナップショット削除はデフォルトが ON となっています。</p>
-<p>@自動メンテナンス機能の使い方は<a href="#usage-maintenance">こちら</a>をご覧ください。</p>
+<h4>Delete snapshots automaticaly</h4>
+<p>Feature of auto maintenance can delete old snapshot automaticaly.<br>
+Default setting is ON.</p>
+<p>How to use feature of auto maintence is <a href="#usage-maintenance">here</a>.</p>
 
-<h4>@手動削除</h4>
-<p>@スナップショットの手動削除は監視対象インスタンスに対して、関数 statsinfo.maintenance(timestamptz) を実行して下さい。
-引数で指定した時刻より古いスナップショットが削除されます。</p>
+<h4>Delete snapshots manualy</h4>
+<p>If you delete snapshots by munual, execute statsinfo.maintenance(timestamptz) function in psql.
+Delete old snapshots which you set timestamps before.</p>
 
-<p>@例: 取得日時が 2011-02-01 07:00:00 より古いスナップショットを削除します。</p>
+<p>Command example: Delete older snapshots than 2011-02-01 07:00:00.</p>
 <pre>$ psql -d postgres -c "SELECT statsinfo.maintenance('2010-02-01 07:00:00'::timestamptz);"</pre>
 
-<h3 id="log">@サーバログのフィルタリング</h3>
-<p>
-@pg_statsinfo には PostgreSQL のサーバログをフィルタリングにより加工する機能があります。<br>
-以下では、出力されるログファイルの種類とフィルタリングの種類を説明します。
-</p>
-
-<h4>@ログファイルの種類</h4>
-<dl>
-  <dt>@CSVログ (*.csv) (例: postgresql-2013-10-01_000000.csv)</dt>
-  <dd>@CSVログとは、PostgreSQL が出力する生のログとなります。(CSVログの詳細は<a href="http://www.postgresql.jp/document/current/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG"> こちら </a>をご覧ください)</dd>
-  <dd>@pg_statsinfo は本ログの情報を元に加工したログの出力を行いますが、本ログに関しては全く加工を行いません。</dd>
-  <dt>@テキストログ (pg_statsinfo.log)</dt>
-  <dd>@テキストログとは、PostgreSQL が出力したログ(CSVログ)の情報を元に pg_statsinfo が加工を行ったログです。</dd>
-  <dd>@テキストログには以下の特徴があります。
-    <ul>
-      <li>@テキストログの書式を任意の形式に設定することができます。</li>
-      <li>@テキストログのファイルアクセス権限を設定することができます。</li>
-      <li>@テキストログのファイル名を設定することができます。</li>
-      <li>@特定のユーザのログを除外した内容で出力することができます。</li>
-      <li>@特定のSQLSTATEを持つログのメッセージレベルを変更した内容で出力することができます。</li>
-    </ul>
-  <dd>@テキストログの書式、ファイル名およびファイルアクセス権限は、設定ファイルの下記のパラメータで指定します。(詳細は<a href="#configuration"> こちら </a>をご覧ください)
-    <ul>
-      <li>pg_statsinfo.textlog_line_prefix</li>
-      <li>pg_statsinfo.textlog_permission</li>
-      <li>pg_statsinfo.textlog_filename</li>      
-    </ul>
-  </dd>
-  <dt>@ログローテート時の動作</dt>
-  <dd>@PostgreSQL のログ(CSVログ)がローテートされた場合、テキストログはCSVログの拡張子を「.log」とした名前にリネームされ、新規にテキストログが作成されます。</dd>
-</dl>
-
-<p>
-@(注1) ログローテート前に将来リネーム予定のパスに既にファイルが存在する場合がありますが、これは正常な状態です。<br/>
-@(注2) 上記のファイル(以降、コンソールログと呼びます)には、アーカイブコマンドなどがコンソールに出力した内容が記録されていますが、コンソールログはログローテート時にテキストログで上書きされます。
-</p>
-
-<p>@ログファイルの出力例を以下に示します。</p>
-<pre>
-$ ls -l $PGDATA/pg_log
--rw------- 1 postgres postgres 433644 Oct  1 23:59 postgresql-2013-10-01_000000.csv
--rw------- 1 postgres postgres 322167 Oct  1 23:59 postgresql-2013-10-01_000000.log
--rw------- 1 postgres postgres 425449 Oct  2 23:59 postgresql-2013-10-02_000000.csv
--rw------- 1 postgres postgres 321695 Oct  2 23:59 postgresql-2013-10-02_000000.log
--rw------- 1 postgres postgres 255424 Oct  3 13:40 postgresql-2013-10-03_000000.csv
--rw------- 1 postgres postgres      0 Oct  3 00:00 postgresql-2013-10-03_000000.log
--rw------- 1 postgres postgres 190786 Oct  3 13:40 pg_statsinfo.log
-
-postgresql-2013-10-01_000000.csv ... @ログローテート済みのCSVログ
-postgresql-2013-10-01_000000.log ... @ログローテート済みのテキストログ (上記のCSVログの情報を元に加工したログ)
-postgresql-2013-10-02_000000.csv ... @ログローテート済みのCSVログ
-postgresql-2013-10-02_000000.log ... @ログローテート済みのテキストログ (上記のCSVログの情報を元に加工したログ)
-postgresql-2013-10-03_000000.csv ... @最新のCSVログ
-postgresql-2013-10-03_000000.log ... @コンソールログ
-pg_statsinfo.log ................... @テキストログ (最新のCSVログの情報を元に加工したログ)
-</pre>
-
-<h4>@フィルタリングの種類</h4>
-<dl>
-  <dt>@メッセージレベルによる出力制御</dt>
-  <dd>@特定のメッセージレベルより低いレベルのログをテキストログに出力しないようにフィルタリングします。</dd>
-  <dd>@特定のメッセージレベルは、設定ファイル(postgresql.conf)の下記のパラメータで指定します。</dd>
-  <dd>@設定の詳細については、<a href="#configuration">設定ファイル</a>をご覧ください。</dd>
-  <dd>
-    <ul>
-      <li>pg_statsinfo.textlog_min_messages</li>
-    </ul>
-  </dd>
-  <dd>@設定例: warning 以上のメッセージレベルのログをテキストログに出力する</dd>
-  <dd>
-    <pre>pg_statsinfo.textlog_min_messages = warning</pre>
-  </dd>
-  <dt>@特定ユーザのセッションのログの出力制御</dt>
-  <dd>@特定ユーザのセッションのログをテキストログに出力しないようにフィルタリングします。</dd>
-  <dd>@特定ユーザは、設定ファイル(postgresql.conf)の下記のパラメータで指定します。</dd>
-  <dd>@設定の詳細については、<a href="#configuration">設定ファイル</a>をご覧ください。</dd>
-  <dd>
-    <ul>
-      <li>pg_statsinfo.textlog_nologging_users</li>
-    </ul>
-  </dd>
-  <dd>@設定例: postgres ユーザのセッションのログをテキストログに出力しない</dd>
-  <dd>
-    <pre>pg_statsinfo.textlog_nologging_users = 'postgres'</pre>
-  </dd>
-  <dt>@メッセージレベルの変更</dt>
-  <dd>@特定のSQLSTATEを持つログのメッセージレベルを任意のメッセージレベルに変更します。</dd>
-  <dd>@メッセージレベルの変更対象のSQLSTATEおよび変更後のメッセージレベルは、設定ファイル(postgresql.conf)の下記のパラメータで指定します。</dd>
-  <dd>@設定の詳細については、<a href="#configuration">設定ファイル</a>をご覧ください。</dd>
-  <dd>
-    <ul>
-      <li>pg_statsinfo.adjust_log_level</li>
-      <li>pg_statsinfo.adjust_log_info</li>
-      <li>pg_statsinfo.adjust_log_notice</li>
-      <li>pg_statsinfo.adjust_log_warning</li>
-      <li>pg_statsinfo.adjust_log_error</li>
-      <li>pg_statsinfo.adjust_log_log</li>
-      <li>pg_statsinfo.adjust_log_fatal</li>
-    </ul>
-  </dd>
-  <dd>@設定例: SQLSTATEが '42P01' のログのメッセージレベルを 'INFO' に変更する</dd>
-  <dd>
-    <pre>pg_statsinfo.adjust_log_level = on
-pg_statsinfo.adjust_log_info = '42P01'</pre>
-  </dd>
-</dl>
-
-<h4>@自動メンテナンス機能によるログファイル整理</h4>
-<p>@自動メンテナンス機能を使用することでログファイルの整理を行うことができます。<br>
-自動メンテナンスのログファイル整理はデフォルトが ON となっています。</p>
-<p>@自動メンテナンス機能の使い方は<a href="#usage-maintenance">こちら</a>をご覧ください。</p>
+<h4>Log files arrangement by feature of auto maintenance log files</h4>
+<p>It can arrange log files automatically by feature of auto maintenance log files.<br>
+It is default ON.</p>
+<p>How to use auto maintence log files is <a href="#usage-maintenance">here</a>.</p>
 
 <h3 id="usage-alert">Usage of Alert Function</h3>
 <p>
@@ -520,20 +413,20 @@ In default setting, Alert function is always ON in each instance.
 <h4>Change Alert Settings</h4>
 <p>
 You can change the threshold of alert function and ON or OFF function.<br/>
-@また、アラート条件(閾値)を「-1」に設定することで一部のアラート項目のみ無効とすることができます。
+And if you set off or (-1) alert setting, it can stop only part of alert functions.
 </p>
 
 <p>
 If you want to change the threshold of alert function, you should update the alert function table.<br/>
-@なお、アラート設定の変更を行うには、アラート設定を変更する監視対象インスタンスの初回スナップショットが完了している必要があることに注意してください。
+And alert function is executed every snapshot and in more two snapshots in the repository server.
 </p>
 
-Examples: Set ROLLBACK / sec thereshold to 3000
+Example: Set ROLLBACK / sec thereshold to 3000.
 <pre>
 # UPDATE statsrepo.alert SET commit_tps = 3000 WHERE instid = &lt;instance ID\&gt;
 </pre>
 
-@設定例: 秒間ロールバック数のアラートを無効にする場合
+Example: Disabled alert of rollback / sec.
 <pre>
 # UPDATE statsrepo.alert SET rollback_tps = -1 WHERE instid = &lt;instance ID\&gt;
 </pre>
@@ -608,55 +501,55 @@ Alert setting table is "statsrepo.alert". And, setting table's schema is in foll
     <td>fragment_percent</td>
     <td>integer</td>
     <td>70</td>
-    <td>@各テーブルの断片化率(correlation)(%)</td>
+    <td>correlations in each tables(%)</td>
   </tr>
   <tr>
     <td>backend_max</td>
     <td>integer</td>
     <td>100</td>
-    <td>@バックエンドの最大数</td>
+    <td>Maximum number of backend</td>
   </tr>
   <tr>
     <td>disk_remain_percent</td>
     <td>integer</td>
     <td>20</td>
-    <td>@テーブルスペースのディスク空き容量の割合(%)</td>
+    <td>Ratio of disk space in table space(%)</td>
   </tr>
   <tr>
     <td>loadavg_1min</td>
     <td>real</td>
     <td>7.0</td>
-    <td>@過去1分間のロードアベレージ</td>
+    <td>Load average@1min</td>
   </tr>
   <tr>
     <td>loadavg_5min</td>
     <td>real</td>
     <td>6.0</td>
-    <td>@過去5分間のロードアベレージ</td>
+    <td>Load average@5min</td>
   </tr>
   <tr>
     <td>loadavg_15min</td>
     <td>real</td>
     <td>5.0</td>
-    <td>@過去15分間のロードアベレージ</td>
+    <td>Load average@15min</td>
   </tr>
   <tr>
     <td>swap_size</td>
     <td>integer</td>
     <td>1000000</td>
-    <td>@スワップ使用量(KB)</td>
+    <td>Amount of disk swap(KB)</td>
   </tr>
   <tr>
     <td>rep_flush_delay</td>
     <td>integer</td>
     <td>100</td>
-    <td>@マスタとスタンバイ間のWAL書き込み遅延量(MB)</td>
+    <td>Amount of replication delay(MB)</td>
   </tr>
   <tr>
     <td>rep_replay_delay</td>
     <td>integer</td>
     <td>200</td>
-    <td>@スタンバイのリカバリ遅延量(MB)</td>
+    <td>Amount of recovery delay in standby server(MB)</td>
   </tr>
   <tr>
     <td>enable_alert</td>
@@ -673,22 +566,21 @@ Please don't delete an alert table's tuple.<br>
 If you delete the tuple, you can not set the alert function in the instance.
 </p>
 
-<h3 id="usage-cmdline">@コマンドライン機能の使い方</h3>
+<h3 id="usage-cmdline">How to use pg_statsinfo in command-line.</h3>
 
-<h4>@ポート生成</h4>
+<h4>Create report</h4>
 <pre>
 $ pg_statsinfo -r REPORTID [-i INSTANCEID] [-b SNAPID] [-e SNAPID] [-B DATE] [-E DATE] [-o FILENAME] [connection-options]
 </pre>
 
 <p>
-@以下にコマンド例を示します。<br>
-以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動しているリポジトリDBに対して、postgres データベースに、postgres ユーザで接続し、以下の条件のレポートを出力します。
+Example of command is under following. Under following command example shows create report in the repository database which is, hostname is localhost, port number is 5432, database is postgres, and user is postgres.
 </p>
 <ul>
-  <li>@レポート種別IDが All のレポート</li>
-  <li>@レポート範囲は最初のスナップショットから最後のスナップショット</li>
-  <li>@レポート対象は全ての監視対象インスタンス</li>
-  <li>@レポートの出力先は標準出力</li>
+  <li>All of report items</li>
+  <li>The report period is a snapshot of the beginning last from a snapshot</li>
+  <li>Target monitored instances for creating reports are all</li>
+  <li>The destination of the report is standard output</li>
 </ul>
 
 <pre>
@@ -697,9 +589,9 @@ $ pg_statsinfo  -r All -h localhost -d postgres -p 5432 -U postgres
 
 <dl>
   <dt>-r, --report=REPORTID</dt>
-  <dd>@レポート種別IDを指定します。</dd>
-  <dd>@レポート種別IDに指定できる値は以下のとおりです。</dd>
-  <dd>@レポート種別IDとレポートの内容についての対応は「<a href="files/pg_statsinfo_v2.5_report_infomation.xls">pg_statsinfo v2.5 レポート項目一覧</a>」をご覧ください。</dd>
+  <dd>Set kind of reports if you want to create.</dd>
+  <dd>Can set under following kind of reports.</dd>
+  <dd>More detail information is <a href="files/pg_statsinfo_v2.5_report_infomation.xls">Items of report in pg_statsinfo v2.5</a>.</dd>
   <dd>
     <ul>
       <li>Summary</li>
@@ -720,48 +612,44 @@ $ pg_statsinfo  -r All -h localhost -d postgres -p 5432 -U postgres
       <li>All</li>
     </ul>
   </dd>
-  <dd>@レポート種別IDは、頭文字からの最短一致での指定を許容し、大文字と小文字を区別しません。</dd>
+  <dd>Report ID cannot distinguish between upper and lowercase letters. It can permit designation by the shortest agreement from an initial.</dd>
   
   <dt>-i, --instid=INSTANCEID</dt>
-  <dd>@レポート対象とする監視対象インスタンスの識別子を指定します。</dd>
-  <dd>@本オプションは省略可能です。省略時は全ての監視対象インスタンスがレポート対象です。</dd>
+  <dd>Set the monitored instance which you would like to create reports.</dd>
+  <dd>This option can be omitted. If you doesn't set this parameter, default setting sets all of monitored instance in your repository database.</dd>
   
   <dt>-b, --beginid=SNAPID</dt>
-  <dd>@レポート範囲の開始点とするスナップショットをスナップショットIDで指定します。</dd>
-  <dd>@本オプションは省略可能です。省略時は最初のスナップショットを開始点とします。</dd>
-  <dd>@本オプションと「--B, --begindate」または「-E, --enddate」を同時に指定することはできません。</dd>
-  
+  <dd>Set snapshot id which is begining of snapshot you would like to create report.</dd>
+  <dd>This option can be omitted. If you doesn't set this parameter, default setting sets start of the snapshot in the monitored instance.  (*1) (*2)</dd>
+
   <dt>-e, --endid=SNAPID</dt>
-  <dd>@レポート範囲の終了点とするスナップショットをスナップショットIDで指定します。</dd>
-  <dd>@本オプションは省略可能です。省略時は最後のスナップショットを終了点とします。</dd>
-  <dd>@本オプションと「--B, --begindate」または「-E, --enddate」を同時に指定することはできません。</dd>
+  <dd>Set snapshot id which is end of snapshot you would like to create report.</dd>
+  <dd>his option can be omitted. If you doesn't set this parameter, default setting sets end of the snapshot in the monitored instance. (*1) (*2)</dd>
   
   <dt>-B, --begindate=DATE</dt>
-  <dd>@レポート範囲の開始点とするスナップショットを日時 (YYYY-MM-DD HH:MI:SS形式) で指定します。</dd>
-  <dd>@本オプションは省略可能です。省略時は最初のスナップショットを開始点とします。</dd>
-  <dd>@本オプションと「--b, --beginid」または「-e, --endid」を同時に指定することはできません。</dd>
+  <dd>Set date which is beginning of snapshot you would like to create report.(YYYY-MM-DD HH:MI:SS format)</dd>
+  <dd>This option can be omitted. If you doesn't set this parameter, default setting sets start of snapshot in the monitored instance. (*1) (*2)</dd>
   
   <dt>-E, --enddate=DATE</dt>
-  <dd>@レポート範囲の終了点とするスナップショットを日時 (YYYY-MM-DD HH:MI:SS形式) で指定します。</dd>
-  <dd>@本オプションは省略可能です。省略時は最後のスナップショットを終了点とします。</dd>
-  <dd>@本オプションと「--b, --beginid」または「-e, --endid」を同時に指定することはできません。</dd>
+  <dd>Set date which is end of snapshot you would like to create report.(YYYY-MM-DD HH:MI:SS format)</dd>
+  <dd>This option can be omitted. If you doesn't set this parameter, default setting sets end of the snapshot in the monitored instance. (*1) (*2)</dd>
   
   <dt>-o, --output=FILENAME</dt>
-  <dd>@レポートの出力先ファイル名を指定します。</dd>
-  <dd>@本オプションは省略可能です。省略時はレポートを標準出力に出力します。</dd>
-  <dd>@指定したファイルが既に存在する場合は上書きします。</dd>
+  <dd>Set reports file name.</dd>
+  <dd>This option can be omitted. If you doesn't set this parameter, default setting outputs stdout.</dd>
 </dl>
+*1: Can not set snapshot id and date in a same.
+*2: If you ommit period of snapshot, default setting sets from 0:00 a.m. of the day before to the present. 
 
 <br>
 
-<h4>@スナップショット一覧表示</h4>
+<h4>List of snapshot</h4>
 <pre>
 $ pg_statsinfo -l [-i INSTANCEID] [connection-options]
 </pre>
 
 <p>
-@以下にコマンド例を示します。<br>
-以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動しているリポジトリDBに対して、postgres データベースに、postgres ユーザで接続し、当該リポジトリDBに蓄積されているスナップショットの一覧を表示します。
+Sample command is under following. Under following command example shows list of snapshots stored in sample database in the repository database which is, hostname is localhost, port number is 5432, database is postgres, and user is postgres.
 </p>
 
 <pre>
@@ -770,23 +658,22 @@ $ pg_statsinfo -l -h localhost -d postgres -p 5432 -U postgres
 
 <dl>
   <dt>-l, --list</dt>
-  <dd>@本オプションが指定された場合はスナップショット一覧の表示を行います。</dd>
+  <dd>Show list of snapshots, if you select this option.</dd>
   
   <dt>-i, --instid=INSTANCEID</dt>
-  <dd>@スナップショット一覧を表示する監視対象インスタンスの識別子を指定します。</dd>
-  <dd>@本オプションは省略可能です。省略時は全ての監視対象インスタンスのスナップショット一覧を表示します。</dd>
+  <dd>Set instance id which you would like to see list of snapshots.</dd>
+  <dd>This option can be omitted. If you doesn't set this parameter, default setting is showing all of the monitored instance.</dd>
 </dl>
 
 <br>
 
-<h4>@スナップショットサイズ表示</h4>
+<h4>Show snapshot size</h4>
 <pre>
 $ pg_statsinfo -s [connection-options]
 </pre>
 
 <p>
-@以下にコマンド例を示します。<br>
-以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動しているリポジトリDBに対して、postgres データベースに、postgres ユーザで接続し、当該リポジトリDBに蓄積されているスナップショットのサイズを表示します。
+Sample command is under following. The command example shows snapshots size in "sample" database stored in repository database which is, hostname is localhost, port number is 5432, database is postgres, and user is postgres.
 </p>
 
 <pre>
@@ -795,19 +682,18 @@ $ pg_statsinfo -s -h localhost -d postgres -p 5432 -U postgres
 
 <dl>
   <dt>-s, --size</dt>
-  <dd>@本オプションが指定された場合はスナップショットサイズの表示を行います。</dd>
+  <dd>Show snapshot size, if you use this option.</dd>
 </dl>
 
 <br>
 
-<h4>@スナップショット取得</h4>
+<h4>Get snapshot</h4>
 <pre>
 $ pg_statsinfo -S COMMENT [connection-options]
 </pre>
 
 <p>
-@以下にコマンド例を示します。<br>
-以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動している監視対象インスタンスに対して、postgres データベースに、postgres ユーザで接続し、'COMMENT'をコメントとして付与したスナップショットを取得します。
+Sample command is under following. The command example shows getting snapshots with comment from database which is, hostname is localhost, port number is 5432, database is postgres, and user is postgres.
 </p>
 
 <pre>
@@ -816,20 +702,19 @@ $ pg_statsinfo -S 'COMMENT' -h localhost -d postgres -p 5432 -U postgres
 
 <dl>
   <dt>-S, --snapshot=COMMENT</dt>
-  <dd>@本オプションが指定された場合はスナップショットの取得を行います。</dd>
-  <dd>@オプション引数にはスナップショットに付与するコメントを指定します。</dd>
+  <dd>If you set this option, get snapshot.</dd>
+  <dd>Option argument is set comment of snapshot.</dd>
 </dl>
 
 <br>
 
-<h4>@スナップショット削除</h4>
+<h4>Delete snapshot</h4>
 <pre>
 $ pg_statsinfo -D SNAPID [connection-options]
 </pre>
 
 <p>
-@以下にコマンド例を示します。<br>
-以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動しているリポジトリDBに対して、postgres データベースに、postgres ユーザで接続し、当該リポジトリDBに蓄積されているスナップショットIDが 123 のスナップショットを削除します。
+Sample command is under following. The command example shows deleting snapshots from repository database which is, hostname is localhost, port number is 5432, database is postgres, and user is postgres.
 </p>
 
 <pre>
@@ -838,20 +723,19 @@ $ pg_statsinfo -D 123 -h localhost -d postgres -p 5432 -U postgres
 
 <dl>
   <dt>-D, --delete=SNAPID</dt>
-  <dd>@本オプションが指定された場合はスナップショットの削除を行います。</dd>
-  <dd>@オプション引数には削除対象のスナップショットのスナップショットIDを指定します。</dd>
+  <dd>Delete snapshot which is set by the snapshot id.</dd>
+  <dd>Option argument is set snapshot id which you want to delete.</dd>
 </dl>
 
 <br>
 
-<h4>@エージェント停止</h4>
+<h4>Stop pg_statsinfo's agent</h4>
 <pre>
 $ pg_statsinfo --stop [connection-options]
 </pre>
 
 <p>
-@以下にコマンド例を示します。<br>
-以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動している監視対象インスタンスに対して、postgres データベースに、postgres ユーザで接続し、エージェントを停止します。
+Sample command is under following.<br>The command example shows stopping pg_statsinfo's agent in which is, hostname is localhost, port number is 5432, database is postgres, and user is postgres.
 </p>
 
 <pre>
@@ -860,19 +744,19 @@ $ pg_statsinfo --stop -h localhost -d postgres -p 5432 -U postgres
 
 <dl>
   <dt>--stop</dt>
-  <dd>@本オプションが指定された場合は エージェントを停止します。</dd>
+  <dd>If we execute with this option, agent is going to stop.</dd>
 </dl>
 
 <br>
 
-<h4>@エージェント起動</h4>
+<h4>Start pg_statsinfo's agent.</h4>
 <pre>
 $ pg_statsinfo --start [connection-options]
 </pre>
 
 <p>
-@以下にコマンド例を示します。<br>
-以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動している監視対象インスタンスに対して、postgres データベースに、postgres ユーザで接続し、エージェントを起動します。
+Command example is under following.<br>
+Is in under following command sample, connect monitored instance to start agent in host name is localhost, port is 5432, database name is postgres, and connection user is postgres.
 </p>
 
 <pre>
@@ -881,38 +765,38 @@ $ pg_statsinfo --start -h localhost -d postgres -p 5432 -U postgres
 
 <dl>
   <dt>--start</dt>
-  <dd>@本オプションが指定された場合は エージェントを起動します。</dd>
+  <dd>If you set this option, start pg_statsinfo's agent.</dd>
 </dl>
 
 <br>
 
-<h4>@共通オプション (connection-options)</h4>
+<h4>Connection Options</h4>
 <p>
-@データベース接続に関するオプションです。<br>
-スナップショット取得を実行する場合は監視対象インスタンス、それ以外はリポジトリDBへの接続情報を指定します。
+Connect to database options is under following, it is same as PostgreSQL.<br>
+If you would like to get snapshot, Set monitor instance. Or if you execute other purpose, set repository database.
 </p>
 
 <dl>
   <dt>-d, --dbname=DBNAME</dt>
-  <dd>@接続するデータベース名を指定します。</dd>
-  <dd>@本オプションが指定されていない場合は環境変数「PGDATABASE」の値が使用されます。<dd>
-  <dd>@環境変数も設定されていない場合は、接続時に指定したユーザ名が使用されます。</dd>
+  <dd>Set connecting database name.</dd>
+  <dd>If you ommit this paramater, set "PGDATABASE" environment variable.<dd>
+  <dd>And if you don't set environment variable, default is set your username which is used connect database.</dd>
   
   <dt>-h, --host=HOSTNAME</dt>
-  <dd>@サーバが稼働しているマシンのホスト名を指定します。</dd>
-  <dd>@ホスト名がスラッシュから始まる場合、Unixドメインソケット用のディレクトリとして使用されます。</dd>
+  <dd>Set host name which is working database server.</dd>
+  <dd>If you set hostname stating "/", it is used UNIX domain socket.</dd>
   
   <dt>-p, --port=PORT</dt>
-  <dd>@サーバが接続を監視するTCPポートもしくはUnixドメインソケットファイルの拡張子を指定します。</dd>
+  <dd>Set tcp port which is monitored instance or UNIX domain socket file.</dd>
   
   <dt>-U, --username=USERNAME</dt>
-  <dd>@接続するユーザ名を指定します。</dd>
+  <dd>Set user name</dd>
   
   <dt>-w, --no-password</dt>
-  <dd>@パスワードの入力を促しません。サーバがパスワード認証を必要とし、かつ、.pgpassファイルなどの他の方法が利用できない場合、接続試行は失敗します。</dd>
+  <dd>If you connect database not to set password, set this option.</dd>
   
   <dt>-W, --password</dt>
-  <dd>@データベースに接続する前に、強制的にパスワード入力を促します。</dd>
+  <dd>If you connect database to need to set password, fource to input password.  </dd>
 </dl>
 
 <br>
@@ -929,46 +813,42 @@ pg_statsinfo.maintenance_time = '00:00:00'
 pg_statsinfo.repository_keepday = 7
 </pre>
 
-<p>@(注1) 自動メンテナンスのスナップショット削除はデフォルトで有効となっています。</p>
-<p>@(注2) 自動メンテナンスのログファイル整理と併せて使用する場合は自動メンテナンス設定を 'on' に設定するかカンマ区切りで 'log' を追記してください。</p>
-<p>Caution! : If you don't use automatic maintenance mode, repository size will be very large. Plese maintenance repository manualy in every term.</p>
-<p>@(注4) 複数監視対象インスタンス－単一リポジトリDBの構成で、各監視対象インスタンスのスナップショットの保持期間を
-互いに異なる期間に設定した場合、自動メンテナンス実行時には最も短く設定した期間のスナップショットが保持されます。
-例えば、各監視対象インスタンスの postgresql.conf に以下のようにスナップショット保持期間(pg_statsinfo.repository_keepday)の
-設定を記述した場合、自動メンテナンス実行時のスナップショット保持期間として反映されるのは監視対象インスタンス3の設定となります。</p>
+<p>(*1) Feature of auto deleting snapshots is default ON.</p>
+<p>(*2) When you use with feature of auto log files maintenance, please set pg_statsinfo.enable_maintenance = 'on' or pg_statsinfo.enable_maintenance = 'snapshot, log'.</p>
+<p>(*3) If you don't use automatic maintenance mode, repository size will be very large. Plese maintenance repository manualy in every term.</p>
+<p>(*4) If you use this setting in multi-monitoring instances with difference sttings, setting of deleting snapshot in repository server is set in shortest schedule.
+For exmaple, when you set pg_statsinfo.repository_keepday which is under following in postgresql.conf to eahc server, monitoring instance3's configuration is reflect in the repository database server.</p>
 
 <pre>
-<@監視対象インスタンス1>
+&lt;Monitoring instance1&gt;
 pg_statsinfo.enable_maintenance = 'snapshot' 
 pg_statsinfo.repository_keepday = 7
-<@監視対象インスタンス2>
+&lt;Monitoring instance2&gt;
 pg_statsinfo.enable_maintenance = 'snapshot' 
 pg_statsinfo.repository_keepday = 5
-<@監視対象インスタンス3>
+&lt;Monitoring instance3&gt;
 pg_statsinfo.enable_maintenance = 'snapshot' 
 pg_statsinfo.repository_keepday = 3
 </pre>
 
-<h4>@ログファイル整理</h4>
-<p>@自動メンテナンスのログファイル整理を有効にすると、1日1回任意の時刻にサーバログの整理を行うための任意のシェルコマンドを実行することができます。<br>
-自動メンテナンスのログファイル整理を有効にするには、設定ファイル(postgresql.conf)に以下の設定を記述します。</p>
+<h4>Feature of auto log files maintenance</h4>
+<p>pg_statsinfo can execute auto log files maintenance shell script at once every day. It is default ON and is executed in regular time.<br>
+If you would like to enable this feature, set configuratoin in postgresql.conf.</p>
 
-<p>@例: 毎日0時2分に前日以前のCSVログファイルを圧縮アーカイブする</p>
+<p>Example: Compress CSV log files at 0:02 every day.</p>
 <pre>
-pg_statsinfo.enable_maintenance = 'log'     # @自動メンテナンス設定
-pg_statsinfo.maintenance_time = '00:02:00'  # @自動メンテナンス実行時刻設定
-pg_statsinfo.log_maintenance_command = '&ltPGHOME&gt/bin/archive_pglog.sh %l'  # @ログファイル整理コマンド設定 (*1)
-@※&ltPGHOME&gt: PostgreSQL インストールディレクトリ
-
-(*1) archive_pglog.sh
-@archive_pglog.sh は同梱されるシェルスクリプトです。
-@前日以前のCSVログファイルを圧縮アーカイブし、ログファイル格納ディレクトリ配下にアーカイブファイル(TGZ)を作成します。
-@また、アーカイブしたCSVログファイルをログファイル格納ディレクトリから削除します。
+pg_statsinfo.enable_maintenance = 'log'     # auto maintenance settings
+pg_statsinfo.maintenance_time = '00:02:00'  # time which is executed auto maintenance
+pg_statsinfo.log_maintenance_command = '&ltPGHOME&gt/bin/archive_pglog.sh %l'  # Configuration of arrangement log files (*1)
 </pre>
-
-<p>@(注1) 自動メンテナンスのログファイル整理はデフォルトで有効となっています。</p>
-<p>@(注2) 自動メンテナンスのスナップショット削除と併せて使用する場合は自動メンテナンス設定を 'on' に設定するかカンマ区切りで 'snapshot' を追記してください。</p>
-<p>@(注3) ログファイル整理コマンドの設定を省略した場合、上記の例と同じコマンドが適用されます。</p>
+<p>(*1) &ltPGHOME&gt: install directory of PostgreSQL</p>
+<p>(*2) archive_pglog.sh
+archive_pglog.sh is included shell script in package of pg_statsinfo.
+It compress CSV log files before one day in every day, and create compressed log file in log directory which is created by pg_statsinfo.
+And also, it deletes CSV log files which have been moved by its shell script.</p>
+<p>(*3) Feature of auto maintence is enable in default setting.</p>
+<p>(*4) When you use with feature of auto log files maintenance, please set pg_statsinfo.enable_maintenance = 'on' or pg_statsinfo.enable_maintenance = 'snapshot, log'.</p>
+<p>(*5) If you omit configuration of log maintenance command, above command is executed.</p>
 
 <br>
 
@@ -1001,7 +881,7 @@ Some of the paramters cannot be changed online and require server's restart.
   <tr>
     <td>log_filename</td>
     <td>'postgresql-%Y-%m-%d_%H%M%S.log'</td>
-    <td>@CSVログおよびテキストログのファイル名。デフォルトから変更する場合でも、%Y, %m, %d, %H, %M, %S がこの順に全て表れる形式でなければなりません。</td>
+    <td>@ust set this format. If you want to change file name, must set order in "%Y, %m, %d, %H, %M, %S" in file name.</td>
   </tr>
   <tr>
     <td>track_counts</td>
@@ -1061,9 +941,9 @@ They can be changed online when reloaded with pg_ctl reload.
   <tr>
     <td>track_io_timing</td>
     <td>off</td>
-    <td>@ブロックの読み込みと書き込み時間に関する統計情報の収集設定。ブロックの読み書きに関する統計情報を収集する場合は on を設定します。<br>
-        本パラメータを on に設定した場合、現時点の時刻をオペレーティングシステムに繰り返し問い合わせるので、プラットフォームによっては深刻な負荷の原因になる可能性がある点を留意してください。<br>
-        (本パラメータはPostgreSQL 9.2以降から指定可能です)</td>
+    <td>Collect statistics of read and write relation blocks and times. If you set would like to collect these stats, set on this parameter.<br>
+        [caution] If this parameter set on, it might cause lessor parformance.<br>
+        (This parameter can be set in PostgreSQL 9.2 or later.)</td>
   </tr>
   <tr>
     <td>log_checkpoints</td>
@@ -1153,7 +1033,7 @@ They can be changed online when reloaded with pg_ctl reload.
   <tr>
     <td>pg_statsinfo.textlog_nologging_users</td>
     <td>-</td>
-    <td>@テキストログのフィルタリング設定。テキストログへの出力を除外するユーザを設定します。複数のユーザを設定する場合はカンマ区切りで指定します。</td>
+    <td>Text log filtering configuration. Exclude user for not to output pg_log.And if you would like to set multiple user, set values with separator ",".</td>
   </tr>
   <tr>
     <td>pg_statsinfo.sampling_interval</td>
@@ -1173,7 +1053,7 @@ They can be changed online when reloaded with pg_ctl reload.
   <tr>
     <td>pg_statsinfo.excluded_schemas</td>
     <td>'pg_catalog, pg_toast, information_schema'</td>
-    <td>@監視対象から除外するスキーマ名</td>
+    <td>exclude schema when snapshots.</td>
   </tr>
   <tr>
     <td>pg_statsinfo.repository_server</td>
@@ -1231,12 +1111,12 @@ They can be changed online when reloaded with pg_ctl reload.
   <tr>
     <td>pg_statsinfo.maintenance_time</td>
     <td>'00:02:00'</td>
-    <td>@自動メンテナンス実行時刻設定</td>
+    <td>Maintenance time of the snapshots in repository server.</td>
   </tr>
   <tr>
     <td>pg_statsinfo.repository_keepday</td>
     <td>7</td>
-    <td>@スナップショットの保持期間設定</td>
+    <td>Maintenance period of snapshots in repository server.</td>
   </tr>
   <tr>
     <td>pg_statsinfo.log_maintenance_command</td>
@@ -1261,7 +1141,7 @@ They can be changed online when reloaded with pg_ctl reload.
   <tr>
     <td>pg_statsinfo.controlfile_fsync_interval</td>
     <td>1min</td>
-    <td>@pg_statsinfoの制御ファイルの更新をストレージデバイスに同期書き出し(fsync)する間隔を設定します。</td>
+    <td>Set regular intervals of fsync() contorol file of pg_statsinfo.</td>
   </tr>
 </tbody>
 </table>
@@ -1312,21 +1192,18 @@ If you change this SQLSTATE for INFO log level, you set pg_statsinfo.adjust_log_
 </p>
 <pre>$ pg_ctl reload</pre>
 
-<h3 id="user-operations">@運用上必要となる作業</h3>
-<p>@ユーザが行う必要のある操作と運用上必要となる作業について説明します。</p>
+<h3 id="user-operations">Needed operations</h3>
+<p>This section is needed operations in install of pg_statsinfo system.</p>
 
-<h4>@サーバログの削除</h4>
-<p>@不要となった古いログファイル(CSVログ、テキストログ)は定期的に削除して下さい。<br>
-不要となったログファイルの削除は手動で行うか、自動メンテナンスのログファイル整理を利用して下さい。</p>
+<h4>Delete server's log</h4>
+<p>Please delete old log files(CSV log, text log) every period, or use feature of auto log maintenance.</p>
 
 <h4>Rotate Logs</h4>
 <p>if you want to rotate logs in arbitrary time, execute the following function on the monitored instance.</p>
 <pre>$ psql -d postgres -c "SELECT pg_rotate_logfile()"</pre>
 
-<h4 id="on-abort">@異常終了時の対処</h4>
-<p>@エージェントのみが異常終了しても、PostgreSQL インスタンスには影響はありませんが、エージェントの機能は停止したままになってしまいます。<br>
-エージェントを再起動するには PostgreSQL インスタンスを再起動してください。<br>
-なお、エージェントが異常終了してから再起動するまでの間に出力されたサーバログは、再起動時に解析(サーバログの分配のみ)されます。
+<h4 id="on-abort">When abend was happened</h4>
+<p>If pg_statsinfo's agent is stopped, it doesn't affect the PostgreSQL server. However,  agent have been stopped forever. If you would like to restart agent, restart your PostgreSQL server.
 </p>
 
 <h3 id="uninstall">Uninstall</h3>
@@ -1376,25 +1253,20 @@ PostgreSQL uses own timezone implementation, but we cannot use it from an extern
 <dt>Cannot collect shutdown checkpoint logs</dt>
 <dd>That't because the repository might be unavailable if it is in the same server with the monitored one.</dd>
 
-<dt>@スナップショット取得とテーブル削除の同時実行</dt>
-<dd>@スナップショット取得とテーブル削除が同時に要求されると、タイミングによってはスナップショット取得でエラーが発生する可能性があります。
-エラーが発生した場合、スナップショット取得はリトライされます。</dd>
+<dt>Cannot deleting snapshot table and getting snapshot in same timing.</dt>
+<dd>It might occure error when getting snapshot. However, if error is occured in getting snapshot, then it retry.</dd>
 
-<dt>@複数の監視インスタンスの設定について</dt>
-<dd>@各インスタンス毎に、データベースシステム識別子 or OSホスト名 or Port番号のいずれかが異なっていない場合、複数インスタンスとして認識できません。</dd>
+<dt>Settings of multi-monitoring instance</dt>
+<dd>Cannot set all of same identifieres which are database id, host name, or port number in each instance. pg_statsinfo cannot recognize each instances.</dd>
 
-<dt>@自動メンテナンス(スナップショット削除)の注意点</dt>
-<dd>@複数の監視対象インスタンスのスナップショットを同一のリポジトリDBに蓄積する構成では、
-自動メンテナンス設定のスナップショット保持期間の設定に注意してください。<br>
-複数の監視対象インスタンスで自動メンテナンスのスナップショット削除を有効とする場合、
-それぞれの監視対象インスタンスのスナップショット保持期間の設定でスナップショット削除が実行されます。<br>
-そのため、結果的に監視対象インスタンスの中で最も期間の短いスナップショット保持期間が有効となります。</dd>
+<dt>Caution of feature of auto maintenance</dt>
+<dd>In auto deleting snapshots, shortest period of deleting setting has most priority setting. It cannot work each settings in each monitoring instance. Please care of this rule.</dd>
 
-<dt>@トランザクションログ(WAL)の出力量の統計情報収集に関する制限</dt>
-<dd>@監視対象インスタンスがレプリケーション構成のスタンバイの場合は、トランザクションログ(WAL)の出力量の統計情報が収集されません。</dd>
+<dt>Limitaion of getting amount of WAL statistics.</dt>
+<dd>Amount of WAL statistics were not collected in a stanby server.</dd>
 
-<dt>@レポート全般に関する注意点</dt>
-<dd>@データサイズなどを示す一部の項目の値は、単位換算での数値の切り捨てにより微小な値が存在するにもかかわらずゼロと表示される可能性がある。</dd>
+<dt>Other cautions in reports</dt>
+<dd>There are rounding off fractions in reports. It will represent zero value if little bit value is existed.</dd>
 </dl>
 <br/>
 
@@ -1418,13 +1290,13 @@ Example of pg_repoter's output report is <a href='files/details.html'>here</a>.
 
 <h4>Q3. Auto maintenance mode does not work well. </h4>
 <p>
-@自動メンテナンスの設定が有効になっていないことが考えられます。
-以下の事項を点検してください。
+It might be auto maintenance configuration is off.
+Confirm under following configuration in your postgresql.conf.
 </p>
 
 <dl>
-  <dt>@自動メンテナンスの設定が、postgresql.conf に適切に記述されているか</dt>
-  <dd>postgresql.conf の自動メンテナンス設定が 'on' または 'snapshot' が含まれているか確認してください。
+  <dt>Propety configuration examples in postgresql.conf are here.</dt>
+  <dd>Set one configuration in postgresql.conf, if you like.
     <ul>
       <li>pg_statsinfo.enable_maintenance = 'on'</li>
       <li>pg_statsinfo.enable_maintenance = 'snapshot'</li>
@@ -1433,114 +1305,112 @@ Example of pg_repoter's output report is <a href='files/details.html'>here</a>.
   </dd>
 </dl>
 
-<h4>@Q4. アラート機能が正常に動作しているかの確認方法を教えてください。</h4>
+<h4>Q4. How to confirm alert function works well.</h4>
 <p>
-@アラート機能を有効に設定、かつ秒間コミット数のアラート条件(閾値)を「0」に設定した状態でスナップショットを取得してください。<br>
-スナップショットの取得時に、サーバログにアラートメッセージが出力されていればアラート機能が正常に動作しています。
+Enable alert function in postgresql.conf and set commit alert threshold 0, finaly get snapshost in command line or automaticaly<br>
+If it works collectly, alert messages were outpted in log messages.
 </p>
 
 <p>
-@アラート機能を有効、かつ秒間のコミット数のアラート条件(閾値)を「0」に設定するには以下の SQL をリポジトリDBに対して実行します。
+Example setting SQL is under following.
 </p>
 <pre>
 # UPDATE statsrepo.alert SET enable_alert = true, commit_tps = 0;
 </pre>
 
 <p>
-@アラート機能が正常に動作したことを確認した後は、秒間のコミット数のアラート条件(閾値)を元に戻してください。
+After you confirm to work collectly, set propety value or default value.
 </p>
 
-<h4>@Q5. 古いバージョン(2.x)からアップグレードする方法を教えてください。</h4>
+<h4>Q5. Please tell me how to update from pg_statsinfo 2.x.</h4>
 <p>
-@古いバージョンをアンインストールした後、新しいバージョンをインストールしてください。<br>
-また、古いバージョンで取得済みのスナップショットは新しいバージョンでは利用できません。<br>
-<a href="#uninstall">アンインストール</a> の手順に従い、リポジトリDBのスナップショットを全て削除してください。<br><br>
-上記の操作を行った後、監視対象インスタンスを再起動してください。
+First, uninstall old version. Next, install new version.<br>
+In new version, it cannot use snapshots which was get in old version. <br>
+Please read <a href="#uninstall">Uninstall</a>, and drop old pg_statsinfo's schema.<br><br>
+Then you restart postgres, it will be work.
 </p>
 
-<h4>@Q6. 簡易レポート機能でレポート生成を実行したところ、レポートが表示されません。</h4>
+<h4>Q6. It cannot create report by command-line.</h4>
 <p>
-@リポジトリDBに格納されているスナップショットの件数が2件未満である可能性があります。<br>
-レポートの作成には2件以上のスナップショットが必要となりますので、スナップショットの取得が2回実行されるのを待ってからレポート生成を実行してください。
+It might not have snapshots in repository database or only stored two or less snapshots.<br>
+It should need two over snapshots to create report. Please get snapshot more or wait for getting snapshot automaticaly, then create report.
 </p>
 
-<h4>@Q7. 簡易レポート機能でレポート生成を実行したところ、一部のレポート項目が表示されません。</h4>
+<h4>Q7. It cannot create part of report by command-line.</h4>
 <dl>
   <dt>Query Activity (Functions)</dt>
-  <dd>@設定ファイルの「track_functions」が「none」に設定されている可能性があります。</dd>
-  <dd>@この場合、当該レポート項目に必要な情報がスナップショットに含まれません。</dd>
-  <dd>@当該レポート項目を表示するには「track_functions」を「none」以外に設定してください。</dd>
+  <dd>It might set track_functions = none in postgresql.conf.</dd>
+  <dd>In this settings, needed statistics isn't stored in repository database.</dd>
+  <dd>Please change track_functions = none in postgreswl.conf.</dd>
   
   <dt>Query Activity (Statements)</dt>
-  <dd>@pg_stat_statements がインストールされていない可能性があります。</dd>
-  <dd>@この場合、当該レポート項目に必要な情報がスナップショットに含まれません。</dd>
-  <dd>@当該レポート項目を表示するには pg_stat_statements をインストールしてください。</dd>
+  <dd>It might not install pg_stat_statements.</dd>
+  <dd>For create this report item, install pg_stat_statements before operation.</dd>
   
   <dt>Autovacuum Activity</dt>
-  <dd>@設定ファイルの「log_autovacuum_min_duration」が「-1」に設定されている可能性があります。</dd>
-  <dd>@この場合、当該レポート項目に必要な情報がスナップショットに含まれません。</dd>
-  <dd>@当該レポート項目を表示するには「log_autovacuum_min_duration」を「-1」以外に設定してください。</dd>
+  <dd>It might set log_autovacuum_min_duration = -1 in postgresql.conf.</dd>
+  <dd>In this case. it cannot create item of autovacuum in the report.</dd>
+  <dd>If you would like to create this to report item, don't set "log_autovacuum_min_duration = -1".</dd>
   
   <dt>Checkpoint Activity</dt>
-  <dd>@設定ファイルの「log_checkpoints」が「off」に設定されている可能性があります。</dd>
-  <dd>@この場合、当該レポート項目に必要な情報がスナップショットに含まれません。</dd>
-  <dd>@当該レポート項目を表示するには「log_checkpoints」を「on」に設定してください。</dd>
+  <dd>It might set log_checkpoints = off in postgresql.conf.</dd>
+  <dd>In this case, needed statistic was not stored in repository database.</dd>
+  <dd>If you would like to create this report item, set "log_checkpoints = on" in postgresql.conf.</dd>
   
   <dt>OS Resource Usage (IO Usage)</dt>
-  <dd>@OS管理外の記憶デバイスまたは分散ファイルシステム(NFSなど)を利用した環境では、OSリソースのディスクI/O情報が収集されません。</dd>
-  <dd>@そのため、当該レポート項目に必要な情報がスナップショットに存在しない可能性があります。</dd>
+  <dd>It might use NFS or other kind of storages which aren't block device.</dd>
+  <dd>pg_statsinfo gets OS resources in /proc, therefore it doesn't support peculiar storages.</dd>
   
   <dt>Long Transactions</dt>
-  <dd>@レポート対象となる情報がスナップショットに存在しない可能性があります。</dd>
+  <dd>It might not exist snapshot in your setting period.</dd>
   
   <dt>Notable Tables</dt>
-  <dd>@レポート対象となる情報がスナップショットに存在しない可能性があります。</dd>
+  <dd>It might not exist snapshot in your setting period.</dd>
   
   <dt>Lock Conflicts</dt>
-  <dd>@レポート対象となる情報がスナップショットに存在しない可能性があります。</dd>
+  <dd>It might not exist snapshot in your setting period.</dd>
   
   <dt>Replication Activity</dt>
-  <dd>@レポート対象となる情報がスナップショットに存在しない可能性があります。</dd>
+  <dd>It might not exist snapshot in your setting period.</dd>
   
   <dt>Schema Information</dt>
-  <dd>@一部のデータベースのスキーマ情報が含まれてない場合は、該当のデータベースに接続できる設定になっているか <a href="http://www.postgresql.jp/document/current/html/client-authentication.html">クライアント認証</a> などを確認してください。</dd>
+  <dd>Confirm your database connecting setting and .pgpass. Client authentication is <a href="http://www.postgresql.jp/document/current/html/client-authentication.html">here</a>.</dd>
 </dl>
 <br>
 
-<h2 id="change">@pg_statsinfo 2.4 からの変更点</h2>
-<p>@pg_statsinfo 2.4 からの変更点は以下の通りです。</p>
+<h2 id="change">Changes from pg_statsinfo 2.4</h2>
+<p>pg_statsinfo 2.4 is changed under following points</p>
 <ul>
-  <li>@PostgreSQL 9.3に対応</li>
-  <li>@統計情報の収集対象に以下の項目を追加</li>
+  <li>Work in PostgreSQL 9.3.</li>
+  <li>Add collective statistics under following.</li>
   <ul>
-    <li>@バックエンドの最大数</li>
-    <li>@PostgreSQLの設定パラメータの単位</li>
+    <li>Maximum number of backend</li>
+    <li>Unit of parameter values in postgresql.conf</li>
   </ul>
-  <li>@テキストログファイル名の設定のデフォルト値を "pg_statsinfo.log" に変更</li>
-  <li>@アラート機能の実行有無をアラート項目単位で切り替える設定を追加</li>
-  <li>@アラート機能の判定対象に以下の項目を追加</li>
+  <li>Change default pg_statsinfo outputed log file name to "pg_statsinfo.log".</li>
+  <li>Add configuration which enable or disable alert functions, it can set each alert item freely.</li>
+  <li>Add under following alert function</li>
   <ul>
-    <li>@テーブルの断片化率(correlation)</li>
-    <li>@バックエンドの最大数</li>
-    <li>@テーブルスペースのディスク空き容量</li>
-    <li>@ロードアベレージ</li>
-    <li>@スワップ使用量</li>
-    <li>@レプリケーションの遅延量</li>
+    <li>correlations in each tables</li>
+    <li>maximum number of backends</li>
+    <li>empty disk space in tablespace</li>
+    <li>load average</li>
+    <li>amount of disk swap</li>
+    <li>amount of replication delay</li>
   </ul>
-  <li>@チェックポイントおよび自動バキュームのログがサーバログのフィルタリングで分配されるように変更</li>
-  <li>@スタンバイで実行されたチェックポイント(リスタートポイント)の統計情報を収集するように変更</li>
-  <li>@リポジトリDBに不備がある場合は、フォールバックモード(一部機能を無効化した状態)で動作するように変更</li>
-  <li>@簡易レポート機能の名称をコマンドライン機能に変更</li>
-  <li>@コマンドライン機能が生成するレポートに以下の項目を追加</li>
+  <li>Change output checkpoint log and auto vacuum log messages in pg_statsinfo's text log. Before version is'nt output these log messages intentionally.</li>
+  <li>Add collecting statistics in restartpoint in standby server</li>
+  <li>Add fall-back mode if repository database server is not collectly working or not connecting. Before version, pg_statsinfo output error logs until fixed.</li>
+  <li>Add report items in command-line reporting feature.</li>
   <ul>
-    <li>@レプリケーションの遅延量</li>
-    <li>@Autoanalyzeの実行回数と処理時間</li>
-    <li>@データベース設定のパラメータの単位</li>
+    <li>amount of replication delay</li>
+    <li>number of executed and execution time in auto analyze</li>
+    <li>unit of parameter values in postgresql.conf</li>
   </ul>
-  <li>@コマンドライン機能が提供する操作に以下の項目を追加</li>
+  <li>Add command of pg_statsinfo agent operations.</li>
   <ul>
-    <li>@エージェント停止</li>
-    <li>@エージェント起動</li>
+    <li>stop pg_statsinfo agent</li>
+    <li>start pg_statsinfo agent</li>
   </ul>
 </ul>
 <br>
@@ -1566,64 +1436,6 @@ See also "<a href="pg_statsinfo-warm-standby.html">pg_statsinfo: warm-standby</a
   <li>Setup another repository server independent from active and standby servers.</li>
   <li>Place repositories for each active and standby servers.</li>
 </ol>
-
-<h3 id="fallback-mode">@フォールバックモード</h3>
-<p>@エージェント起動時および設定リロード時にリポジトリDBの正当性チェックを行います。<br/>
-正当性チェックを実施した結果、不備が検出された場合は一部の機能を無効化した状態で動作するモード(フォールバックモード)に移行します。</p>
-
-<p>@リポジトリDBの正当性チェックの内容およびフォールバックモードで無効化される機能を以下に示します。</p>
-<h4>@リポジトリDBの正当性チェックの内容</h4>
-<ul>
-  <li>@リポジトリDBに接続できるか</li>
-  <li>@リポジトリDBに登録されている statsrepo スキーマのバージョンが正しいか</li>
-  <li>@リポジトリDBの PostgreSQL が XML をサポートしているか (configure オプションに --with-libxml が指定されたビルドであるか)</li>
-</ul>
-
-<h4>@フォールバックモードで無効化される機能</h4>
-<ul>
-  <li>@統計情報の取得機能</li>
-  <li>@アラート機能</li>
-  <li>@コマンドライン機能でのスナップショット取得</li>
-  <li>@自動メンテナンス機能でのスナップショット削除</li>
-</ul>
-
-<h4>@復旧手順</h4>
-<p>@リポジトリDBに接続できないことが原因でフォールバックモードの移行した場合は、リポジトリDBを復旧した時点で自動的に通常モードに復旧します。<br/>
-他の原因によりフォールバックモードに移行した場合は、リポジトリDBを復旧した後で設定リロードを実行してください。</p>
-
-<p>@フォールバックモードに移行した原因はログ(テキストログ or syslog)に出力された内容から判断できます。<br/>
-フォールバックモードに移行した時のログの出力例を以下に示します。</p>
-<pre>
-# @リポジトリDBに接続できない
-ERROR:  pg_statsinfo: could not connect to database with "host=192.168.0.1 user=postgres": timeout expired
-LOG:  pg_statsinfo: pg_statsinfo is starting in fallback mode
-
-# @statsrepo スキーマのバージョンが合わない
-ERROR:  pg_statsinfo: incompatible statsrepo schema: version mismatch
-LOG:  pg_statsinfo: pg_statsinfo is starting in fallback mode
-
-# @リポジトリDBの PostgreSQL が XML をサポートしていない
-ERROR:  pg_statsinfo: repository server must support XML feature. you need to rebuild PostgreSQL using "./configure --with-libxml"
-LOG:  pg_statsinfo: pg_statsinfo is starting in fallback mode
-</pre>
-
-<p>@リポジトリDBの復旧に関する点検事項と対処方法を以下に示します。</p>
-<dl>
-  <dt>@リポジトリDBに接続できない場合</dt>
-  <ul>
-    <li>@リポジトリDBの稼動状態を確認し、リポジトリDBが停止している場合はリポジトリDBを起動してください。</li>
-    <li>@設定ファイルのリポジトリDBへの接続文字列(pg_statsinfo.repository_server)を確認し、設定が誤っている場合は修正してください。(要設定リロード)</li>
-  </ul>
-  <dt>@statsrepo スキーマのバージョンが合わない場合</dt>
-  <ul>
-    <li>@statsrepo スキーマを削除するか、リポジトリDBのデータベースを別に作成してください。</li>
-  </ul>
-  <dd>@(正しいバージョンの statsrepo スキーマは設定リロード時に自動的に登録されます)</dd>
-  <dt>@PostgreSQL が XML をサポートしていない場合</dt>
-  <ul>
-    <li>@configure オプションに --with-libxml が指定されたビルドの PostgreSQL をインストールした後、リポジトリDBを再起動してください。</li>
-  </ul>
-</dl>
 
 <h3 id="internal">Internals</h3>
 <p>pg_statsinfo consists of a library and a daemon. The library is loaded by PostgreSQL server, and the daemon is run as a database client.
