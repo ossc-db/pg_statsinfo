@@ -29,9 +29,6 @@
 #define STATSINFO_CONTROL_FILE		"pg_statsinfo.control"
 #define STATSINFO_CONTROL_VERSION	20500
 
-#define LOGGER_RETURN_SUCCESS		0x00
-#define LOGGER_RETURN_FAILED		0xff
-
 #define STATSREPO_SCHEMA_VERSION	20500
 
 /* read settings */
@@ -49,6 +46,9 @@ FROM \
 		('" GUC_PREFIX ".textlog_min_messages'), \
 		('" GUC_PREFIX ".textlog_filename'), \
 		('" GUC_PREFIX ".textlog_line_prefix'), \
+		('" GUC_PREFIX ".repolog_min_messages'), \
+		('" GUC_PREFIX ".repolog_buffer'), \
+		('" GUC_PREFIX ".repolog_interval'), \
 		('" GUC_PREFIX ".syslog_line_prefix'), \
 		('" GUC_PREFIX ".textlog_permission'), \
 		('" GUC_PREFIX ".excluded_dbnames'), \
@@ -66,18 +66,33 @@ FROM \
 		('" GUC_PREFIX ".adjust_log_log'), \
 		('" GUC_PREFIX ".adjust_log_fatal'), \
 		('" GUC_PREFIX ".textlog_nologging_users'), \
+		('" GUC_PREFIX ".repolog_nologging_users'), \
 		('" GUC_PREFIX ".enable_maintenance'), \
 		('" GUC_PREFIX ".maintenance_time'), \
 		('" GUC_PREFIX ".repository_keepday'), \
+		('" GUC_PREFIX ".repolog_keepday'), \
 		('" GUC_PREFIX ".log_maintenance_command'), \
 		('" GUC_PREFIX ".controlfile_fsync_interval')) AS t(name) \
 	LEFT JOIN pg_settings s \
 	ON t.name = s.name"
 
 /* reworked from access/xlog_internal.h */
-#define XLogSegSize    ((uint32) XLOG_SEG_SIZE)
-#define XLogSegsPerFile (((uint32) 0xffffffff) / XLogSegSize)
-#define XLogFileSize  (XLogSegsPerFile * XLogSegSize)
+#define XLogSegSize		((uint32) XLOG_SEG_SIZE)
+#if PG_VERSION_NUM >= 90300
+#define XLogSegsPerFile		(UINT64CONST(0x100000000) / XLogSegSize)
+#define XLOGFILESIZE_FORMAT	UINT64_FORMAT
+#else
+#define XLogSegsPerFile		(((uint32) 0xffffffff) / XLogSegSize)
+#define XLOGFILESIZE_FORMAT	"%u"
+#endif
+#define XLogFileSize	(XLogSegsPerFile * XLogSegSize)
+
+/* number of columns of csvlog */
+#if PG_VERSION_NUM < 90000
+#define CSV_COLS			22
+#else
+#define CSV_COLS			23
+#endif
 
 /* shutdown state */
 typedef enum ShutdownState
@@ -86,6 +101,7 @@ typedef enum ShutdownState
 	RUNNING,
 	SHUTDOWN_REQUESTED,
 	COLLECTOR_SHUTDOWN,
+	LOGGER_SEND_SHUTDOWN,
 	WRITER_SHUTDOWN,
 	LOGGER_SHUTDOWN
 } ShutdownState;
@@ -103,7 +119,9 @@ typedef enum WriterQueueType
 {
 	QUEUE_SNAPSHOT,
 	QUEUE_CHECKPOINT,
-	QUEUE_AUTOVACUUM
+	QUEUE_AUTOVACUUM,
+	QUEUE_MAINTENANCE,
+	QUEUE_LOGSTORE
 } WriterQueueType;
 
 /*
@@ -112,6 +130,7 @@ typedef enum WriterQueueType
  */
 typedef enum StatsinfoState
 {
+	STATSINFO_STARTUP,
 	STATSINFO_RUNNING,
 	STATSINFO_STOPPED,
 	STATSINFO_SHUTDOWNED
@@ -132,6 +151,11 @@ extern char		   *stat_statements_max;
 extern char		   *stat_statements_exclude_users;
 extern int			sampling_interval;
 extern int			snapshot_interval;
+extern int		    enable_maintenance;
+extern time_t		maintenance_time;
+extern int			repository_keepday;
+extern int			repolog_keepday;
+extern char		   *log_maintenance_command;
 /*---- GUC variables (logger) ----------*/
 extern char		   *log_directory;
 extern char		   *log_error_verbosity;
@@ -143,6 +167,9 @@ extern char		   *textlog_filename;
 extern char		   *textlog_line_prefix;
 extern int			textlog_min_messages;
 extern int			textlog_permission;
+extern int			repolog_min_messages;
+extern int			repolog_buffer;
+extern int			repolog_interval;
 extern bool			adjust_log_level;
 extern char		   *adjust_log_info;
 extern char		   *adjust_log_notice;
@@ -151,13 +178,10 @@ extern char		   *adjust_log_error;
 extern char		   *adjust_log_log;
 extern char		   *adjust_log_fatal;
 extern char		   *textlog_nologging_users;
+extern char		   *repolog_nologging_users;
 extern int			controlfile_fsync_interval;
 /*---- GUC variables (writer) ----------*/
 extern char		   *repository_server;
-extern int		    enable_maintenance;
-extern time_t		maintenance_time;
-extern int			repository_keepday;
-extern char		   *log_maintenance_command;
 /*---- message format ----*/
 extern char		   *msg_debug;
 extern char		   *msg_info;
@@ -181,7 +205,6 @@ extern char		   *msg_restartpoint_complete;
 
 extern volatile ShutdownState	shutdown_state;
 extern volatile WriterState		writer_state;
-extern bool						shutdown_message_found;
 
 /* threads */
 extern pthread_t	th_collector;
@@ -238,14 +261,16 @@ typedef struct Log
 } Log;
 
 /* Contents of pg_statsinfo.control */
-typedef struct StatsinfoControlFileData
+typedef struct ControlFile
 {
-	uint32	control_version;		/* STATSINFO_CONTROL_VERSION */
-	char	csv_name[MAXPGPATH];	/* latest parsed csvlog file name */
-	long	csv_offset;				/* latest parsed csvlog file offset */
-	StatsinfoState	state;			/* see enum above */
-	pg_crc32	crc;				/* CRC of all above ... MUST BE LAST! */
-} StatsinfoControlFileData;
+	uint32			control_version;			/* STATSINFO_CONTROL_VERSION */
+	StatsinfoState	state;						/* see enum above */
+	char			csv_name[MAXPGPATH];		/* latest routed csvlog file name */
+	long			csv_offset;					/* latest routed csvlog file offset */
+	char			send_csv_name[MAXPGPATH];	/* latest stored csvlog file name */
+	long			send_csv_offset;			/* latest stored csvlog file offset */
+	pg_crc32		crc;						/* CRC of all above ... MUST BE LAST! */
+} ControlFile;
 
 /* collector.c */
 extern void collector_init(void);
@@ -259,6 +284,24 @@ extern void readopt_from_db(PGresult *res);
 /* logger.c */
 extern void logger_init(void);
 extern void *logger_main(void *arg);
+/* logger_send.c */
+extern void *logger_send_main(void *arg);
+/* logger_common.c */
+extern void init_log(Log *log, const char *buf, const size_t fields[]);
+extern void get_csvlog(char csvlog[], const char *prev, const char *pg_log);
+extern bool is_nologging_user(const Log *log, List *user_list);
+extern bool split_string(char *rawstring, char separator, List **elemlist);
+extern void adjust_log(Log *log, List *adjust_log_list);
+extern List *add_adlog(List *adlog_list, int elevel, char *rawstring);
+extern void OpenControlFile(int flags, mode_t mode);
+extern void CloseControlFile(void);
+extern bool ReadControlFile(ControlFile *ctrl);
+extern void InitControlFile(ControlFile *ctrl);
+extern void WriteState(StatsinfoState state);
+extern void WriteLogRouteData(char *csv_name, long csv_offset);
+extern void WriteLogStoreData(char *csv_name, long csv_offset);
+extern void FsyncControlFile(void);
+extern void FlushControlFile(void);
 /* logger_in.c */
 extern bool read_csv(FILE *fp, StringInfo buf, int ncolumns, size_t *columns);
 extern bool match(const char *str, const char *pattern);
@@ -282,6 +325,7 @@ extern void writer_send(QueueItem *item);
 extern bool writer_has_queue(WriterQueueType type);
 /* maintenance.c */
 extern void maintenance_snapshot(time_t repository_keepday);
+extern void maintenance_repolog(time_t repolog_keepday);
 extern pid_t maintenance_log(const char *command, int *fd_err);
 bool check_maintenance_log(pid_t log_maintenance_pid, int fd_err);
 
@@ -294,6 +338,7 @@ extern const char *elevel_to_str(int elevel);
 extern void shutdown_progress(ShutdownState state);
 extern void delay(void);
 extern char *getlocaltimestamp(void);
+extern time_t get_next_time(time_t now, int interval);
 extern int get_server_version(PGconn *conn);
 
 #endif   /* PG_STATSINFOD_H */

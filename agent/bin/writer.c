@@ -66,7 +66,7 @@ writer_main(void *arg)
 	int	items;
 	int	rstate = -1;
 
-	while (shutdown_state < COLLECTOR_SHUTDOWN)
+	while (shutdown_state < LOGGER_SEND_SHUTDOWN)
 	{
 		/* update settings if reloaded */
 		if (writer_reload_time < collector_reload_time)
@@ -342,7 +342,8 @@ get_instid(PGconn *conn)
 		char	xlog_file_size[32];
 
 		PQclear(res);
-		snprintf(xlog_file_size, sizeof(xlog_file_size), "%u", XLogFileSize);
+		snprintf(xlog_file_size,
+			sizeof(xlog_file_size), XLOGFILESIZE_FORMAT, XLogFileSize);
 
 		params[3] = server_version_string;
 		params[4] = xlog_file_size;
@@ -451,7 +452,9 @@ validate_repository(void)
 	/* install statsrepo schema if not installed yet */
 	ensure_schema(writer_conn, "statsrepo");
 
-	writer_disconnect();
+	/* update last used time of the connection */
+	writer_conn_last_used = time(NULL);
+
 	return REPOSITORY_OK;
 }
 

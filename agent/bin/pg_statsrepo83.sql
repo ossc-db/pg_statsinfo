@@ -15,6 +15,18 @@ SET LOCAL client_min_messages = WARNING;
 
 CREATE SCHEMA statsrepo;
 
+CREATE TYPE statsrepo.elevel AS ENUM
+(
+	'DEBUG',
+	'INFO',
+	'NOTICE',
+	'WARNING',
+	'ERROR',
+	'LOG',
+	'FATAL',
+	'PANIC'
+);
+
 CREATE TABLE statsrepo.instance
 (
 	instid				bigserial,
@@ -448,6 +460,35 @@ CREATE TABLE statsrepo.xlog
 	location	text,
 	xlogfile	text,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
+CREATE TABLE statsrepo.log
+(
+	instid				bigint,
+	timestamp			timestamptz,
+	username			text,
+	database			text,
+	pid					integer,
+	client_addr			text,
+	session_id			text,
+	session_line_num	bigint,
+	ps_display			text,
+	session_start		timestamptz,
+	vxid				text,
+	xid					bigint,
+	elevel				statsrepo.elevel,
+	sqlstate			text,
+	message				text,
+	detail				text,
+	hint				text,
+	query				text,
+	query_pos			integer,
+	context				text,
+	user_query			text,
+	user_query_pos		integer,
+	location			text,
+	application_name	text,
+	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
 );
 
 -- del_snapshot(snapid) - delete the specified snapshot.

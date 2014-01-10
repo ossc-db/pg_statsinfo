@@ -424,7 +424,8 @@ Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 	 * create partition tables
 	 */
 	params[0] = snap->start;
-	if (pgut_command(conn, SQL_CREATE_PARTITION, 1, params) != PGRES_TUPLES_OK)
+	if (pgut_command(conn,
+		SQL_CREATE_SNAPSHOT_PARTITION, 1, params) != PGRES_TUPLES_OK)
 		goto error;
 
 	if (pgut_command(conn, "BEGIN", 0, NULL) != PGRES_COMMAND_OK)

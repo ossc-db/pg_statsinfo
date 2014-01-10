@@ -7,6 +7,7 @@
 #include "pg_statsinfod.h"
 
 #include <fcntl.h>
+#include <sys/stat.h> 
 
 const char *PROGRAM_VERSION	= "2.5.0";
 const char *PROGRAM_URL		= "http://pgstatsinfo.projects.postgresql.org/";
@@ -36,6 +37,11 @@ char		   *stat_statements_max;
 char		   *stat_statements_exclude_users;
 int				sampling_interval;
 int				snapshot_interval;
+int				enable_maintenance;
+time_t			maintenance_time;
+int				repository_keepday;
+int				repolog_keepday;
+char		   *log_maintenance_command;
 /*---- GUC variables (logger) ----------*/
 char		   *log_directory;
 char		   *log_error_verbosity;
@@ -47,6 +53,9 @@ char		   *textlog_filename;
 char		   *textlog_line_prefix;
 int				textlog_min_messages;
 int				textlog_permission;
+int				repolog_min_messages;
+int				repolog_buffer;
+int				repolog_interval;
 bool			adjust_log_level;
 char		   *adjust_log_info;
 char		   *adjust_log_notice;
@@ -55,13 +64,10 @@ char		   *adjust_log_error;
 char		   *adjust_log_log;
 char		   *adjust_log_fatal;
 char		   *textlog_nologging_users;
+char		   *repolog_nologging_users;
 int				controlfile_fsync_interval;
 /*---- GUC variables (writer) ----------*/
 char		   *repository_server;
-int			    enable_maintenance;
-time_t			maintenance_time;
-int				repository_keepday;
-char		   *log_maintenance_command;
 /*---- message format ----*/
 char		   *msg_debug;
 char		   *msg_info;
@@ -85,7 +91,6 @@ char		   *msg_restartpoint_complete;
 
 /* current shutdown state */
 volatile ShutdownState	shutdown_state;
-bool					shutdown_message_found;
 static pthread_mutex_t	shutdown_state_lock;
 
 /* current writer state */
@@ -93,8 +98,9 @@ volatile WriterState	writer_state;
 
 /* threads */
 pthread_t	th_collector;
-pthread_t	th_logger;
 pthread_t	th_writer;
+pthread_t	th_logger;
+pthread_t	th_logger_send;
 
 static int help(void);
 static bool assign_int(const char *value, void *var);
@@ -110,6 +116,7 @@ static int strtoi(const char *nptr, char **endptr, int base);
 static bool execute_script(PGconn *conn, const char *script_file);
 static void create_lock_file(void);
 static void unlink_lock_file(void);
+static void load_control_file(ControlFile *ctrl);
 
 /* parameters */
 static struct ParamMap PARAM_MAP[] =
@@ -140,6 +147,9 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".textlog_filename", assign_string, &textlog_filename},
 	{GUC_PREFIX ".textlog_line_prefix", assign_string, &textlog_line_prefix},
 	{GUC_PREFIX ".textlog_permission", assign_int, &textlog_permission},
+	{GUC_PREFIX ".repolog_min_messages", assign_elevel, &repolog_min_messages},
+	{GUC_PREFIX ".repolog_buffer", assign_int, &repolog_buffer},
+	{GUC_PREFIX ".repolog_interval", assign_int, &repolog_interval},
 	{GUC_PREFIX ".adjust_log_level", assign_bool, &adjust_log_level},
 	{GUC_PREFIX ".adjust_log_info", assign_string, &adjust_log_info},
 	{GUC_PREFIX ".adjust_log_notice", assign_string, &adjust_log_notice},
@@ -148,9 +158,11 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".adjust_log_log", assign_string, &adjust_log_log},
 	{GUC_PREFIX ".adjust_log_fatal", assign_string, &adjust_log_fatal},
 	{GUC_PREFIX ".textlog_nologging_users", assign_string, &textlog_nologging_users},
+	{GUC_PREFIX ".repolog_nologging_users", assign_string, &repolog_nologging_users},
 	{GUC_PREFIX ".enable_maintenance", assign_int, &enable_maintenance},
 	{GUC_PREFIX ".maintenance_time", assign_time, &maintenance_time},
 	{GUC_PREFIX ".repository_keepday", assign_int, &repository_keepday},
+	{GUC_PREFIX ".repolog_keepday", assign_int, &repolog_keepday},
 	{GUC_PREFIX ".log_maintenance_command", assign_string, &log_maintenance_command},
 	{GUC_PREFIX ".controlfile_fsync_interval", assign_int, &controlfile_fsync_interval},
 	{":debug", assign_string, &msg_debug},
@@ -187,7 +199,7 @@ isTTY(int fd)
 int
 main(int argc, char *argv[])
 {
-	void	*logger_retval;
+	ControlFile	 ctrl;
 
 	shutdown_state = STARTUP;
 
@@ -253,32 +265,32 @@ main(int argc, char *argv[])
 	 * terminated by ERRORs.
 	 */
 	pgut_abort_level = FATAL;
+	pgut_abort_code = STATSINFO_EXIT_FAILED;
 
 	/* init logger, collector, and writer module */
 	pthread_mutex_init(&shutdown_state_lock, NULL);
 	collector_init();
-	logger_init();
 	writer_init();
+	logger_init();
 
-	/* run the modules in each thread */
+	/* load control file */
 	shutdown_state = RUNNING;
 	elog(LOG, "start");
+	load_control_file(&ctrl);
+
+	/* run the modules in each thread */
 	pthread_create(&th_collector, NULL, collector_main, NULL);
 	pthread_create(&th_writer, NULL, writer_main, NULL);
-	pthread_create(&th_logger, NULL, logger_main, NULL);
+	pthread_create(&th_logger, NULL, logger_main, &ctrl);
+	pthread_create(&th_logger_send, NULL, logger_send_main, &ctrl);
 
 	/* join the threads */ 
 	pthread_join(th_collector, (void **) NULL);
 	pthread_join(th_writer, (void **) NULL);
-	pthread_join(th_logger, (void **) &logger_retval);
+	pthread_join(th_logger, (void **) NULL);
+	pthread_join(th_logger_send, (void **) NULL);
 
-#ifdef NOT_USED
-	if (!shutdown_message_found)
-		restart_postmaster();		/* postmaster might be crashed! */
-#endif
-
-	if (logger_retval == (void *) LOGGER_RETURN_FAILED)
-		return STATSINFO_EXIT_FAILED;
+	CloseControlFile();
 
 	return STATSINFO_EXIT_SUCCESS;
 }
@@ -799,6 +811,15 @@ getlocaltimestamp(void)
 	return tp;
 }
 
+time_t
+get_next_time(time_t now, int interval)
+{
+	if (interval > 0)
+		return (now / interval) * interval + interval;
+	else
+		return now;
+}
+
 int
 get_server_version(PGconn *conn)
 {
@@ -1036,5 +1057,26 @@ unlink_lock_file(void)
 				(errcode_errno(),
 				 errmsg("could not remove lock file \"%s\": %m",
 				 	lockfile)));
+	}
+}
+
+/*
+ * load control file.
+ */
+static void
+load_control_file(ControlFile *ctrl)
+{
+	struct stat		st;
+
+	if (stat(STATSINFO_CONTROL_FILE, &st) != 0)
+	{
+		OpenControlFile(O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+		InitControlFile(ctrl);
+	}
+	else
+	{
+		OpenControlFile(O_RDWR, 0);
+		if (!ReadControlFile(ctrl))
+			InitControlFile(ctrl);
 	}
 }

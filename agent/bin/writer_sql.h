@@ -100,7 +100,10 @@ SET \
 WHERE \
 	snapid = $1"
 
-#define SQL_CREATE_PARTITION "\
-SELECT statsrepo.create_partition($1)"
+#define SQL_CREATE_SNAPSHOT_PARTITION "\
+SELECT statsrepo.create_snapshot_partition($1)"
+
+#define SQL_CREATE_REPOLOG_PARTITION "\
+SELECT statsrepo.create_repolog_partition($1)"
 
 #endif

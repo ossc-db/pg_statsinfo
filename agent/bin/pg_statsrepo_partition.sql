@@ -15,6 +15,18 @@ SET LOCAL client_min_messages = WARNING;
 
 CREATE SCHEMA statsrepo;
 
+CREATE TYPE statsrepo.elevel AS ENUM
+(
+	'DEBUG',
+	'INFO',
+	'NOTICE',
+	'WARNING',
+	'ERROR',
+	'LOG',
+	'FATAL',
+	'PANIC'
+);
+
 CREATE TABLE statsrepo.instance
 (
 	instid				bigserial,
@@ -448,6 +460,35 @@ CREATE TABLE statsrepo.xlog
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
+CREATE TABLE statsrepo.log
+(
+	instid				bigint,
+	timestamp			timestamptz,
+	username			text,
+	database			text,
+	pid					integer,
+	client_addr			text,
+	session_id			text,
+	session_line_num	bigint,
+	ps_display			text,
+	session_start		timestamptz,
+	vxid				text,
+	xid					bigint,
+	elevel				statsrepo.elevel,
+	sqlstate			text,
+	message				text,
+	detail				text,
+	hint				text,
+	query				text,
+	query_pos			integer,
+	context				text,
+	user_query			text,
+	user_query_pos		integer,
+	location			text,
+	application_name	text,
+	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
+);
+
 -- del_snapshot(snapid) - delete the specified snapshot.
 CREATE FUNCTION statsrepo.del_snapshot(bigint) RETURNS void AS
 $$
@@ -458,13 +499,20 @@ $$
 $$
 LANGUAGE sql;
 
--- del_snapshot(time) - delete snapshots before the specified time.
+-- del_snapshot(time) - delete snapshots older than the specified timestamp.
 CREATE FUNCTION statsrepo.del_snapshot(timestamptz) RETURNS void AS
 $$
 	DELETE FROM statsrepo.snapshot WHERE time < $1;
 	DELETE FROM statsrepo.autovacuum WHERE start < (SELECT min(time) FROM statsrepo.snapshot);
 	DELETE FROM statsrepo.autoanalyze WHERE start < (SELECT min(time) FROM statsrepo.snapshot);
 	DELETE FROM statsrepo.checkpoint WHERE start < (SELECT min(time) FROM statsrepo.snapshot);
+$$
+LANGUAGE sql;
+
+-- del_repolog(time) - delete logs older than the specified timestamp.
+CREATE FUNCTION statsrepo.del_repolog(timestamptz) RETURNS void AS
+$$
+	DELETE FROM statsrepo.log WHERE timestamp < $1;
 $$
 LANGUAGE sql;
 
@@ -2582,7 +2630,7 @@ $$
 $$ LANGUAGE sql IMMUTABLE STRICT;
 
 -- function to create new partition-table
-CREATE FUNCTION statsrepo.partition_new(parent_oid oid, date date)
+CREATE FUNCTION statsrepo.partition_new(regclass, date, text)
 RETURNS void AS
 $$
 DECLARE
@@ -2590,12 +2638,12 @@ DECLARE
 	child_name	name;
 	condef		text;
 BEGIN
-	parent_name := relname FROM pg_class WHERE oid = parent_oid;
-	child_name := parent_name || to_char(date, '_YYYYMMDD');
+	parent_name := relname FROM pg_class WHERE oid = $1;
+	child_name := parent_name || to_char($2, '_YYYYMMDD');
 
 	/* child table already exists */
 	PERFORM 1 FROM pg_inherits i LEFT JOIN pg_class c ON c.oid = i.inhrelid
-	WHERE i.inhparent = parent_oid AND c.relname = child_name;
+	WHERE i.inhparent = $1 AND c.relname = child_name;
 	IF FOUND THEN
 		RETURN;
 	END IF;
@@ -2605,26 +2653,26 @@ BEGIN
 		EXECUTE 'CREATE TABLE statsrepo.' || child_name
 			|| ' (LIKE statsrepo.' || parent_name
 			|| ' INCLUDING INDEXES INCLUDING DEFAULTS INCLUDING CONSTRAINTS,'
-			|| ' CHECK (date >= DATE ''' || to_char(date, 'YYYY-MM-DD') || ''''
-			|| ' AND date < DATE ''' || to_char(date + 1, 'YYYY-MM-DD') || ''')'
+			|| ' CHECK (' || $3 || ' >= DATE ''' || to_char($2, 'YYYY-MM-DD') || ''''
+			|| ' AND ' || $3 || ' < DATE ''' || to_char($2 + 1, 'YYYY-MM-DD') || ''')'
 			|| ' ) INHERITS (statsrepo.' || parent_name || ')';
-		
+
 		/* add foreign key constraint */
-		FOR condef IN SELECT statsrepo.get_constraintdef(parent_oid) LOOP
+		FOR condef IN SELECT statsrepo.get_constraintdef($1) LOOP
 		    EXECUTE 'ALTER TABLE statsrepo.' || child_name || ' ADD ' || condef;
 		END LOOP;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
 
--- partition_drop(date, oid) - drop partition-table.
-CREATE FUNCTION statsrepo.partition_drop(date, oid)
+-- partition_drop(date, regclass) - drop partition-table.
+CREATE FUNCTION statsrepo.partition_drop(date, regclass)
 RETURNS void AS
 $$
 DECLARE
-	parent_name			name;
-	child_name			name;
-	tblname				name;
+	parent_name	name;
+	child_name	name;
+	tblname		name;
 BEGIN
 	parent_name := relname FROM pg_class WHERE oid = $2;
 	child_name := parent_name || to_char($1, '_YYYYMMDD');
@@ -2639,23 +2687,36 @@ END;
 $$
 LANGUAGE plpgsql;
 
--- function to create partition-tables
-CREATE FUNCTION statsrepo.create_partition(timestamptz) RETURNS void AS
+-- function to create partition-tables for snapshot
+CREATE FUNCTION statsrepo.create_snapshot_partition(timestamptz) RETURNS void AS
 $$
 DECLARE
 BEGIN
 	LOCK TABLE statsrepo.instance IN SHARE UPDATE EXCLUSIVE MODE;
 
 	SET client_min_messages = warning;
-	PERFORM statsrepo.partition_new('statsrepo.table'::regclass, CAST($1 AS DATE));
-	PERFORM statsrepo.partition_new('statsrepo.index'::regclass, CAST($1 AS DATE));
-	PERFORM statsrepo.partition_new('statsrepo.column'::regclass, CAST($1 AS DATE));
+	PERFORM statsrepo.partition_new('statsrepo.table', CAST($1 AS DATE), 'date');
+	PERFORM statsrepo.partition_new('statsrepo.index', CAST($1 AS DATE), 'date');
+	PERFORM statsrepo.partition_new('statsrepo.column', CAST($1 AS DATE), 'date');
 	RESET client_min_messages;
 END;
 $$ LANGUAGE plpgsql;
 
--- function to insert partition-table
-CREATE FUNCTION statsrepo.partition_insert() RETURNS TRIGGER AS
+-- function to create partition-tables for log
+CREATE FUNCTION statsrepo.create_repolog_partition(timestamptz) RETURNS void AS
+$$
+DECLARE
+BEGIN
+	LOCK TABLE statsrepo.instance IN SHARE UPDATE EXCLUSIVE MODE;
+
+	SET client_min_messages = warning;
+	PERFORM statsrepo.partition_new('statsrepo.log', CAST($1 AS DATE), 'CAST (timestamp AS DATE)');
+	RESET client_min_messages;
+END;
+$$ LANGUAGE plpgsql;
+
+-- function to insert partition-table for snapshot
+CREATE FUNCTION statsrepo.partition_snapshot_insert() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
@@ -2665,20 +2726,48 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- trigger registration for partitioning
-CREATE TRIGGER partition_insert_table BEFORE INSERT ON statsrepo.table FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_insert();
-CREATE TRIGGER partition_insert_index BEFORE INSERT ON statsrepo.index FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_insert();
-CREATE TRIGGER partition_insert_column BEFORE INSERT ON statsrepo.column FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_insert();
+-- function to insert partition-table for log
+CREATE FUNCTION statsrepo.partition_repolog_insert() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+	EXECUTE 'INSERT INTO statsrepo.'
+		|| TG_TABLE_NAME || to_char(new.timestamp, '_YYYYMMDD') || ' VALUES(($1).*)' USING new;
+	RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
 
--- del_snapshot2(time) - delete snapshots before the specified time.
+-- trigger registration for partitioning
+CREATE TRIGGER partition_insert_table BEFORE INSERT ON statsrepo.table FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_snapshot_insert();
+CREATE TRIGGER partition_insert_index BEFORE INSERT ON statsrepo.index FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_snapshot_insert();
+CREATE TRIGGER partition_insert_column BEFORE INSERT ON statsrepo.column FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_snapshot_insert();
+CREATE TRIGGER partition_insert_log BEFORE INSERT ON statsrepo.log FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_repolog_insert();
+
+-- del_snapshot2(time) - delete snapshots older than the specified timestamp.
 CREATE FUNCTION statsrepo.del_snapshot2(timestamptz) RETURNS void AS
 $$
 	LOCK TABLE statsrepo.instance IN SHARE UPDATE EXCLUSIVE MODE;
 
-	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.table'::regclass);
-	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.index'::regclass);
-	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.column'::regclass);
+	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.table');
+	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.index');
+	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.column');
 	SELECT statsrepo.del_snapshot($1);
+$$
+LANGUAGE sql;
+
+-- del_repolog2(time) - delete logs older than the specified timestamp.
+CREATE FUNCTION statsrepo.del_repolog2(timestamptz) RETURNS void AS
+$$
+	LOCK TABLE statsrepo.instance IN SHARE UPDATE EXCLUSIVE MODE;
+
+	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.log');
+
+	/*
+	 * Note:
+	 * Not use DELETE directly due to a bug in PostgreSQL (#6019).
+	 * (BUG #6019: invalid cached plan on inherited table)
+	 */
+	SELECT statsrepo.del_repolog($1);
 $$
 LANGUAGE sql;
 

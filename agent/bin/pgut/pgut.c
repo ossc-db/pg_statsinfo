@@ -45,6 +45,7 @@ static bool	in_cleanup = false;
 /* log min messages */
 int			pgut_log_level = INFO;
 int			pgut_abort_level = ERROR;
+int			pgut_abort_code = 1;
 bool		pgut_echo = false;
 
 /* Database connections */
@@ -830,7 +831,7 @@ pgut_errfinish(int dummy, ...)
 			edata->detail.data);
 
 	if (pgut_abort_level <= edata->elevel && edata->elevel <= PANIC)
-		exit_or_abort(edata->code);
+		exit_or_abort(pgut_abort_code);
 }
 
 #ifndef PGUT_OVERRIDE_ELOG

@@ -6,24 +6,13 @@
 
 #include "pg_statsinfod.h"
 
-#include "libpq/pqsignal.h"
-
 #include <dirent.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <time.h>
 
-#ifndef WIN32
-#include <dirent.h>
-#include <linux/version.h>
-#endif
-
-/* pg_statsinfo.control values */
-static StatsinfoControlFileData		ControlFile;
-
-static int			cf_fd; 
 static time_t		logger_reload_time = 0;
 static List		   *adjust_log_list = NIL;
+static bool			shutdown_message_found = false;
 
 /*---- GUC variables (logger) ----------*/
 static char		   *my_log_directory;
@@ -46,12 +35,6 @@ static char		   *my_adjust_log_fatal;
 static List		   *my_textlog_nologging_users;
 static int		    my_controlfile_fsync_interval;
 /*-----------------------*/
-
-#if PG_VERSION_NUM < 90000
-#define CSV_COLS			22
-#else
-#define CSV_COLS			23
-#endif
 
 /*
  * delay is required because postgres logger might be alive in some seconds
@@ -83,12 +66,6 @@ typedef struct Logger
 	size_t	fields[CSV_COLS + 1];	/* field offsets in buffer */
 } Logger;
 
-typedef struct AdjustLog
-{
-	char	*sqlstate;	/* SQL STATE to be adjusted */
-	int		 elevel;	/* log level */
-} AdjustLog;
-
 static List			   *log_queue = NIL;
 static pthread_mutex_t	log_lock;
 static int				recursive_level = 0;
@@ -100,46 +77,29 @@ static void logger_parse(Logger *logger, const char *pg_log, bool only_routing);
 
 static void logger_route(Logger *logger, const Log *log);
 
-static void init_log(Log *log, const char *buf, size_t len, const size_t fields[]);
 static bool logger_open(Logger *logger, const char *csvlog, long offset);
 static void logger_close(Logger *logger);
 static bool logger_next(Logger *logger, const char *pg_log);
-static void get_csvlog(char csvlog[], const char *prev, const char *pg_log);
-static void adjust_log(Log *log);
 static void replace_extension(char path[], const char *extension);
 static void assign_textlog_path(Logger *logger, const char *pg_log);
 static void assign_csvlog_path(Logger *logger, const char *pg_log, const char *csvlog, long offset);
-static List *add_adlog(List *adlog_list, int elevel, char *rawstring);
-static char *b_trim(char *str);
-static bool split_string(char *rawstring, char separator, List **elemlist);
-static bool is_nologging_user(const Log *log);
-static int csvfilter(const struct dirent *dp);
-static void open_controlfile(Logger *logger, int flags, mode_t mode);
-static void load_controlfile(Logger *logger);
-static bool ReadControlFile(void);
-static void RewriteControlFile(Logger *logger);
-static void FsyncControlFile(void);
-static void FlushControlFile(void);
-static int SyncFile(int fd);
-static time_t get_next_time(time_t now, int interval);
-static void logger_shutdown(Logger *logger);
+static void do_complement(Logger *logger, ControlFile *ctrl);
+static void rename_unknown_textlog(Logger *logger);
 
 static volatile bool	stop_request = false;
 
 /* SIGUSR1: instructs to stop the pg_statsinfod process */
 static void
-logger_sigusr1_handler(SIGNAL_ARGS)
+sigusr1_handler(SIGNAL_ARGS)
 {
 	stop_request = true;
-	if (shutdown_state < SHUTDOWN_REQUESTED)
-		shutdown_progress(SHUTDOWN_REQUESTED);
+	shutdown_progress(SHUTDOWN_REQUESTED);
 }
 
 void
 logger_init(void)
 {
 	pthread_mutex_init(&log_lock, NULL);
-	shutdown_message_found = false;
 	log_queue = NIL;
 	logger_reload_time = 0;	/* any values ok as far as before now */
 }
@@ -150,14 +110,14 @@ logger_init(void)
 void *
 logger_main(void *arg)
 {
-	Logger			  logger;
-	int				  entry;
-	struct dirent	**dplist;
-	time_t			  now;
-	time_t			  next_fsync;
+	ControlFile	*ctrl = (ControlFile *) arg;
+	Logger		 logger;
+	char		 csvlog[MAXPGPATH];
+	time_t		 now;
+	time_t		 next_fsync;
 
 	/* Set up signal handlers */
-	pqsignal(SIGUSR1, logger_sigusr1_handler);
+	pqsignal(SIGUSR1, sigusr1_handler);
 
 	memset(&logger, 0, sizeof(logger));
 	initStringInfo(&logger.buf);
@@ -169,27 +129,19 @@ logger_main(void *arg)
 	/* sets latest csvlog to the elements of logger */
 	for (;;)
 	{
-		entry = scandir(my_log_directory, &dplist, csvfilter, alphasort);
-		if (entry > 0)
+		get_csvlog(csvlog, NULL, my_log_directory);
+		if (csvlog[0])
 			break;
 		usleep(200 * 1000);	/* 200ms */
-	};
-	assign_csvlog_path(&logger, my_log_directory, dplist[entry - 1]->d_name, 0);
+	}
+	assign_csvlog_path(&logger, my_log_directory, csvlog, 0);
 	assign_textlog_path(&logger, my_log_directory);
 
-	while (entry--)
-		free(dplist[entry]);
-	free(dplist);
-
-	/* load the pg_statsinfo.control */
-	load_controlfile(&logger);
-	ControlFile.state = STATSINFO_RUNNING;
-
-	/* perform the log routing until end of the latest csvlog */
-	logger_open(&logger, logger.csv_path, logger.csv_offset);
-	logger_parse(&logger, my_log_directory, true);
-
+	WriteState(STATSINFO_RUNNING);
 	FsyncControlFile();
+
+	/* complement the log until end of the latest csvlog */
+	do_complement(&logger, ctrl);
 
 	/*
 	 * Logger should not shutdown before any other threads are alive,
@@ -258,10 +210,10 @@ logger_main(void *arg)
 
 	/* update pg_statsinfo.control */
 	if (shutdown_message_found || !stop_request)
-		ControlFile.state = STATSINFO_SHUTDOWNED;
+		WriteState(STATSINFO_SHUTDOWNED);
 	else
-		ControlFile.state = STATSINFO_STOPPED;
-	RewriteControlFile(&logger);
+		WriteState(STATSINFO_STOPPED);
+
 	FsyncControlFile();
 
 	/* final shutdown message */
@@ -276,7 +228,7 @@ logger_main(void *arg)
 	logger_close(&logger);
 	shutdown_progress(LOGGER_SHUTDOWN);
 
-	return (void *) LOGGER_RETURN_SUCCESS;
+	return NULL;
 }
 
 #ifdef PGUT_OVERRIDE_ELOG
@@ -565,7 +517,7 @@ logger_route(Logger *logger, const Log *log)
 		if (logger->textlog != NULL)
 		{
 			/* don't write a textlog of the users that are set not logging */
-			if (!is_nologging_user(log))
+			if (!is_nologging_user(log, my_textlog_nologging_users))
 			{
 				if (!write_textlog(log,
 								   my_textlog_line_prefix,
@@ -581,42 +533,6 @@ logger_route(Logger *logger, const Log *log)
 	}
 }
 
-static void
-init_log(Log *log, const char *buf, size_t len, const size_t fields[])
-{
-	int		i;
-
-	i = 0;
-	log->timestamp = buf + fields[i++];
-	log->username = buf + fields[i++];
-	log->database = buf + fields[i++];
-	log->pid = buf + fields[i++];
-	log->client_addr = buf + fields[i++];
-	log->session_id = buf + fields[i++];
-	log->session_line_num = buf + fields[i++];
-	log->ps_display = buf + fields[i++];
-	log->session_start = buf + fields[i++];
-	log->vxid = buf + fields[i++];
-	log->xid = buf + fields[i++];
-	log->elevel = str_to_elevel(buf + fields[i++]);
-	log->sqlstate = buf + fields[i++];
-	log->message = buf + fields[i++];
-	log->detail = buf + fields[i++];
-	log->hint = buf + fields[i++];
-	log->query = buf + fields[i++];
-	log->query_pos = buf + fields[i++];
-	log->context = buf + fields[i++];
-	log->user_query = buf + fields[i++];
-	log->user_query_pos = buf + fields[i++];
-	log->error_location = buf + fields[i++];
-#if PG_VERSION_NUM >= 90000
-	log->application_name = buf + fields[i++];
-#else
-	log->application_name = "";
-#endif
-	Assert(i == CSV_COLS);
-}
-
 /*
  * logger_parse - Parse CSV log and route it into textlog, syslog, or trap.
  */
@@ -628,7 +544,7 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 		Log		log;
 		int		save_elevel;
 
-		init_log(&log, logger->buf.data, logger->buf.len, logger->fields);
+		init_log(&log, logger->buf.data, logger->fields);
 
 		/* parse operation request logs; those messages are NOT routed. */
 		if (log.elevel == LOG)
@@ -659,17 +575,6 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 				continue;
 			}
 
-			/* restart requested ? */
-			if (strcmp(log.message, LOGMSG_RESTART) == 0)
-			{
-				if (!only_routing)
-				{
-					shutdown_message_found = true;
-					shutdown_progress(SHUTDOWN_REQUESTED);
-				}
-				continue;
-			}
-
 #ifdef ADJUST_PERFORMANCE_MESSAGE_LEVEL
 			/* performance log? */
 			if ((my_textlog_min_messages > INFO ||
@@ -688,14 +593,11 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 		 */
 		save_elevel = log.elevel;
 		if (my_adjust_log_level)
-			adjust_log(&log);
+			adjust_log(&log, adjust_log_list);
 		logger_route(logger, &log);
 
 		/* update pg_statsinfo.control */
-		strlcpy(ControlFile.csv_name,
-			logger->csv_name, sizeof(ControlFile.csv_name));
-		ControlFile.csv_offset = logger->csv_offset;
-		RewriteControlFile(logger);
+		WriteLogRouteData(logger->csv_name, logger->csv_offset);
 
 		if (!only_routing && save_elevel == LOG)
 		{
@@ -783,6 +685,7 @@ logger_close(Logger *logger)
 	{
 		struct stat	st;
 
+		fsync(fileno(logger->textlog));
 		fclose(logger->textlog);
 		logger->textlog = NULL;
 
@@ -887,71 +790,6 @@ logger_next(Logger *logger, const char *pg_log)
 	return ret;
 }
 
-/*
- * Get the csvlog path to parse next, or null-string if no logs.
- */
-static void
-get_csvlog(char csvlog[], const char *prev, const char *pg_log)
-{
-	int				  entry;
-	struct dirent	**dplist;
-	struct stat		  st;
-	char			  tmppath[MAXPGPATH];
-	int				  i;
-
-	Assert(csvlog);
-	Assert(prev);
-	Assert(prev[0]);
-	Assert(pg_log);
-
-	csvlog[0] = '\0';
-
-	if ((entry = scandir(pg_log, &dplist, csvfilter, alphasort)) < 0)
-	{
-		/* pg_log directory might not exist before syslogger started */
-		if (errno != ENOENT)
-			ereport(WARNING,
-				(errcode_errno(),
-				 errmsg("could not scan directory \"%s\": ", pg_log)));
-		return;
-	}
-
-	for (i = 0; i < entry; i++)
-	{
-		/* get the next log of previous parsed log */
-		if (strcmp(prev, dplist[i]->d_name) < 0)
-		{
-			strlcpy(csvlog, dplist[i]->d_name, MAXPGPATH);
-
-			join_path_components(tmppath, pg_log, dplist[i]->d_name);
-			if (stat(tmppath, &st) == 0 && st.st_size > 0)
-				break;
-		}
-	}
-
-	while (entry--)
-		free(dplist[entry]);
-	free(dplist);
-}
-
-static void
-adjust_log(Log *log)
-{
-	ListCell	*cell;
-
-	foreach(cell, adjust_log_list)
-	{
-		AdjustLog *adlog = (AdjustLog *) lfirst(cell);
-
-		if (strcmp(adlog->sqlstate, log->sqlstate) == 0)
-		{
-			log->elevel = adlog->elevel;
-			elog(DEBUG2, "adjust log level -> %d: sqlstate=\"%s\"", log->elevel, log->sqlstate);
-			break;
-		}
-	}
-}
-
 static void
 replace_extension(char path[], const char *extension)
 {
@@ -984,441 +822,90 @@ assign_csvlog_path(Logger *logger, const char *pg_log, const char *csvlog, long 
 	logger->csv_offset = offset;
 }
 
-static List *
-add_adlog(List *adlog_list, int elevel, char *rawstring)
+static void
+do_complement(Logger *logger, ControlFile *ctrl)
 {
-	char	*token;
+	char		prev_csvlog[MAXPGPATH];
+	struct stat	st;
 
-	token = strtok(rawstring, ",");
-	while (token)
+	if (ctrl->csv_name[0] == '\0' ||
+		ctrl->state == STATSINFO_SHUTDOWNED)
 	{
-		AdjustLog *adlog = pgut_malloc(sizeof(AdjustLog));;
-		adlog->elevel = elevel;
-		adlog->sqlstate = b_trim(token);
-		adlog_list = lappend(adlog_list, adlog);
-		token = strtok(NULL, ",");
-	}
-	return adlog_list;
-}
-
-/*
- * Note: this function modify the argument string
- */
-static char *
-b_trim(char *str)
-{
-	size_t	 len;
-	char	*start;
-
-	if (str == NULL)
-		return NULL;
-
-	/* remove space character from prefix */
-	len = strlen(str);
-	while (len > 0 && isspace(str[len - 1])) { len--; }
-	str[len] = '\0';
-
-	/* remove space character from suffix */
-	start = str;
-	while (isspace(start[0])) { start++; }
-	memmove(str, start, strlen(start) + 1);
-
-	return str;
-}
-
-/*
- * Note: this function modify the argument
- */
-static bool
-split_string(char *rawstring, char separator, List **elemlist)
-{
-	char	*nextp = rawstring;
-	bool	 done = false;
-
-	*elemlist = NIL;
-
-	/* skip leading whitespace */
-	while (isspace((unsigned char) *nextp))
-		nextp++;
-
-	/* allow empty string */
-	if (*nextp == '\0')
-		return true;
-
-	/* At the top of the loop, we are at start of a new identifier. */
-	do
-	{
-		char *curname;
-		char *endp;
-
-		if (*nextp == '\"')
-		{
-			/* Quoted name --- collapse quote-quote pairs, no downcasing */
-			curname = nextp + 1;
-			for (;;)
-			{
-				endp = strchr(nextp + 1, '\"');
-				if (endp == NULL)
-					return false; /* mismatched quotes */
-				if (endp[1] != '\"')
-					break; /* found end of quoted name */
-				/* Collapse adjacent quotes into one quote, and look again */
-				memmove(endp, endp + 1, strlen(endp));
-				nextp = endp;
-			}
-			/* endp now points at the terminating quote */
-			nextp = endp + 1;
-		}
-		else
-		{
-			/* Unquoted name --- extends to separator or whitespace */
-			curname = nextp;
-			while (*nextp && *nextp != separator &&
-				   !isspace((unsigned char) *nextp))
-				nextp++;
-			endp = nextp;
-			if (curname == nextp)
-				return false; /* empty unquoted name not allowed */
-		}
-
-		/* skip trailing whitespace */
-		while (isspace((unsigned char) *nextp))
-			nextp++;
-
-		if (*nextp == separator)
-		{
-			nextp++;
-			while (isspace((unsigned char) *nextp))
-				nextp++; /* skip leading whitespace for next */
-			/* we expect another name, so done remains false */
-		}
-		else if (*nextp == '\0')
-			done = true;
-		else
-			return false; /* invalid syntax */
-
-		/* Now safe to overwrite separator with a null */
-		*endp = '\0';
-
 		/*
-		 * Finished isolating current name --- add it to list
+		 * if the latest textlog file already exists, rename it to
+		 * "<latest-csvlog>.err.<seqid>" (eg. postgresql-2012-07-01_000000.err.1)
 		 */
-		*elemlist = lappend(*elemlist, pgut_strdup(curname));
+		if (stat(logger->textlog_path, &st) == 0)
+			rename_unknown_textlog(logger);
 
-		/* Loop back if we didn't reach end of string */
-	} while (!done);
-
-	return true;
-}
-
-static bool
-is_nologging_user(const Log *log)
-{
-	ListCell	*cell;
-
-	foreach(cell, my_textlog_nologging_users)
-	{
-		if (strcmp(log->username, (char *) lfirst(cell)) == 0)
-		return true;
-	}
-	return false;
-}
-
-static int
-csvfilter(const struct dirent *dp)
-{
-	const char	*extension;
-	struct stat	 entry_stat;
-	char		 entry_path[MAXPGPATH];
-
-	/* check the extension is .csv */
-	extension = strrchr(dp->d_name, '.');
-	if (extension && strcmp(extension, ".csv") == 0)
-	{
-		/* do lstat() for matching extensions */
-		join_path_components(entry_path, my_log_directory, dp->d_name);
-		if (lstat(entry_path, &entry_stat) == 0)
-		{
-			/* is this a regular file? */
-			if (S_ISREG(entry_stat.st_mode))
-				return 1;
-		}
-	}
-	return 0;
-}
-
-static void
-open_controlfile(Logger *logger, int flags, mode_t mode)
-{
-	if ((cf_fd = open(STATSINFO_CONTROL_FILE, flags, mode)) < 0)
-	{
-		ereport(ERROR,
-			(errcode_errno(),
-			 errmsg("could not open control file \"%s\": %m",
-			 	STATSINFO_CONTROL_FILE)));
-		/* shutdown due to fatal error */
-		logger_shutdown(logger);
-	}
-}
-
-/*
- * load the previous state from pg_statsinfo.control.
- */
-static void
-load_controlfile(Logger *logger)
-{
-	struct stat		st;
-
-	if (stat(STATSINFO_CONTROL_FILE, &st) != 0)
-	{
-		open_controlfile(logger,
-			O_RDWR | O_CREAT | O_EXCL | PG_BINARY,
-			S_IRUSR | S_IWUSR);
+		logger_open(logger, logger->csv_name, logger->csv_offset);
 		return;
 	}
 
-	open_controlfile(logger, O_RDWR | PG_BINARY, 0);
+	join_path_components(prev_csvlog, my_log_directory, ctrl->csv_name);
 
 	/*
-	 * if state value of pg_statsinfo.control is not "STATSINFO_SHUTDOWNED",
-	 * that means the previous pg_statsinfod was abnormally end or stopped by
-	 * request.
-	 * in this case, parse the csvlog between last parsed position and
-	 * latest position.
+	 * if state of control file is "STATSINFO_STOPPED",
+	 * restore the latest textlog from previous textlog that was renamed.
 	 */
-	if (ReadControlFile())
+	if (ctrl->state == STATSINFO_STOPPED)
 	{
-		char prev_csvlog[MAXPGPATH];
+		char prev_textlog[MAXPGPATH];
 
-		if (ControlFile.state == STATSINFO_SHUTDOWNED)
-			return;
+		strlcpy(prev_textlog, prev_csvlog, MAXPGPATH);
+		replace_extension(prev_textlog, ".log");
 
-		join_path_components(
-			prev_csvlog, my_log_directory, ControlFile.csv_name);
+		if (rename(prev_textlog, logger->textlog_path) != 0)
+			ereport(ERROR,
+				(errcode_errno(),
+				 errmsg("could not rename file \"%s\" to \"%s\": %m",
+				 	prev_textlog, logger->textlog_path)));
+	}
 
-		/*
-		 * if state of pg_statsinfo.control is "STATSINFO_STOPPED",
-		 * restore the latest textlog from previous textlog that was renamed.
-		 */
-		if (ControlFile.state == STATSINFO_STOPPED)
-		{
-			char prev_textlog[MAXPGPATH];
-
-			strlcpy(prev_textlog, prev_csvlog, MAXPGPATH);
-			replace_extension(prev_textlog, ".log");
-
-			if (rename(prev_textlog, logger->textlog_path) != 0)
-				ereport(ERROR,
-					(errcode_errno(),
-					 errmsg("could not rename file \"%s\" to \"%s\": %m",
-					 	prev_textlog, logger->textlog_path)));
-		}
-
-		if (stat(prev_csvlog, &st) == 0 && ControlFile.csv_offset <= st.st_size)
-		{
-			/* set the csvlog path and the csvlog offset to the logger */
-			assign_csvlog_path(logger, my_log_directory,
-				ControlFile.csv_name, ControlFile.csv_offset);
-			return;
-		}
-
+	if (stat(prev_csvlog, &st) != 0 || ctrl->csv_offset > st.st_size)
+	{
 		/* csvlog which parsed at last is missed */
 		ereport(WARNING,
 			(errmsg("csvlog file \"%s\" not found or incurrect offset",
-				ControlFile.csv_name)));
+				ctrl->csv_name)));
+
+		/*
+		 * if the latest textlog file already exists, rename it to
+		 * "<latest-csvlog>.err.<seqid>" (eg. postgresql-2012-07-01_000000.err.1)
+		 */
+		if (stat(logger->textlog_path, &st) == 0)
+			rename_unknown_textlog(logger);
+
+		logger_open(logger, logger->csv_name, logger->csv_offset);
+		return;
 	}
 
-	/*
-	 * could not read the pg_statsinfo.control or incorrect data.
-	 * rename the latest textlog file to "<latest-csvlog>.err.<seqid>"
-	 * (eg. postgresql-2012-07-01_000000.err.1)
-	 */
-	if (stat(logger->textlog_path, &st) == 0)
-	{
-		char new_path[MAXPGPATH];
-		char extension[32];
-		int seqid = 0;
-
-		for (;;)
-		{
-			strlcpy(new_path, logger->csv_path, sizeof(new_path));
-			snprintf(extension, sizeof(extension), ".err.%d", ++seqid);
-			replace_extension(new_path, extension);
-
-			if (stat(new_path, &st) != 0)
-				break;
-		}
-
-		rename(logger->textlog_path, new_path);
-		elog(WARNING,
-			"latest textlog file already exists, it renamed to '%s'", new_path);
-	}
-}
-
-/*
- * I/O routines for pg_statsinfo.control
- *
- * ControlFile is a buffer in memory that holds an image of the contents of
- * pg_statsinfo.control. RewriteControlFile() writes the pg_statsinfo.control
- * file with the contents in buffer. ReadControlFile() loads the buffer from the
- * pg_statsinfo.control file.
- */
-static bool
-ReadControlFile(void)
-{
-	pg_crc32	crc;
-
-	Assert(cf_fd >= 0);	/* have not been opened the pg_statsinfo.control */
-
-	/* read data */
-	if (read(cf_fd, &ControlFile,
-			sizeof(ControlFile)) != sizeof(ControlFile))
-	{
-		ereport(ERROR,
-			(errcode_errno(),
-			 errmsg("could not read from control file \"%s\": %m",
-			 	STATSINFO_CONTROL_FILE)));
-		return false;
-	}
-
-	/*
-	 * Check for expected pg_statsinfo.control format version.
-	 * If this is wrong, the CRC check will likely fail because we'll be
-	 * checking the wrong number of bytes.
-	 * Complaining about wrong version will probably be more enlightening
-	 * than complaining about wrong CRC.
-	 */
-	if (ControlFile.control_version != STATSINFO_CONTROL_VERSION &&
-		((ControlFile.control_version / 100) != (STATSINFO_CONTROL_VERSION / 100)))
-	{
-		ereport(ERROR,
-			(errmsg("pg_statsinfo.control format incompatible"),
-			 errdetail("pg_statsinfo.control was created with STATSINFO_CONTROL_VERSION %d (0x%08x), "
-			 		   "but the pg_statsinfo was compiled with STATSINFO_CONTROL_VERSION %d (0x%08x)",
-					ControlFile.control_version, ControlFile.control_version,
-					STATSINFO_CONTROL_VERSION, STATSINFO_CONTROL_VERSION)));
-		return false;
-	}
-
-	/* check the CRC */
-	INIT_CRC32(crc);
-	COMP_CRC32(crc,
-		(char *) &ControlFile, offsetof(StatsinfoControlFileData, crc));
-	FIN_CRC32(crc);
-
-	if (!EQ_CRC32(crc, ControlFile.crc))
-	{
-		ereport(ERROR,
-			(errmsg("incorrect checksum in control file \"%s\"",
-				STATSINFO_CONTROL_FILE)));
-		return false;
-	}
-
-	return true;
+	/* perform the log routing until end of the latest csvlog */
+	logger_open(logger, ctrl->csv_name, ctrl->csv_offset);
+	logger_parse(logger, my_log_directory, true);
+	return;
 }
 
 static void
-RewriteControlFile(Logger *logger)
+rename_unknown_textlog(Logger *logger)
 {
-	char	buffer[sizeof(ControlFile)];
+	struct stat	st;
+	char		new_path[MAXPGPATH];
+	char		extension[32];
+	int			seqid = 0;
 
-	Assert(cf_fd >= 0);	/* have not been opened the pg_statsinfo.control */
+	strlcpy(new_path, logger->csv_path, sizeof(new_path));
 
-	/* initialize version and compatibility-check fields */
-	ControlFile.control_version = STATSINFO_CONTROL_VERSION;
-
-	/* contents are protected with a CRC */
-	INIT_CRC32(ControlFile.crc);
-	COMP_CRC32(ControlFile.crc,
-		(char *) &ControlFile, offsetof(StatsinfoControlFileData, crc));
-	FIN_CRC32(ControlFile.crc);
-
-	memset(buffer, 0, sizeof(ControlFile));
-	memcpy(buffer, &ControlFile, sizeof(ControlFile));
-
-	lseek(cf_fd, 0, SEEK_SET);
-	errno = 0;
-	if (write(cf_fd, buffer, sizeof(ControlFile)) != sizeof(ControlFile))
+	for (;;)
 	{
-		/* if write didn't set errno, assume problem is no disk space */
-		if (errno == 0)
-			errno = ENOSPC;
-		ereport(ERROR,
-			(errcode_errno(),
-			 errmsg("could not write to control file \"%s\": %m",
-			 	STATSINFO_CONTROL_FILE)));
-		/* shutdown due to fatal error */
-		logger_shutdown(logger);
+		snprintf(extension, sizeof(extension), ".err.%d", ++seqid);
+		replace_extension(new_path, extension);
+
+		if (stat(new_path, &st) != 0)
+			break;
 	}
-}
 
-static void
-FsyncControlFile(void)
-{
-	Assert(cf_fd >= 0);	/* have not been opened the pg_statsinfo.control */
-
-	elog(DEBUG2, "fsync control file (fsync method=\"fsync\")");
-	if (fsync(cf_fd) != 0)
-		ereport(ERROR,
-			(errcode_errno(),
-				errmsg("could not fsync control file \"%s\": %m",
-				STATSINFO_CONTROL_FILE)));
-}
-
-static void
-FlushControlFile(void)
-{
-	Assert(cf_fd >= 0);	/* have not been opened the pg_statsinfo.control */
-
-	if (SyncFile(cf_fd) != 0)
-		ereport(ERROR,
-			(errcode_errno(),
-				errmsg("could not fsync control file \"%s\": %m",
-				STATSINFO_CONTROL_FILE)));
-}
-
-static int
-SyncFile(int fd)
-{
-#if defined(HAVE_SYNC_FILE_RANGE)
-	elog(DEBUG2, "fsync file (fsync method=\"sync_file_range\")");
-	return sync_file_range(fd, 0, 0,
-		SYNC_FILE_RANGE_WAIT_BEFORE | SYNC_FILE_RANGE_WRITE);
-#elif defined(HAVE_FDATASYNC)
-	elog(DEBUG2, "fsync file (fsync method=\"fdatasync\")");
-	return fdatasync(fd);
-#else
-	elog(DEBUG2, "fsync file (fsync method=\"fsync\")");
-	return fsync(cf_fd);
-#endif
-}
-
-static time_t
-get_next_time(time_t now, int interval)
-{
-	if (interval > 0)
-		return (now / interval) * interval + interval;
-	else
-		return now;
-}
-
-static void
-logger_shutdown(Logger *logger)
-{
-	/* notify shutdown request to other threads */
-	if (shutdown_state < SHUTDOWN_REQUESTED)
-		shutdown_progress(SHUTDOWN_REQUESTED);
-
-	/* wait until the end of the other threads */
-	while (shutdown_state < WRITER_SHUTDOWN)
-		usleep(200 * 1000);	/* 200ms */
-
-	/* final shutdown message */
-	elog(ERROR, "shutdown due to fatal error");
-	logger_recv(logger);
-	logger_close(logger);
-
-	/* exit the logger thread */
-	shutdown_progress(LOGGER_SHUTDOWN);
-	pthread_exit((void *) LOGGER_RETURN_FAILED);
+	rename(logger->textlog_path, new_path);
+	elog(WARNING,
+		"latest textlog file already exists, it renamed to '%s'", new_path);
 }

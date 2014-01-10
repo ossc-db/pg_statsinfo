@@ -23,7 +23,7 @@ setup_repository ${REPOSITORY_DATA} ${REPOSITORY_USER} ${REPOSITORY_PORT} ${REPO
 echo "/*---- Input the repository data ----*/"
 if [ $(server_version) -ge 80400 ] ; then
 	send_query -qf "$(pg_config --sharedir)/contrib/pg_statsrepo_partition.sql"
-	send_query -c "SELECT statsrepo.create_partition('2012-11-01')" > /dev/null
+	send_query -c "SELECT statsrepo.create_snapshot_partition('2012-11-01')" > /dev/null
 else
 	send_query -qf "$(pg_config --sharedir)/contrib/pg_statsrepo83.sql"
 fi

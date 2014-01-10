@@ -163,8 +163,12 @@ default_log_maintenance_command(void)
 #define DEFAULT_SNAPSHOT_INTERVAL			600		/* sec */
 #define DEFAULT_SYSLOG_LEVEL				DISABLE
 #define DEFAULT_TEXTLOG_LEVEL				WARNING
+#define DEFAULT_REPOLOG_LEVEL				WARNING
+#define DEFAULT_REPOLOG_BUFFER				10000
+#define DEFAULT_REPOLOG_INTERVAL			10
 #define DEFAULT_MAINTENANCE_TIME			"00:02:00"
 #define DEFAULT_REPOSITORY_KEEPDAY			7		/* day */
+#define DEFAULT_REPOLOG_KEEPDAY				7		/* day */
 #define DEFAULT_LOG_MAINTENANCE_COMMAND		default_log_maintenance_command()
 #define DEFAULT_LONG_LOCK_THREASHOLD		30		/* sec */
 #define DEFAULT_STAT_STATEMENTS_MAX			30
@@ -222,6 +226,9 @@ static char	   *textlog_filename = NULL;
 static char	   *textlog_line_prefix = NULL;
 static int		textlog_min_messages = DEFAULT_TEXTLOG_LEVEL;
 static int		textlog_permission = 0600;
+static int		repolog_min_messages = DEFAULT_REPOLOG_LEVEL;
+static int		repolog_buffer = DEFAULT_REPOLOG_BUFFER;
+static int		repolog_interval = DEFAULT_REPOLOG_INTERVAL;
 static bool		adjust_log_level = false;
 static char	   *adjust_log_info = NULL;
 static char	   *adjust_log_notice = NULL;
@@ -230,9 +237,11 @@ static char	   *adjust_log_error = NULL;
 static char	   *adjust_log_log = NULL;
 static char	   *adjust_log_fatal = NULL;
 static char	   *textlog_nologging_users = NULL;
+static char	   *repolog_nologging_users = NULL;
 static char	   *enable_maintenance = NULL;
 static char	   *maintenance_time = NULL;
 static int		repository_keepday = DEFAULT_REPOSITORY_KEEPDAY;
+static int		repolog_keepday = DEFAULT_REPOLOG_KEEPDAY;
 static char	   *log_maintenance_command = NULL;
 static int		long_lock_threashold = DEFAULT_LONG_LOCK_THREASHOLD;
 static int		stat_statements_max = DEFAULT_STAT_STATEMENTS_MAX;
@@ -314,8 +323,10 @@ static bool parse_bool(const char *value, bool *result);
 static const char *elevel_to_str(int elevel);
 static char	   *syslog_min_messages_str;
 static char	   *textlog_min_messages_str;
+static char	   *repolog_min_messages_str;
 static const char *assign_syslog_min_messages(const char *newval, bool doit, GucSource source);
 static const char *assign_textlog_min_messages(const char *newval, bool doit, GucSource source);
+static const char *assign_repolog_min_messages(const char *newval, bool doit, GucSource source);
 static const char *assign_elevel(const char *name, int *var, const char *newval, bool doit);
 
 /* 8.3 or earlier versions can work only with PGC_USERSET */
@@ -661,6 +672,20 @@ _PG_init(void)
 #endif
 							 NULL,
 							 NULL);
+
+	DefineCustomEnumVariable(GUC_PREFIX ".repolog_min_messages",
+							 "Sets the message levels that are repository-logged.",
+							 NULL,
+							 &repolog_min_messages,
+							 DEFAULT_REPOLOG_LEVEL,
+							 elevel_options,
+							 PGC_SIGHUP,
+							 0,
+#if PG_VERSION_NUM >= 90100
+							 NULL,
+#endif
+							 NULL,
+							 NULL);
 #else
 	DefineCustomStringVariable(GUC_PREFIX ".syslog_min_messages",
 							   "Sets the message levels that are system-logged.",
@@ -680,6 +705,16 @@ _PG_init(void)
 							   PGC_SIGHUP,
 							   0,
 							   assign_textlog_min_messages,
+							   NULL);
+
+	DefineCustomStringVariable(GUC_PREFIX ".repolog_min_messages",
+							   "Sets the message levels that are repository-logged.",
+							   NULL,
+							   &repolog_min_messages_str,
+							   elevel_to_str(DEFAULT_REPOLOG_LEVEL),
+							   PGC_SIGHUP,
+							   0,
+							   assign_repolog_min_messages,
 							   NULL);
 #endif
 
@@ -912,6 +947,19 @@ _PG_init(void)
 							   NULL,
 							   NULL);
 
+	DefineCustomStringVariable(GUC_PREFIX ".repolog_nologging_users",
+							   "Sets dbusers that doesn't store the log in repository.",
+							   NULL,
+							   &repolog_nologging_users,
+							   "",
+							   PGC_SIGHUP,
+							   GUC_SUPERUSER_ONLY,
+#if PG_VERSION_NUM >= 90100
+							   NULL,
+#endif
+							   NULL,
+							   NULL);
+
 	DefineCustomStringVariable(GUC_PREFIX ".enable_maintenance",
 							   "Sets the maintenance mode.",
 							   NULL,
@@ -947,6 +995,21 @@ _PG_init(void)
 							NULL,
 							&repository_keepday,
 							DEFAULT_REPOSITORY_KEEPDAY,
+							1,
+							3650,
+							PGC_SIGHUP,
+							0,
+#if PG_VERSION_NUM >= 90100
+							NULL,
+#endif
+							NULL,
+							NULL);
+
+	DefineCustomIntVariable(GUC_PREFIX ".repolog_keepday",
+							"Sets the retention period of log which is in repository.",
+							NULL,
+							&repolog_keepday,
+							DEFAULT_REPOLOG_KEEPDAY,
 							1,
 							3650,
 							PGC_SIGHUP,
@@ -1014,12 +1077,42 @@ _PG_init(void)
 							   NULL);
 
 	DefineCustomIntVariable(GUC_PREFIX ".controlfile_fsync_interval",
-							"sets the fsync interval of the control file.",
+							"Sets the fsync interval of the control file.",
 							NULL,
 							&controlfile_fsync_interval,
 							DEFAULT_CONTROLFILE_FSYNC_INTERVAL,
 							-1,
 							INT_MAX,
+							PGC_SIGHUP,
+							GUC_UNIT_S,
+#if PG_VERSION_NUM >= 90100
+							NULL,
+#endif
+							NULL,
+							NULL);
+
+	DefineCustomIntVariable(GUC_PREFIX ".repolog_buffer",
+							"Sets the number of log to buffer which use to store log into repository.",
+							NULL,
+							&repolog_buffer,
+							DEFAULT_REPOLOG_BUFFER,
+							1,
+							INT_MAX,
+							PGC_SIGHUP,
+							0,
+#if PG_VERSION_NUM >= 90100
+							NULL,
+#endif
+							NULL,
+							NULL);
+
+	DefineCustomIntVariable(GUC_PREFIX ".repolog_interval",
+							"Sets the store interval to store log in repository.",
+							NULL,
+							&repolog_interval,
+							DEFAULT_REPOLOG_INTERVAL,
+							0,
+							60,
 							PGC_SIGHUP,
 							GUC_UNIT_S,
 #if PG_VERSION_NUM >= 90100
@@ -2707,6 +2800,7 @@ check_enable_maintenance(char **newval, void **extra, GucSource source)
 		{
 			mode |= MAINTENANCE_MODE_SNAPSHOT;
 			mode |= MAINTENANCE_MODE_LOG;
+			mode |= MAINTENANCE_MODE_REPOLOG;
 		}
 		snprintf(mode_string, sizeof(mode_string), "%d", mode);
 		*newval = strdup(mode_string);
@@ -2730,6 +2824,8 @@ check_enable_maintenance(char **newval, void **extra, GucSource source)
 			mode |= MAINTENANCE_MODE_SNAPSHOT;
 		else if (pg_strcasecmp(tok, "log") == 0)
 			mode |= MAINTENANCE_MODE_LOG;
+		else if (pg_strcasecmp(tok, "repolog") == 0)
+			mode |= MAINTENANCE_MODE_REPOLOG;
 		else
 		{
 			GUC_check_errdetail(GUC_PREFIX ".enable_maintenance unrecognized keyword: \"%s\"", tok);
@@ -2810,6 +2906,7 @@ assign_enable_maintenance(const char *newval, bool doit, GucSource source)
 		{
 			mode |= MAINTENANCE_MODE_SNAPSHOT;
 			mode |= MAINTENANCE_MODE_LOG;
+			mode |= MAINTENANCE_MODE_REPOLOG;
 		}
 		snprintf(mode_string, sizeof(mode_string), "%d", mode);
 		return strdup(mode_string);
@@ -2836,6 +2933,8 @@ assign_enable_maintenance(const char *newval, bool doit, GucSource source)
 			mode |= MAINTENANCE_MODE_SNAPSHOT;
 		else if (pg_strcasecmp(tok, "log") == 0)
 			mode |= MAINTENANCE_MODE_LOG;
+		else if (pg_strcasecmp(tok, "repolog") == 0)
+			mode |= MAINTENANCE_MODE_REPOLOG;
 		else
 		{
 			pfree(rawstring);
@@ -2959,6 +3058,12 @@ static const char *
 assign_textlog_min_messages(const char *newval, bool doit, GucSource source)
 {
 	return (assign_elevel("textlog_min_messages", &textlog_min_messages, newval, doit));
+}
+
+static const char *
+assign_repolog_min_messages(const char *newval, bool doit, GucSource source)
+{
+	return (assign_elevel("repolog_min_messages", &repolog_min_messages, newval, doit));
 }
 
 static const char *

@@ -49,8 +49,9 @@
 #define LOGMSG_RESTART		LOG_PREFIX "restart requested"
 
 /* maintenance mode flag */
-#define MAINTENANCE_MODE_SNAPSHOT	0x01
-#define MAINTENANCE_MODE_LOG		0x02
+#define MAINTENANCE_MODE_SNAPSHOT	(1 << 0)
+#define MAINTENANCE_MODE_LOG		(1 << 1)
+#define MAINTENANCE_MODE_REPOLOG	(1 << 2)
 
 /* exit code for pg_statsinfod */
 #define STATSINFO_EXIT_SUCCESS		0x00

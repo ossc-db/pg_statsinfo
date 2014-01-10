@@ -11,6 +11,7 @@
 /* maintenance mode */
 #define MaintenanceModeIsSnapshot(mode)	( mode & MAINTENANCE_MODE_SNAPSHOT )
 #define MaintenanceModeIsLog(mode)		( mode & MAINTENANCE_MODE_LOG )
+#define MaintenanceModeIsRepoLog(mode)	( mode & MAINTENANCE_MODE_REPOLOG )
 
 pthread_mutex_t	reload_lock;
 pthread_mutex_t	maintenance_lock;
@@ -21,7 +22,6 @@ volatile char  *maintenance_requested;
 
 static PGconn  *collector_conn = NULL;
 
-static time_t get_next_time(time_t now, int interval);
 static bool reload_params(void);
 static void do_sample(void);
 static void do_snapshot(char *comment);
@@ -142,6 +142,21 @@ collector_main(void *arg)
 				maintenance_snapshot(repository_keep_period);
 			}
 
+			if (MaintenanceModeIsRepoLog(enable_maintenance))
+			{
+				time_t repolog_keep_period;
+				struct tm *tm;
+
+				/* calculate retention period on the basis of today's 0:00 AM */
+				tm = localtime(&now);
+				tm->tm_hour = 0;
+				tm->tm_min = 0;
+				tm->tm_sec = 0;
+				repolog_keep_period = mktime(tm) - ((time_t) repolog_keepday * SECS_PER_DAY);
+
+				maintenance_repolog(repolog_keep_period);
+			}
+
 			if (MaintenanceModeIsLog(enable_maintenance))
 			{
 				if (log_maintenance_pid <= 0)
@@ -174,12 +189,6 @@ collector_main(void *arg)
 	shutdown_progress(COLLECTOR_SHUTDOWN);
 
 	return NULL;
-}
-
-static time_t
-get_next_time(time_t now, int interval)
-{
-	return (now / interval) * interval + interval;
 }
 
 static bool

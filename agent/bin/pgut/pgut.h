@@ -63,6 +63,7 @@ extern const char  *PROGRAM_EMAIL;
 extern bool		interrupted;
 extern int		pgut_log_level;
 extern int		pgut_abort_level;
+extern int		pgut_abort_code;
 extern bool		pgut_echo;	
 
 extern void pgut_init(int argc, char **argv);

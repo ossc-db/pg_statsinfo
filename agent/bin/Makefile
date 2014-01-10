@@ -9,6 +9,8 @@ SRCS = \
 	checkpoint.c \
 	collector.c \
 	logger.c \
+	logger_send.c \
+	logger_common.c \
 	logger_in.c \
 	logger_out.c \
 	maintenance.c \
