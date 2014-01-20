@@ -491,8 +491,7 @@ static bool
 LogStore_exec(LogStore *log_store, PGconn *conn, const char *instid)
 {
 	ListCell	*cell;
-	time_t		 time;
-	struct tm	*tm;
+	struct tm	 tm;
 	int			 prev_year = -1;
 	int			 prev_mon = -1;
 	int			 prev_mday = -1;
@@ -507,22 +506,19 @@ LogStore_exec(LogStore *log_store, PGconn *conn, const char *instid)
 		LogData		*log = (LogData *) lfirst(cell);
 		const char	*timestamp = GET_FIELD(log, 0);
 
-		/*
-		 * create partition table
-		 */
-		parse_time(timestamp, &time);
-		tm = localtime(&time);
+		memset(&tm, 0, sizeof(tm));
+		strptime(timestamp, "%Y-%m-%d", &tm);
 
-		if (prev_year < tm->tm_year ||
-			prev_mon < tm->tm_mon ||
-			prev_mday < tm->tm_mday)
+		if (prev_year < tm.tm_year ||
+			prev_mon < tm.tm_mon ||
+			prev_mday < tm.tm_mday)
 		{
 			if (pgut_command(conn,
 				SQL_CREATE_REPOLOG_PARTITION, 1, &timestamp) != PGRES_TUPLES_OK)
 				goto error;
-			prev_year = tm->tm_year;
-			prev_mon = tm->tm_mon;
-			prev_mday = tm->tm_mday;
+			prev_year = tm.tm_year;
+			prev_mon = tm.tm_mon;
+			prev_mday = tm.tm_mday;
 		}
 	}
 
