@@ -522,7 +522,9 @@ LogStore_exec(LogStore *log_store, PGconn *conn, const char *instid)
 		}
 	}
 
-	if (pgut_command(conn, "BEGIN", 0, NULL) != PGRES_COMMAND_OK)
+	if (pgut_command(conn, "BEGIN", 0, NULL) != PGRES_COMMAND_OK ||
+		pgut_command(conn,
+			"SET synchronous_commit = off", 0, NULL) != PGRES_COMMAND_OK)
 		goto error;
 
 	foreach(cell, log_buffer.logs)
