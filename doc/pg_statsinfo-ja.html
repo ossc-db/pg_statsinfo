@@ -1204,12 +1204,12 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
   <tr>
     <td>pg_statsinfo.textlog_min_messages</td>
     <td>warning</td>
-    <td>テキストログへ出力する最小メッセージレベル。(*1)</td>
+    <td>テキストログへ出力する最小メッセージレベル <a href="#configuration-a1">(*1)</a></td>
   </tr>
   <tr>
     <td>pg_statsinfo.syslog_min_messages</td>
     <td>disable</td>
-    <td>syslog へ出力する最小メッセージレベル。(*1)</td>
+    <td>syslog へ出力する最小メッセージレベル <a href="#configuration-a1">(*1)</a>。</td>
   </tr>
   <tr>
     <td>pg_statsinfo.textlog_filename</td>
@@ -1219,13 +1219,13 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
   <tr>
     <td>pg_statsinfo.textlog_line_prefix</td>
     <td>'%t %p '</td>
-    <td>テキストログの各行の先頭に追加される書式。(*2)</td>
+    <td>テキストログの各行の先頭に追加される書式 <a href="#configuration-a2">(*2)</a></td>
   </tr>
   <tr>
     <td>pg_statsinfo.syslog_line_prefix</td>
     <td>'%t %p '</td>
-    <td>syslog の各行の先頭に追加される書式。
-        syslog がデフォルトで付与する時刻とプロセスIDは、エージェントのものに置き換わってしまうため、元の値を記録するために %t や %p が必要なことに注意してください。(*2)
+    <td>syslog の各行の先頭に追加される書式 <a href="#configuration-a2">(*2)</a>.
+        syslog がデフォルトで付与する時刻とプロセスIDは、エージェントのものに置き換わってしまうため、元の値を記録するために %t や %p が必要なことに注意してください。
     </td>
   </tr>
   <tr>
@@ -1261,12 +1261,12 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
   <tr>
     <td>pg_statsinfo.sampling_interval</td>
     <td>5s</td>
-    <td>サンプリングの実行間隔。(*3)</td>
+    <td>サンプリングの実行間隔 <a href="#configuration-a3">(*3)</a></td>
   </tr>
   <tr>
     <td>pg_statsinfo.snapshot_interval</td>
     <td>10min</td>
-    <td>スナップショットの取得間隔。(*3)</td>
+    <td>スナップショットの取得間隔 <a href="#configuration-a3">(*3)</a></td>
   </tr>
   <tr>
     <td>pg_statsinfo.excluded_dbnames</td>
@@ -1281,7 +1281,7 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
   <tr>
     <td>pg_statsinfo.repository_server</td>
     <td>'dbname=postgres'</td>
-    <td>リポジトリDBへの接続文字列。パスワードの入力待ちは避ける。(*4)</td>
+    <td>リポジトリDBへの接続文字列 <a href="#configuration-a4">(*4)</a>。パスワードの入力待ちは避ける。一般ユーザを使用して接続する場合は、<a href="#restrictions-dbuser"> こちら </a>の注意点をご覧ください。</td>
   </tr>
   <tr>
     <td>pg_statsinfo.adjust_log_level</td>
@@ -1291,32 +1291,32 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
   <tr>
     <td>pg_statsinfo.adjust_log_info</td>
     <td>-</td>
-    <td>メッセージレベルを INFO に変更したい SQLSTATE を指定します。(*5)</td>
+    <td>メッセージレベルを INFO に変更したい SQLSTATE 指定 <a href="#configuration-a5">(*5)</a></td>
   </tr>
   <tr>
     <td>pg_statsinfo.adjust_log_notice</td>
     <td>-</td>
-    <td>メッセージレベルを NOTICE に変更したい SQLSTATE を指定します。(*5)</td>
+    <td>メッセージレベルを NOTICE に変更したい SQLSTATE を指定 <a href="#configuration-a5">(*5)</a></td>
   </tr>
   <tr>
     <td>pg_statsinfo.adjust_log_warning</td>
     <td>-</td>
-    <td>メッセージレベルを WARNING に変更したい SQLSTATE を指定します。(*5)</td>
+    <td>メッセージレベルを WARNING に変更したい SQLSTATE を指定 <a href="#configuration-a5">(*5)</a></td>
   </tr>
   <tr>
     <td>pg_statsinfo.adjust_log_error</td>
     <td>-</td>
-    <td>メッセージレベルを ERROR に変更したい SQLSTATE を指定します。(*5)</td>
+    <td>メッセージレベルを ERROR に変更したい SQLSTATE を指定 <a href="#configuration-a5">(*5)</a></td>
   </tr>
   <tr>
     <td>pg_statsinfo.adjust_log_log</td>
     <td>-</td>
-    <td>メッセージレベルを LOG に変更したい SQLSTATE を指定します。(*5)</td>
+    <td>メッセージレベルを LOG に変更したい SQLSTATE を指定 <a href="#configuration-a5">(*5)</a></td>
   </tr>
   <tr>
     <td>pg_statsinfo.adjust_log_fatal</td>
     <td>-</td>
-    <td>メッセージレベルを FATAL に変更したい SQLSTATE を指定します。(*5)</td>
+    <td>メッセージレベルを FATAL に変更したい SQLSTATE を指定 <a href="#configuration-a5">(*5)</a></td>
   </tr>
   <tr>
     <td>pg_statsinfo.enable_maintenance</td>
@@ -1375,24 +1375,24 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
 </table>
 
 <dl>
-<dt>*1 : メッセージレベル</dt>
+<dt id="configuration-a1">*1 : メッセージレベル</dt>
 <dd>以下の値が指定でき、そのレベルと、それより上位のレベルのメッセージが記録されます。
 全く記録しない場合には disable を指定します。
 独自に disable, alert レベルが追加されていることと、debug を区別しないことを除き、<a href="http://www.postgresql.jp/document/8.3/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-WHEN">log_min_messages</a> と同じ優先順位です。
 </dd>
 <dd>disable &gt; alert &gt; panic &gt; fatal &gt; log &gt; error &gt; warning &gt; notice &gt; info &gt; debug</dd>
 
-<dt>*2 : 書式指定</dt>
+<dt id="configuration-a2">*2 : 書式指定</dt>
 <dd>設定パラメータ <a href="http://www.postgresql.jp/document/current/html/runtime-config-logging.html#GUC-LOG-LINE-PREFIX">log_line_prefix</a> と同じ形式で指定します。
 log_line_prefix の値そのものは無視されることに注意して下さい。
 </dd>
 
-<dt>*3 : 時間指定</dt>
+<dt id="configuration-a3">*3 : 時間指定</dt>
 <dd>単位として d(日)、h(時)、min(分)、s(秒) を指定できます。
 指定無しの場合は秒単位とみなします。</dd>
 <dd>PostgreSQL 8.3時間を指定する場合は、秒数のみしか指定できませんのでご注意ください。(例：3minとしたい場合は180と指定する)<dd>
 
-<dt>*4 : 接続文字列</dt>
+<dt id="configuration-a4">*4 : 接続文字列</dt>
 <dd>
 例えば 'host=127.0.0.1 port=5432 dbname=mydb user=postgres' といったlibpq形式の接続情報文字列です。
 詳細は<a href="http://www.postgresql.jp/document/current/html/libpq-connect.html">データベース接続制御関数</a>のPQconnectdbを参照して下さい。
@@ -1404,7 +1404,7 @@ log_line_prefix の値そのものは無視されることに注意して下さ�
 なお、.pgpassを用いる場合、リポジトリDBへの接続文字列のホスト指定にhostaddrは使用しないで下さい。
 </dd>
 
-<dt>*5 : SQLSTATE 指定</dt>
+<dt id="configuration-a5">*5 : SQLSTATE 指定</dt>
 <dd>
 複数のログのメッセージレベルを変更したい場合には、SQLSTATE をカンマ区切りで指定します。
 </dd>
@@ -1514,6 +1514,15 @@ PostgreSQL はタイムゾーンを独自に管理しており、外部プログ
 遅延が発生している場合は入力元のCSVログファイルを移動／削除しないようにしてください。
 または、サーバログ蓄積機能のフィルタリング設定を使用して遅延が発生しないようにログの蓄積量を調整してください。
 </dd>
+
+<dt id="restrictions-dbuser">リポジトリDBへの接続に一般ユーザを使用する際の注意点</dt>
+<dd>リポジトリDBへの接続に一般ユーザを使用する場合は、当該ユーザにリポジトリDBのデータベースへのアクセス権限が必要です。
+そのため、一般ユーザを使用する場合は、一般ユーザが所有者のデータベースを作成し、リポジトリDBのデータベースとすることを推奨します。<br>
+一般ユーザの作成および当該ユーザが所有者のデータベースを作成するには、以下のコマンドを実行します。
+<pre>
+$ createuser -DRSl -U &lt;DB管理者ユーザ名&gt; &lt;一般ユーザ名&gt;
+$ createdb -U &lt;DB管理者ユーザ名&gt; -O &lt;一般ユーザ名&gt; &lt;データベース名&gt;
+</pre></dd>
 </dl>
 <br>
 
