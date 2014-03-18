@@ -465,7 +465,6 @@ CREATE TABLE statsrepo.alert_message
 (
 	snapid		bigint,
 	message		text,
-	PRIMARY KEY (snapid),
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid)
 );
 

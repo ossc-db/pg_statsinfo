@@ -496,7 +496,7 @@ Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 			for (i = 0; i < PQntuples(alerts); i++)
 			{
 				fields[12] = "ALERT";  /* elevel */
-				fields[14] = PQgetvalue(alerts, 0, 0);  /* message */
+				fields[14] = PQgetvalue(alerts, i, 0);  /* message */
 				if (pgut_command(conn,
 					SQL_INSERT_LOG, lengthof(fields), fields) != PGRES_COMMAND_OK)
 					goto error;
