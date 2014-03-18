@@ -24,7 +24,8 @@ CREATE TYPE statsrepo.elevel AS ENUM
 	'ERROR',
 	'LOG',
 	'FATAL',
-	'PANIC'
+	'PANIC',
+	'ALERT'
 );
 
 CREATE TABLE statsrepo.instance
@@ -458,6 +459,14 @@ CREATE TABLE statsrepo.xlog
 	location	text,
 	xlogfile	text,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
+CREATE TABLE statsrepo.alert_message
+(
+	snapid		bigint,
+	message		text,
+	PRIMARY KEY (snapid),
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid)
 );
 
 CREATE TABLE statsrepo.log
@@ -2583,6 +2592,28 @@ $$
 		1,
 		2,
 		3;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Alert'
+CREATE FUNCTION statsrepo.get_alert(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT "timestamp"		timestamp,
+	OUT message			text
+) RETURNS SETOF record AS
+$$
+	SELECT
+		s.time::timestamp(0),
+		a.message
+	FROM
+		statsrepo.alert_message a LEFT JOIN statsrepo.snapshot s
+			ON a.snapid = s.snapid
+	WHERE
+		s.snapid BETWEEN $1 AND $2
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+	ORDER BY
+		1;
 $$
 LANGUAGE sql;
 

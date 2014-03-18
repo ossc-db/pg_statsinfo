@@ -30,6 +30,7 @@
 #define REPORTID_REPLICATION_ACTIVITY	"ReplicationActivity"
 #define REPORTID_SETTING_PARAMETERS		"SettingParameters"
 #define REPORTID_SCHEMA_INFORMATION		"SchemaInformation"
+#define REPORTID_ALERT					"Alert"
 #define REPORTID_PROFILES				"Profiles"
 #define REPORTID_ALL					"All"
 

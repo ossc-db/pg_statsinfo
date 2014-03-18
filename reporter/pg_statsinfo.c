@@ -146,6 +146,7 @@ pgut_help(bool details)
 	printf("                          * ReplicationActivity\n");
 	printf("                          * SettingParameters\n");
 	printf("                          * SchemaInformation\n");
+	printf("                          * Alert\n");
 	printf("                          * Profiles\n");
 	printf("                          * All\n");
 	printf("                         ---------------------------\n");

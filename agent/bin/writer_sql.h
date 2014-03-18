@@ -90,6 +90,13 @@ INSERT INTO statsrepo.inherits VALUES ($1, $2, $3, $4, $5)"
 #define SQL_INSERT_FUNCTION "\
 INSERT INTO statsrepo.function VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
 
+#define SQL_INSERT_ALERT "\
+INSERT INTO statsrepo.alert_message VALUES ($1, $2)"
+
+#define SQL_INSERT_LOG "\
+INSERT INTO statsrepo.log VALUES \
+($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)"
+
 #define SQL_UPDATE_SNAPSHOT "\
 UPDATE \
 	statsrepo.snapshot \

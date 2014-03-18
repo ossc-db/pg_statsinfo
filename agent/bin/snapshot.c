@@ -31,11 +31,12 @@ typedef struct Snap
 {
 	QueueItem	base;
 
-	char	   *comment;	/* snapshot comment, or NULL */
-	PGresult   *dbnames;	/* database list { dbid, dbname } */
-	List	   *instance;	/* per instance snapshot */
-	List	   *dbsnaps;	/* a list of per database snapshot */
-	char	   *start;		/* start timestamp */
+	char		*comment;		/* snapshot comment, or NULL */
+	PGresult	*dbnames;		/* database list { dbid, dbname } */
+	List		*instance;		/* per instance snapshot */
+	List		*dbsnaps;		/* a list of per database snapshot */
+	char		*start;			/* start timestamp */
+	bool		 alert_logging;	/* alert logging */
 } Snap;
 
 /* cpustats data */
@@ -368,6 +369,7 @@ get_snapshot(char *comment)
 	snap->base.free = (QueueItemFree) Snap_free;
 	snap->base.exec = (QueueItemExec) Snap_exec;
 	snap->comment = comment;
+	snap->alert_logging = repolog_min_messages <= ALERT;
 
 	/* update previous values */
 	prev_cpustats.user = cpu_user;
@@ -412,9 +414,9 @@ Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 	const char *params[4];
 	const char *snapid;
 	ListCell   *db;
-	int			rows;
 	int			i;
 	PGresult   *repo_size = NULL;
+	PGresult   *alerts = NULL;
 	PGresult   *update_res = NULL;
 	char	   *end = NULL;
 
@@ -426,6 +428,9 @@ Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 	params[0] = snap->start;
 	if (pgut_command(conn,
 		SQL_CREATE_SNAPSHOT_PARTITION, 1, params) != PGRES_TUPLES_OK)
+		goto error;
+	if (pgut_command(conn,
+		SQL_CREATE_REPOLOG_PARTITION, 1, params) != PGRES_TUPLES_OK)
 		goto error;
 
 	if (pgut_command(conn, "BEGIN", 0, NULL) != PGRES_COMMAND_OK)
@@ -470,6 +475,36 @@ Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 	}
 
 	/*
+	 * call statsrepo.alert(snapid) if exists
+	 */
+	if (has_statsrepo_alert(conn))
+	{
+		elog(DEBUG2, "run alert(snapid=%s)", snapid);
+		alerts = pgut_execute(conn,
+							  "SELECT * FROM statsrepo.alert($1)",
+							  1, &snapid);
+		if (!do_put(conn, SQL_INSERT_ALERT, alerts, snapid, NULL))
+			goto error;
+
+		if (snap->alert_logging)
+		{
+			const char *fields[24];
+
+			memset(fields, 0, sizeof(fields));
+			fields[0] = instid;
+			fields[1] = snap->start;  /* timestamp */
+			for (i = 0; i < PQntuples(alerts); i++)
+			{
+				fields[12] = "ALERT";  /* elevel */
+				fields[14] = PQgetvalue(alerts, 0, 0);  /* message */
+				if (pgut_command(conn,
+					SQL_INSERT_LOG, lengthof(fields), fields) != PGRES_COMMAND_OK)
+					goto error;
+			}
+		}
+	}
+
+	/*
 	 * end of the snapshot information getting
 	 */
 	if ((end = getlocaltimestamp()) == NULL)
@@ -489,26 +524,15 @@ Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 	if (!pgut_commit(conn))
 		goto error;
 
-	/*
-	 * call statsrepo.alert(snapid) if exists
-	 */
-	if (has_statsrepo_alert(conn))
-	{
-		PGresult *alerts;
-
-		elog(DEBUG2, "run alert(snapid=%s)", snapid);
-		alerts = pgut_execute(conn,
-							  "SELECT * FROM statsrepo.alert($1)",
-							  1, &snapid);
-		rows = PQntuples(alerts);
-		for (i = 0; i < rows; i++)
+	/* write alert log */
+	if (alerts)
+		for (i = 0; i < PQntuples(alerts); i++)
 			elog(ALERT, "%s", PQgetvalue(alerts, i, 0));
-		PQclear(alerts);
-	}
 
 	free(end);
 	PQclear(snapid_res);
 	PQclear(repo_size);
+	PQclear(alerts);
 	PQclear(update_res);
 	return true;
 
@@ -517,6 +541,7 @@ error:
 		free(end);
 	PQclear(snapid_res);
 	PQclear(repo_size);
+	PQclear(alerts);
 	PQclear(update_res);
 	pgut_rollback(conn);
 	return false;
