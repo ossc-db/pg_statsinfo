@@ -465,7 +465,7 @@ CREATE TABLE statsrepo.alert_message
 (
 	snapid		bigint,
 	message		text,
-	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid)
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
 CREATE TABLE statsrepo.log
