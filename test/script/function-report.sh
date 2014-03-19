@@ -79,6 +79,9 @@ exec_command "exec_statsinfo -r SettingParameters"
 echo "/**--- REPORTID: SchemaInformation ---**/"
 exec_command "exec_statsinfo -r SchemaInformation"
 
+echo "/**--- REPORTID: Alert ---**/"
+exec_command "exec_statsinfo -r Alert"
+
 echo "/**--- REPORTID: Profiles ---**/"
 exec_command "exec_statsinfo -r Profiles"
 

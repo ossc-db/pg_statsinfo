@@ -34,6 +34,13 @@ $$
 	INSERT INTO statsrepo.activity VALUES ($6 + 3, 0.083333333333333301, 0.666666666666666963, 2.08333333333332993, 1.16666666666667007, 6, '127.0.0.1', 10593, '2012-11-01 00:02:30+09', 4, 'SELECT 4');
 
 	--
+	-- Data for Name: alert_message; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
+	--
+	INSERT INTO statsrepo.alert_message VALUES ($6 + 1, 'too many transactions in snapshots between ''2012-11-01 00:00:00'' and ''2012-11-01 00:01:00'' --- 1585 Transactions/sec (threshold = 1000 Transactions/sec)');
+	INSERT INTO statsrepo.alert_message VALUES ($6 + 2, 'too many transactions in snapshots between ''2012-11-01 00:01:00'' and ''2012-11-01 00:02:00'' --- 1688 Transactions/sec (threshold = 1000 Transactions/sec)');
+	INSERT INTO statsrepo.alert_message VALUES ($6 + 2, 'dead tuple size exceeds threshold in snapshot ''2012-11-01 00:02:00'' --- 245.15 MiB (threshold = 100 MiB)');
+
+	--
 	-- Data for Name: autoanalyze; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
 	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_branches', 0.841124545);
