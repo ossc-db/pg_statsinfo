@@ -1827,6 +1827,74 @@ postgres          public            pgbench_tellers_pkey  pgbench_tellers       
 
 exit: 0
 
+/**--- REPORTID: Alert ---**/
+---------------------------------------------
+STATSINFO Report (host: statsinfo, port: 5432)
+---------------------------------------------
+
+----------------------------------------
+/* Alert */
+----------------------------------------
+DateTime             Message
+--------------------------------------------------------------------------------
+2012-11-01 00:01:00  too many transactions in snapshots between '2012-11-01 00:00:00' and '2012-11-01 00:01:00' --- 1585 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  too many transactions in snapshots between '2012-11-01 00:01:00' and '2012-11-01 00:02:00' --- 1688 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  dead tuple size exceeds threshold in snapshot '2012-11-01 00:02:00' --- 245.15 MiB (threshold = 100 MiB)
+
+---------------------------------------------
+STATSINFO Report (host: statsinfo, port: 5433)
+---------------------------------------------
+
+----------------------------------------
+/* Alert */
+----------------------------------------
+DateTime             Message
+--------------------------------------------------------------------------------
+2012-11-01 00:01:00  too many transactions in snapshots between '2012-11-01 00:00:00' and '2012-11-01 00:01:00' --- 1585 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  too many transactions in snapshots between '2012-11-01 00:01:00' and '2012-11-01 00:02:00' --- 1688 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  dead tuple size exceeds threshold in snapshot '2012-11-01 00:02:00' --- 245.15 MiB (threshold = 100 MiB)
+
+---------------------------------------------
+STATSINFO Report (host: statsinfo, port: 5434)
+---------------------------------------------
+
+----------------------------------------
+/* Alert */
+----------------------------------------
+DateTime             Message
+--------------------------------------------------------------------------------
+2012-11-01 00:01:00  too many transactions in snapshots between '2012-11-01 00:00:00' and '2012-11-01 00:01:00' --- 1585 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  too many transactions in snapshots between '2012-11-01 00:01:00' and '2012-11-01 00:02:00' --- 1688 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  dead tuple size exceeds threshold in snapshot '2012-11-01 00:02:00' --- 245.15 MiB (threshold = 100 MiB)
+
+---------------------------------------------
+STATSINFO Report (host: statsinfo, port: 5435)
+---------------------------------------------
+
+----------------------------------------
+/* Alert */
+----------------------------------------
+DateTime             Message
+--------------------------------------------------------------------------------
+2012-11-01 00:01:00  too many transactions in snapshots between '2012-11-01 00:00:00' and '2012-11-01 00:01:00' --- 1585 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  too many transactions in snapshots between '2012-11-01 00:01:00' and '2012-11-01 00:02:00' --- 1688 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  dead tuple size exceeds threshold in snapshot '2012-11-01 00:02:00' --- 245.15 MiB (threshold = 100 MiB)
+
+---------------------------------------------
+STATSINFO Report (host: statsinfo, port: 5436)
+---------------------------------------------
+
+----------------------------------------
+/* Alert */
+----------------------------------------
+DateTime             Message
+--------------------------------------------------------------------------------
+2012-11-01 00:01:00  too many transactions in snapshots between '2012-11-01 00:00:00' and '2012-11-01 00:01:00' --- 1585 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  too many transactions in snapshots between '2012-11-01 00:01:00' and '2012-11-01 00:02:00' --- 1688 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  dead tuple size exceeds threshold in snapshot '2012-11-01 00:02:00' --- 245.15 MiB (threshold = 100 MiB)
+
+exit: 0
+
 /**--- REPORTID: Profiles ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
@@ -1898,6 +1966,14 @@ Snapshot Duration    : 00:03:00
 Total Database Size  : 26 MiB
 Total Commits        : 66970
 Total Rollbacks      : 0
+
+/** Alert **/
+-----------------------------------
+DateTime             Message
+--------------------------------------------------------------------------------
+2012-11-01 00:01:00  too many transactions in snapshots between '2012-11-01 00:00:00' and '2012-11-01 00:01:00' --- 1585 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  too many transactions in snapshots between '2012-11-01 00:01:00' and '2012-11-01 00:02:00' --- 1688 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  dead tuple size exceeds threshold in snapshot '2012-11-01 00:02:00' --- 245.15 MiB (threshold = 100 MiB)
 
 ----------------------------------------
 /* Database Statistics */
@@ -2208,6 +2284,14 @@ Total Database Size  : 26 MiB
 Total Commits        : 66970
 Total Rollbacks      : 0
 
+/** Alert **/
+-----------------------------------
+DateTime             Message
+--------------------------------------------------------------------------------
+2012-11-01 00:01:00  too many transactions in snapshots between '2012-11-01 00:00:00' and '2012-11-01 00:01:00' --- 1585 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  too many transactions in snapshots between '2012-11-01 00:01:00' and '2012-11-01 00:02:00' --- 1688 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  dead tuple size exceeds threshold in snapshot '2012-11-01 00:02:00' --- 245.15 MiB (threshold = 100 MiB)
+
 ----------------------------------------
 /* Database Statistics */
 ----------------------------------------
@@ -2516,6 +2600,14 @@ Snapshot Duration    : 00:03:00
 Total Database Size  : 26 MiB
 Total Commits        : 66970
 Total Rollbacks      : 0
+
+/** Alert **/
+-----------------------------------
+DateTime             Message
+--------------------------------------------------------------------------------
+2012-11-01 00:01:00  too many transactions in snapshots between '2012-11-01 00:00:00' and '2012-11-01 00:01:00' --- 1585 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  too many transactions in snapshots between '2012-11-01 00:01:00' and '2012-11-01 00:02:00' --- 1688 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  dead tuple size exceeds threshold in snapshot '2012-11-01 00:02:00' --- 245.15 MiB (threshold = 100 MiB)
 
 ----------------------------------------
 /* Database Statistics */
@@ -2826,6 +2918,14 @@ Total Database Size  : 26 MiB
 Total Commits        : 66970
 Total Rollbacks      : 0
 
+/** Alert **/
+-----------------------------------
+DateTime             Message
+--------------------------------------------------------------------------------
+2012-11-01 00:01:00  too many transactions in snapshots between '2012-11-01 00:00:00' and '2012-11-01 00:01:00' --- 1585 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  too many transactions in snapshots between '2012-11-01 00:01:00' and '2012-11-01 00:02:00' --- 1688 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  dead tuple size exceeds threshold in snapshot '2012-11-01 00:02:00' --- 245.15 MiB (threshold = 100 MiB)
+
 ----------------------------------------
 /* Database Statistics */
 ----------------------------------------
@@ -3135,6 +3235,14 @@ Snapshot Duration    : 00:03:00
 Total Database Size  : 26 MiB
 Total Commits        : 66970
 Total Rollbacks      : 0
+
+/** Alert **/
+-----------------------------------
+DateTime             Message
+--------------------------------------------------------------------------------
+2012-11-01 00:01:00  too many transactions in snapshots between '2012-11-01 00:00:00' and '2012-11-01 00:01:00' --- 1585 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  too many transactions in snapshots between '2012-11-01 00:01:00' and '2012-11-01 00:02:00' --- 1688 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:02:00  dead tuple size exceeds threshold in snapshot '2012-11-01 00:02:00' --- 245.15 MiB (threshold = 100 MiB)
 
 ----------------------------------------
 /* Database Statistics */
@@ -3649,6 +3757,14 @@ Snapshot Duration    : 00:00:00
 Total Database Size  : 26 MiB
 Total Commits        : 66970
 Total Rollbacks      : 0
+
+/** Alert **/
+-----------------------------------
+DateTime             Message
+--------------------------------------------------------------------------------
+2012-11-01 00:00:00  too many transactions in snapshots between '2012-11-01 00:00:00' and '2012-11-01 00:01:00' --- 1585 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:00:00  too many transactions in snapshots between '2012-11-01 00:01:00' and '2012-11-01 00:02:00' --- 1688 Transactions/sec (threshold = 1000 Transactions/sec)
+2012-11-01 00:00:00  dead tuple size exceeds threshold in snapshot '2012-11-01 00:02:00' --- 245.15 MiB (threshold = 100 MiB)
 
 ----------------------------------------
 /* Database Statistics */

@@ -209,6 +209,7 @@ static void report_replication_activity(PGconn *conn, ReportScope *scope, FILE *
 static void report_setting_parameters(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_schema_information(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_alert(PGconn *conn, ReportScope *scope, FILE *out);
+static void report_alert_section(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_profiles(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_all(PGconn *conn, ReportScope *scope, FILE *out);
 
@@ -218,6 +219,7 @@ static List *select_scope_by_timestamp(PGconn *conn, time_t begindate, time_t en
 static void destroy_report_scope(ReportScope *scope);
 static int get_server_version(PGconn *conn);
 static int parse_version(const char *versionString);
+static void print_alert_data(PGconn *conn, ReportScope *scope, FILE *out);
 
 /*
  * generate a report
@@ -1194,13 +1196,30 @@ report_schema_information(PGconn *conn, ReportScope *scope, FILE *out)
 static void
 report_alert(PGconn *conn, ReportScope *scope, FILE *out)
 {
+	fprintf(out, "----------------------------------------\n");
+	fprintf(out, "/* Alert */\n");
+	fprintf(out, "----------------------------------------\n");
+	print_alert_data(conn, scope, out);
+}
+
+/*
+ * generate a report that corresponds to 'Alert'
+ */
+static void
+report_alert_section(PGconn *conn, ReportScope *scope, FILE *out)
+{
+	fprintf(out, "/** Alert **/\n");
+	fprintf(out, "-----------------------------------\n");
+	print_alert_data(conn, scope, out);
+}
+
+static void
+print_alert_data(PGconn *conn, ReportScope *scope, FILE *out)
+{
 	PGresult	*res;
 	const char	*params[] = { scope->beginid, scope->endid };
 	int			 i;
 
-	fprintf(out, "----------------------------------------\n");
-	fprintf(out, "/* Alert */\n");
-	fprintf(out, "----------------------------------------\n");
 	fprintf(out, "%-19s  %s\n", "DateTime", "Message");
 	fprintf(out, "--------------------------------------------------------------------------------\n");
 
@@ -1250,6 +1269,7 @@ static void
 report_all(PGconn *conn, ReportScope *scope, FILE *out)
 {
 	report_summary(conn, scope, out);
+	report_alert_section(conn, scope, out);
 	report_database_statistics(conn, scope, out);
 	report_instance_activity(conn, scope, out);
 	report_resource_usage(conn, scope, out);
@@ -1263,7 +1283,6 @@ report_all(PGconn *conn, ReportScope *scope, FILE *out)
 	report_replication_activity(conn, scope, out);
 	report_setting_parameters(conn, scope, out);
 	report_schema_information(conn, scope, out);
-	report_alert(conn, scope, out);
 	report_profiles(conn, scope, out);
 }
 
