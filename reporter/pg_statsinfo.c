@@ -133,6 +133,7 @@ pgut_help(bool details)
 	printf("  -r, --report=REPORTID  generate a report that specified by REPORTID\n");
 	printf("                         ---------------------------\n");
 	printf("                          * Summary\n");
+	printf("                          * Alert\n");
 	printf("                          * DatabaseStatistics\n");
 	printf("                          * InstanceActivity\n");
 	printf("                          * OSResourceUsage\n");
@@ -146,7 +147,6 @@ pgut_help(bool details)
 	printf("                          * ReplicationActivity\n");
 	printf("                          * SettingParameters\n");
 	printf("                          * SchemaInformation\n");
-	printf("                          * Alert\n");
 	printf("                          * Profiles\n");
 	printf("                          * All\n");
 	printf("                         ---------------------------\n");
