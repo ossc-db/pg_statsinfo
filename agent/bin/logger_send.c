@@ -1,7 +1,7 @@
 /*
  * logger_send.c
  *
- * Copyright (c) 2010-2013, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2009-2014, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 #include "pg_statsinfod.h"

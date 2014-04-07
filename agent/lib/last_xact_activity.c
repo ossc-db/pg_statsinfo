@@ -2,7 +2,7 @@
  * lib/last_xact_activity.c
  *     Track statement execution in current/last transaction.
  *
- * Copyright (c) 2011-2012, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2009-2014, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 #include "postgres.h"

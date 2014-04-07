@@ -1,7 +1,7 @@
 /*
  * maintenance.c:
  *
- * Copyright (c) 2011-2012, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2009-2014, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 #include "pg_statsinfod.h"

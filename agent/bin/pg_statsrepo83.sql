@@ -3,7 +3,7 @@
  *
  * Create a repository schema for PostgreSQL 8.3.
  *
- * Copyright (c) 2010-2012, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2009-2014, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 -- Adjust this setting to control where the objects get created.
