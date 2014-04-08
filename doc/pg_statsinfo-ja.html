@@ -244,7 +244,7 @@ pg_statsinfo の運用管理向けの操作を行うコマンドを提供しま�
 <h3 id="requirement">動作環境</h3>
 <dl>
   <dt>PostgreSQL</dt>
-  <dd>バージョン 8.3, 8.4, 9.0, 9.1, 9.2, 9.3</dd>
+  <dd>バージョン 8.4, 9.0, 9.1, 9.2, 9.3</dd>
   <dt>動作検証済みOS</dt>
   <dd>RHEL 5.x, RHEL 6.x, CentOS 5.x, CentOS 6.x</dd>
 </dl>
@@ -1132,8 +1132,7 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
 <h4>追加設定項目</h4>
 <p>
 pg_statsinfo を利用するために確認が推奨されるパラメータは以下です。
-パラメータを後から変更するためには、設定値のリロード (pg_ctl reload) が必要です。<br>
-なお、PostgreSQL 8.3 で利用する場合には、custom_variable_classes の設定値は 'statsinfo'、独自パラメータ 'pg_statsinfo.*' は 'statsinfo.*' と読み替えてください。
+パラメータを後から変更するためには、設定値のリロード (pg_ctl reload) が必要です。
 </p>
 
 <table>
@@ -1199,7 +1198,6 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
     <td>custom_variable_classes</td>
     <td>(空文字)</td>
     <td>独自変数クラス名の設定。<br>
-        PostgreSQL 8.3で利用する場合は 'statsinfo' を指定してください。<br>
         PostgreSQL 8.4 ～ 9.1 で利用する場合には 'pg_statsinfo' を指定してください。<br>
         PostgreSQL 9.2以降で利用する場合は当パラメータの設定は不要です。<br>
   </tr>
@@ -1380,7 +1378,7 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
 <dt id="configuration-a1">*1 : メッセージレベル</dt>
 <dd>以下の値が指定でき、そのレベルと、それより上位のレベルのメッセージが記録されます。
 全く記録しない場合には disable を指定します。
-独自に disable, alert レベルが追加されていることと、debug を区別しないことを除き、<a href="http://www.postgresql.jp/document/8.3/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-WHEN">log_min_messages</a> と同じ優先順位です。
+独自に disable, alert レベルが追加されていることと、debug を区別しないことを除き、<a href="http://www.postgresql.jp/document/current/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-WHEN">log_min_messages</a> と同じ優先順位です。
 </dd>
 <dd>disable &gt; alert &gt; panic &gt; fatal &gt; log &gt; error &gt; warning &gt; notice &gt; info &gt; debug</dd>
 
@@ -1390,9 +1388,7 @@ log_line_prefix の値そのものは無視されることに注意して下さ�
 </dd>
 
 <dt id="configuration-a3">*3 : 時間指定</dt>
-<dd>単位として d(日)、h(時)、min(分)、s(秒) を指定できます。
-指定無しの場合は秒単位とみなします。</dd>
-<dd>PostgreSQL 8.3時間を指定する場合は、秒数のみしか指定できませんのでご注意ください。(例：3minとしたい場合は180と指定する)<dd>
+<dd>単位として d(日)、h(時)、min(分)、s(秒) を指定できます。指定無しの場合は秒単位とみなします。</dd>
 
 <dt id="configuration-a4">*4 : 接続文字列</dt>
 <dd>
