@@ -33,14 +33,10 @@
 #define DISABLE		(PANIC + 2)
 
 /* guc parameter name prefix for the program */
-#if PG_VERSION_NUM >= 80400
-#define GUC_PREFIX			"pg_statsinfo"
-#else
-#define GUC_PREFIX			"statsinfo"
-#endif
+#define GUC_PREFIX	"pg_statsinfo"
 
 /* log message prefix for the program */
-#define LOG_PREFIX			"pg_statsinfo: "
+#define LOG_PREFIX	"pg_statsinfo: "
 
 /* manual snapshot log message */
 #define LOGMSG_SNAPSHOT		LOG_PREFIX "snapshot requested"

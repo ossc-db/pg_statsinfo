@@ -463,23 +463,11 @@ ensure_schema(PGconn *conn, const char *schema)
 	if (ok)
 		return true;	/* ok, installed */
 
-	/* iff schema is "statsrepo", check repository server version */
+	/* iff schema is "statsrepo", create language 'PL/pgSQL' */
 	if (strcmp(schema, "statsrepo") == 0)
 	{
-		int		server_version;
 		bool	installed;
 
-		server_version = get_server_version(conn);
-
-		if (server_version < 0)
-			return false;
-		else if (server_version >= 80400)
-			/* sets repository schema for partitioning */
-			schema = "statsrepo_partition";
-		else
-			schema = "statsrepo83";
-
-		/* create language 'PL/pgSQL' */
 		res = pgut_execute(conn,
 			"SELECT 1 FROM pg_language WHERE lanname = 'plpgsql'", 0, NULL);
 		if (PQresultStatus(res) != PGRES_TUPLES_OK)
@@ -818,22 +806,6 @@ get_next_time(time_t now, int interval)
 		return (now / interval) * interval + interval;
 	else
 		return now;
-}
-
-int
-get_server_version(PGconn *conn)
-{
-	PGresult	*res;
-	int			 server_version_num;
-
-	res = pgut_execute(conn, "SHOW server_version_num", 0, NULL);
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-		server_version_num = -1;
-	else
-		server_version_num = atoi(PQgetvalue(res, 0, 0));
-	PQclear(res);
-
-	return server_version_num;
 }
 
 static bool

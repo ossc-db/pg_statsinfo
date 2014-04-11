@@ -104,19 +104,13 @@ function set_pgconfig()
 		touch ${datadir}/postgresql-statsinfo.conf
 	else
 		local version=$(server_version)
-		local guc_prefix=""
+		local guc_prefix="pg_statsinfo"
 		local buffer=""
 
 		buffer=$(cat ${pgconfig})
 		if [ ${?} -ne 0 ] ; then
 			echo "ERROR: could not read statsinfo's setting base file" 1>&2
 			exit 1
-		fi
-
-		if [ ${version} -lt 80400 ] ; then
-			guc_prefix="statsinfo"
-		else
-			guc_prefix="pg_statsinfo"
 		fi
 
 		if [ ${version} -ge 90200 ] ; then
@@ -129,10 +123,6 @@ function set_pgconfig()
 
 		if [ ${version} -lt 90000 ] ; then
 			buffer=$(echo "${buffer}" | grep -Pv "^\s*wal_level\s*=")
-		fi
-
-		if [ ${version} -lt 80400 ] ; then
-			buffer=$(echo "${buffer}" | grep -Pv "^\s*track_functions\s*=")
 		fi
 
 		echo "${buffer}" |
@@ -154,11 +144,7 @@ function update_pgconfig()
 	local value=${3}
 	local buffer=""
 
-	if [ $(server_version) -lt 80400 ] ; then
-		param=$(echo "${param}" | sed "s/<guc_prefix>/statsinfo/")
-	else
-		param=$(echo "${param}" | sed "s/<guc_prefix>/pg_statsinfo/")
-	fi
+	param=$(echo "${param}" | sed "s/<guc_prefix>/pg_statsinfo/")
 
 	grep -Pq "^\s*${param}\s*=" ${datadir}/postgresql-statsinfo.conf
 	if [ ${?} -ne 0 ] ; then
@@ -176,11 +162,7 @@ function delete_pgconfig()
 	local param=${2}
 	local buffer=""
 
-	if [ $(server_version) -lt 80400 ] ; then
-		param=$(echo "${param}" | sed "s/<guc_prefix>/statsinfo/")
-	else
-		param=$(echo "${param}" | sed "s/<guc_prefix>/pg_statsinfo/")
-	fi
+	param=$(echo "${param}" | sed "s/<guc_prefix>/pg_statsinfo/")
 
 	buffer=$(grep -Pv "^\s*${param}\s*=.\+" ${datadir}/postgresql-statsinfo.conf)
 	echo "${buffer}" > ${datadir}/postgresql-statsinfo.conf

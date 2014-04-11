@@ -109,9 +109,7 @@ static const char *database_gets[] =
 	SQL_SELECT_COLUMN,
 	SQL_SELECT_INDEX,
 	SQL_SELECT_INHERITS,
-#if PG_VERSION_NUM >= 80400
 	SQL_SELECT_FUNCTION,
-#endif
 	NULL
 };
 
@@ -122,9 +120,7 @@ static const char *database_puts[] =
 	SQL_INSERT_COLUMN,
 	SQL_INSERT_INDEX,
 	SQL_INSERT_INHERITS,
-#if PG_VERSION_NUM >= 80400
 	SQL_INSERT_FUNCTION,
-#endif
 	NULL
 };
 

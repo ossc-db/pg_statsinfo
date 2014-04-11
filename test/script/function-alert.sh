@@ -22,15 +22,13 @@ setup_repository ${REPOSITORY_DATA} ${REPOSITORY_USER} ${REPOSITORY_PORT} ${REPO
 echo "/*---- Initialize monitored instance ----*/"
 setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG} "" "" ""
 sleep 3
-if [ $(server_version) -ge 80400 ] ; then
-	echo "shared_preload_libraries = 'pg_statsinfo, pg_stat_statements'" >> ${PGDATA}/postgresql-statsinfo.conf
-	pg_ctl restart -w -D ${PGDATA} -o "-p ${PGPORT}" > /dev/null
-	sleep 3
-	if [ $(server_version) -ge 90100 ] ; then
-		psql -c "CREATE EXTENSION pg_stat_statements" > /dev/null
-	else
-		psql -f $(pg_config --sharedir)/contrib/pg_stat_statements.sql > /dev/null
-	fi
+echo "shared_preload_libraries = 'pg_statsinfo, pg_stat_statements'" >> ${PGDATA}/postgresql-statsinfo.conf
+pg_ctl restart -w -D ${PGDATA} -o "-p ${PGPORT}" > /dev/null
+sleep 3
+if [ $(server_version) -ge 90100 ] ; then
+	psql -c "CREATE EXTENSION pg_stat_statements" > /dev/null
+else
+	psql -f $(pg_config --sharedir)/contrib/pg_stat_statements.sql > /dev/null
 fi
 
 get_snapshot
@@ -86,27 +84,25 @@ sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g"
 sed "s#--- .\+ Transactions/sec #--- xxx Transactions/sec #"
 send_query -c "UPDATE statsrepo.alert SET commit_tps = -1" > /dev/null
 
-if [ $(server_version) -ge 80400 ] ; then
-	echo "/**--- Alert the response time average of query ---**/"
-	send_query -c "UPDATE statsrepo.alert SET response_avg = 0"
-	psql -c "SELECT pg_sleep(1)" > /dev/null
-	get_snapshot
-	sleep ${WRITE_DELAY}
-	tail -n 1 ${PGDATA}/pg_log/pg_statsinfo.log |
-	sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g" |
-	sed "s/--- .\+ sec /--- xxx sec /"
-	send_query -c "UPDATE statsrepo.alert SET response_avg = -1" > /dev/null
+echo "/**--- Alert the response time average of query ---**/"
+send_query -c "UPDATE statsrepo.alert SET response_avg = 0"
+psql -c "SELECT pg_sleep(1)" > /dev/null
+get_snapshot
+sleep ${WRITE_DELAY}
+tail -n 1 ${PGDATA}/pg_log/pg_statsinfo.log |
+sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g" |
+sed "s/--- .\+ sec /--- xxx sec /"
+send_query -c "UPDATE statsrepo.alert SET response_avg = -1" > /dev/null
 
-	echo "/**--- Alert the response time max of query ---**/"
-	send_query -c "UPDATE statsrepo.alert SET response_worst = 0"
-	psql -c "SELECT pg_sleep(1)" > /dev/null
-	get_snapshot
-	sleep ${WRITE_DELAY}
-	tail -n 1 ${PGDATA}/pg_log/pg_statsinfo.log |
-	sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g" |
-	sed "s/--- .\+ sec /--- xxx sec /"
-	send_query -c "UPDATE statsrepo.alert SET response_worst = -1" > /dev/null
-fi
+echo "/**--- Alert the response time max of query ---**/"
+send_query -c "UPDATE statsrepo.alert SET response_worst = 0"
+psql -c "SELECT pg_sleep(1)" > /dev/null
+get_snapshot
+sleep ${WRITE_DELAY}
+tail -n 1 ${PGDATA}/pg_log/pg_statsinfo.log |
+sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g" |
+sed "s/--- .\+ sec /--- xxx sec /"
+send_query -c "UPDATE statsrepo.alert SET response_worst = -1" > /dev/null
 
 echo "/**--- Alert the dead tuple size and ratio ---**/"
 send_query << EOF

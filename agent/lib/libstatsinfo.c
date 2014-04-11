@@ -174,12 +174,7 @@ default_log_maintenance_command(void)
 #define DEFAULT_STAT_STATEMENTS_MAX			30
 #define DEFAULT_CONTROLFILE_FSYNC_INTERVAL	60		/* sec */
 #define LONG_TRANSACTION_THRESHOLD			1.0		/* sec */
-
-#if PG_VERSION_NUM < 80400
-#define DEFAULT_ENABLE_MAINTENANCE			"3"		/* snapshot + log */
-#else
 #define DEFAULT_ENABLE_MAINTENANCE			"on"	/* snapshot + log */
-#endif
 
 static const struct config_enum_entry elevel_options[] =
 {
@@ -318,23 +313,7 @@ static bool parse_float8(const char *value, double *result);
 static char *b_trim(char *str);
 static HeapTupleHeader search_devicestats(ArrayType *devicestats, const char *device_name);
 
-#if PG_VERSION_NUM < 80400
-static bool parse_bool(const char *value, bool *result);
-static const char *elevel_to_str(int elevel);
-static char	   *syslog_min_messages_str;
-static char	   *textlog_min_messages_str;
-static char	   *repolog_min_messages_str;
-static const char *assign_syslog_min_messages(const char *newval, bool doit, GucSource source);
-static const char *assign_textlog_min_messages(const char *newval, bool doit, GucSource source);
-static const char *assign_repolog_min_messages(const char *newval, bool doit, GucSource source);
-static const char *assign_elevel(const char *name, int *var, const char *newval, bool doit);
-
-/* 8.3 or earlier versions can work only with PGC_USERSET */
-#undef PGC_SIGHUP
-#define PGC_SIGHUP		PGC_USERSET
-#endif
-
-#if PG_VERSION_NUM < 80400 || defined(WIN32)
+#if defined(WIN32)
 static int str_to_elevel(const char *name, const char *str,
 						 const struct config_enum_entry *options);
 #endif
@@ -644,7 +623,6 @@ _PG_init(void)
 	/*
 	 * Define (or redefine) custom GUC variables.
 	 */
-#if PG_VERSION_NUM >= 80400
 	DefineCustomEnumVariable(GUC_PREFIX ".syslog_min_messages",
 							 "Sets the message levels that are system-logged.",
 							 NULL,
@@ -686,37 +664,6 @@ _PG_init(void)
 #endif
 							 NULL,
 							 NULL);
-#else
-	DefineCustomStringVariable(GUC_PREFIX ".syslog_min_messages",
-							   "Sets the message levels that are system-logged.",
-							   NULL,
-							   &syslog_min_messages_str,
-							   elevel_to_str(DEFAULT_SYSLOG_LEVEL),
-							   PGC_SIGHUP,
-							   0,
-							   assign_syslog_min_messages,
-							   NULL);
-
-	DefineCustomStringVariable(GUC_PREFIX ".textlog_min_messages",
-							   "Sets the message levels that are text-logged.",
-							   NULL,
-							   &textlog_min_messages_str,
-							   elevel_to_str(DEFAULT_TEXTLOG_LEVEL),
-							   PGC_SIGHUP,
-							   0,
-							   assign_textlog_min_messages,
-							   NULL);
-
-	DefineCustomStringVariable(GUC_PREFIX ".repolog_min_messages",
-							   "Sets the message levels that are repository-logged.",
-							   NULL,
-							   &repolog_min_messages_str,
-							   elevel_to_str(DEFAULT_REPOLOG_LEVEL),
-							   PGC_SIGHUP,
-							   0,
-							   assign_repolog_min_messages,
-							   NULL);
-#endif
 
 	DefineCustomStringVariable(GUC_PREFIX ".textlog_filename",
 							   "Sets the latest file name for textlog.",
@@ -1164,17 +1111,13 @@ _PG_init(void)
 	if (Log_autovacuum_min_duration < 0)
 		SetConfigOption("log_autovacuum_min_duration", "0",
 						PGC_POSTMASTER, PGC_S_OVERRIDE);
-#if PG_VERSION_NUM >= 80400
 	if (!pgstat_track_functions)
 		SetConfigOption("track_functions", "all",
 						PGC_POSTMASTER, PGC_S_OVERRIDE);
-#endif
 #endif /* ADJUST_NON_CRITICAL_SETTINGS */
 
-#if PG_VERSION_NUM >= 80400
 	/* Install xact_last_activity */
 	init_last_xact_activity();
-#endif
 
 	/*
 	 * spawn pg_statsinfo launcher process if the first call
@@ -1189,10 +1132,8 @@ _PG_init(void)
 void
 _PG_fini(void)
 {
-#if PG_VERSION_NUM >= 80400
 	/* Uninstall xact_last_activity */
 	fini_last_xact_activity();
-#endif
 }
 
 /*
@@ -3010,7 +2951,7 @@ verify_timestr(const char *timestr)
 	return true;
 }
 
-#if PG_VERSION_NUM < 80400 || defined(WIN32)
+#if defined(WIN32)
 static int
 str_to_elevel(const char *name,
 			  const char *str,
@@ -3044,36 +2985,6 @@ elevel_to_str(int elevel)
 	elog(ERROR, "could not find enum option %d for %s",
 		 elevel, GUC_PREFIX ".log_min_messages");
 	return NULL;				/* silence compiler */
-}
-#endif
-
-#if PG_VERSION_NUM < 80400
-static const char *
-assign_syslog_min_messages(const char *newval, bool doit, GucSource source)
-{
-	return (assign_elevel("syslog_min_messages", &syslog_min_messages, newval, doit));
-}
-
-static const char *
-assign_textlog_min_messages(const char *newval, bool doit, GucSource source)
-{
-	return (assign_elevel("textlog_min_messages", &textlog_min_messages, newval, doit));
-}
-
-static const char *
-assign_repolog_min_messages(const char *newval, bool doit, GucSource source)
-{
-	return (assign_elevel("repolog_min_messages", &repolog_min_messages, newval, doit));
-}
-
-static const char *
-assign_elevel(const char *name, int *var, const char *newval, bool doit)
-{
-	int		value = str_to_elevel(name, newval, elevel_options);
-
-	if (doit)
-		(*var) = value;
-	return newval;	/* OK */
 }
 #endif
 
@@ -3330,73 +3241,6 @@ parse_float8(const char *value, double *result)
 
 	return true;
 }
-
-#if PG_VERSION_NUM < 80400
-/*
- * Try to interpret value as boolean value.  Valid values are: true,
- * false, yes, no, on, off, 1, 0; as well as unique prefixes thereof.
- * If the string parses okay, return true, else false.
- * If okay and result is not NULL, return the value in *result.
- */
-static bool
-parse_bool(const char *value, bool *result)
-{
-	size_t		len = strlen(value);
-
-	if (pg_strncasecmp(value, "true", len) == 0)
-	{
-		if (result)
-			*result = true;
-	}
-	else if (pg_strncasecmp(value, "false", len) == 0)
-	{
-		if (result)
-			*result = false;
-	}
-
-	else if (pg_strncasecmp(value, "yes", len) == 0)
-	{
-		if (result)
-			*result = true;
-	}
-	else if (pg_strncasecmp(value, "no", len) == 0)
-	{
-		if (result)
-			*result = false;
-	}
-
-	/* 'o' is not unique enough */
-	else if (pg_strncasecmp(value, "on", (len > 2 ? len : 2)) == 0)
-	{
-		if (result)
-			*result = true;
-	}
-	else if (pg_strncasecmp(value, "off", (len > 2 ? len : 2)) == 0)
-	{
-		if (result)
-			*result = false;
-	}
-
-	else if (pg_strcasecmp(value, "1") == 0)
-	{
-		if (result)
-			*result = true;
-	}
-	else if (pg_strcasecmp(value, "0") == 0)
-	{
-		if (result)
-			*result = false;
-	}
-
-	else
-	{
-		if (result)
-			*result = false; /* suppress compiler warning */
-		return false;
-	}
-	return true;
-}
-#endif
 
 /*
  * Note: this function modify the argument string

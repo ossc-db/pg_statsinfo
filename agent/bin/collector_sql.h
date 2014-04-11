@@ -156,7 +156,6 @@ ORDER BY dbid"
 #define SQL_SELECT_TABLESPACE	"SELECT * FROM statsinfo.tablespaces"
 
 /* setting */
-#if PG_VERSION_NUM >= 80400
 #define SQL_SELECT_SETTING "\
 SELECT \
 	name, \
@@ -169,18 +168,6 @@ WHERE \
 	source NOT IN ('client', 'default', 'session') \
 AND \
 	setting <> boot_val"
-#else
-#define SQL_SELECT_SETTING "\
-SELECT \
-	name, \
-	setting, \
-	unit, \
-	source \
-FROM \
-	pg_settings \
-WHERE \
-	source NOT IN ('client', 'default', 'session')"
-#endif
 
 /* role */
 #define SQL_SELECT_ROLE "\
@@ -278,18 +265,6 @@ ORDER BY \
 #endif
 
 /* lock */
-#if PG_VERSION_NUM >= 80400
-#define SQL_SELECT_LOCK_XID_CAST			"transactionid"
-#define SQL_SELECT_LOCK_BLOCKER_QUERY "\
-CASE \
-	WHEN la.gid IS NOT NULL THEN '(xact is detached from session)' \
-	WHEN la.queries IS NULL THEN '(library might not have been loaded)' \
-	ELSE la.queries \
-END"
-#else
-#define SQL_SELECT_LOCK_XID_CAST			"CAST(transactionid AS text)"
-#define SQL_SELECT_LOCK_BLOCKER_QUERY		"'(N/A)'"
-#endif
 #if PG_VERSION_NUM >= 90000
 #define SQL_SELECT_LOCK_APPNAME				"sa.application_name"
 #else
@@ -315,9 +290,13 @@ SELECT \
 	la.gid AS blocker_gid, \
 	(statement_timestamp() - sb.query_start)::interval(0), \
 	sb." PG_STAT_ACTIVITY_ATTNAME_QUERY ", \
-	" SQL_SELECT_LOCK_BLOCKER_QUERY " \
+	CASE \
+		WHEN la.gid IS NOT NULL THEN '(xact is detached from session)' \
+		WHEN la.queries IS NULL THEN '(library might not have been loaded)' \
+		ELSE la.queries \
+	END \
 FROM \
-	(SELECT DISTINCT l0.pid, l0.relation, " SQL_SELECT_LOCK_XID_CAST ", la.gid, lx.queries \
+	(SELECT DISTINCT l0.pid, l0.relation, transactionid, la.gid, lx.queries \
 	 FROM pg_locks l0 \
 		LEFT JOIN \
 			(SELECT l1.virtualtransaction, pp.gid \
@@ -328,7 +307,7 @@ FROM \
 	 WHERE l0.granted = true AND \
 		(la.gid IS NULL OR l0.relation IS NOT NULL)) la \
 	 LEFT JOIN pg_stat_activity sa ON la.pid = sa." PG_STAT_ACTIVITY_ATTNAME_PID ", \
-	(SELECT DISTINCT pid, relation, " SQL_SELECT_LOCK_XID_CAST " \
+	(SELECT DISTINCT pid, relation, transactionid \
 	 FROM pg_locks \
 	 WHERE granted = false) lb \
 	 LEFT JOIN pg_stat_activity sb ON lb.pid = sb." PG_STAT_ACTIVITY_ATTNAME_PID " \

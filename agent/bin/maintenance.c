@@ -9,9 +9,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#define SQL_DELETE_SNAPSHOT_PARTITION	"SELECT statsrepo.del_snapshot2(CAST($1 AS TIMESTAMPTZ))"
-#define SQL_DELETE_SNAPSHOT				"SELECT statsrepo.del_snapshot(CAST($1 AS TIMESTAMPTZ))"
-#define SQL_DELETE_REPOLOG				"SELECT statsrepo.del_repolog2(CAST($1 AS TIMESTAMPTZ))"
+#define SQL_DELETE_SNAPSHOT		"SELECT statsrepo.del_snapshot2(CAST($1 AS TIMESTAMPTZ))"
+#define SQL_DELETE_REPOLOG		"SELECT statsrepo.del_repolog2(CAST($1 AS TIMESTAMPTZ))"
 
 typedef struct Maintenance
 {
@@ -177,22 +176,13 @@ delete_snapshot(PGconn *conn, void *param)
 {
 	const char		*params[1];
 	ExecStatusType	 status;
-	int				 server_version;
-
-	server_version = get_server_version(conn);
-	if (server_version < 0)
-		return false;
 
 	params[0] = (const char *) param;
-	if (server_version >= 80400)
-	{
-		/* exclusive control during snapshot and maintenance */
-		pthread_mutex_lock(&maintenance_lock);
-		status = pgut_command(conn, SQL_DELETE_SNAPSHOT_PARTITION, 1, params);
-		pthread_mutex_unlock(&maintenance_lock);
-	}
-	else
-		status = pgut_command(conn, SQL_DELETE_SNAPSHOT, 1, params);
+
+	/* exclusive control during snapshot and maintenance */
+	pthread_mutex_lock(&maintenance_lock);
+	status = pgut_command(conn, SQL_DELETE_SNAPSHOT, 1, params);
+	pthread_mutex_unlock(&maintenance_lock);
 
 	return status == PGRES_TUPLES_OK;
 }

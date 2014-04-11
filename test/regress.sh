@@ -48,14 +48,12 @@ function verify_libraries()
 		failed=1
 	fi
 
-	if [ $(server_version) -ge 80400 ] ; then
-		if [ -f "${libdir}/pg_stat_statements.so" -o \
-			 -f "${libdir}/pgsql/pg_stat_statements.so" ] ; then
-			printf "%-35s ... ok\n" "pg_stat_statements"
-		else
-			printf "%-35s ... not installed\n" "pg_stat_statements"
-			failed=1
-		fi
+	if [ -f "${libdir}/pg_stat_statements.so" -o \
+		 -f "${libdir}/pgsql/pg_stat_statements.so" ] ; then
+		printf "%-35s ... ok\n" "pg_stat_statements"
+	else
+		printf "%-35s ... not installed\n" "pg_stat_statements"
+		failed=1
 	fi
 
 	if [ ${failed} -eq 1 ] ; then

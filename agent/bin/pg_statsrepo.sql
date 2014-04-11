@@ -1,7 +1,7 @@
 /*
  * bin/pg_statsrepo.sql
  *
- * Create a repository schema for PostgreSQL 8.3.
+ * Create a repository schema.
  *
  * Copyright (c) 2009-2014, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
@@ -24,7 +24,8 @@ CREATE TYPE statsrepo.elevel AS ENUM
 	'ERROR',
 	'LOG',
 	'FATAL',
-	'PANIC'
+	'PANIC',
+	'ALERT'
 );
 
 CREATE TABLE statsrepo.instance
@@ -177,8 +178,7 @@ CREATE TABLE statsrepo.index
 	idx_blks_hit	bigint,
 	PRIMARY KEY (snapid, dbid, idx),
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE,
-	FOREIGN KEY (snapid, dbid) REFERENCES statsrepo.database (snapid, dbid),
-	FOREIGN KEY (snapid, dbid, tbl) REFERENCES statsrepo.table (snapid, dbid, tbl)
+	FOREIGN KEY (snapid, dbid) REFERENCES statsrepo.database (snapid, dbid)
 );
 
 CREATE TABLE statsrepo.column
@@ -199,8 +199,7 @@ CREATE TABLE statsrepo.column
 	correlation		real,
 	PRIMARY KEY (snapid, dbid, tbl, attnum),
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE,
-	FOREIGN KEY (snapid, dbid) REFERENCES statsrepo.database (snapid, dbid),
-	FOREIGN KEY (snapid, dbid, tbl) REFERENCES statsrepo.table (snapid, dbid, tbl)
+	FOREIGN KEY (snapid, dbid) REFERENCES statsrepo.database (snapid, dbid)
 );
 
 CREATE TABLE statsrepo.activity
@@ -462,6 +461,13 @@ CREATE TABLE statsrepo.xlog
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
+CREATE TABLE statsrepo.alert_message
+(
+	snapid		bigint,
+	message		text,
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
 CREATE TABLE statsrepo.log
 (
 	instid				bigint,
@@ -495,13 +501,10 @@ CREATE TABLE statsrepo.log
 CREATE FUNCTION statsrepo.del_snapshot(bigint) RETURNS void AS
 $$
 	DELETE FROM statsrepo.snapshot WHERE snapid = $1;
-	DELETE FROM statsrepo.autovacuum WHERE start < (SELECT min(time) FROM statsrepo.snapshot);
-	DELETE FROM statsrepo.autoanalyze WHERE start < (SELECT min(time) FROM statsrepo.snapshot);
-	DELETE FROM statsrepo.checkpoint WHERE start < (SELECT min(time) FROM statsrepo.snapshot);
 $$
 LANGUAGE sql;
 
--- del_snapshot(time) - delete snapshots before the specified time.
+-- del_snapshot(time) - delete snapshots older than the specified timestamp.
 CREATE FUNCTION statsrepo.del_snapshot(timestamptz) RETURNS void AS
 $$
 	DELETE FROM statsrepo.snapshot WHERE time < $1;
@@ -511,11 +514,12 @@ $$
 $$
 LANGUAGE sql;
 
--- function to create partition-tables (nothing to do because does not partitioned)
-CREATE FUNCTION statsrepo.create_partition(timestamptz) RETURNS void AS
+-- del_repolog(time) - delete logs older than the specified timestamp.
+CREATE FUNCTION statsrepo.del_repolog(timestamptz) RETURNS void AS
 $$
-	/* do nothing */
-$$ LANGUAGE sql;
+	DELETE FROM statsrepo.log WHERE timestamp < $1;
+$$
+LANGUAGE sql;
 
 ------------------------------------------------------------------------------
 -- utility function for reporter.
@@ -722,7 +726,9 @@ CREATE FUNCTION statsrepo.get_information(
 	OUT port		text,
 	OUT "database"	name,
 	OUT encoding	name,
+	OUT collation	name,
 	OUT start		timestamp(0),
+	OUT reload		timestamp(0),
 	OUT version		text
 ) RETURNS record AS
 $$
@@ -731,7 +737,9 @@ $$
 		$2,
 		datname,
 		pg_encoding_to_char(encoding),
+		datcollate,
 		pg_postmaster_start_time()::timestamp(0),
+		pg_conf_load_time()::timestamp(0),
 		version()
 	FROM
 		pg_catalog.pg_database
@@ -757,6 +765,7 @@ $$
 		pg_catalog.pg_settings
 	WHERE
 		source NOT IN ('default', 'session', 'override')
+		AND setting <> boot_val
 	ORDER BY lower(name);
 $$
 LANGUAGE sql;
@@ -768,9 +777,10 @@ CREATE FUNCTION statsrepo.get_table_option(
 ) RETURNS text AS
 $$
 	SELECT
-		pg_catalog.array_to_string(c.reloptions, ', ')
+		pg_catalog.array_to_string(c.reloptions || array(SELECT 'toast.' || x FROM pg_catalog.unnest(tc.reloptions) x), ', ')
 	FROM
 		pg_catalog.pg_class c
+		LEFT JOIN pg_catalog.pg_class tc ON (c.reltoastrelid = tc.oid)
 	WHERE
 		c.oid = $1::regclass;
 $$
@@ -803,19 +813,11 @@ $$
 		statsrepo.tps(ed.rollbacks - sd.rollbacks, time - time0),
 		comment
 	FROM
-		(SELECT s1.*,
-				(SELECT s2.snapid
-				   FROM statsrepo.snapshot s2
-				  WHERE s1.snapid > s2.snapid
-				    AND instid = $1
-				 ORDER BY s2.snapid DESC LIMIT 1) AS snapid0,
-				(SELECT s2.time
-				   FROM statsrepo.snapshot s2
-				  WHERE s1.snapid > s2.snapid
-				    AND instid = $1
-				 ORDER BY s2.snapid DESC LIMIT 1) AS time0
-		FROM statsrepo.snapshot s1
-		WHERE s1.instid = $1) e
+		(SELECT	*,
+				lag(snapid) OVER (ORDER BY snapid) AS snapid0,
+				lag(time) OVER (ORDER BY snapid) AS time0
+		FROM statsrepo.snapshot
+		WHERE instid = $1) e
 		LEFT JOIN
 			(SELECT	snapid,
 					sum(size) AS size,
@@ -835,15 +837,15 @@ LANGUAGE sql;
 
 -- refine snapshot list
 CREATE FUNCTION statsrepo.get_snapshot_list_refine(
-	IN  begin_snapid		bigint,
-	OUT snapid		bigint,
-	OUT check_box	xml,
-	OUT "timestamp"	timestamp(0),
-	OUT size		numeric,
-	OUT diff_size	numeric,
-	OUT commits		numeric(1000,3),
-	OUT	rollbacks	numeric(1000,3),
-	OUT comment		text
+	IN  begin_snapid	bigint,
+	OUT snapid			bigint,
+	OUT check_box		xml,
+	OUT "timestamp"		timestamp(0),
+	OUT size			numeric,
+	OUT diff_size		numeric,
+	OUT commits			numeric(1000,3),
+	OUT	rollbacks		numeric(1000,3),
+	OUT comment			text
 ) RETURNS SETOF record AS
 $$
 	SELECT
@@ -860,19 +862,11 @@ $$
 		statsrepo.tps(ed.rollbacks - sd.rollbacks, time - time0),
 		comment
 	FROM
-		(SELECT s1.*,
-				(SELECT s2.snapid
-				   FROM statsrepo.snapshot s2
-				  WHERE s1.snapid > s2.snapid
-				    AND instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $1)
-				 ORDER BY s2.snapid DESC LIMIT 1) AS snapid0,
-				(SELECT s2.time
-				   FROM statsrepo.snapshot s2
-				  WHERE s1.snapid > s2.snapid
-				    AND instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $1)
-				 ORDER BY s2.snapid DESC LIMIT 1) AS time0
-		FROM statsrepo.snapshot s1
-		WHERE s1.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $1)) e
+		(SELECT	*,
+				lag(snapid) OVER (ORDER BY snapid) AS snapid0,
+				lag(time) OVER (ORDER BY snapid) AS time0
+		FROM statsrepo.snapshot
+		WHERE instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $1)) e
 		LEFT JOIN
 			(SELECT	snapid,
 					sum(size) AS size,
@@ -959,11 +953,6 @@ $$
 		AND time >= $2 AND time <= $3
 $$
 LANGUAGE sql STABLE;
-
--- get date of the corresponding snapshot from 'snapid'
-CREATE FUNCTION statsrepo.get_snap_date(bigint) RETURNS date AS
-'SELECT CAST(time AS DATE) FROM statsrepo.snapshot WHERE snapid = $1'
-LANGUAGE sql IMMUTABLE STRICT; 
 
 -- generate information that corresponds to 'Summary'
 CREATE FUNCTION statsrepo.get_summary(
@@ -1092,55 +1081,33 @@ $$
 	FROM
 	(
 		SELECT
-			de.snapid,
-			de.name,
-			de.xact_commit - ds.xact_commit AS xact_commit,
-			de.xact_rollback - de.xact_rollback AS xact_rollback,
-			de.time - ds.time AS duration
+			snapid,
+			name,
+			xact_commit - lag(xact_commit) OVER w AS xact_commit,
+			xact_rollback - lag(xact_rollback) OVER w AS xact_rollback,
+			time - lag(time) OVER w AS duration
 		FROM
 			(SELECT
-				d.snapid,
-				d.name,
+				s.snapid,
 				s.time,
-				s.instid,
+				d.name,
 				sum(xact_commit) AS xact_commit,
-				sum(xact_rollback) AS xact_rollback,
-				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < d.snapid AND instid = s.instid) AS prev_snapid
+				sum(xact_rollback) AS xact_rollback
 			 FROM
-			 	statsrepo.database d,
+				statsrepo.database d,
 				statsrepo.snapshot s
 			 WHERE
 			 	d.snapid = s.snapid
 			 	AND d.snapid BETWEEN $1 AND $2
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 			 GROUP BY
-			 	d.snapid, d.name, s.time, s.instid) AS de,
-			(SELECT
-				d.snapid,
-				d.name,
-				s.time,
-				s.instid,
-				sum(xact_commit) AS xact_commit,
-				sum(xact_rollback) AS xact_rollback,
-				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > d.snapid AND instid = s.instid) AS next_snapid
-			 FROM
-			 	statsrepo.database d,
-				statsrepo.snapshot s
-			 WHERE
-			 	d.snapid = s.snapid
-			 	AND d.snapid BETWEEN $1 AND $2
-				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-			 GROUP BY
-			 	d.snapid, d.name, s.time, s.instid) AS ds
-		WHERE
-			ds.snapid = de.prev_snapid
-			AND de.snapid = ds.next_snapid
-			AND ds.name = de.name
+			 	s.snapid, s.time, d.name) AS d
+		WINDOW w AS (PARTITION BY name ORDER BY snapid)
 		ORDER BY
-			de.snapid, de.name
+			snapid, name
 	) t
 	WHERE
-		snapid > $1
+		snapid > $1;
 $$
 LANGUAGE sql;
 
@@ -1162,56 +1129,34 @@ $$
 	FROM
 	(
 		SELECT
-			de.snapid,
-			de.time,
-			de.name,
-			de.xact_commit - ds.xact_commit AS xact_commit,
-			de.xact_rollback - de.xact_rollback AS xact_rollback,
-			de.time - ds.time AS duration
+			snapid,
+			time,
+			name,
+			xact_commit - lag(xact_commit) OVER w AS xact_commit,
+			xact_rollback - lag(xact_rollback) OVER w AS xact_rollback,
+			time - lag(time) OVER w AS duration
 		FROM
 			(SELECT
-				d.snapid,
-				d.name,
+				s.snapid,
 				s.time,
-				s.instid,
+				d.name,
 				sum(xact_commit) AS xact_commit,
-				sum(xact_rollback) AS xact_rollback,
-				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < d.snapid AND instid = s.instid) AS prev_snapid
+				sum(xact_rollback) AS xact_rollback
 			 FROM
-			 	statsrepo.database d,
+				statsrepo.database d,
 				statsrepo.snapshot s
 			 WHERE
 			 	d.snapid = s.snapid
 			 	AND d.snapid BETWEEN $1 AND $2
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 			 GROUP BY
-			 	d.snapid, d.name, s.time, s.instid) AS de,
-			(SELECT
-				d.snapid,
-				d.name,
-				s.time,
-				s.instid,
-				sum(xact_commit) AS xact_commit,
-				sum(xact_rollback) AS xact_rollback,
-				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > d.snapid AND instid = s.instid) AS next_snapid
-			 FROM
-			 	statsrepo.database d,
-				statsrepo.snapshot s
-			 WHERE
-			 	d.snapid = s.snapid
-			 	AND d.snapid BETWEEN $1 AND $2
-				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-			 GROUP BY
-			 	d.snapid, d.name, s.time, s.instid) AS ds
-		WHERE
-			ds.snapid = de.prev_snapid
-			AND de.snapid = ds.next_snapid
-			AND ds.name = de.name
+			 	s.snapid, s.time, d.name) AS d
+		WINDOW w AS (PARTITION BY name ORDER BY snapid)
 		ORDER BY
-			de.snapid, de.name
+			snapid, name
 	) t
 	WHERE
-		snapid > $1
+		snapid > $1;
 $$
 LANGUAGE sql;
 
@@ -1426,45 +1371,25 @@ $$
 	FROM
 	(
 		SELECT
-			xe.snapid,
-			xe.time,
-			xe.location,
-			xe.xlogfile,
-			statsrepo.xlog_location_diff(xe.location, xs.location, xe.xlog_file_size) AS write_size,
-			xe.time - xs.time AS duration
-		FROM
-		 	(SELECT
-		 		s.snapid,
-		 		s.time,
-		 		x.location,
-		 		x.xlogfile,
-				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < s.snapid AND instid = s.instid) AS prev_snapid,
-				i.xlog_file_size
-		 	 FROM
-			 	statsrepo.xlog x,
-				statsrepo.snapshot s,
-				statsrepo.instance i
-			 WHERE
-				x.snapid BETWEEN $1 AND $2
-				AND x.snapid = s.snapid
-				AND s.instid = i.instid
-				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)) AS xe,
-		 	(SELECT
-		 		s.snapid,
-		 		s.time,
-		 		x.location,
-		 		x.xlogfile,
-				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > s.snapid AND instid = s.instid) AS next_snapid
-		 	 FROM
-			 	statsrepo.xlog x,
-				statsrepo.snapshot s
-			 WHERE
-				x.snapid BETWEEN $1 AND $2
-				AND x.snapid = s.snapid
-				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)) AS xs
-		WHERE
-			xs.snapid = xe.prev_snapid
-			AND xe.snapid = xs.next_snapid
+			s.snapid,
+			s.time,
+			x.location,
+			x.xlogfile,
+			statsrepo.xlog_location_diff(
+				x.location, lag(x.location) OVER w, i.xlog_file_size) AS write_size,
+			s.time - lag(s.time) OVER w AS duration
+		 FROM
+			statsrepo.xlog x,
+			statsrepo.snapshot s,
+			statsrepo.instance i
+		 WHERE
+			x.snapid BETWEEN $1 AND $2
+			AND x.snapid = s.snapid
+			AND s.instid = i.instid
+			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+		 WINDOW w AS (ORDER BY s.snapid)
+		 ORDER BY
+		 	s.snapid
 	) t
 	WHERE
 		snapid > $1;
@@ -1564,61 +1489,26 @@ $$
 	FROM
 	(
 		SELECT
-			ce.snapid,
-			(CASE WHEN ce.overflow_user = 1 THEN ce.cpu_user + 4294967296 ELSE ce.cpu_user END - cs.cpu_user) AS user,
-			(CASE WHEN ce.overflow_system = 1 THEN ce.cpu_system + 4294967296 ELSE ce.cpu_system END - cs.cpu_system) AS system,
-			(CASE WHEN ce.overflow_idle = 1 THEN ce.cpu_idle + 4294967296 ELSE ce.cpu_idle END - cs.cpu_idle) AS idle,
-			(CASE WHEN ce.overflow_iowait = 1 THEN ce.cpu_iowait + 4294967296 ELSE ce.cpu_iowait END - cs.cpu_iowait) AS iowait,
-			
-			(CASE WHEN ce.overflow_user = 1 THEN ce.cpu_user + 4294967296 ELSE ce.cpu_user END +
-			 CASE WHEN ce.overflow_system = 1 THEN ce.cpu_system + 4294967296 ELSE ce.cpu_system END +
-			 CASE WHEN ce.overflow_idle = 1 THEN ce.cpu_idle + 4294967296 ELSE ce.cpu_idle END +
-			 CASE WHEN ce.overflow_iowait = 1 THEN ce.cpu_iowait + 4294967296 ELSE ce.cpu_iowait END) -
-			(cs.cpu_user + cs.cpu_system + cs.cpu_idle + cs.cpu_iowait) AS total
+			c.snapid,
+			(CASE WHEN overflow_user = 1 THEN cpu_user + 4294967296 ELSE cpu_user END - lag(cpu_user) OVER w) AS user,
+			(CASE WHEN overflow_system = 1 THEN cpu_system + 4294967296 ELSE cpu_system END - lag(cpu_system) OVER w) AS system,
+			(CASE WHEN overflow_idle = 1 THEN cpu_idle + 4294967296 ELSE cpu_idle END - lag(cpu_idle) OVER w) AS idle,
+			(CASE WHEN overflow_iowait = 1 THEN cpu_iowait + 4294967296 ELSE cpu_iowait END - lag(cpu_iowait) OVER w) AS iowait,
+			(CASE WHEN overflow_user = 1 THEN cpu_user + 4294967296 ELSE cpu_user END +
+			 CASE WHEN overflow_system = 1 THEN cpu_system + 4294967296 ELSE cpu_system END +
+			 CASE WHEN overflow_idle = 1 THEN cpu_idle + 4294967296 ELSE cpu_idle END +
+			 CASE WHEN overflow_iowait = 1 THEN cpu_iowait + 4294967296 ELSE cpu_iowait END) -
+			(lag(cpu_user) OVER w + lag(cpu_system) OVER w + lag(cpu_idle) OVER w + lag(cpu_iowait) OVER w) AS total
 		FROM
-			(SELECT
-				s.snapid,
-				s.instid,
-				c.cpu_user,
-				c.cpu_system,
-				c.cpu_idle,
-				c.cpu_iowait,
-				c.overflow_user,
-				c.overflow_system,
-				c.overflow_idle,
-				c.overflow_iowait,
-				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < s.snapid AND instid = s.instid) AS prev_snapid
-			 FROM
-				statsrepo.cpu c,
-				statsrepo.snapshot s
-			 WHERE
-				c.snapid BETWEEN $1 AND $2
-				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-				AND s.snapid = c.snapid) AS ce,
-			(SELECT
-				s.snapid,
-				s.instid,
-				c.cpu_user,
-				c.cpu_system,
-				c.cpu_idle,
-				c.cpu_iowait,
-				c.overflow_user,
-				c.overflow_system,
-				c.overflow_idle,
-				c.overflow_iowait,
-				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > s.snapid AND instid = s.instid) AS next_snapid
-			 FROM
-				statsrepo.cpu c,
-				statsrepo.snapshot s
-			 WHERE
-				c.snapid BETWEEN $1 AND $2
-				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-				AND s.snapid = c.snapid) AS cs
+			statsrepo.cpu c,
+			statsrepo.snapshot s
 		WHERE
-			cs.snapid = ce.prev_snapid
-			AND cs.instid = ce.instid
+			c.snapid BETWEEN $1 AND $2
+			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			AND s.snapid = c.snapid
+		WINDOW w AS (PARTITION BY s.instid ORDER BY c.snapid)
 		ORDER BY
-			ce.snapid
+			c.snapid
 	) t
 	WHERE
 		snapid > $1;
@@ -1645,63 +1535,27 @@ $$
 	FROM
 	(
 		SELECT
-			ce.snapid,
-			ce.time,
-			(CASE WHEN ce.overflow_user = 1 THEN ce.cpu_user + 4294967296 ELSE ce.cpu_user END - cs.cpu_user) AS user,
-			(CASE WHEN ce.overflow_system = 1 THEN ce.cpu_system + 4294967296 ELSE ce.cpu_system END - cs.cpu_system) AS system,
-			(CASE WHEN ce.overflow_idle = 1 THEN ce.cpu_idle + 4294967296 ELSE ce.cpu_idle END - cs.cpu_idle) AS idle,
-			(CASE WHEN ce.overflow_iowait = 1 THEN ce.cpu_iowait + 4294967296 ELSE ce.cpu_iowait END - cs.cpu_iowait) AS iowait,
-			
-			(CASE WHEN ce.overflow_user = 1 THEN ce.cpu_user + 4294967296 ELSE ce.cpu_user END +
-			 CASE WHEN ce.overflow_system = 1 THEN ce.cpu_system + 4294967296 ELSE ce.cpu_system END +
-			 CASE WHEN ce.overflow_idle = 1 THEN ce.cpu_idle + 4294967296 ELSE ce.cpu_idle END +
-			 CASE WHEN ce.overflow_iowait = 1 THEN ce.cpu_iowait + 4294967296 ELSE ce.cpu_iowait END) -
-			(cs.cpu_user + cs.cpu_system + cs.cpu_idle + cs.cpu_iowait) AS total
+			c.snapid,
+			s.time,
+			(CASE WHEN overflow_user = 1 THEN cpu_user + 4294967296 ELSE cpu_user END - lag(cpu_user) OVER w) AS user,
+			(CASE WHEN overflow_system = 1 THEN cpu_system + 4294967296 ELSE cpu_system END - lag(cpu_system) OVER w) AS system,
+			(CASE WHEN overflow_idle = 1 THEN cpu_idle + 4294967296 ELSE cpu_idle END - lag(cpu_idle) OVER w) AS idle,
+			(CASE WHEN overflow_iowait = 1 THEN cpu_iowait + 4294967296 ELSE cpu_iowait END - lag(cpu_iowait) OVER w) AS iowait,
+			(CASE WHEN overflow_user = 1 THEN cpu_user + 4294967296 ELSE cpu_user END +
+			 CASE WHEN overflow_system = 1 THEN cpu_system + 4294967296 ELSE cpu_system END +
+			 CASE WHEN overflow_idle = 1 THEN cpu_idle + 4294967296 ELSE cpu_idle END +
+			 CASE WHEN overflow_iowait = 1 THEN cpu_iowait + 4294967296 ELSE cpu_iowait END) -
+			(lag(cpu_user) OVER w + lag(cpu_system) OVER w + lag(cpu_idle) OVER w + lag(cpu_iowait) OVER w) AS total
 		FROM
-			(SELECT
-				s.snapid,
-				s.time,
-				s.instid,
-				c.cpu_user,
-				c.cpu_system,
-				c.cpu_idle,
-				c.cpu_iowait,
-				c.overflow_user,
-				c.overflow_system,
-				c.overflow_idle,
-				c.overflow_iowait,
-				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < s.snapid AND instid = s.instid) AS prev_snapid
-			 FROM
-				statsrepo.cpu c,
-				statsrepo.snapshot s
-			 WHERE
-				c.snapid BETWEEN $1 AND $2
-				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-				AND s.snapid = c.snapid) AS ce,
-			(SELECT
-				s.snapid,
-				s.instid,
-				c.cpu_user,
-				c.cpu_system,
-				c.cpu_idle,
-				c.cpu_iowait,
-				c.overflow_user,
-				c.overflow_system,
-				c.overflow_idle,
-				c.overflow_iowait,
-				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > s.snapid AND instid = s.instid) AS next_snapid
-			 FROM
-				statsrepo.cpu c,
-				statsrepo.snapshot s
-			 WHERE
-				c.snapid BETWEEN $1 AND $2
-				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-				AND s.snapid = c.snapid) AS cs
+			statsrepo.cpu c,
+			statsrepo.snapshot s
 		WHERE
-			cs.snapid = ce.prev_snapid
-			AND cs.instid = ce.instid
+			c.snapid BETWEEN $1 AND $2
+			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			AND s.snapid = c.snapid
+		WINDOW w AS (PARTITION BY s.instid ORDER BY c.snapid)
 		ORDER BY
-			ce.snapid
+			c.snapid
 	) t
 	WHERE
 		snapid > $1;
@@ -1826,59 +1680,39 @@ $$
 	FROM
 	(
 		SELECT
-			de.snapid,
-			de.device_name,
-			de.rs - ds.rs AS read_size,
-			de.ws - ds.ws AS write_size,
-			de.rt - ds.rt AS read_time,
-			de.wt - ds.wt AS write_time,
-			de.time - ds.time AS duration
+			snapid,
+			device_name,
+			CASE WHEN overflow_drs = 1 THEN rs + 4294967296 ELSE rs END - lag(rs) OVER w AS read_size,
+			CASE WHEN overflow_dws = 1 THEN ws + 4294967296 ELSE ws END - lag(ws) OVER w AS write_size,
+			CASE WHEN overflow_drt = 1 THEN rt + 4294967296 ELSE rt END - lag(rt) OVER w AS read_time,
+			CASE WHEN overflow_dwt = 1 THEN wt + 4294967296 ELSE wt END - lag(wt) OVER w AS write_time,
+			time - lag(time) OVER w AS duration
 		FROM
 			(SELECT
-				d.snapid,
-				d.device_name,
-				sum(d.device_readsector) + (sum(d.overflow_drs) * 4294967296) AS rs,
-				sum(d.device_writesector) + (sum(d.overflow_dws) * 4294967296) AS ws,
-				sum(d.device_readtime) + (sum(d.overflow_drt) * 4294967296) AS rt,
-				sum(d.device_writetime) + (sum(d.overflow_dwt) * 4294967296) AS wt,
+				s.snapid,
 				s.time,
-				s.instid,
-				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < d.snapid AND instid = s.instid) AS prev_snapid
+				d.device_name,
+				sum(device_readsector) AS rs,
+				sum(device_writesector) AS ws,
+				sum(device_readtime) AS rt,
+				sum(device_writetime) AS wt,
+				sum(overflow_drs) AS overflow_drs,
+				sum(overflow_dws) AS overflow_dws,
+				sum(overflow_drt) AS overflow_drt,
+				sum(overflow_dwt) AS overflow_dwt
 			 FROM
 				statsrepo.device d,
 				statsrepo.snapshot s
 			 WHERE
-				d.snapid BETWEEN $1 AND $2
-				AND d.snapid = s.snapid
+				s.snapid = d.snapid
+				AND s.snapid BETWEEN $1 AND $2
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 				AND d.device_name IS NOT NULL
 			 GROUP BY
-				d.snapid, d.device_name, s.time, s.instid) AS de,
-			(SELECT
-				d.snapid,
-				d.device_name,
-				sum(d.device_readsector) AS rs,
-				sum(d.device_writesector) AS ws,
-				sum(d.device_readtime) AS rt,
-				sum(d.device_writetime) AS wt,
-				s.time,
-				s.instid,
-				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > d.snapid AND instid = s.instid) AS next_snapid
-			 FROM
-				statsrepo.device d,
-				statsrepo.snapshot s
-			 WHERE
-				d.snapid BETWEEN $1 AND $2
-				AND d.snapid = s.snapid
-				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-				AND d.device_name IS NOT NULL
-			 GROUP BY
-				d.snapid, d.device_name, s.time, s.instid) AS ds
-		WHERE
-			ds.snapid = de.prev_snapid
-			AND ds.device_name = de.device_name
+				s.snapid, s.time, d.device_name) AS d
+		WINDOW w AS (PARTITION BY device_name ORDER BY snapid)
 		ORDER BY
-			de.snapid, de.device_name
+			snapid, device_name
 	) t
 	WHERE
 		snapid > $1;
@@ -1907,60 +1741,40 @@ $$
 	FROM
 	(
 		SELECT
-			de.snapid,
-			de.time,
-			de.device_name,
-			de.rs - ds.rs AS read_size,
-			de.ws - ds.ws AS write_size,
-			de.rt - ds.rt AS read_time,
-			de.wt - ds.wt AS write_time,
-			de.time - ds.time AS duration
+			snapid,
+			time,
+			device_name,
+			CASE WHEN overflow_drs = 1 THEN rs + 4294967296 ELSE rs END - lag(rs) OVER w AS read_size,
+			CASE WHEN overflow_dws = 1 THEN ws + 4294967296 ELSE ws END - lag(ws) OVER w AS write_size,
+			CASE WHEN overflow_drt = 1 THEN rt + 4294967296 ELSE rt END - lag(rt) OVER w AS read_time,
+			CASE WHEN overflow_dwt = 1 THEN wt + 4294967296 ELSE wt END - lag(wt) OVER w AS write_time,
+			time - lag(time) OVER w AS duration
 		FROM
 			(SELECT
-				d.snapid,
-				d.device_name,
-				sum(d.device_readsector) + (sum(d.overflow_drs) * 4294967296) AS rs,
-				sum(d.device_writesector) + (sum(d.overflow_dws) * 4294967296) AS ws,
-				sum(d.device_readtime) + (sum(d.overflow_drt) * 4294967296) AS rt,
-				sum(d.device_writetime) + (sum(d.overflow_dwt) * 4294967296) AS wt,
+				s.snapid,
 				s.time,
-				s.instid,
-				(SELECT max(snapid) FROM statsrepo.snapshot WHERE snapid < d.snapid AND instid = s.instid) AS prev_snapid
+				d.device_name,
+				sum(device_readsector) AS rs,
+				sum(device_writesector) AS ws,
+				sum(device_readtime) AS rt,
+				sum(device_writetime) AS wt,
+				sum(overflow_drs) AS overflow_drs,
+				sum(overflow_dws) AS overflow_dws,
+				sum(overflow_drt) AS overflow_drt,
+				sum(overflow_dwt) AS overflow_dwt
 			 FROM
 				statsrepo.device d,
 				statsrepo.snapshot s
 			 WHERE
-				d.snapid BETWEEN $1 AND $2
-				AND d.snapid = s.snapid
+			 	s.snapid = d.snapid
+				AND s.snapid BETWEEN $1 AND $2
 				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 				AND d.device_name IS NOT NULL
 			 GROUP BY
-				d.snapid, d.device_name, s.time, s.instid) AS de,
-			(SELECT
-				d.snapid,
-				d.device_name,
-				sum(d.device_readsector) AS rs,
-				sum(d.device_writesector) AS ws,
-				sum(d.device_readtime) AS rt,
-				sum(d.device_writetime) AS wt,
-				s.time,
-				s.instid,
-				(SELECT min(snapid) FROM statsrepo.snapshot WHERE snapid > d.snapid AND instid = s.instid) AS next_snapid
-			 FROM
-				statsrepo.device d,
-				statsrepo.snapshot s
-			 WHERE
-				d.snapid BETWEEN $1 AND $2
-				AND d.snapid = s.snapid
-				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-				AND d.device_name IS NOT NULL
-			 GROUP BY
-				d.snapid, d.device_name, s.time, s.instid) AS ds
-		WHERE
-			ds.snapid = de.prev_snapid
-			AND ds.device_name = de.device_name
+				s.snapid, s.time, d.device_name) AS d
+		WINDOW w AS (PARTITION BY device_name ORDER BY snapid)
 		ORDER BY
-			de.snapid, de.device_name
+			snapid, device_name
 	) t
 	WHERE
 		snapid > $1;
@@ -2777,6 +2591,28 @@ $$
 $$
 LANGUAGE sql;
 
+-- generate information that corresponds to 'Alert'
+CREATE FUNCTION statsrepo.get_alert(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT "timestamp"		timestamp,
+	OUT message			text
+) RETURNS SETOF record AS
+$$
+	SELECT
+		s.time::timestamp(0),
+		a.message
+	FROM
+		statsrepo.alert_message a LEFT JOIN statsrepo.snapshot s
+			ON a.snapid = s.snapid
+	WHERE
+		s.snapid BETWEEN $1 AND $2
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+	ORDER BY
+		1;
+$$
+LANGUAGE sql;
+
 -- generate information that corresponds to 'Profiles'
 CREATE FUNCTION statsrepo.get_profiles(
 	IN snapid_begin		bigint,
@@ -2796,6 +2632,175 @@ $$
 		processing
 	ORDER BY
 		executes;
+$$
+LANGUAGE sql;
+
+------------------------------------------------------------------------------
+-- function for partitioning.
+------------------------------------------------------------------------------
+
+-- get date of the corresponding snapshot from 'snapid'
+CREATE FUNCTION statsrepo.get_snap_date(bigint) RETURNS date AS
+'SELECT CAST(time AS DATE) FROM statsrepo.snapshot WHERE snapid = $1'
+LANGUAGE sql IMMUTABLE STRICT; 
+
+-- get definition of foreign key
+CREATE FUNCTION statsrepo.get_constraintdef(oid)
+RETURNS SETOF text AS
+$$
+	SELECT
+		pg_catalog.pg_get_constraintdef(oid, true) AS condef
+	FROM
+		pg_constraint
+	WHERE
+		conrelid = $1 AND contype = 'f';
+$$ LANGUAGE sql IMMUTABLE STRICT;
+
+-- function to create new partition-table
+CREATE FUNCTION statsrepo.partition_new(regclass, date, text)
+RETURNS void AS
+$$
+DECLARE
+	parent_name	name;
+	child_name	name;
+	condef		text;
+BEGIN
+	parent_name := relname FROM pg_class WHERE oid = $1;
+	child_name := parent_name || to_char($2, '_YYYYMMDD');
+
+	/* child table already exists */
+	PERFORM 1 FROM pg_inherits i LEFT JOIN pg_class c ON c.oid = i.inhrelid
+	WHERE i.inhparent = $1 AND c.relname = child_name;
+	IF FOUND THEN
+		RETURN;
+	END IF;
+
+	/* create child table */
+	IF NOT FOUND THEN
+		EXECUTE 'CREATE TABLE statsrepo.' || child_name
+			|| ' (LIKE statsrepo.' || parent_name
+			|| ' INCLUDING INDEXES INCLUDING DEFAULTS INCLUDING CONSTRAINTS,'
+			|| ' CHECK (' || $3 || ' >= DATE ''' || to_char($2, 'YYYY-MM-DD') || ''''
+			|| ' AND ' || $3 || ' < DATE ''' || to_char($2 + 1, 'YYYY-MM-DD') || ''')'
+			|| ' ) INHERITS (statsrepo.' || parent_name || ')';
+
+		/* add foreign key constraint */
+		FOR condef IN SELECT statsrepo.get_constraintdef($1) LOOP
+		    EXECUTE 'ALTER TABLE statsrepo.' || child_name || ' ADD ' || condef;
+		END LOOP;
+	END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- partition_drop(date, regclass) - drop partition-table.
+CREATE FUNCTION statsrepo.partition_drop(date, regclass)
+RETURNS void AS
+$$
+DECLARE
+	parent_name	name;
+	child_name	name;
+	tblname		name;
+BEGIN
+	parent_name := relname FROM pg_class WHERE oid = $2;
+	child_name := parent_name || to_char($1, '_YYYYMMDD');
+
+	FOR tblname IN
+		SELECT c.relname FROM pg_inherits i LEFT JOIN pg_class c ON c.oid = i.inhrelid
+		WHERE i.inhparent = $2 AND c.relname < child_name
+	LOOP
+		EXECUTE 'DROP TABLE IF EXISTS statsrepo.' || tblname;
+	END LOOP;
+END;
+$$
+LANGUAGE plpgsql;
+
+-- function to create partition-tables for snapshot
+CREATE FUNCTION statsrepo.create_snapshot_partition(timestamptz) RETURNS void AS
+$$
+DECLARE
+BEGIN
+	LOCK TABLE statsrepo.instance IN SHARE UPDATE EXCLUSIVE MODE;
+
+	SET client_min_messages = warning;
+	PERFORM statsrepo.partition_new('statsrepo.table', CAST($1 AS DATE), 'date');
+	PERFORM statsrepo.partition_new('statsrepo.index', CAST($1 AS DATE), 'date');
+	PERFORM statsrepo.partition_new('statsrepo.column', CAST($1 AS DATE), 'date');
+	RESET client_min_messages;
+END;
+$$ LANGUAGE plpgsql;
+
+-- function to create partition-tables for log
+CREATE FUNCTION statsrepo.create_repolog_partition(timestamptz) RETURNS void AS
+$$
+DECLARE
+BEGIN
+	LOCK TABLE statsrepo.instance IN SHARE UPDATE EXCLUSIVE MODE;
+
+	SET client_min_messages = warning;
+	PERFORM statsrepo.partition_new('statsrepo.log', CAST($1 AS DATE), 'CAST (timestamp AS DATE)');
+	RESET client_min_messages;
+END;
+$$ LANGUAGE plpgsql;
+
+-- function to insert partition-table for snapshot
+CREATE FUNCTION statsrepo.partition_snapshot_insert() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+	EXECUTE 'INSERT INTO statsrepo.'
+		|| TG_TABLE_NAME || to_char(new.date, '_YYYYMMDD') || ' VALUES(($1).*)' USING new;
+	RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- function to insert partition-table for log
+CREATE FUNCTION statsrepo.partition_repolog_insert() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+	EXECUTE 'INSERT INTO statsrepo.'
+		|| TG_TABLE_NAME || to_char(new.timestamp, '_YYYYMMDD') || ' VALUES(($1).*)' USING new;
+	RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- trigger registration for partitioning
+CREATE TRIGGER partition_insert_table BEFORE INSERT ON statsrepo.table FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_snapshot_insert();
+CREATE TRIGGER partition_insert_index BEFORE INSERT ON statsrepo.index FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_snapshot_insert();
+CREATE TRIGGER partition_insert_column BEFORE INSERT ON statsrepo.column FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_snapshot_insert();
+CREATE TRIGGER partition_insert_log BEFORE INSERT ON statsrepo.log FOR EACH ROW EXECUTE PROCEDURE statsrepo.partition_repolog_insert();
+
+-- del_snapshot2(time) - delete snapshots older than the specified timestamp.
+CREATE FUNCTION statsrepo.del_snapshot2(timestamptz) RETURNS void AS
+$$
+	LOCK TABLE statsrepo.instance IN SHARE UPDATE EXCLUSIVE MODE;
+
+	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.table');
+	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.index');
+	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.column');
+
+	/*
+	 * Note:
+	 * Not use DELETE directly due to a bug in PostgreSQL (#6019).
+	 * (BUG #6019: invalid cached plan on inherited table)
+	 */
+	SELECT statsrepo.del_snapshot($1);
+$$
+LANGUAGE sql;
+
+-- del_repolog2(time) - delete logs older than the specified timestamp.
+CREATE FUNCTION statsrepo.del_repolog2(timestamptz) RETURNS void AS
+$$
+	LOCK TABLE statsrepo.instance IN SHARE UPDATE EXCLUSIVE MODE;
+
+	SELECT statsrepo.partition_drop(CAST($1 AS DATE), 'statsrepo.log');
+
+	/*
+	 * Note:
+	 * Not use DELETE directly due to a bug in PostgreSQL (#6019).
+	 * (BUG #6019: invalid cached plan on inherited table)
+	 */
+	SELECT statsrepo.del_repolog($1);
 $$
 LANGUAGE sql;
 

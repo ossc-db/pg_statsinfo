@@ -339,6 +339,5 @@ extern void shutdown_progress(ShutdownState state);
 extern void delay(void);
 extern char *getlocaltimestamp(void);
 extern time_t get_next_time(time_t now, int interval);
-extern int get_server_version(PGconn *conn);
 
 #endif   /* PG_STATSINFOD_H */

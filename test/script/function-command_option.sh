@@ -18,8 +18,7 @@ function exec_statsinfo2()
 
 trap stop_all_database EXIT
 
-[ $(server_version) -ge 80400 ] &&
-	export PGOPTIONS=' -c intervalstyle=postgres'
+export PGOPTIONS=' -c intervalstyle=postgres'
 
 echo "/*---- Initialize repository DB ----*/"
 setup_repository ${REPOSITORY_DATA} ${REPOSITORY_USER} ${REPOSITORY_PORT} ${REPOSITORY_CONFIG}

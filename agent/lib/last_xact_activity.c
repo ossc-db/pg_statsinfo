@@ -54,19 +54,16 @@ typedef struct statBuffer
 } statBuffer;
 
 /* Hook storage */
-#if PG_VERSION_NUM >= 80400
 static shmem_startup_hook_type	prev_shmem_startup_hook = NULL;
 static ExecutorStart_hook_type	prev_ExecutorStart_hook = NULL;
 static ExecutorEnd_hook_type	prev_ExecutorEnd_hook = NULL;
 #if PG_VERSION_NUM >= 90000
 static ProcessUtility_hook_type	prev_ProcessUtility_hook = NULL;
 #endif
-#endif
 
 /* Backend local variables */
 static MemoryContext pglxaContext = NULL;
 static statBuffer *stat_buffer_snapshot = NULL;
-#if PG_VERSION_NUM >= 80400
 static int buffer_size_per_backend = 1000;
 static statBuffer *stat_buffer = NULL;
 static char *query_buffer = NULL;
@@ -75,7 +72,6 @@ static bool record_xact_commands = false;
 static bool free_localdata_on_execend = false;
 #if PG_VERSION_NUM >= 90000
 static bool immediate_exit_xact = false;
-#endif
 #endif
 
 /* Module callbacks */
@@ -88,7 +84,6 @@ PG_FUNCTION_INFO_V1(statsinfo_last_xact_activity);
 
 /* Internal functions */
 static void clear_snapshot(void);
-#if PG_VERSION_NUM >= 80400
 static void shmem_startup(void);
 static void backend_shutdown_hook(int code, Datum arg);
 static void myExecutorStart(QueryDesc *queryDesc, int eflags);
@@ -111,7 +106,6 @@ static void myProcessUtility(Node *parsetree, const char *queryString,
 static void myProcessUtility(Node *parsetree,
 			   const char *queryString, ParamListInfo params, bool isTopLevel,
 			   DestReceiver *dest, char *completionTag);
-#endif
 #endif
 #endif
 
@@ -138,7 +132,6 @@ static void myProcessUtility(Node *parsetree,
 #define RESTORE_HOOK(func) \
 	func##_hook = prev_##func##_hook;
 
-#if PG_VERSION_NUM >= 80400
 /*
  * Module load callbacks
  */
@@ -477,11 +470,9 @@ myProcessUtility(Node *parsetree, const char *queryString,
 }
 #endif
 #endif
-#endif
 
 #define LAST_XACT_ACTIVITY_COLS		4
 
-#if PG_VERSION_NUM >= 80400
 /*
  * statsinfo_last_xact_activity() -
  *
@@ -600,48 +591,6 @@ statsinfo_last_xact_activity(PG_FUNCTION_ARGS)
 		SRF_RETURN_DONE(funcctx);
 	}
 }
-#else
-/*
- * statsinfo_last_xact_activity() -
- *
- * dummy function for PG8.3.
- */
-Datum
-statsinfo_last_xact_activity(PG_FUNCTION_ARGS)
-{
-	FuncCallContext *funcctx;
-
-	if (SRF_IS_FIRSTCALL())
-	{
-		MemoryContext oldcontext;
-		TupleDesc	tupdesc;
-
-		funcctx = SRF_FIRSTCALL_INIT();
-
-		oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
-
-		tupdesc = CreateTemplateTupleDesc(LAST_XACT_ACTIVITY_COLS, false);
-		TupleDescInitEntry(tupdesc, (AttrNumber) 1, "pid",
-						   INT4OID, -1, 0);
-		TupleDescInitEntry(tupdesc, (AttrNumber) 2, "xid",
-						   XIDOID, -1, 0);
-		TupleDescInitEntry(tupdesc, (AttrNumber) 3, "in_xact",
-						   BOOLOID, -1, 0);
-		TupleDescInitEntry(tupdesc, (AttrNumber) 4, "queries",
-						   TEXTOID, -1, 0);
-
-		funcctx->tuple_desc = BlessTupleDesc(tupdesc);
-		funcctx->user_fctx = palloc0(sizeof(int));
-
-		MemoryContextSwitchTo(oldcontext);
-	}
-
-	/* stuff done on every call of the function */
-	funcctx = SRF_PERCALL_SETUP();
-
-	SRF_RETURN_DONE(funcctx);
-}
-#endif
 
 void
 last_xact_activity_clear_snapshot(void)
@@ -666,7 +615,6 @@ clear_snapshot(void)
 	stat_buffer_snapshot = NULL;
 }
 
-#if PG_VERSION_NUM >= 80400
 /*
  * Create snap shot of last_xact_activity for stable return.
  */
@@ -882,4 +830,3 @@ attatch_shmem(void)
 			init_entry(beid, 0);
 	}
 }
-#endif

@@ -625,30 +625,6 @@ WHERE
 ORDER BY
 	datname, nspname, relname, blockee_query;
 EOF
-elif [ $(server_version) -ge 80400 ] ; then
-	send_query << EOF
-SELECT
-	snapid,
-	datname,
-	nspname,
-	relname,
-	CASE WHEN blocker_appname IS NULL THEN '(N/A)' END AS blocker_appname,
-	CASE WHEN blocker_addr IS NOT NULL THEN 'xxx' END AS blocker_addr,
-	CASE WHEN blocker_hostname IS NULL THEN '(N/A)' END AS blocker_hostname,
-	CASE WHEN blocker_port IS NOT NULL THEN 'xxx' END AS blocker_port,
-	CASE WHEN blockee_pid IS NOT NULL THEN 'xxx' END AS blockee_pid,
-	CASE WHEN blocker_pid IS NOT NULL THEN 'xxx' END AS blocker_pid,
-	CASE WHEN blocker_gid IS NOT NULL THEN 'xxx' END AS blocker_gid,
-	CASE WHEN duration IS NOT NULL THEN 'xxx' END AS duration,
-	blockee_query,
-	blocker_query
-FROM
-	statsrepo.lock
-WHERE
-	snapid = (SELECT max(snapid) FROM statsrepo.snapshot)
-ORDER BY
-	datname, nspname, relname, blockee_query;
-EOF
 else
 	send_query << EOF
 SELECT
@@ -665,7 +641,7 @@ SELECT
 	CASE WHEN blocker_gid IS NOT NULL THEN 'xxx' END AS blocker_gid,
 	CASE WHEN duration IS NOT NULL THEN 'xxx' END AS duration,
 	blockee_query,
-	CASE WHEN blocker_query IS NULL THEN '(N/A)' END AS blocker_query
+	blocker_query
 FROM
 	statsrepo.lock
 WHERE
@@ -696,27 +672,26 @@ echo "/**--- Statistics of query ---**/"
 echo "/***-- pg_stat_statements is not installed --***/"
 send_query -c "SELECT * FROM statsrepo.statement WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
 
-if [ $(server_version) -ge 80400 ] ; then
-	echo "/***-- pg_stat_statements is installed --***/"
-	cat << EOF >> ${PGDATA}/postgresql-statsinfo.conf
+echo "/***-- pg_stat_statements is installed --***/"
+cat << EOF >> ${PGDATA}/postgresql-statsinfo.conf
 shared_preload_libraries = 'pg_statsinfo, pg_stat_statements'
 pg_statsinfo.stat_statements_max = 1
 pg_statsinfo.stat_statements_exclude_users = '${PGUSER}'
 EOF
-	pg_ctl restart -w -D ${PGDATA} -o "-p ${PGPORT}" > /dev/null
-	sleep 3
-	if [ $(server_version) -ge 90100 ] ; then
-		psql -c "CREATE EXTENSION pg_stat_statements"
-	else
-		psql -f $(pg_config --sharedir)/contrib/pg_stat_statements.sql
-	fi
-	psql db01 -U user01 -At << EOF > /dev/null
+pg_ctl restart -w -D ${PGDATA} -o "-p ${PGPORT}" > /dev/null
+sleep 3
+if [ $(server_version) -ge 90100 ] ; then
+	psql -c "CREATE EXTENSION pg_stat_statements"
+else
+	psql -f $(pg_config --sharedir)/contrib/pg_stat_statements.sql
+fi
+psql db01 -U user01 -At << EOF > /dev/null
 SELECT schema01.func01('yyy', 25);
 SELECT schema01.func01('zzz', 32);
 EOF
-	get_snapshot
-	if [ $(server_version) -ge 90200 ] ; then
-		send_query << EOF
+get_snapshot
+if [ $(server_version) -ge 90200 ] ; then
+	send_query << EOF
 SELECT
 	s.snapid,
 	d.name AS database,
@@ -750,8 +725,8 @@ WHERE
 ORDER BY
 	database, role, query;
 EOF
-	elif [ $(server_version) -ge 90000 ] ; then
-		send_query << EOF
+elif [ $(server_version) -ge 90000 ] ; then
+	send_query << EOF
 SELECT
 	s.snapid,
 	d.name AS database,
@@ -785,8 +760,8 @@ WHERE
 ORDER BY
 	database, role, query;
 EOF
-	else
-		send_query << EOF
+else
+	send_query << EOF
 SELECT
 	s.snapid,
 	d.name AS database,
@@ -820,7 +795,6 @@ WHERE
 ORDER BY
 	database, role, query;
 EOF
-	fi
 fi
 
 echo "/**--- Collect statistics after database crash recovery ---**/"
