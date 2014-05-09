@@ -427,6 +427,9 @@ set_connect_privileges(void)
 static RepositoryState
 validate_repository(void)
 {
+	/* disconnect the current connection */
+	writer_disconnect();
+
 	/* connect to repository server */
 	if (writer_connect(false) == NULL)
 		return REPOSITORY_CONNECT_FAILURE;
