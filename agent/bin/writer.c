@@ -453,7 +453,8 @@ validate_repository(void)
 		return REPOSITORY_INVALID_DATABASE;
 
 	/* install statsrepo schema if not installed yet */
-	ensure_schema(writer_conn, "statsrepo");
+	if (!ensure_schema(writer_conn, "statsrepo"))
+		return REPOSITORY_INVALID_DATABASE;
 
 	/* update last used time of the connection */
 	writer_conn_last_used = time(NULL);
