@@ -690,10 +690,11 @@ logger_close(Logger *logger)
 		logger->textlog = NULL;
 
 		/* overwrite existing .log file; it must be empty.
+		 * if .log file is not empty, rename it to .log.copy.
 		 * Note:
 		 * Some error messages through system() (eg. recovery_command)
 		 * outputs to the .log file  from postgres's logger, so sometimes
-		 * .log file will not be empty. At the moment we overwrite without check.
+		 * .log file will not be empty.
 		 */
 		if (logger->csv_path[0] && stat(logger->csv_path, &st) == 0)
 		{
@@ -701,6 +702,16 @@ logger_close(Logger *logger)
 
 			strlcpy(path, logger->csv_path, MAXPGPATH);
 			replace_extension(path, ".log");
+
+			if (stat(path, &st) == 0 && st.st_size > 0)
+			{
+				char	save_path[MAXPGPATH];
+
+				strlcpy(save_path, path, MAXPGPATH);
+				replace_extension(save_path, ".log.copy");
+				rename(path, save_path);
+			}
+
 			rename(logger->textlog_path, path);
 		}
 	}
