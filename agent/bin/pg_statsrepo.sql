@@ -210,12 +210,19 @@ CREATE TABLE statsrepo.activity
 	waiting				float8,
 	running				float8,
 	max_backends		integer,
-	max_xact_client		inet,
-	max_xact_pid		integer,
-	max_xact_start		timestamptz,
-	max_xact_duration	float8,
-	max_xact_query		text,
 	PRIMARY KEY (snapid),
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
+CREATE TABLE statsrepo.xact
+(
+	snapid			bigint,
+	client			inet,
+	pid				integer,
+	start			timestamptz,
+	duration		float8,
+	query			text,
+	PRIMARY KEY (snapid, pid, start),
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
@@ -1914,24 +1921,23 @@ CREATE FUNCTION statsrepo.get_long_transactions(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		a.max_xact_pid,
-		a.max_xact_client,
-		a.max_xact_start::timestamp(0),
-		max(a.max_xact_duration)::numeric(1000, 3) AS duration,
-		a.max_xact_query
+		x.pid,
+		x.client,
+		x.start::timestamp(0),
+		max(x.duration)::numeric(1000, 3) AS duration,
+		(SELECT query FROM statsrepo.xact WHERE snapid = max(x.snapid) AND pid = x.pid AND start = x.start)
 	FROM
-		statsrepo.activity a,
+		statsrepo.xact x,
 		statsrepo.snapshot s
 	WHERE
-		a.snapid BETWEEN $1 AND $2
-		AND a.snapid = s.snapid
+		x.snapid BETWEEN $1 AND $2
+		AND x.snapid = s.snapid
 		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-		AND max_xact_pid <> 0
+		AND x.pid <> 0
 	GROUP BY
-		a.max_xact_pid,
-		a.max_xact_client,
-		a.max_xact_start,
-		a.max_xact_query
+		x.pid,
+		x.client,
+		x.start
 	ORDER BY
 		duration DESC;
 $$

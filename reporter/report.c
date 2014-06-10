@@ -50,7 +50,7 @@ FROM \
 #define SQL_SELECT_IO_USAGE_TENDENCY			"SELECT * FROM statsrepo.get_io_usage_tendency_report($1, $2)"
 #define SQL_SELECT_DISK_USAGE_TABLESPACE		"SELECT * FROM statsrepo.get_disk_usage_tablespace($1, $2)"
 #define SQL_SELECT_DISK_USAGE_TABLE				"SELECT * FROM statsrepo.get_disk_usage_table($1, $2) LIMIT 10"
-#define SQL_SELECT_LONG_TRANSACTIONS			"SELECT * FROM statsrepo.get_long_transactions($1, $2)"
+#define SQL_SELECT_LONG_TRANSACTIONS			"SELECT * FROM statsrepo.get_long_transactions($1, $2) LIMIT 10"
 #define SQL_SELECT_HEAVILY_UPDATED_TABLES		"SELECT * FROM statsrepo.get_heavily_updated_tables($1, $2) LIMIT 20"
 #define SQL_SELECT_HEAVILY_ACCESSED_TABLES		"SELECT * FROM statsrepo.get_heavily_accessed_tables($1, $2) LIMIT 20"
 #define SQL_SELECT_LOW_DENSITY_TABLES			"SELECT * FROM statsrepo.get_low_density_tables($1, $2) LIMIT 10"

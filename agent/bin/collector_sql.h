@@ -150,10 +150,13 @@ ORDER BY dbid"
 #endif
 
 /* activity */
-#define SQL_SELECT_ACTIVITY		"SELECT * FROM statsinfo.activity()"
+#define SQL_SELECT_ACTIVITY				"SELECT * FROM statsinfo.activity()"
+
+/* long transaction */
+#define SQL_SELECT_LONG_TRANSACTION		"SELECT * FROM statsinfo.long_xact()"
 
 /* tablespace */
-#define SQL_SELECT_TABLESPACE	"SELECT * FROM statsinfo.tablespaces"
+#define SQL_SELECT_TABLESPACE			"SELECT * FROM statsinfo.tablespaces"
 
 /* setting */
 #define SQL_SELECT_SETTING "\

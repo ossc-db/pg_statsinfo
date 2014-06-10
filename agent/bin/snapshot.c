@@ -64,9 +64,10 @@ static List		*prev_diskstats_list = NIL;
 
 static const char *instance_gets[] =
 {
-/*	SQL_SELECT_ACTIVITY,	*/
-/*	SQL_SELECT_CPU,			*/
-/*	SQL_SELECT_DEVICE,		*/
+/*	SQL_SELECT_ACTIVITY,			*/
+/*	SQL_SELECT_LONG_TRANSACTION,	*/
+/*	SQL_SELECT_CPU,					*/
+/*	SQL_SELECT_DEVICE,				*/
 	SQL_SELECT_LOADAVG,
 	SQL_SELECT_MEMORY,
 	SQL_SELECT_TABLESPACE,
@@ -85,6 +86,7 @@ static const char *instance_gets[] =
 static const char *instance_puts[] =
 {
 	SQL_INSERT_ACTIVITY,
+	SQL_INSERT_LONG_TRANSACTION,
 	SQL_INSERT_CPU,
 	SQL_INSERT_DEVICE,
 	SQL_INSERT_LOADAVG,
@@ -142,6 +144,7 @@ get_snapshot(char *comment)
 {
 	PGconn		*conn = NULL;
 	PGresult	*activity = NULL;
+	PGresult	*long_xact = NULL;
 	PGresult	*cpuinfo = NULL;
 	PGresult	*deviceinfo = NULL;
 	Snap		*snap;
@@ -185,6 +188,14 @@ get_snapshot(char *comment)
 		{
 			activity = do_get(conn, SQL_SELECT_ACTIVITY, 0, NULL);
 			if (activity == NULL)
+				continue;
+		}
+
+		/* query long transaction as a separated transaction. */
+		if (long_xact == NULL)
+		{
+			long_xact = do_get(conn, SQL_SELECT_LONG_TRANSACTION, 0, NULL);
+			if (long_xact == NULL)
 				continue;
 		}
 
@@ -310,6 +321,7 @@ get_snapshot(char *comment)
 	if (snap->instance == NIL)
 	{
 		PQclear(activity);		/* activity has not been assigned yet */
+		PQclear(long_xact);		/* long transaction has not been assigned yet */
 		PQclear(cpuinfo);		/* cpuinfo has not been assigned yet */
 		PQclear(deviceinfo);	/* deviceinfo has not been assigned yet */
 		list_destroy(diskstats_list, free);
@@ -321,6 +333,8 @@ get_snapshot(char *comment)
 	snap->instance = lcons(deviceinfo, snap->instance);
 	/* prepend the cpuinfo to the instance statistics */
 	snap->instance = lcons(cpuinfo, snap->instance);
+	/* prepend the long transaction to the instance statistics */
+	snap->instance = lcons(long_xact, snap->instance);
 	/* prepend the activity to the instance statistics */
 	snap->instance = lcons(activity, snap->instance);
 

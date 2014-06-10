@@ -39,14 +39,21 @@ CREATE FUNCTION statsinfo.activity(
 	OUT idle_in_xact	float8,
 	OUT waiting			float8,
 	OUT running			float8,
-	OUT backends		integer,
+	OUT backends		integer)
+AS 'MODULE_PATHNAME', 'statsinfo_activity'
+LANGUAGE C STRICT;
+
+--
+-- statsinfo.long_xact()
+--
+CREATE FUNCTION statsinfo.long_xact(
 	OUT client			text,
 	OUT pid				integer,
 	OUT start			timestamptz,
 	OUT duration		float8,
-	OUT query			text
-)
-AS 'MODULE_PATHNAME', 'statsinfo_activity'
+	OUT query			text)
+RETURNS SETOF record
+AS 'MODULE_PATHNAME', 'statsinfo_long_xact'
 LANGUAGE C STRICT;
 
 --

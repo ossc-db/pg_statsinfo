@@ -498,19 +498,7 @@ EOF
 echo "/***-- There is no transaction of more than 1 second --***/"
 sleep 10
 get_snapshot
-send_query << EOF
-SELECT
-	snapid,
-	CASE WHEN max_xact_client IS NULL THEN 'OK' ELSE 'FAILED' END AS max_xact_client,
-	CASE WHEN max_xact_pid IS NULL THEN 'OK' ELSE 'FAILED' END AS max_xact_pid,
-	CASE WHEN max_xact_start IS NULL THEN 'OK' ELSE 'FAILED' END AS max_xact_start,
-	CASE WHEN max_xact_duration IS NULL THEN 'OK' ELSE 'FAILED' END AS max_xact_duration,
-	CASE WHEN max_xact_query IS NULL THEN 'OK' ELSE 'FAILED' END AS max_xact_query
-FROM
-	statsrepo.activity
-WHERE
-	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
-EOF
+send_query -c "SELECT * FROM statsrepo.xact WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
 
 echo "/***-- There is a transaction of more than 1 second --***/"
 pid=$(psql -Atc "SELECT pg_backend_pid() FROM pg_sleep(10)")
@@ -518,13 +506,13 @@ get_snapshot
 send_query << EOF
 SELECT
 	snapid,
-	CASE WHEN max_xact_client IS NULL THEN 'OK' ELSE 'FAILED' END AS max_xact_client,
-	CASE WHEN max_xact_pid = ${pid} THEN 'OK' ELSE 'FAILED' END AS max_xact_pid,
-	CASE WHEN max_xact_start IS NOT NULL THEN 'OK' ELSE 'FAILED' END AS max_xact_start,
-	CASE WHEN max_xact_duration > 0 THEN 'OK' ELSE 'FAILED' END AS max_xact_duration,
-	max_xact_query
+	CASE WHEN client IS NULL THEN 'OK' ELSE 'FAILED' END AS client,
+	CASE WHEN pid = ${pid} THEN 'OK' ELSE 'FAILED' END AS pid,
+	CASE WHEN start IS NOT NULL THEN 'OK' ELSE 'FAILED' END AS start,
+	CASE WHEN duration > 0 THEN 'OK' ELSE 'FAILED' END AS duration,
+	query
 FROM
-	statsrepo.activity
+	statsrepo.xact
 WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
 EOF

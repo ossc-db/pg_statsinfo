@@ -13,6 +13,7 @@
 #include <sys/wait.h>
 #include <time.h>
 
+#include "access/hash.h"
 #include "access/heapam.h"
 #include "catalog/pg_type.h"
 #include "catalog/pg_control.h"
@@ -173,6 +174,7 @@ default_log_maintenance_command(void)
 #define DEFAULT_LONG_LOCK_THREASHOLD		30		/* sec */
 #define DEFAULT_STAT_STATEMENTS_MAX			30
 #define DEFAULT_CONTROLFILE_FSYNC_INTERVAL	60		/* sec */
+#define DEFAULT_LONG_TRANSACTION_MAX		10
 #define LONG_TRANSACTION_THRESHOLD			1.0		/* sec */
 #define DEFAULT_ENABLE_MAINTENANCE			"on"	/* snapshot + log */
 
@@ -241,12 +243,14 @@ static char	   *log_maintenance_command = NULL;
 static int		long_lock_threashold = DEFAULT_LONG_LOCK_THREASHOLD;
 static int		stat_statements_max = DEFAULT_STAT_STATEMENTS_MAX;
 static char	   *stat_statements_exclude_users = NULL;
+static int		long_transaction_max = DEFAULT_LONG_TRANSACTION_MAX;
 static int		controlfile_fsync_interval = DEFAULT_CONTROLFILE_FSYNC_INTERVAL;
 
 /*---- Function declarations ----*/
 
 PG_FUNCTION_INFO_V1(statsinfo_sample);
 PG_FUNCTION_INFO_V1(statsinfo_activity);
+PG_FUNCTION_INFO_V1(statsinfo_long_xact);
 PG_FUNCTION_INFO_V1(statsinfo_snapshot);
 PG_FUNCTION_INFO_V1(statsinfo_maintenance);
 PG_FUNCTION_INFO_V1(statsinfo_tablespaces);
@@ -263,6 +267,7 @@ PG_FUNCTION_INFO_V1(statsinfo_profile);
 
 extern Datum PGUT_EXPORT statsinfo_sample(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_activity(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_long_xact(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_snapshot(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_maintenance(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_tablespaces(PG_FUNCTION_ARGS);
@@ -283,6 +288,38 @@ extern PGUT_EXPORT void	init_last_xact_activity(void);
 extern PGUT_EXPORT void	fini_last_xact_activity(void);
 
 /*----  Internal declarations ----*/
+
+/* activity statistics */
+typedef struct Activity
+{
+	int		samples;
+
+	/* from pg_stat_activity */
+	int		idle;
+	int		idle_in_xact;
+	int		waiting;
+	int		running;
+	int		max_backends;
+} Activity;
+
+/* hashtable key for long transaction */
+typedef struct LongXactHashKey
+{
+	int				pid;
+	TimestampTz		start;
+} LongXactHashKey;
+
+/* long transaction */
+typedef struct LongXactEntry
+{
+	LongXactHashKey	key;		/* hash key of entry - MUST BE FIRST */
+	int				pid;
+	TimestampTz		start;
+	double			duration;	/* in sec */
+	char			client[NI_MAXHOST];
+	char			query[1];	/* VARIABLE LENGTH ARRAY - MUST BE LAST */
+	/* Note: the allocated length of query[] is actually pgstat_track_activity_query_size */
+} LongXactEntry;
 
 static void inet_to_cstring(const SockAddr *addr, char host[NI_MAXHOST]);
 static void StartStatsinfoLauncher(void);
@@ -312,6 +349,11 @@ static bool parse_int64(const char *value, int64 *result);
 static bool parse_float8(const char *value, double *result);
 static char *b_trim(char *str);
 static HeapTupleHeader search_devicestats(ArrayType *devicestats, const char *device_name);
+static uint32 lx_hash_fn(const void *key, Size keysize);
+static int lx_match_fn(const void *key1, const void *key2, Size keysize);
+static LongXactEntry *lx_entry_alloc(LongXactHashKey *key, PgBackendStatus *be);
+static void lx_entry_dealloc(void);
+static int lx_entry_cmp(const void *lhs, const void *rhs);
 
 #if defined(WIN32)
 static int str_to_elevel(const char *name, const char *str,
@@ -328,27 +370,8 @@ static const char *assign_enable_maintenance(const char *newval, bool doit, GucS
 static const char *assign_maintenance_time(const char *newval, bool doit, GucSource source);
 #endif
 
-/* sampled statistics */
-typedef struct Stats
-{
-	int			samples;
-
-	/* from pg_stat_activity */
-	int			idle;
-	int			idle_in_xact;
-	int			waiting;
-	int			running;
-	int			max_backends;
-
-	/* longest transaction */
-	int			max_xact_pid;
-	TimestampTz	max_xact_start;
-	double		max_xact_duration;	/* in sec */
-	char		max_xact_client[NI_MAXHOST];
-	char		max_xact_query[1];	/* VARIABLE LENGTH ARRAY - MUST BE LAST */
-} Stats;
-
-static Stats	*stats;
+static Activity		 activity = { 0, 0, 0, 0, 0, 0 };
+static HTAB			*long_xacts = NULL;
 
 /* variables for pg_statsinfo launcher */
 static volatile bool	got_SIGCHLD = false;
@@ -372,16 +395,20 @@ statsinfo_sample(PG_FUNCTION_ARGS)
 
 	must_be_superuser();
 
-	if (stats == NULL)
+	if (long_xacts == NULL)
 	{
-		stats = (Stats *) malloc(offsetof(Stats, max_xact_query) +
-								 pgstat_track_activity_query_size);
-		if (stats == NULL)
-			ereport(ERROR,
-				(errcode(ERRCODE_OUT_OF_MEMORY),
-				 errmsg("out of memory")));
+		/* create hash table when first needed */
+		HASHCTL		ctl;
 
-		memset(stats, 0, sizeof(*stats));
+		memset(&ctl, 0, sizeof(ctl));
+		ctl.keysize = sizeof(LongXactHashKey);
+		ctl.entrysize = offsetof(LongXactEntry, query) +
+							pgstat_track_activity_query_size;
+		ctl.hash = lx_hash_fn;
+		ctl.match = lx_match_fn;
+		long_xacts = hash_create("Long Transaction",
+								 long_transaction_max, &ctl,
+								 HASH_ELEM | HASH_FUNCTION | HASH_COMPARE);
 	}
 
 	now = GetCurrentTimestamp();
@@ -395,6 +422,8 @@ statsinfo_sample(PG_FUNCTION_ARGS)
 		int					usecs;
 		double				duration;
 		PGPROC			   *proc;
+		LongXactHashKey		key;
+		LongXactEntry	   *entry;
 
 		be = pgstat_fetch_stat_beentry(i);
 		if (!be)
@@ -434,8 +463,7 @@ statsinfo_sample(PG_FUNCTION_ARGS)
 
 		TimestampDifference(be->st_xact_start_timestamp, now, &secs, &usecs);
 		duration = secs + usecs / 1000000.0;
-		if (duration < stats->max_xact_duration ||
-			duration < LONG_TRANSACTION_THRESHOLD)
+		if (duration < LONG_TRANSACTION_THRESHOLD)
 			continue;
 
 		/* XXX: needs lock? */
@@ -443,37 +471,48 @@ statsinfo_sample(PG_FUNCTION_ARGS)
 		if ((proc = BackendPidGetProc(be->st_procpid)) == NULL ||
 			(ProcGlobal->allPgXact[proc->pgprocno].vacuumFlags & PROC_IN_VACUUM))
 			continue;
-
-		if (be->st_state == STATE_IDLEINTRANSACTION)
-			strlcpy(stats->max_xact_query,
-				"<IDLE> in transaction", pgstat_track_activity_query_size);
-		else
-			strlcpy(stats->max_xact_query,
-				be->st_activity, pgstat_track_activity_query_size);
 #else
 		if ((proc = BackendPidGetProc(be->st_procpid)) == NULL ||
 			(proc->vacuumFlags & PROC_IN_VACUUM))
 			continue;
-
-		strlcpy(stats->max_xact_query,
-			be->st_activity, pgstat_track_activity_query_size);
 #endif
 
-		stats->max_xact_pid = be->st_procpid;
-		stats->max_xact_start = be->st_xact_start_timestamp;
-		stats->max_xact_duration = duration;
-		inet_to_cstring(&be->st_clientaddr, stats->max_xact_client);
+		/* set up key for hashtable search */
+		key.pid = be->st_procpid;
+		key.start = be->st_xact_start_timestamp;
+
+		/* lookup the hash table entry */
+		entry = (LongXactEntry *) hash_search(long_xacts, &key, HASH_FIND, NULL);
+
+		/* create new entry, if not present */
+		if (!entry)
+			entry = lx_entry_alloc(&key, be);
+
+#if PG_VERSION_NUM >= 90200
+		if (be->st_state == STATE_IDLEINTRANSACTION)
+			strlcpy(entry->query,
+				"<IDLE> in transaction", pgstat_track_activity_query_size);
+		else
+			strlcpy(entry->query,
+				be->st_activity, pgstat_track_activity_query_size);
+#else
+		strlcpy(entry->query,
+			be->st_activity, pgstat_track_activity_query_size);
+#endif
+		entry->duration = duration;
 	}
 
-	stats->idle += idle;
-	stats->idle_in_xact += idle_in_xact;
-	stats->waiting += waiting;
-	stats->running += running;
+	activity.idle += idle;
+	activity.idle_in_xact += idle_in_xact;
+	activity.waiting += waiting;
+	activity.running += running;
 
-	if (stats->max_backends < (backends - 1))
-		stats->max_backends = backends - 1;
+	if (activity.max_backends < (backends - 1))
+		activity.max_backends = backends - 1;
 
-	stats->samples++;
+	activity.samples++;
+
+	lx_entry_dealloc();
 
 	PG_RETURN_VOID();
 }
@@ -505,7 +544,7 @@ inet_to_cstring(const SockAddr *addr, char host[NI_MAXHOST])
 	}
 }
 
-#define NUM_ACTIVITY_COLS		10
+#define NUM_ACTIVITY_COLS		5
 
 /*
  * statsinfo_activity - accumulate sampled counters.
@@ -527,41 +566,23 @@ statsinfo_activity(PG_FUNCTION_ARGS)
 
 	Assert(tupdesc->natts == lengthof(values));
 
-	if (stats != NULL && stats->samples > 0)
+	if (activity.samples > 0)
 	{
-		double		samples = stats->samples;
+		double		samples = activity.samples;
 
 		memset(nulls, 0, sizeof(nulls));
 
 		i = 0;
-		values[i++] = Float8GetDatum(stats->idle / samples);
-		values[i++] = Float8GetDatum(stats->idle_in_xact / samples);
-		values[i++] = Float8GetDatum(stats->waiting / samples);
-		values[i++] = Float8GetDatum(stats->running / samples);
-		values[i++] = Int32GetDatum(stats->max_backends);
+		values[i++] = Float8GetDatum(activity.idle / samples);
+		values[i++] = Float8GetDatum(activity.idle_in_xact / samples);
+		values[i++] = Float8GetDatum(activity.waiting / samples);
+		values[i++] = Float8GetDatum(activity.running / samples);
+		values[i++] = Int32GetDatum(activity.max_backends);
 
-		if (stats->max_xact_client[0])
-			values[i++] = CStringGetTextDatum(stats->max_xact_client);
-		else
-			nulls[i++] = true;
-		if (stats->max_xact_pid != 0)
-		{
-			values[i++] = Int32GetDatum(stats->max_xact_pid);
-			values[i++] = TimestampTzGetDatum(stats->max_xact_start);
-			values[i++] = Float8GetDatum(stats->max_xact_duration);
-			values[i++] = CStringGetTextDatum(stats->max_xact_query);
-		}
-		else
-		{
-			nulls[i++] = true;
-			nulls[i++] = true;
-			nulls[i++] = true;
-			nulls[i++] = true;
-		}
 		Assert(i == lengthof(values));
 
-		/* reset stats */
-		memset(stats, 0, sizeof(*stats));
+		/* reset activity statistics */
+		memset(&activity, 0, sizeof(Activity));
 	}
 	else
 	{
@@ -572,6 +593,92 @@ statsinfo_activity(PG_FUNCTION_ARGS)
 	tuple = heap_form_tuple(tupdesc, values, nulls);
 
 	PG_RETURN_DATUM(HeapTupleGetDatum(tuple));
+}
+
+#define NUM_LONG_TRANSACTION_COLS		5
+
+/*
+ * statsinfo_long_xact - get long transaction information
+ */
+Datum
+statsinfo_long_xact(PG_FUNCTION_ARGS)
+{
+	ReturnSetInfo	   *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
+	TupleDesc			tupdesc;
+	Tuplestorestate	   *tupstore;
+	MemoryContext		per_query_ctx;
+	MemoryContext		oldcontext;
+	HASH_SEQ_STATUS		hash_seq;
+	LongXactEntry	   *entry;
+	Datum				values[NUM_LONG_TRANSACTION_COLS];
+	bool				nulls[NUM_LONG_TRANSACTION_COLS];
+	int					i;
+
+	/* check to see if caller supports us returning a tuplestore */
+	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
+		ereport(ERROR,
+				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+				 errmsg("set-valued function called in context that cannot accept a set")));
+	if (!(rsinfo->allowedModes & SFRM_Materialize))
+		ereport(ERROR,
+				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+				 errmsg("materialize mode required, but it is not " \
+						"allowed in this context")));
+
+	/* Build a tuple descriptor for our result type */
+	if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
+		elog(ERROR, "return type must be a row type");
+	Assert(tupdesc->natts == lengthof(values));
+
+	per_query_ctx = rsinfo->econtext->ecxt_per_query_memory;
+	oldcontext = MemoryContextSwitchTo(per_query_ctx);
+
+	tupstore = tuplestore_begin_heap(true, false, work_mem);
+	rsinfo->returnMode = SFRM_Materialize;
+	rsinfo->setResult = tupstore;
+	rsinfo->setDesc = tupdesc;
+
+	MemoryContextSwitchTo(oldcontext);
+
+	if (long_xacts)
+	{
+		hash_seq_init(&hash_seq, long_xacts);
+		while ((entry = hash_seq_search(&hash_seq)) != NULL)
+		{
+			memset(values, 0, sizeof(values));
+			memset(nulls, 0, sizeof(nulls));
+
+			i = 0;
+			if (entry->client[0])
+				values[i++] = CStringGetTextDatum(entry->client);
+			else
+				nulls[i++] = true;
+			if (entry->pid != 0)
+			{
+				values[i++] = Int32GetDatum(entry->pid);
+				values[i++] = TimestampTzGetDatum(entry->start);
+				values[i++] = Float8GetDatum(entry->duration);
+				values[i++] = CStringGetTextDatum(entry->query);
+			}
+			else
+			{
+				nulls[i++] = true;
+				nulls[i++] = true;
+				nulls[i++] = true;
+				nulls[i++] = true;
+			}
+			Assert(i == lengthof(values));
+			tuplestore_putvalues(tupstore, tupdesc, values, nulls);
+
+			/* remove entry from hashtable */
+			hash_search(long_xacts, &entry->key, HASH_REMOVE, NULL);
+		}
+	}
+
+	/* clean up and return the tuplestore */
+	tuplestore_donestoring(tupstore);
+
+	return (Datum) 0;
 }
 
 /*
@@ -1062,6 +1169,21 @@ _PG_init(void)
 							60,
 							PGC_SIGHUP,
 							GUC_UNIT_S,
+#if PG_VERSION_NUM >= 90100
+							NULL,
+#endif
+							NULL,
+							NULL);
+
+		DefineCustomIntVariable(GUC_PREFIX ".long_transaction_max",
+							"Sets the max collection size of long transaction.",
+							NULL,
+							&long_transaction_max,
+							DEFAULT_LONG_TRANSACTION_MAX,
+							1,
+							100,
+							PGC_POSTMASTER,
+							0,
 #if PG_VERSION_NUM >= 90100
 							NULL,
 #endif
@@ -3390,4 +3512,107 @@ get_statsinfo_pid(const char *pid_file)
 		elog(ERROR, "invalid data in PID file \"%s\"", pid_file);
 	fclose(fp);
 	return pid;
+}
+
+/*
+ * lx_hash_fn - calculate hash value for a key
+ */
+static uint32
+lx_hash_fn(const void *key, Size keysize)
+{
+	const LongXactHashKey	*k = (const LongXactHashKey *) key;
+
+	return hash_uint32((uint32) k->pid) ^
+		   hash_uint32((uint32) k->start);
+}
+
+/*
+ * lx_match_fn - compare two keys, zero means match
+ */
+static int
+lx_match_fn(const void *key1, const void *key2, Size keysize)
+{
+	const LongXactHashKey	*k1 = (const LongXactHashKey *) key1;
+	const LongXactHashKey	*k2 = (const LongXactHashKey *) key2;
+
+	if (k1->pid == k2->pid &&
+		k1->start == k2->start)
+		return 0;
+	else
+		return 1;
+}
+
+/*
+ * lx_entry_alloc - allocate a new long transaction entry
+ */
+static LongXactEntry *
+lx_entry_alloc(LongXactHashKey *key, PgBackendStatus *be)
+{
+	LongXactEntry	*entry;
+	bool			 found;
+
+	/* create an entry with desired hash code */
+	entry = (LongXactEntry *) hash_search(long_xacts, key, HASH_ENTER, &found);
+
+	if (!found)
+	{
+		/* new entry, initialize it */
+		entry->pid = be->st_procpid;
+		entry->start = be->st_xact_start_timestamp;
+		inet_to_cstring(&be->st_clientaddr, entry->client);
+	}
+
+	return entry;
+}
+
+/*
+ * lx_entry_dealloc - deallocate entries
+ */
+static void
+lx_entry_dealloc(void)
+{
+	HASH_SEQ_STATUS	  hash_seq;
+	LongXactEntry	**entries;
+	LongXactEntry	 *entry;
+	int				  entry_num;
+	int				  excess;
+	int				  i;
+
+	entry_num = hash_get_num_entries(long_xacts);
+
+	if (entry_num <= long_transaction_max)
+		return;	/* not need to be deallocated */
+
+	entries = palloc(entry_num * sizeof(LongXactEntry *));
+
+	i = 0;
+	hash_seq_init(&hash_seq, long_xacts);
+	while ((entry = hash_seq_search(&hash_seq)) != NULL)
+		entries[i++] = entry;
+
+	qsort(entries, i, sizeof(LongXactEntry *), lx_entry_cmp);
+
+	/* discards extra entries in order of duration */
+	excess = entry_num - long_transaction_max;
+	for (i = 0; i < excess; i++)
+		hash_search(long_xacts, &entries[i]->key, HASH_REMOVE, NULL);
+
+	pfree(entries);
+}
+
+/*
+ * lx_entry_cmp - qsort comparator for sorting into duration order
+ */
+static int
+lx_entry_cmp(const void *lhs, const void *rhs)
+{
+	double		l_duration = (*(LongXactEntry *const *) lhs)->duration;
+	double		r_duration = (*(LongXactEntry *const *) rhs)->duration;
+
+	if (l_duration < r_duration)
+		return -1;
+	else if (l_duration > r_duration)
+		return +1;
+	else
+		return 0;
 }
