@@ -1150,12 +1150,12 @@ postgres.public.pgbench_branches         2         2.000         0.500         1
 
 /** Analyze Statistics **/
 -----------------------------------
-Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
-------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
-postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
-postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
-postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
+Table                                Count  Duration(Total)    Duration(Avg)    Duration(Max)  Last Analyze Time
+-------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches         2          1.686 s          0.843 s          0.845 s  2012-11-01 00:01:30
+postgres.public.pgbench_accounts         2          0.670 s          0.335 s          0.390 s  2012-11-01 00:01:30
+postgres.public.pgbench_history          2          0.230 s          0.115 s          0.160 s  2012-11-01 00:01:30
+postgres.public.pgbench_tellers          2          0.031 s          0.015 s          0.015 s  2012-11-01 00:01:30
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
@@ -1174,12 +1174,12 @@ postgres.public.pgbench_branches         2         2.000         0.500         1
 
 /** Analyze Statistics **/
 -----------------------------------
-Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
-------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
-postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
-postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
-postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
+Table                                Count  Duration(Total)    Duration(Avg)    Duration(Max)  Last Analyze Time
+-------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches         2          1.686 s          0.843 s          0.845 s  2012-11-01 00:01:30
+postgres.public.pgbench_accounts         2          0.670 s          0.335 s          0.390 s  2012-11-01 00:01:30
+postgres.public.pgbench_history          2          0.230 s          0.115 s          0.160 s  2012-11-01 00:01:30
+postgres.public.pgbench_tellers          2          0.031 s          0.015 s          0.015 s  2012-11-01 00:01:30
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -1198,12 +1198,12 @@ postgres.public.pgbench_branches         2         2.000         0.500         1
 
 /** Analyze Statistics **/
 -----------------------------------
-Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
-------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
-postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
-postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
-postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
+Table                                Count  Duration(Total)    Duration(Avg)    Duration(Max)  Last Analyze Time
+-------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches         2          1.686 s          0.843 s          0.845 s  2012-11-01 00:01:30
+postgres.public.pgbench_accounts         2          0.670 s          0.335 s          0.390 s  2012-11-01 00:01:30
+postgres.public.pgbench_history          2          0.230 s          0.115 s          0.160 s  2012-11-01 00:01:30
+postgres.public.pgbench_tellers          2          0.031 s          0.015 s          0.015 s  2012-11-01 00:01:30
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
@@ -1222,12 +1222,12 @@ postgres.public.pgbench_branches         2         2.000         0.500         1
 
 /** Analyze Statistics **/
 -----------------------------------
-Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
-------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
-postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
-postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
-postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
+Table                                Count  Duration(Total)    Duration(Avg)    Duration(Max)  Last Analyze Time
+-------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches         2          1.686 s          0.843 s          0.845 s  2012-11-01 00:01:30
+postgres.public.pgbench_accounts         2          0.670 s          0.335 s          0.390 s  2012-11-01 00:01:30
+postgres.public.pgbench_history          2          0.230 s          0.115 s          0.160 s  2012-11-01 00:01:30
+postgres.public.pgbench_tellers          2          0.031 s          0.015 s          0.015 s  2012-11-01 00:01:30
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
@@ -1253,12 +1253,12 @@ postgres.public.pgbench_tellers       35.500       0.000       0.500    0.000 Mi
 
 /** Analyze Statistics **/
 -----------------------------------
-Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
-------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
-postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
-postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
-postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
+Table                                Count  Duration(Total)    Duration(Avg)    Duration(Max)  Last Analyze Time
+-------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches         2          1.686 s          0.843 s          0.845 s  2012-11-01 00:01:30
+postgres.public.pgbench_accounts         2          0.670 s          0.335 s          0.390 s  2012-11-01 00:01:30
+postgres.public.pgbench_history          2          0.230 s          0.115 s          0.160 s  2012-11-01 00:01:30
+postgres.public.pgbench_tellers          2          0.031 s          0.015 s          0.015 s  2012-11-01 00:01:30
 
 exit: 0
 
@@ -2163,12 +2163,12 @@ postgres.public.pgbench_branches         2         2.000         0.500         1
 
 /** Analyze Statistics **/
 -----------------------------------
-Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
-------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
-postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
-postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
-postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
+Table                                Count  Duration(Total)    Duration(Avg)    Duration(Max)  Last Analyze Time
+-------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches         2          1.686 s          0.843 s          0.845 s  2012-11-01 00:01:30
+postgres.public.pgbench_accounts         2          0.670 s          0.335 s          0.390 s  2012-11-01 00:01:30
+postgres.public.pgbench_history          2          0.230 s          0.115 s          0.160 s  2012-11-01 00:01:30
+postgres.public.pgbench_tellers          2          0.031 s          0.015 s          0.015 s  2012-11-01 00:01:30
 
 ----------------------------------------
 /* Query Activity */
@@ -2480,12 +2480,12 @@ postgres.public.pgbench_branches         2         2.000         0.500         1
 
 /** Analyze Statistics **/
 -----------------------------------
-Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
-------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
-postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
-postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
-postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
+Table                                Count  Duration(Total)    Duration(Avg)    Duration(Max)  Last Analyze Time
+-------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches         2          1.686 s          0.843 s          0.845 s  2012-11-01 00:01:30
+postgres.public.pgbench_accounts         2          0.670 s          0.335 s          0.390 s  2012-11-01 00:01:30
+postgres.public.pgbench_history          2          0.230 s          0.115 s          0.160 s  2012-11-01 00:01:30
+postgres.public.pgbench_tellers          2          0.031 s          0.015 s          0.015 s  2012-11-01 00:01:30
 
 ----------------------------------------
 /* Query Activity */
@@ -2797,12 +2797,12 @@ postgres.public.pgbench_branches         2         2.000         0.500         1
 
 /** Analyze Statistics **/
 -----------------------------------
-Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
-------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
-postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
-postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
-postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
+Table                                Count  Duration(Total)    Duration(Avg)    Duration(Max)  Last Analyze Time
+-------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches         2          1.686 s          0.843 s          0.845 s  2012-11-01 00:01:30
+postgres.public.pgbench_accounts         2          0.670 s          0.335 s          0.390 s  2012-11-01 00:01:30
+postgres.public.pgbench_history          2          0.230 s          0.115 s          0.160 s  2012-11-01 00:01:30
+postgres.public.pgbench_tellers          2          0.031 s          0.015 s          0.015 s  2012-11-01 00:01:30
 
 ----------------------------------------
 /* Query Activity */
@@ -3115,12 +3115,12 @@ postgres.public.pgbench_branches         2         2.000         0.500         1
 
 /** Analyze Statistics **/
 -----------------------------------
-Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
-------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
-postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
-postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
-postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
+Table                                Count  Duration(Total)    Duration(Avg)    Duration(Max)  Last Analyze Time
+-------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches         2          1.686 s          0.843 s          0.845 s  2012-11-01 00:01:30
+postgres.public.pgbench_accounts         2          0.670 s          0.335 s          0.390 s  2012-11-01 00:01:30
+postgres.public.pgbench_history          2          0.230 s          0.115 s          0.160 s  2012-11-01 00:01:30
+postgres.public.pgbench_tellers          2          0.031 s          0.015 s          0.015 s  2012-11-01 00:01:30
 
 ----------------------------------------
 /* Query Activity */
@@ -3440,12 +3440,12 @@ postgres.public.pgbench_tellers       35.500       0.000       0.500    0.000 Mi
 
 /** Analyze Statistics **/
 -----------------------------------
-Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
-------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
-postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
-postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
-postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
+Table                                Count  Duration(Total)    Duration(Avg)    Duration(Max)  Last Analyze Time
+-------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches         2          1.686 s          0.843 s          0.845 s  2012-11-01 00:01:30
+postgres.public.pgbench_accounts         2          0.670 s          0.335 s          0.390 s  2012-11-01 00:01:30
+postgres.public.pgbench_history          2          0.230 s          0.115 s          0.160 s  2012-11-01 00:01:30
+postgres.public.pgbench_tellers          2          0.031 s          0.015 s          0.015 s  2012-11-01 00:01:30
 
 ----------------------------------------
 /* Query Activity */
@@ -3962,12 +3962,12 @@ postgres.public.pgbench_tellers       35.500       0.000       0.500    0.000 Mi
 
 /** Analyze Statistics **/
 -----------------------------------
-Table                             Duration(Total)    Duration(Avg)    Duration(Max)     Count
-------------------------------------------------------------------------------------------------
-postgres.public.pgbench_branches          1.686 s          0.843 s          0.845 s         2
-postgres.public.pgbench_accounts          0.670 s          0.335 s          0.390 s         2
-postgres.public.pgbench_history           0.230 s          0.115 s          0.160 s         2
-postgres.public.pgbench_tellers           0.031 s          0.015 s          0.015 s         2
+Table                                Count  Duration(Total)    Duration(Avg)    Duration(Max)  Last Analyze Time
+-------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_branches         2          1.686 s          0.843 s          0.845 s  2012-11-01 00:01:30
+postgres.public.pgbench_accounts         2          0.670 s          0.335 s          0.390 s  2012-11-01 00:01:30
+postgres.public.pgbench_history          2          0.230 s          0.115 s          0.160 s  2012-11-01 00:01:30
+postgres.public.pgbench_tellers          2          0.031 s          0.015 s          0.015 s  2012-11-01 00:01:30
 
 ----------------------------------------
 /* Query Activity */

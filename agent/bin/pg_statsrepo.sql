@@ -2241,7 +2241,8 @@ CREATE FUNCTION statsrepo.get_autoanalyze_stats(
 	OUT total_duration	numeric,
 	OUT avg_duration	numeric,
 	OUT max_duration	numeric,
-	OUT "count"			bigint
+	OUT "count"			bigint,
+	OUT last_analyze	timestamp
 ) RETURNS SETOF record AS
 $$
 	SELECT
@@ -2251,7 +2252,8 @@ $$
 		round(sum(duration)::numeric,3),
 		round(avg(duration)::numeric,3),
 		round(max(duration)::numeric,3),
-		count(*)
+		count(*),
+		max(start)::timestamp(0)
 	FROM
 		statsrepo.autoanalyze a,
 		(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
