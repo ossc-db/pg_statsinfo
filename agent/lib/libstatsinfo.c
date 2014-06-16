@@ -1181,7 +1181,7 @@ _PG_init(void)
 							&long_transaction_max,
 							DEFAULT_LONG_TRANSACTION_MAX,
 							1,
-							100,
+							INT_MAX,
 							PGC_POSTMASTER,
 							0,
 #if PG_VERSION_NUM >= 90100
