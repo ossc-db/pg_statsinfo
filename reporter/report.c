@@ -1143,15 +1143,15 @@ report_schema_information(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Tables **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %-16s  %8s  %14s  %10s  %10s  %11s  %11s\n",
-		"Database", "Schema", "Table", "Columns", "Row Width", "Size",
-		"Size Incr", "Table Scans", "Index Scans");
-	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "%-16s  %-16s  %-16s  %8s  %8s  %10s  %10s  %11s  %11s\n",
+		"Database", "Schema", "Table", "Columns", "Rows", "Size", "Size Incr",
+		"Table Scans", "Index Scans");
+	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_SCHEMA_INFORMATION_TABLES, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-16s  %-16s  %8s  %9s byte  %6s MiB  %6s MiB  %11s  %11s\n",
+		fprintf(out, "%-16s  %-16s  %-16s  %8s  %8s  %6s MiB  %6s MiB  %11s  %11s\n",
 			PQgetvalue(res, i, 0),	
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
