@@ -1710,12 +1710,12 @@ STATSINFO Report (host: statsinfo, port: 5432)
 
 /** Tables **/
 -----------------------------------
-Database          Schema            Table              Columns       Row Width        Size   Size Incr  Table Scans  Index Scans
------------------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts         4         97 byte      13 MiB       0 MiB            0       133066
-postgres          public            pgbench_branches         3          8 byte       0 MiB       0 MiB       109143            0
-postgres          public            pgbench_history          6         24 byte       4 MiB       3 MiB            0            0
-postgres          public            pgbench_tellers          4         12 byte       0 MiB       0 MiB        81067            0
+Database          Schema            Table              Columns      Rows        Size   Size Incr  Table Scans  Index Scans
+-----------------------------------------------------------------------------------------------------------------------------
+postgres          public            pgbench_accounts         4    100002      13 MiB       0 MiB            0       133066
+postgres          public            pgbench_branches         3         1       0 MiB       0 MiB       109143            0
+postgres          public            pgbench_history          6     80338       4 MiB       3 MiB            0            0
+postgres          public            pgbench_tellers          4        10       0 MiB       0 MiB        81067            0
 
 /** Indexes **/
 -----------------------------------
@@ -1735,12 +1735,12 @@ STATSINFO Report (host: statsinfo, port: 5433)
 
 /** Tables **/
 -----------------------------------
-Database          Schema            Table              Columns       Row Width        Size   Size Incr  Table Scans  Index Scans
------------------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts         4         97 byte      13 MiB       0 MiB            0       133066
-postgres          public            pgbench_branches         3          8 byte       0 MiB       0 MiB       109143            0
-postgres          public            pgbench_history          6         24 byte       4 MiB       3 MiB            0            0
-postgres          public            pgbench_tellers          4         12 byte       0 MiB       0 MiB        81067            0
+Database          Schema            Table              Columns      Rows        Size   Size Incr  Table Scans  Index Scans
+-----------------------------------------------------------------------------------------------------------------------------
+postgres          public            pgbench_accounts         4    100002      13 MiB       0 MiB            0       133066
+postgres          public            pgbench_branches         3         1       0 MiB       0 MiB       109143            0
+postgres          public            pgbench_history          6     80338       4 MiB       3 MiB            0            0
+postgres          public            pgbench_tellers          4        10       0 MiB       0 MiB        81067            0
 
 /** Indexes **/
 -----------------------------------
@@ -1760,12 +1760,12 @@ STATSINFO Report (host: statsinfo, port: 5434)
 
 /** Tables **/
 -----------------------------------
-Database          Schema            Table              Columns       Row Width        Size   Size Incr  Table Scans  Index Scans
------------------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts         4         97 byte      13 MiB       0 MiB            0       133066
-postgres          public            pgbench_branches         3          8 byte       0 MiB       0 MiB       109143            0
-postgres          public            pgbench_history          6         24 byte       4 MiB       3 MiB            0            0
-postgres          public            pgbench_tellers          4         12 byte       0 MiB       0 MiB        81067            0
+Database          Schema            Table              Columns      Rows        Size   Size Incr  Table Scans  Index Scans
+-----------------------------------------------------------------------------------------------------------------------------
+postgres          public            pgbench_accounts         4    100002      13 MiB       0 MiB            0       133066
+postgres          public            pgbench_branches         3         1       0 MiB       0 MiB       109143            0
+postgres          public            pgbench_history          6     80338       4 MiB       3 MiB            0            0
+postgres          public            pgbench_tellers          4        10       0 MiB       0 MiB        81067            0
 
 /** Indexes **/
 -----------------------------------
@@ -1785,12 +1785,12 @@ STATSINFO Report (host: statsinfo, port: 5435)
 
 /** Tables **/
 -----------------------------------
-Database          Schema            Table              Columns       Row Width        Size   Size Incr  Table Scans  Index Scans
------------------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts         4         97 byte      13 MiB       0 MiB            0       133066
-postgres          public            pgbench_branches         3          8 byte       0 MiB       0 MiB       109143            0
-postgres          public            pgbench_history          6         24 byte       4 MiB       3 MiB            0            0
-postgres          public            pgbench_tellers          4         12 byte       0 MiB       0 MiB        81067            0
+Database          Schema            Table              Columns      Rows        Size   Size Incr  Table Scans  Index Scans
+-----------------------------------------------------------------------------------------------------------------------------
+postgres          public            pgbench_accounts         4    100002      13 MiB       0 MiB            0       133066
+postgres          public            pgbench_branches         3         1       0 MiB       0 MiB       109143            0
+postgres          public            pgbench_history          6     80338       4 MiB       3 MiB            0            0
+postgres          public            pgbench_tellers          4        10       0 MiB       0 MiB        81067            0
 
 /** Indexes **/
 -----------------------------------
@@ -1810,12 +1810,12 @@ STATSINFO Report (host: statsinfo, port: 5436)
 
 /** Tables **/
 -----------------------------------
-Database          Schema            Table              Columns       Row Width        Size   Size Incr  Table Scans  Index Scans
------------------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts         4         97 byte      13 MiB       0 MiB            0       133066
-postgres          public            pgbench_branches         3          8 byte       0 MiB       0 MiB       109143            0
-postgres          public            pgbench_history          6         24 byte       4 MiB       3 MiB            0            0
-postgres          public            pgbench_tellers          4         12 byte       0 MiB       0 MiB        81067            0
+Database          Schema            Table              Columns      Rows        Size   Size Incr  Table Scans  Index Scans
+-----------------------------------------------------------------------------------------------------------------------------
+postgres          public            pgbench_accounts         4    100002      13 MiB       0 MiB            0       133066
+postgres          public            pgbench_branches         3         1       0 MiB       0 MiB       109143            0
+postgres          public            pgbench_history          6     80338       4 MiB       3 MiB            0            0
+postgres          public            pgbench_tellers          4        10       0 MiB       0 MiB        81067            0
 
 /** Indexes **/
 -----------------------------------
@@ -2245,12 +2245,12 @@ shared_buffers                    4096                              8kB     conf
 
 /** Tables **/
 -----------------------------------
-Database          Schema            Table              Columns       Row Width        Size   Size Incr  Table Scans  Index Scans
------------------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts         4         97 byte      13 MiB       0 MiB            0       133066
-postgres          public            pgbench_branches         3          8 byte       0 MiB       0 MiB       109143            0
-postgres          public            pgbench_history          6         24 byte       4 MiB       3 MiB            0            0
-postgres          public            pgbench_tellers          4         12 byte       0 MiB       0 MiB        81067            0
+Database          Schema            Table              Columns      Rows        Size   Size Incr  Table Scans  Index Scans
+-----------------------------------------------------------------------------------------------------------------------------
+postgres          public            pgbench_accounts         4    100002      13 MiB       0 MiB            0       133066
+postgres          public            pgbench_branches         3         1       0 MiB       0 MiB       109143            0
+postgres          public            pgbench_history          6     80338       4 MiB       3 MiB            0            0
+postgres          public            pgbench_tellers          4        10       0 MiB       0 MiB        81067            0
 
 /** Indexes **/
 -----------------------------------
@@ -2562,12 +2562,12 @@ shared_buffers                    4096                              8kB     conf
 
 /** Tables **/
 -----------------------------------
-Database          Schema            Table              Columns       Row Width        Size   Size Incr  Table Scans  Index Scans
------------------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts         4         97 byte      13 MiB       0 MiB            0       133066
-postgres          public            pgbench_branches         3          8 byte       0 MiB       0 MiB       109143            0
-postgres          public            pgbench_history          6         24 byte       4 MiB       3 MiB            0            0
-postgres          public            pgbench_tellers          4         12 byte       0 MiB       0 MiB        81067            0
+Database          Schema            Table              Columns      Rows        Size   Size Incr  Table Scans  Index Scans
+-----------------------------------------------------------------------------------------------------------------------------
+postgres          public            pgbench_accounts         4    100002      13 MiB       0 MiB            0       133066
+postgres          public            pgbench_branches         3         1       0 MiB       0 MiB       109143            0
+postgres          public            pgbench_history          6     80338       4 MiB       3 MiB            0            0
+postgres          public            pgbench_tellers          4        10       0 MiB       0 MiB        81067            0
 
 /** Indexes **/
 -----------------------------------
@@ -2879,12 +2879,12 @@ shared_buffers                    4096                              8kB     conf
 
 /** Tables **/
 -----------------------------------
-Database          Schema            Table              Columns       Row Width        Size   Size Incr  Table Scans  Index Scans
------------------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts         4         97 byte      13 MiB       0 MiB            0       133066
-postgres          public            pgbench_branches         3          8 byte       0 MiB       0 MiB       109143            0
-postgres          public            pgbench_history          6         24 byte       4 MiB       3 MiB            0            0
-postgres          public            pgbench_tellers          4         12 byte       0 MiB       0 MiB        81067            0
+Database          Schema            Table              Columns      Rows        Size   Size Incr  Table Scans  Index Scans
+-----------------------------------------------------------------------------------------------------------------------------
+postgres          public            pgbench_accounts         4    100002      13 MiB       0 MiB            0       133066
+postgres          public            pgbench_branches         3         1       0 MiB       0 MiB       109143            0
+postgres          public            pgbench_history          6     80338       4 MiB       3 MiB            0            0
+postgres          public            pgbench_tellers          4        10       0 MiB       0 MiB        81067            0
 
 /** Indexes **/
 -----------------------------------
@@ -3197,12 +3197,12 @@ shared_buffers                    4096                              8kB     conf
 
 /** Tables **/
 -----------------------------------
-Database          Schema            Table              Columns       Row Width        Size   Size Incr  Table Scans  Index Scans
------------------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts         4         97 byte      13 MiB       0 MiB            0       133066
-postgres          public            pgbench_branches         3          8 byte       0 MiB       0 MiB       109143            0
-postgres          public            pgbench_history          6         24 byte       4 MiB       3 MiB            0            0
-postgres          public            pgbench_tellers          4         12 byte       0 MiB       0 MiB        81067            0
+Database          Schema            Table              Columns      Rows        Size   Size Incr  Table Scans  Index Scans
+-----------------------------------------------------------------------------------------------------------------------------
+postgres          public            pgbench_accounts         4    100002      13 MiB       0 MiB            0       133066
+postgres          public            pgbench_branches         3         1       0 MiB       0 MiB       109143            0
+postgres          public            pgbench_history          6     80338       4 MiB       3 MiB            0            0
+postgres          public            pgbench_tellers          4        10       0 MiB       0 MiB        81067            0
 
 /** Indexes **/
 -----------------------------------
@@ -3522,12 +3522,12 @@ shared_buffers                    4096                              8kB     conf
 
 /** Tables **/
 -----------------------------------
-Database          Schema            Table              Columns       Row Width        Size   Size Incr  Table Scans  Index Scans
------------------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts         4         97 byte      13 MiB       0 MiB            0       133066
-postgres          public            pgbench_branches         3          8 byte       0 MiB       0 MiB       109143            0
-postgres          public            pgbench_history          6         24 byte       4 MiB       3 MiB            0            0
-postgres          public            pgbench_tellers          4         12 byte       0 MiB       0 MiB        81067            0
+Database          Schema            Table              Columns      Rows        Size   Size Incr  Table Scans  Index Scans
+-----------------------------------------------------------------------------------------------------------------------------
+postgres          public            pgbench_accounts         4    100002      13 MiB       0 MiB            0       133066
+postgres          public            pgbench_branches         3         1       0 MiB       0 MiB       109143            0
+postgres          public            pgbench_history          6     80338       4 MiB       3 MiB            0            0
+postgres          public            pgbench_tellers          4        10       0 MiB       0 MiB        81067            0
 
 /** Indexes **/
 -----------------------------------
@@ -4044,12 +4044,12 @@ shared_buffers                    4096                              8kB     conf
 
 /** Tables **/
 -----------------------------------
-Database          Schema            Table              Columns       Row Width        Size   Size Incr  Table Scans  Index Scans
------------------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts         4         97 byte      13 MiB       0 MiB            0       133066
-postgres          public            pgbench_branches         3          8 byte       0 MiB       0 MiB       109143            0
-postgres          public            pgbench_history          6         24 byte       4 MiB       3 MiB            0            0
-postgres          public            pgbench_tellers          4         12 byte       0 MiB       0 MiB        81067            0
+Database          Schema            Table              Columns      Rows        Size   Size Incr  Table Scans  Index Scans
+-----------------------------------------------------------------------------------------------------------------------------
+postgres          public            pgbench_accounts         4    100002      13 MiB       0 MiB            0       133066
+postgres          public            pgbench_branches         3         1       0 MiB       0 MiB       109143            0
+postgres          public            pgbench_history          6     80338       4 MiB       3 MiB            0            0
+postgres          public            pgbench_tellers          4        10       0 MiB       0 MiB        81067            0
 
 /** Indexes **/
 -----------------------------------
