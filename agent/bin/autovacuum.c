@@ -38,7 +38,7 @@ INSERT INTO statsrepo.autovacuum_cancel VALUES \
 #endif
 #define NUM_AUTOANALYZE			4
 #define NUM_RUSAGE				3
-#define NUM_AUTOVACUUM_CANCEL	4
+#define NUM_AUTOVACUUM_CANCEL	5
 
 #define AUTOVACUUM_CANCEL_LIFETIME	300	/* sec */
 
@@ -178,32 +178,38 @@ parse_autovacuum_cancel(const Log *log)
 	else if (match(log->message, MSG_AUTOVACUUM_CANCEL))
 	{
 		AVCancelRequest	*entry;
-		AutovacuumLog	*av;
-		char			*query = NULL;
 
 		if ((params = capture(log->context,
-			"automatic vacuum of table \"%s.%s.%s\"", 3)) == NIL)
+			"automatic %s of table \"%s.%s.%s\"", 4)) == NIL)
 			return false;	/* should not happen */
 
-		/*
-		 * get the query that caused cancel.
-		 * if missing the cancel request, set to NULL.
-		 */
-		if ((entry = get_avc_request(log->pid)))
+		/* get the query that caused cancel */
+		entry = get_avc_request(log->pid);
+
+		if (strcmp(list_nth(params, 0), "vacuum") == 0)
 		{
-			query = pgut_strdup(entry->query);
-			remove_avc_request(entry);
+			AutovacuumLog	*av;
+
+			av = pgut_new(AutovacuumLog);
+			av->base.type = QUEUE_AUTOVACUUM;
+			av->base.free = (QueueItemFree) Autovacuum_free;
+			av->base.exec = (QueueItemExec) AutovacuumCancel_exec;
+			strlcpy(av->finish, log->timestamp, lengthof(av->finish));
+			av->params = params;
+			if (entry)
+				av->params = lappend(av->params, pgut_strdup(entry->query));
+			else
+				av->params = lappend(av->params, NULL);
+
+			writer_send((QueueItem *) av);
+		}
+		else
+		{
+			/* does not collect in the case of analyze */
+			list_free_deep(params);
 		}
 
-		av = pgut_new(AutovacuumLog);
-		av->base.type = QUEUE_AUTOVACUUM;
-		av->base.free = (QueueItemFree) Autovacuum_free;
-		av->base.exec = (QueueItemExec) AutovacuumCancel_exec;
-		strlcpy(av->finish, log->timestamp, lengthof(av->finish));
-		av->params = params;
-		av->params = lappend(av->params, query);
-
-		writer_send((QueueItem *) av);
+		remove_avc_request(entry);
 	}
 	else
 		return false;
@@ -283,10 +289,10 @@ AutovacuumCancel_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 
 	params[0] = instid;
 	params[1] = av->finish;					/* finish */
-	params[2] = list_nth(av->params, 0);	/* database */
-	params[3] = list_nth(av->params, 1);	/* schema */
-	params[4] = list_nth(av->params, 2);	/* table */
-	params[5] = list_nth(av->params, 3);	/* query */
+	params[2] = list_nth(av->params, 1);	/* database */
+	params[3] = list_nth(av->params, 2);	/* schema */
+	params[4] = list_nth(av->params, 3);	/* table */
+	params[5] = list_nth(av->params, 4);	/* query */
 
 	return pgut_command(conn, SQL_INSERT_AUTOVACUUM_CANCEL,
 						lengthof(params), params) == PGRES_COMMAND_OK;
@@ -338,6 +344,9 @@ put_avc_request(AVCancelRequest *new_entry)
 static void
 remove_avc_request(AVCancelRequest *entry)
 {
+	if (!entry)
+		return;
+
 	free(entry->w_pid);
 	free(entry->query);
 	free(entry);
