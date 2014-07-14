@@ -599,42 +599,52 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 		/* update pg_statsinfo.control */
 		WriteLogRouteData(logger->csv_name, logger->csv_offset);
 
-		if (!only_routing && save_elevel == LOG)
+		if (!only_routing)
 		{
-			/* checkpoint ? */
-			if (is_checkpoint(log.message))
+			if (save_elevel == LOG)
 			{
-				parse_checkpoint(log.message, log.timestamp);
-				continue;
+				/* checkpoint ? */
+				if (is_checkpoint(log.message))
+				{
+					parse_checkpoint(log.message, log.timestamp);
+					continue;
+				}
+
+				/* autovacuum ? */
+				if (is_autovacuum(log.message))
+				{
+					parse_autovacuum(log.message, log.timestamp);
+					continue;
+				}
+
+				/* setting parameters reloaded ? */
+				if (strcmp(log.message, msg_sighup) == 0)
+				{
+					server_reload_time = time(NULL) + RELOAD_DELAY;
+					continue;
+				}
+
+				/* shutdown ? */
+				if (strcmp(log.message, msg_shutdown) == 0)
+				{
+					shutdown_message_found = true;
+					continue;
+				}
+
+				/* shutdown requested ? */
+				if (strcmp(log.message, msg_shutdown_smart) == 0 ||
+					strcmp(log.message, msg_shutdown_fast) == 0 ||
+					strcmp(log.message, msg_shutdown_immediate) == 0)
+				{
+					shutdown_progress(SHUTDOWN_REQUESTED);
+					continue;
+				}
 			}
 
-			/* autovacuum ? */
-			if (is_autovacuum(log.message))
+			/* autovacuum cancel ? */
+			if (is_autovacuum_cancel(save_elevel, log.message))
 			{
-				parse_autovacuum(log.message, log.timestamp);
-				continue;
-			}
-
-			/* setting parameters reloaded ? */
-			if (strcmp(log.message, msg_sighup) == 0)
-			{
-				server_reload_time = time(NULL) + RELOAD_DELAY;
-				continue;
-			}
-
-			/* shutdown ? */
-			if (strcmp(log.message, msg_shutdown) == 0)
-			{
-				shutdown_message_found = true;
-				continue;
-			}
-
-			/* shutdown requested ? */
-			if (strcmp(log.message, msg_shutdown_smart) == 0 ||
-				strcmp(log.message, msg_shutdown_fast) == 0 ||
-				strcmp(log.message, msg_shutdown_immediate) == 0)
-			{
-				shutdown_progress(SHUTDOWN_REQUESTED);
+				parse_autovacuum_cancel(&log);
 				continue;
 			}
 		}

@@ -317,6 +317,8 @@ extern bool parse_checkpoint(const char *message, const char *timestamp);
 /* autovacuum.c */
 extern bool is_autovacuum(const char *message);
 extern bool parse_autovacuum(const char *message, const char *timestamp);
+extern bool is_autovacuum_cancel(int elevel, const char *message);
+extern bool parse_autovacuum_cancel(const Log *log);
 
 /* writer.c */
 extern void writer_init(void);

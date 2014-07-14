@@ -333,6 +333,18 @@ CREATE TABLE statsrepo.autoanalyze
 );
 CREATE INDEX statsrepo_autoanalyze_idx ON statsrepo.autoanalyze(instid, start);
 
+CREATE TABLE statsrepo.autovacuum_cancel
+(
+	instid			bigint,
+	timestamp		timestamptz,
+	database		text,
+	schema			text,
+	"table"			text,
+	query			text,
+	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
+);
+CREATE INDEX statsrepo_autovacuum_cancel_idx ON statsrepo.autovacuum_cancel(instid, timestamp);
+
 CREATE TABLE statsrepo.checkpoint
 (
 	instid			bigint,
@@ -518,6 +530,7 @@ $$
 	DELETE FROM statsrepo.autovacuum WHERE start < (SELECT min(time) FROM statsrepo.snapshot);
 	DELETE FROM statsrepo.autoanalyze WHERE start < (SELECT min(time) FROM statsrepo.snapshot);
 	DELETE FROM statsrepo.checkpoint WHERE start < (SELECT min(time) FROM statsrepo.snapshot);
+	DELETE FROM statsrepo.autovacuum_cancel WHERE timestamp < (SELECT min(time) FROM statsrepo.snapshot);
 $$
 LANGUAGE sql;
 
@@ -2167,28 +2180,59 @@ CREATE FUNCTION statsrepo.get_autovacuum_activity(
 	OUT avg_tup_remain	numeric,
 	OUT avg_index_scans	numeric,
 	OUT avg_duration	numeric,
-	OUT max_duration	numeric
+	OUT max_duration	numeric,
+	OUT cancel			bigint
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		database,
-		schema,
-		"table",
-		count(*),
-		round(avg(tup_removed)::numeric,3),
-		round(avg(tup_remain)::numeric,3),
-		round(avg(index_scans)::numeric,3),
-		round(avg(duration)::numeric,3),
-		round(max(duration)::numeric,3)
+		COALESCE(tv.database, tc.database),
+		COALESCE(tv.schema, tc.schema),
+		COALESCE(tv.table, tc.table),
+		COALESCE(tv.count, 0),
+		round(COALESCE(tv.avg_tup_removed, 0)::numeric, 3),
+		round(COALESCE(tv.avg_tup_remain, 0)::numeric, 3),
+		round(COALESCE(tv.avg_index_scans, 0)::numeric, 3),
+		round(COALESCE(tv.avg_duration, 0)::numeric, 3),
+		round(COALESCE(tv.max_duration, 0)::numeric, 3),
+		COALESCE(tc.count, 0)
 	FROM
-		statsrepo.autovacuum v,
-		(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
-		(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
-	WHERE
-		v.start BETWEEN b.time AND e.time
-		AND v.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-	GROUP BY
-		database, schema, "table"
+		(SELECT
+			v.database,
+			v.schema,
+			v.table,
+			count(*),
+			avg(v.tup_removed) AS avg_tup_removed,
+			avg(v.tup_remain) AS avg_tup_remain,
+			avg(v.index_scans) AS avg_index_scans,
+			avg(v.duration) AS avg_duration,
+			max(v.duration) AS max_duration
+		 FROM
+			statsrepo.autovacuum v,
+			(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+			(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e,
+			(SELECT instid FROM statsrepo.snapshot WHERE snapid = $2) i
+		 WHERE
+			v.start BETWEEN b.time AND e.time
+			AND v.instid = i.instid
+		 GROUP BY
+			v.database, v.schema, v."table") tv
+		 FULL JOIN
+			(SELECT
+				c.database,
+				c.schema,
+				c.table,
+				count(*)
+			 FROM
+				statsrepo.autovacuum_cancel c,
+				(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+				(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e,
+				(SELECT instid FROM statsrepo.snapshot WHERE snapid = $2) i
+			 WHERE
+				c.timestamp BETWEEN b.time AND e.time
+				AND c.instid = i.instid
+			 GROUP BY
+				c.database, c.schema, c.table) tc
+		 ON tv.database = tc.database AND tv.schema = tc.schema AND tv.table = tc.table
 	ORDER BY
 		5 DESC;
 $$

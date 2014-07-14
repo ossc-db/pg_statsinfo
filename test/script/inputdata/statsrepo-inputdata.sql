@@ -61,6 +61,13 @@ $$
 	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_tellers', 0, 0, 6, 114, 16, 35, 0, 0, 0, 0, 0);
 
 	--
+	-- Data for Name: autovacuum_cancel; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
+	--
+	INSERT INTO statsrepo.autovacuum_cancel VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_branches', 'ANALYZE-01');
+	INSERT INTO statsrepo.autovacuum_cancel VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_accounts', 'ANALYZE-01');
+	INSERT INTO statsrepo.autovacuum_cancel VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_branches', 'ANALYZE-02');
+
+	--
 	-- Data for Name: checkpoint; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
 	INSERT INTO statsrepo.checkpoint VALUES ($1, '2012-11-01 00:00:30+09', 'xlog', 2283, 0, 0, 0, 44.1259995, 0.191, 45.6969986);

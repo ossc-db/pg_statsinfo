@@ -1143,10 +1143,11 @@ STATSINFO Report (host: statsinfo, port: 5432)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
---------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
-postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)  Cancels
+-----------------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s        0
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s        2
+postgres.public.pgbench_accounts         0         0.000         0.000         0.000       0.000 s        0.000 s        1
 
 /** Analyze Statistics **/
 -----------------------------------
@@ -1167,10 +1168,11 @@ STATSINFO Report (host: statsinfo, port: 5433)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
---------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
-postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)  Cancels
+-----------------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s        0
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s        2
+postgres.public.pgbench_accounts         0         0.000         0.000         0.000       0.000 s        0.000 s        1
 
 /** Analyze Statistics **/
 -----------------------------------
@@ -1191,10 +1193,11 @@ STATSINFO Report (host: statsinfo, port: 5434)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
---------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
-postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)  Cancels
+-----------------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s        0
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s        2
+postgres.public.pgbench_accounts         0         0.000         0.000         0.000       0.000 s        0.000 s        1
 
 /** Analyze Statistics **/
 -----------------------------------
@@ -1215,10 +1218,11 @@ STATSINFO Report (host: statsinfo, port: 5435)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
---------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
-postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)  Cancels
+-----------------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s        0
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s        2
+postgres.public.pgbench_accounts         0         0.000         0.000         0.000       0.000 s        0.000 s        1
 
 /** Analyze Statistics **/
 -----------------------------------
@@ -1239,10 +1243,11 @@ STATSINFO Report (host: statsinfo, port: 5436)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
---------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
-postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)  Cancels
+-----------------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s        0
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s        2
+postgres.public.pgbench_accounts         0         0.000         0.000         0.000       0.000 s        0.000 s        1
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
@@ -2156,10 +2161,11 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
---------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
-postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)  Cancels
+-----------------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s        0
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s        2
+postgres.public.pgbench_accounts         0         0.000         0.000         0.000       0.000 s        0.000 s        1
 
 /** Analyze Statistics **/
 -----------------------------------
@@ -2473,10 +2479,11 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
---------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
-postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)  Cancels
+-----------------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s        0
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s        2
+postgres.public.pgbench_accounts         0         0.000         0.000         0.000       0.000 s        0.000 s        1
 
 /** Analyze Statistics **/
 -----------------------------------
@@ -2790,10 +2797,11 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
---------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
-postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)  Cancels
+-----------------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s        0
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s        2
+postgres.public.pgbench_accounts         0         0.000         0.000         0.000       0.000 s        0.000 s        1
 
 /** Analyze Statistics **/
 -----------------------------------
@@ -3108,10 +3116,11 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
---------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
-postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)  Cancels
+-----------------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s        0
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s        2
+postgres.public.pgbench_accounts         0         0.000         0.000         0.000       0.000 s        0.000 s        1
 
 /** Analyze Statistics **/
 -----------------------------------
@@ -3426,10 +3435,11 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
---------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
-postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)  Cancels
+-----------------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s        0
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s        2
+postgres.public.pgbench_accounts         0         0.000         0.000         0.000       0.000 s        0.000 s        1
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
@@ -3948,10 +3958,11 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)
---------------------------------------------------------------------------------------------------------------------
-postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s
-postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s
+Table                                Count  Removed Rows   Remain Rows   Index Scans      Duration  Duration(Max)  Cancels
+-----------------------------------------------------------------------------------------------------------------------------
+postgres.public.pgbench_tellers          2       207.000        19.500         0.500       0.000 s        0.000 s        0
+postgres.public.pgbench_branches         2         2.000         0.500         1.000       0.000 s        0.000 s        2
+postgres.public.pgbench_accounts         0         0.000         0.000         0.000       0.000 s        0.000 s        1
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
