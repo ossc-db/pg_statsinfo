@@ -333,11 +333,21 @@ SELECT \
 	client_port, \
 	backend_start, \
 	state, \
-	pg_current_xlog_location() || ' (' || pg_xlogfile_name(pg_current_xlog_location()) || ')', \
-	sent_location || ' (' || pg_xlogfile_name(sent_location) || ')', \
-	write_location || ' (' || pg_xlogfile_name(write_location) || ')', \
-	flush_location || ' (' || pg_xlogfile_name(flush_location) || ')', \
-	replay_location || ' (' || pg_xlogfile_name(replay_location) || ')', \
+	CASE WHEN pg_is_in_recovery() THEN \
+		pg_last_xlog_receive_location() || ' (N/A)' ELSE \
+		pg_current_xlog_location() || ' (' || pg_xlogfile_name(pg_current_xlog_location()) || ')' END, \
+	CASE WHEN pg_is_in_recovery() THEN \
+		sent_location || ' (N/A)' ELSE \
+		sent_location || ' (' || pg_xlogfile_name(sent_location) || ')' END, \
+	CASE WHEN pg_is_in_recovery() THEN \
+		write_location || ' (N/A)' ELSE \
+		write_location || ' (' || pg_xlogfile_name(write_location) || ')' END, \
+	CASE WHEN pg_is_in_recovery() THEN \
+		flush_location || ' (N/A)' ELSE \
+		flush_location || ' (' || pg_xlogfile_name(flush_location) || ')' END, \
+	CASE WHEN pg_is_in_recovery() THEN \
+		replay_location || ' (N/A)' ELSE \
+		replay_location || ' (' || pg_xlogfile_name(replay_location) || ')' END, \
 	sync_priority, \
 	sync_state \
 FROM \
