@@ -2256,6 +2256,20 @@ StatsinfoLauncherMain(void)
 	pqsignal(SIGUSR2, sil_sigusr2_handler);
 	pqsignal(SIGCHLD, sil_sigchld_handler);
 
+	/* Reset some signals that are accepted by postmaster */
+	pqsignal(SIGHUP, SIG_DFL);
+	pqsignal(SIGINT, SIG_DFL);
+	pqsignal(SIGQUIT, SIG_DFL);
+	pqsignal(SIGTERM, SIG_DFL);
+	pqsignal(SIGALRM, SIG_DFL);
+	pqsignal(SIGPIPE, SIG_DFL);
+	pqsignal(SIGTTIN, SIG_DFL);
+	pqsignal(SIGTTOU, SIG_DFL);
+
+	/* Unblock signals (they were blocked when the postmaster forked us) */
+	sigemptyset(&UnBlockSig);
+	PG_SETMASK(&UnBlockSig);
+
 	/* launch a pg_statsinfod process */
 	StatsinfoPID = exec_background_process(cmd);
 	launch_time = (pg_time_t) time(NULL);
