@@ -80,6 +80,7 @@ static const char *instance_gets[] =
 #endif
 	SQL_SELECT_XLOG,
 /*	SQL_SELECT_STATEMENT,	*/
+/*	SQL_SELECT_PLAN,		*/
 	NULL
 };
 
@@ -101,6 +102,7 @@ static const char *instance_puts[] =
 #endif
 	SQL_INSERT_XLOG,
 	SQL_INSERT_STATEMENT,
+	SQL_INSERT_PLAN,
 	NULL
 };
 
@@ -137,6 +139,8 @@ static bool do_puts(PGconn *conn, const char *sql[], List *src,
 static bool do_put(PGconn *conn, const char *sql, PGresult *src,
 				   const char *snapid, const char *dbid);
 static bool has_pg_stat_statements(PGconn *conn);
+static bool has_pg_store_plans(PGconn *conn);
+static bool has_pg_store_plans_hash_query(PGconn *conn);
 static bool has_statsrepo_alert(PGconn *conn);
 
 QueueItem *
@@ -341,15 +345,51 @@ get_snapshot(char *comment)
 	/* When pg_stat_statements is installed, we collect it */
 	if (has_pg_stat_statements(conn))
 	{
-		PGresult   *stmt;
-		const char *params[] = {stat_statements_exclude_users, stat_statements_max};
+		StringInfoData	 query;
+		PGresult		*stmt;
+		const char		*params[] = {stat_statements_exclude_users, stat_statements_max};
 
-		stmt = pgut_execute(conn, SQL_SELECT_STATEMENT, 2, params);
+		initStringInfo(&query);
+#if PG_VERSION_NUM >= 90400
+		appendStringInfo(&query, SQL_SELECT_STATEMENT);
+#else
+		if (has_pg_store_plans_hash_query(conn))
+			appendStringInfo(&query, SQL_SELECT_STATEMENT, "pg_store_plans_hash_query(s.query)");
+		else
+			appendStringInfo(&query, SQL_SELECT_STATEMENT, "NULL");
+#endif
+		stmt = pgut_execute(conn, query.data, 2, params);
 		if (PQresultStatus(stmt) == PGRES_TUPLES_OK)
 			snap->instance = lappend(snap->instance, stmt);
 		else
+		{
 			PQclear(stmt);
+			snap->instance = lappend(snap->instance, NULL);
+		}
+
+		termStringInfo(&query);
 	}
+	else
+		snap->instance = lappend(snap->instance, NULL);
+
+	/* When pg_store_plans is installed, we collect it */
+	if (has_pg_store_plans(conn))
+	{
+		PGresult   *stmt;
+		const char *params[] = {stat_statements_exclude_users, stat_statements_max};
+
+		pgut_command(conn, "SET pg_store_plans.plan_format TO 'raw'", 0, NULL);
+		stmt = pgut_execute(conn, SQL_SELECT_PLAN, 2, params);
+		if (PQresultStatus(stmt) == PGRES_TUPLES_OK)
+			snap->instance = lappend(snap->instance, stmt);
+		else
+		{
+			PQclear(stmt);
+			snap->instance = lappend(snap->instance, NULL);
+		}
+	}
+	else
+		snap->instance = lappend(snap->instance, NULL);
 
 	/* collect database statistics */
 	rows = PQntuples(snap->dbnames);
@@ -689,6 +729,39 @@ has_pg_stat_statements(PGconn *conn)
 	res = pgut_execute(conn,
 			"SELECT relname FROM pg_class"
 			" WHERE relname = 'pg_stat_statements' AND relkind = 'v'",
+			0, NULL);
+	result = (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0);
+	PQclear(res);
+
+	return result;
+}
+
+static bool
+has_pg_store_plans(PGconn *conn)
+{
+	PGresult   *res;
+	bool		result;
+
+	/* check whether pg_store_plans is installed */
+	res = pgut_execute(conn,
+			"SELECT relname FROM pg_class"
+			" WHERE relname = 'pg_store_plans' AND relkind = 'v'",
+			0, NULL);
+	result = (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0);
+	PQclear(res);
+
+	return result;
+}
+
+static bool
+has_pg_store_plans_hash_query(PGconn *conn)
+{
+	PGresult   *res;
+	bool		result;
+
+	/* check whether pg_store_plans is installed */
+	res = pgut_execute(conn,
+			"SELECT 1 FROM pg_proc WHERE proname = 'pg_store_plans_hash_query'",
 			0, NULL);
 	result = (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0);
 	PQclear(res);

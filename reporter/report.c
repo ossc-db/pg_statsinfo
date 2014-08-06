@@ -90,6 +90,7 @@ FROM \
 	statsrepo.get_autoanalyze_stats($1, $2)"
 #define SQL_SELECT_QUERY_ACTIVITY_FUNCTIONS		"SELECT * FROM statsrepo.get_query_activity_functions($1, $2) LIMIT 20"
 #define SQL_SELECT_QUERY_ACTIVITY_STATEMENTS	"SELECT * FROM statsrepo.get_query_activity_statements($1, $2) LIMIT 20"
+#define SQL_SELECT_QUERY_ACTIVITY_PLANS			"SELECT * FROM statsrepo.get_query_activity_plans($1, $2) LIMIT 20"
 #define SQL_SELECT_LOCK_CONFLICTS				"SELECT * FROM statsrepo.get_lock_activity($1, $2) LIMIT 20"
 #define SQL_SELECT_REPLICATION_STATUS			"SELECT * FROM statsrepo.get_replication_activity($1, $2)"
 #define SQL_SELECT_REPLICATION_DELAYS_SYNC "\
@@ -995,6 +996,29 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 			fprintf(out, "%16s  ", "(N/A)");
 		}
 		fprintf(out, "%-s\n", PQgetvalue(res, i, 2));
+	}
+	fprintf(out, "\n");
+	PQclear(res);
+
+	fprintf(out, "/** Plans **/\n");
+	fprintf(out, "-----------------------------------\n");
+	fprintf(out, "%-10s  %-10s  %-16s  %-16s  %8s  %14s  %13s  %15s  %16s\n",
+		"Query ID", "Plan ID", "User", "Database", "Calls", "Total Time",
+		"Time/Call", "Block Read Time", "Block Write Time");
+	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_QUERY_ACTIVITY_PLANS, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "%10s  ", PQgetvalue(res, i, 0));
+		fprintf(out, "%10s  ", PQgetvalue(res, i, 1));
+		fprintf(out, "%-16s  ", PQgetvalue(res, i, 2));
+		fprintf(out, "%-16s  ", PQgetvalue(res, i, 3));
+		fprintf(out, "%8s  ", PQgetvalue(res, i, 4));
+		fprintf(out, "%10s sec  ", PQgetvalue(res, i, 5));
+		fprintf(out, "%9s sec  ", PQgetvalue(res, i, 6));
+		fprintf(out, "%12s ms  ", PQgetvalue(res, i, 7));
+		fprintf(out, "%13s ms\n", PQgetvalue(res, i, 8));
 	}
 	fprintf(out, "\n");
 	PQclear(res);

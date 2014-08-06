@@ -181,11 +181,41 @@ FROM \
 	pg_roles"
 
 /* statement */
-#if PG_VERSION_NUM >= 90200
+#if PG_VERSION_NUM >= 90400
 #define SQL_SELECT_STATEMENT "\
 SELECT \
 	s.dbid, \
 	s.userid, \
+	s.queryid, \
+	s.query, \
+	s.calls, \
+	s.total_time / 1000, \
+	s.rows, \
+	s.shared_blks_hit, \
+	s.shared_blks_read, \
+	s.shared_blks_dirtied, \
+	s.shared_blks_written, \
+	s.local_blks_hit, \
+	s.local_blks_read, \
+	s.local_blks_dirtied, \
+	s.local_blks_written, \
+	s.temp_blks_read, \
+	s.temp_blks_written, \
+	s.blk_read_time, \
+	s.blk_write_time \
+FROM \
+	pg_stat_statements s \
+	LEFT JOIN pg_roles r ON r.oid = s.userid \
+WHERE \
+	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
+ORDER BY \
+	s.total_time DESC LIMIT $2"
+#elif PG_VERSION_NUM >= 90200
+#define SQL_SELECT_STATEMENT "\
+SELECT \
+	s.dbid, \
+	s.userid, \
+	%s, \
 	s.query, \
 	s.calls, \
 	s.total_time / 1000, \
@@ -214,6 +244,7 @@ ORDER BY \
 SELECT \
 	s.dbid, \
 	s.userid, \
+	%s, \
 	s.query, \
 	s.calls, \
 	s.total_time, \
@@ -242,6 +273,7 @@ ORDER BY \
 SELECT \
 	s.dbid, \
 	s.userid, \
+	%s, \
 	s.query, \
 	s.calls, \
 	s.total_time, \
@@ -266,6 +298,45 @@ WHERE \
 ORDER BY \
 	s.total_time DESC LIMIT $2"
 #endif
+
+/* plan */
+#if PG_VERSION_NUM >= 90400
+#define SQL_SELECT_PLAN_QUERYID		"p.queryid_stat_statements"
+#else
+#define SQL_SELECT_PLAN_QUERYID		"p.queryid"
+#endif
+
+#define SQL_SELECT_PLAN "\
+SELECT \
+	p.dbid, \
+	p.userid, \
+	" SQL_SELECT_PLAN_QUERYID ", \
+	p.planid, \
+	p.plan, \
+	p.calls, \
+	p.total_time / 1000, \
+	p.rows, \
+	p.shared_blks_hit, \
+	p.shared_blks_read, \
+	p.shared_blks_dirtied, \
+	p.shared_blks_written, \
+	p.local_blks_hit, \
+	p.local_blks_read, \
+	p.local_blks_dirtied, \
+	p.local_blks_written, \
+	p.temp_blks_read, \
+	p.temp_blks_written, \
+	p.blk_read_time, \
+	p.blk_write_time, \
+	p.first_call, \
+	p.last_call \
+FROM \
+	pg_store_plans p \
+	LEFT JOIN pg_roles r ON r.oid = p.userid \
+WHERE \
+	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
+ORDER BY \
+	p.total_time DESC LIMIT $2"
 
 /* lock */
 #if PG_VERSION_NUM >= 90000

@@ -262,6 +262,7 @@ CREATE TABLE statsrepo.statement
 	snapid				bigint,
 	dbid				oid,
 	userid				oid,
+	queryid				bigint,
 	query				text,
 	calls				bigint,
 	total_time			double precision,
@@ -282,6 +283,36 @@ CREATE TABLE statsrepo.statement
 	FOREIGN KEY (snapid, dbid) REFERENCES statsrepo.database (snapid, dbid)
 );
 CREATE INDEX statsrepo_statement_idx ON statsrepo.statement(snapid, dbid);
+
+CREATE TABLE statsrepo.plan
+(
+	snapid					bigint,
+	dbid					oid,
+	userid					oid,
+	queryid					bigint,
+	planid					bigint,
+	plan					text,
+	calls					bigint,
+	total_time				double precision,
+	rows					bigint,
+	shared_blks_hit			bigint,
+	shared_blks_read		bigint,
+	shared_blks_dirtied		bigint,
+	shared_blks_written		bigint,
+	local_blks_hit			bigint,
+	local_blks_read			bigint,
+	local_blks_dirtied		bigint,
+	local_blks_written		bigint,
+	temp_blks_read			bigint,
+	temp_blks_written		bigint,
+	blk_read_time			double precision,
+	blk_write_time			double precision,
+	first_call				timestamptz,
+	last_call				timestamptz,
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE,
+	FOREIGN KEY (snapid, dbid) REFERENCES statsrepo.database (snapid, dbid)
+);
+CREATE INDEX statsrepo_plan_idx ON statsrepo.plan(snapid, dbid);
 
 CREATE TABLE statsrepo.function
 (
@@ -2395,6 +2426,50 @@ $$
 	ORDER BY
 		5 DESC,
 		4 DESC;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Query Activity (Plans)'
+CREATE FUNCTION statsrepo.get_query_activity_plans(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT queryid			bigint,
+	OUT planid			bigint,
+	OUT rolname			text,
+	OUT datname			name,
+	OUT calls			bigint,
+	OUT total_time		numeric,
+	OUT time_per_call	numeric,
+	OUT blk_read_time	numeric,
+	OUT blk_write_time	numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		pe.queryid,
+		pe.planid,
+		r.name,
+		d.name,
+		statsrepo.sub(pe.calls, pb.calls),
+		statsrepo.sub(pe.total_time, pb.total_time)::numeric(1000, 3),
+		statsrepo.div(
+			statsrepo.sub(pe.total_time, pb.total_time)::numeric,
+			statsrepo.sub(pe.calls, pb.calls)),
+		statsrepo.sub(pe.blk_read_time, pb.blk_read_time)::numeric(1000, 3),
+		statsrepo.sub(pe.blk_write_time, pb.blk_write_time)::numeric(1000, 3)
+	FROM
+		statsrepo.plan pe LEFT JOIN statsrepo.plan pb
+			ON pb.snapid = $1 AND pb.dbid = pe.dbid AND pb.queryid = pe.queryid AND pb.planid = pe.planid,
+		statsrepo.database d,
+		statsrepo.role r
+	WHERE
+		pe.snapid = $2
+		AND d.snapid = $2
+		AND r.snapid = $2
+		AND d.dbid = pe.dbid
+		AND r.userid = pe.userid
+	ORDER BY
+		6 DESC,
+		5 DESC;
 $$
 LANGUAGE sql;
 
