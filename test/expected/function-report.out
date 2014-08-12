@@ -1290,6 +1290,14 @@ postgres          postgres             66463     331.375 sec      0.005 sec     
 postgres          postgres             66463      85.370 sec      0.001 sec            (N/A)             (N/A)  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec            (N/A)             (N/A)  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
+/** Plans **/
+-----------------------------------
+Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
+-----------------------------------------------------------------------------------------------------------------------------------------
+ 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
+1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
+1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
 ---------------------------------------------
@@ -1311,6 +1319,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec            (N/A)             (N/A)  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec            (N/A)             (N/A)  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec            (N/A)             (N/A)  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Plans **/
+-----------------------------------
+Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
+-----------------------------------------------------------------------------------------------------------------------------------------
+ 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
+1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
+1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -1334,6 +1350,14 @@ postgres          postgres             66463     331.375 sec      0.005 sec     
 postgres          postgres             66463      85.370 sec      0.001 sec            (N/A)             (N/A)  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec            (N/A)             (N/A)  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
+/** Plans **/
+-----------------------------------
+Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
+-----------------------------------------------------------------------------------------------------------------------------------------
+ 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
+1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
+1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
 ---------------------------------------------
@@ -1356,6 +1380,14 @@ postgres          postgres             66463     331.375 sec      0.005 sec     
 postgres          postgres             66463      85.370 sec      0.001 sec            (N/A)             (N/A)  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec            (N/A)             (N/A)  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
+/** Plans **/
+-----------------------------------
+Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
+-----------------------------------------------------------------------------------------------------------------------------------------
+ 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
+1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
+1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
 ---------------------------------------------
@@ -1377,6 +1409,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Plans **/
+-----------------------------------
+Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
+-----------------------------------------------------------------------------------------------------------------------------------------
+ 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
+1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
+1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
 exit: 0
 
@@ -2194,6 +2234,14 @@ postgres          postgres             66463     331.375 sec      0.005 sec     
 postgres          postgres             66463      85.370 sec      0.001 sec            (N/A)             (N/A)  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec            (N/A)             (N/A)  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
+/** Plans **/
+-----------------------------------
+Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
+-----------------------------------------------------------------------------------------------------------------------------------------
+ 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
+1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
+1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+
 ----------------------------------------
 /* Lock Conflicts */
 ----------------------------------------
@@ -2511,6 +2559,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec            (N/A)             (N/A)  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec            (N/A)             (N/A)  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec            (N/A)             (N/A)  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Plans **/
+-----------------------------------
+Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
+-----------------------------------------------------------------------------------------------------------------------------------------
+ 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
+1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
+1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
 ----------------------------------------
 /* Lock Conflicts */
@@ -2830,6 +2886,14 @@ postgres          postgres             66463     331.375 sec      0.005 sec     
 postgres          postgres             66463      85.370 sec      0.001 sec            (N/A)             (N/A)  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec            (N/A)             (N/A)  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
+/** Plans **/
+-----------------------------------
+Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
+-----------------------------------------------------------------------------------------------------------------------------------------
+ 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
+1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
+1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+
 ----------------------------------------
 /* Lock Conflicts */
 ----------------------------------------
@@ -3148,6 +3212,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec            (N/A)             (N/A)  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec            (N/A)             (N/A)  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec            (N/A)             (N/A)  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Plans **/
+-----------------------------------
+Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
+-----------------------------------------------------------------------------------------------------------------------------------------
+ 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
+1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
+1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
 ----------------------------------------
 /* Lock Conflicts */
@@ -3474,6 +3546,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Plans **/
+-----------------------------------
+Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
+-----------------------------------------------------------------------------------------------------------------------------------------
+ 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
+1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
+1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
 ----------------------------------------
 /* Lock Conflicts */
@@ -3997,6 +4077,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Plans **/
+-----------------------------------
+Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
+-----------------------------------------------------------------------------------------------------------------------------------------
+ 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
+1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
+1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
 ----------------------------------------
 /* Lock Conflicts */
