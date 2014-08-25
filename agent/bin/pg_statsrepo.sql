@@ -2402,27 +2402,50 @@ CREATE FUNCTION statsrepo.get_query_activity_statements(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		r.name,
-		d.name,
-		se.query,
-		statsrepo.sub(se.calls, sb.calls),
-		statsrepo.sub(se.total_time, sb.total_time)::numeric(1000, 3),
+		t1.rolname,
+		t1.datname,
+		t1.query,
+		statsrepo.sub(t1.calls, t2.calls),
+		statsrepo.sub(t1.total_time, t2.total_time)::numeric(1000, 3),
 		statsrepo.div(
-			statsrepo.sub(se.total_time, sb.total_time)::numeric,
-			statsrepo.sub(se.calls, sb.calls)),
-		statsrepo.sub(se.blk_read_time, sb.blk_read_time)::numeric(1000, 3),
-		statsrepo.sub(se.blk_write_time, sb.blk_write_time)::numeric(1000, 3)
+			statsrepo.sub(t1.total_time, t2.total_time)::numeric,
+			statsrepo.sub(t1.calls, t2.calls)),
+		statsrepo.sub(t1.blk_read_time, t2.blk_read_time)::numeric(1000, 3),
+		statsrepo.sub(t1.blk_write_time, t2.blk_write_time)::numeric(1000, 3)
 	FROM
-		statsrepo.statement se LEFT JOIN statsrepo.statement sb
-			ON sb.snapid = $1 AND sb.dbid = se.dbid AND sb.query = se.query,
-		statsrepo.database d,
-		statsrepo.role r
-	WHERE
-		se.snapid = $2
-		AND d.snapid = $2
-		AND r.snapid = $2
-		AND d.dbid = se.dbid
-		AND r.userid = se.userid
+		(
+			SELECT
+				s.dbid,
+				s.userid,
+				d.name AS datname,
+				r.name AS rolname,
+				s.query,
+				max(s.calls) AS calls,
+				max(s.total_time) AS total_time,
+				max(s.blk_read_time) AS blk_read_time,
+				max(s.blk_write_time) AS blk_write_time
+			FROM
+				statsrepo.statement s,
+				statsrepo.snapshot n,
+				statsrepo.database d,
+				statsrepo.role r
+			WHERE
+				s.snapid = n.snapid
+				AND s.snapid = d.snapid
+				AND s.snapid = r.snapid
+				AND s.dbid = d.dbid
+				AND s.userid = r.userid
+				AND s.snapid > $1 AND s.snapid <= $2
+				AND n.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			GROUP BY
+				s.dbid,
+				s.userid,
+				d.name,
+				r.name,
+				s.query
+		) t1 LEFT JOIN
+		(SELECT * FROM statsrepo.statement WHERE snapid = $1) t2 ON
+			t1.dbid = t2.dbid AND t1.userid = t2.userid AND t1.query = t2.query
 	ORDER BY
 		5 DESC,
 		4 DESC;
@@ -2445,28 +2468,54 @@ CREATE FUNCTION statsrepo.get_query_activity_plans(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		pe.queryid,
-		pe.planid,
-		r.name,
-		d.name,
-		statsrepo.sub(pe.calls, pb.calls),
-		statsrepo.sub(pe.total_time, pb.total_time)::numeric(1000, 3),
+		t1.queryid,
+		t1.planid,
+		t1.rolname,
+		t1.datname,
+		statsrepo.sub(t1.calls, t2.calls),
+		statsrepo.sub(t1.total_time, t2.total_time)::numeric(1000, 3),
 		statsrepo.div(
-			statsrepo.sub(pe.total_time, pb.total_time)::numeric,
-			statsrepo.sub(pe.calls, pb.calls)),
-		statsrepo.sub(pe.blk_read_time, pb.blk_read_time)::numeric(1000, 3),
-		statsrepo.sub(pe.blk_write_time, pb.blk_write_time)::numeric(1000, 3)
+			statsrepo.sub(t1.total_time, t2.total_time)::numeric,
+			statsrepo.sub(t1.calls, t2.calls)),
+		statsrepo.sub(t1.blk_read_time, t2.blk_read_time)::numeric(1000, 3),
+		statsrepo.sub(t1.blk_write_time, t2.blk_write_time)::numeric(1000, 3)
 	FROM
-		statsrepo.plan pe LEFT JOIN statsrepo.plan pb
-			ON pb.snapid = $1 AND pb.dbid = pe.dbid AND pb.queryid = pe.queryid AND pb.planid = pe.planid,
-		statsrepo.database d,
-		statsrepo.role r
-	WHERE
-		pe.snapid = $2
-		AND d.snapid = $2
-		AND r.snapid = $2
-		AND d.dbid = pe.dbid
-		AND r.userid = pe.userid
+		(
+			SELECT
+				p.queryid,
+				p.planid,
+				p.dbid,
+				p.userid,
+				d.name AS datname,
+				r.name AS rolname,
+				max(p.calls) AS calls,
+				max(p.total_time) AS total_time,
+				max(p.blk_read_time) AS blk_read_time,
+				max(p.blk_write_time) AS blk_write_time
+			FROM
+				statsrepo.plan p,
+				statsrepo.snapshot n,
+				statsrepo.database d,
+				statsrepo.role r
+			WHERE
+				p.snapid = n.snapid
+				AND p.snapid = d.snapid
+				AND p.snapid = r.snapid
+				AND p.dbid = d.dbid
+				AND p.userid = r.userid
+				AND p.snapid > $1 AND p.snapid <= $2
+				AND n.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			GROUP BY
+				p.queryid,
+				p.planid,
+				p.dbid,
+				p.userid,
+				d.name,
+				r.name
+		) t1 LEFT JOIN
+		(SELECT * FROM statsrepo.plan WHERE snapid = $1) t2 ON
+			t1.dbid = t2.dbid AND t1.userid = t2.userid
+			AND t1.queryid = t2.queryid AND t1.planid = t2.planid
 	ORDER BY
 		6 DESC,
 		5 DESC;
