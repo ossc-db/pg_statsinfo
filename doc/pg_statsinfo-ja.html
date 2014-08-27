@@ -42,7 +42,7 @@
   <li><a href="#uninstall">アンインストール</a></li>
   <li><a href="#restrictions">使用上の注意と制約</a></li>
   <li><a href="#QA">よくあるQ&A</a></li>
-  <li><a href="#change">pg_statsinfo 2.5 からの変更点</a></li>
+  <li><a href="#change">pg_statsinfo 3.0 からの変更点</a></li>
   <li><a href="#details">詳細情報</a>
     <ol>
       <li><a href="#many-instances">複数の監視対象インスタンス</a></li>
@@ -54,14 +54,14 @@
   <li><a href="#seealso">関連項目</a></li>
 </ol>
 </div>
-<h1 id="pg_statsinfo">pg_statsinfo 3.0</h1>
+<h1 id="pg_statsinfo">pg_statsinfo 3.1</h1>
 <h2 id="name">pg_statsinfoとは？</h2>
 <p>
 PostgreSQL サーバの利用統計情報を定期的に収集・蓄積することで、DB設計やPostgreSQLの運用(日々の処理傾向の把握、
 性能劣化などの兆候や問題発生時の原因の把握等)に役立つツールです。<br>
 起動や終了、パラメータの設定は PostgreSQL と密に連携しており、手間をかけずに導入可能です。
 </p>
-<p>pg_statsinfo 2.5 からの変更点は<a href="#change">こちら</a>をご覧ください。</p>
+<p>pg_statsinfo 3.0 からの変更点は<a href="#change">こちら</a>をご覧ください。</p>
 
 <h2 id="description">機能概要</h2>
 <p>pg_statsinfo は、PostgreSQL サーバの統計情報や活動状況を一定の時間間隔毎に定期的に収集し蓄積する機能と、
@@ -111,7 +111,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
   <li>バックエンドプロセスの状況。処理中、ロック待ち、トランザクション中の待機、アイドルのそれぞれで集計します。</li>
   <li>トランザクションログ(WAL)の出力量</li>
   <li>チェックポイントや自動バキュームの経過時間やバッファアクセス回数。</li>
-  <li>実行回数、累積実行時間の多いSQLと関数。</li>
+  <li>実行回数、累積実行時間の多いSQLと関数および実行計画。</li>
   <li>PostgreSQLの設定パラメータ。</li>
   <li>OS リソース情報 (CPU使用量、メモリ使用量、ディスクI/O、ロードアベレージ)。</li>
   <li>ロック競合情報</li>
@@ -127,7 +127,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </p>
 
 <h4>リポジトリDBのテーブル構成</h4>
-<p>リポジトリDBのテーブル構成に関しては、「<a href="files/pg_statsinfo_v3.0_repository_infomation.xls">pg_statsinfo v3.0 リポジトリDB構成</a>」を参照してください。</p>
+<p>リポジトリDBのテーブル構成に関しては、「<a href="files/pg_statsinfo_v3.1_repository_infomation.xls">pg_statsinfo v3.1 リポジトリDB構成</a>」を参照してください。</p>
 
 <h3 id="features-log-route">サーバログ分配機能</h3>
 <p>PostgreSQL が出力するサーバログをCSVログ、テキストログ、syslog に分配して出力します。</p>
@@ -200,7 +200,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </ul>
 
 <p>
-簡易レポート機能が出力するレポートの項目については「<a href="files/pg_statsinfo_v3.0_report_infomation.xls">pg_statsinfo v3.0 レポート項目一覧</a>」をご覧ください。<br>
+簡易レポート機能が出力するレポートの項目については「<a href="files/pg_statsinfo_v3.1_report_infomation.xls">pg_statsinfo v3.1 レポート項目一覧</a>」をご覧ください。<br>
 なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter-ja.html">pg_stats_reporter</a> と同等です。<br>
 グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter-ja.html">pg_stats_reporter</a> を使用してください。
 </p>
@@ -256,7 +256,7 @@ pg_statsinfo の運用管理向けの操作を行うコマンドを提供しま�
 以下はPostgreSQL9.2のRHEL6のx86_64用のrpmをインストールする例です。
 <pre>
 $ su
-# rpm -ivh pg_statsinfo-3.0.0-1.pg92.rhel6.x86_64.rpm
+# rpm -ivh pg_statsinfo-3.1.0-1.pg92.rhel6.x86_64.rpm
 </pre>
 
 <h4>source</h4>
@@ -264,8 +264,8 @@ $ su
 なお、pg_statsinfo の登録スクリプト (sql) を手動でインストールする必要はありません。
 監視対象インスタンス、リポジトリDB共に、初回起動時に必要に応じて エージェントがスキーマを自動的にインストールします。</p>
 <pre>
-$ tar xzvf pg_statsinfo-3.0.0.tar.gz
-$ cd pg_statsinfo-3.0.0
+$ tar xzvf pg_statsinfo-3.1.0.tar.gz
+$ cd pg_statsinfo-3.1.0
 $ make USE_PGXS=1
 $ su
 # make USE_PGXS=1 install
@@ -349,6 +349,22 @@ $ psql -d postgres -c "CREATE EXTENSION pg_stat_statements"
 
 # PostgreSQL のバージョンが 9.0 以前の場合
 $ psql -d postgres -f $PGSHARE/contrib/pg_stat_statements.sql
+</pre>
+
+<p>また、必要に応じて設定ファイルに下記のパラメータを設定してください。</p>
+<ul>
+  <li>pg_statsinfo.stat_statements_max</li>
+  <li>pg_statsinfo.stat_statements_exclude_users</li>
+</ul>
+<p>上記のパラメータの説明は<a href="#configuration">設定ファイル</a>をご覧ください。</p>
+
+<h4 id="pg_store_plans">クエリの実行計画の取得設定</h4>
+<p>
+PostgreSQL のバージョン 9.3 以上を使っている場合、監視対象インスタンスの postgres データベースに pg_store_plans をインストールすることで、クエリの実行計画もスナップショットとして収集できるようになります。<br>
+利用する場合には、postgresql.conf の shared_preload_libraries に pg_store_plans を追加し、初回起動時に以下の手順で登録してください。 
+</p>
+<pre>
+$ psql -d postgres -c "CREATE EXTENSION pg_store_plans"
 </pre>
 
 <p>また、必要に応じて設定ファイルに下記のパラメータを設定してください。</p>
@@ -767,7 +783,7 @@ $ pg_statsinfo  -r All -h localhost -d postgres -p 5432 -U postgres
   <dt>-r, --report=REPORTID</dt>
   <dd>レポート種別IDを指定します。</dd>
   <dd>レポート種別IDに指定できる値は以下のとおりです。</dd>
-  <dd>レポート種別IDとレポートの内容についての対応は「<a href="files/pg_statsinfo_v3.0_report_infomation.xls">pg_statsinfo v3.0 レポート項目一覧</a>」をご覧ください。</dd>
+  <dd>レポート種別IDとレポートの内容についての対応は「<a href="files/pg_statsinfo_v3.1_report_infomation.xls">pg_statsinfo v3.1 レポート項目一覧</a>」をご覧ください。</dd>
   <dd>
     <ul>
       <li>Summary</li>
@@ -1086,7 +1102,7 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
     <td>shared_preload_libraries</td>
     <td>'pg_statsinfo'</td>
     <td>事前読込み用のライブラリの指定。
-        pg_stat_statements を併用する場合は 'pg_statsinfo, pg_stat_statements' のようにカンマ区切りで指定します。</td>
+        pg_stat_statements、pg_store_plans を併用する場合は 'pg_statsinfo, pg_stat_statements, pg_store_plans' のようにカンマ区切りで指定します。</td>
   </tr>
   <tr>
     <td>log_filename</td>
@@ -1354,12 +1370,12 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
   <tr>
     <td>pg_statsinfo.stat_statements_max</td>
     <td>30</td>
-    <td>pg_stat_statementsで収集する情報数の上限。</td>
+    <td>pg_stat_statements、pg_store_plansで収集する情報数の上限。</td>
   </tr>
   <tr>
     <td>pg_statsinfo.stat_statements_exclude_users</td>
     <td>-</td>
-    <td>pg_stat_statementsで収集する情報のフィルタリング設定。収集対象から除外するユーザを設定します。複数のユーザを設定する場合はカンマ区切りで指定します。</td>
+    <td>pg_stat_statements、pg_store_plansで収集する情報のフィルタリング設定。収集対象から除外するユーザを設定します。複数のユーザを設定する場合はカンマ区切りで指定します。</td>
   </tr>
   <tr>
     <td>pg_statsinfo.long_transaction_max</td>
@@ -1614,6 +1630,11 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
   <dd>この場合、当該レポート項目に必要な情報がスナップショットに含まれません。</dd>
   <dd>当該レポート項目を表示するには pg_stat_statements をインストールしてください。</dd>
   
+  <dt>Query Activity (Plans)</dt>
+  <dd>pg_store_plans がインストールされていない可能性があります。</dd>
+  <dd>この場合、当該レポート項目に必要な情報がスナップショットに含まれません。</dd>
+  <dd>当該レポート項目を表示するには pg_store_plans をインストールしてください。</dd>
+  
   <dt>Autovacuum Activity</dt>
   <dd>設定ファイルの「log_autovacuum_min_duration」が「-1」に設定されている可能性があります。</dd>
   <dd>この場合、当該レポート項目に必要な情報がスナップショットに含まれません。</dd>
@@ -1646,19 +1667,13 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
 
 <br>
 
-<h2 id="change">pg_statsinfo 2.5 からの変更点</h2>
-<p>pg_statsinfo 2.5 からの変更点は以下の通りです。</p>
+<h2 id="change">pg_statsinfo 3.0 からの変更点</h2>
+<p>pg_statsinfo 3.0 からの変更点は以下の通りです。</p>
 <ul>
-  <li>サーバログ蓄積機能を追加</li>
-  <li>サーバログ蓄積機能の追加に伴い "サーバログ処理機能" を "サーバログ分配機能" に名称変更</li>
-  <li>スナップショットの情報に、アラート機能で検出した情報を追加</li>
-  <li>スナップショットの情報に、AUTOVACUUM のキャンセル数の情報を追加</li>
-  <li>コマンドライン機能(簡易レポート機能)が生成するレポートに、アラート項目を追加</li>
-  <li>コマンドライン機能(簡易レポート機能)が生成するレポートに、AUTOVACUUM のキャンセル数の情報を追加</li>
-  <li>コマンドライン機能(簡易レポート機能)が生成するレポートに、AUTOANALYZE の最終実行日時の情報を追加</li>
-  <li>コマンドライン機能(簡易レポート機能)が生成するスキーマ情報(テーブル)のレポート内容を変更</li>
-  <li>ロングトランザクション情報の最大収集件数を設定するパラメータを追加</li>
-  <li>PostgreSQL 8.3 がサポート対象外になりました</li>
+  <li>スナップショットの情報に、クエリ実行計画の情報を追加</li>
+  <li>スナップショットの情報に、AUTOANALYZE のキャンセル数の情報を追加</li>
+  <li>コマンドライン機能(簡易レポート機能)が生成するレポートに、クエリ実行計画の項目を追加</li>
+  <li>コマンドライン機能(簡易レポート機能)が生成するレポートに、AUTOANALYZE のキャンセル数の情報を追加</li>
 </ul>
 <br>
 
