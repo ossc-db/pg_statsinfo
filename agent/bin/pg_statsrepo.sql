@@ -376,6 +376,18 @@ CREATE TABLE statsrepo.autovacuum_cancel
 );
 CREATE INDEX statsrepo_autovacuum_cancel_idx ON statsrepo.autovacuum_cancel(instid, timestamp);
 
+CREATE TABLE statsrepo.autoanalyze_cancel
+(
+	instid			bigint,
+	timestamp		timestamptz,
+	database		text,
+	schema			text,
+	"table"			text,
+	query			text,
+	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
+);
+CREATE INDEX statsrepo_autoanalyze_cancel_idx ON statsrepo.autoanalyze_cancel(instid, timestamp);
+
 CREATE TABLE statsrepo.checkpoint
 (
 	instid			bigint,
@@ -562,6 +574,7 @@ $$
 	DELETE FROM statsrepo.autoanalyze WHERE start < (SELECT min(time) FROM statsrepo.snapshot);
 	DELETE FROM statsrepo.checkpoint WHERE start < (SELECT min(time) FROM statsrepo.snapshot);
 	DELETE FROM statsrepo.autovacuum_cancel WHERE timestamp < (SELECT min(time) FROM statsrepo.snapshot);
+	DELETE FROM statsrepo.autoanalyze_cancel WHERE timestamp < (SELECT min(time) FROM statsrepo.snapshot);
 $$
 LANGUAGE sql;
 
@@ -2317,27 +2330,55 @@ CREATE FUNCTION statsrepo.get_autoanalyze_stats(
 	OUT avg_duration	numeric,
 	OUT max_duration	numeric,
 	OUT "count"			bigint,
-	OUT last_analyze	timestamp
+	OUT last_analyze	timestamp,
+	OUT cancels			bigint
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		database,
-		schema,
-		"table",
-		round(sum(duration)::numeric,3),
-		round(avg(duration)::numeric,3),
-		round(max(duration)::numeric,3),
-		count(*),
-		max(start)::timestamp(0)
+		COALESCE(ta.database, tc.database),
+		COALESCE(ta.schema, tc.schema),
+		COALESCE(ta.table, tc.table),
+		round(COALESCE(ta.sum_duration, 0)::numeric, 3),
+		round(COALESCE(ta.avg_duration, 0)::numeric, 3),
+		round(COALESCE(ta.max_duration, 0)::numeric, 3),
+		COALESCE(ta.count, 0),
+		ta.last_analyze::timestamp(0),
+		COALESCE(tc.count, 0)
 	FROM
-		statsrepo.autoanalyze a,
-		(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
-		(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
-	WHERE
-		a.start BETWEEN b.time AND e.time
-		AND a.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-	GROUP BY
-		database, schema, "table"
+		(SELECT
+			a.database,
+			a.schema,
+			a.table,
+			sum(a.duration) AS sum_duration,
+			avg(a.duration) AS avg_duration,
+			max(a.duration) AS max_duration,
+			count(*),
+			max(a.start) AS last_analyze
+		 FROM
+			statsrepo.autoanalyze a,
+			(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+			(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
+		 WHERE
+			a.start BETWEEN b.time AND e.time
+			AND a.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+		 GROUP BY
+			a.database, a.schema, a.table) ta
+		 FULL JOIN
+			(SELECT
+				c.database,
+				c.schema,
+				c.table,
+				count(*)
+			 FROM
+				statsrepo.autoanalyze_cancel c,
+				(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+				(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
+			 WHERE
+				c.timestamp BETWEEN b.time AND e.time
+				AND c.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			 GROUP BY
+				c.database, c.schema, c.table) tc
+		 ON ta.database = tc.database AND ta.schema = tc.schema AND ta.table = tc.table
 	ORDER BY
 		4 DESC;
 $$

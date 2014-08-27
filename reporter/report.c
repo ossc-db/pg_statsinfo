@@ -85,7 +85,8 @@ SELECT \
 	total_duration, \
 	avg_duration, \
 	max_duration, \
-	last_analyze \
+	last_analyze, \
+	cancels \
 FROM \
 	statsrepo.get_autoanalyze_stats($1, $2)"
 #define SQL_SELECT_QUERY_ACTIVITY_FUNCTIONS		"SELECT * FROM statsrepo.get_query_activity_functions($1, $2) LIMIT 20"
@@ -914,20 +915,22 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Analyze Statistics **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-32s  %8s  %15s  %15s  %15s  %-16s\n",
-		"Table", "Count", "Duration(Total)", "Duration(Avg)", "Duration(Max)", "Last Analyze Time");
-	fprintf(out, "-------------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "%-32s  %8s  %15s  %15s  %15s  %-19s  %7s\n",
+		"Table", "Count", "Duration(Total)", "Duration(Avg)",
+		"Duration(Max)", "Last Analyze Time", "Cancels");
+	fprintf(out, "------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_AUTOANALYZE_STATS, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-32s  %8s  %13s s  %13s s  %13s s  %-16s\n",
+		fprintf(out, "%-32s  %8s  %13s s  %13s s  %13s s  %-19s  %7s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
 			PQgetvalue(res, i, 3),
 			PQgetvalue(res, i, 4),
-			PQgetvalue(res, i, 5));
+			PQgetvalue(res, i, 5),
+			PQgetvalue(res, i, 6));
 	}
 	fprintf(out, "\n");
 	PQclear(res);

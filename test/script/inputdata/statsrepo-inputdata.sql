@@ -53,6 +53,13 @@ $$
 	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_accounts', 0.280000001);
 
 	--
+	-- Data for Name: autoanalyze_cancel; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
+	--
+	INSERT INTO statsrepo.autoanalyze_cancel VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_branches', 'VACUUM-01');
+	INSERT INTO statsrepo.autoanalyze_cancel VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_accounts', 'VACUUM-01');
+	INSERT INTO statsrepo.autoanalyze_cancel VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_branches', 'VACUUM-02');
+
+	--
 	-- Data for Name: autovacuum; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
 	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_branches', 1, 0, 6, 3, 1, 56, 0, 2, 0, 30.5180000000000007, 0);

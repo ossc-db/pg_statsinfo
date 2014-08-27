@@ -19,6 +19,10 @@ INSERT INTO statsrepo.autoanalyze VALUES \
 INSERT INTO statsrepo.autovacuum_cancel VALUES \
 ($1, $2, $3, $4, $5, $6)"
 
+#define SQL_INSERT_AUTOANALYZE_CANCEL "\
+INSERT INTO statsrepo.autoanalyze_cancel VALUES \
+($1, $2, $3, $4, $5, $6)"
+
 /* pg_rusage (rusage is not localized) */
 #define MSG_RUSAGE \
 	"CPU %fs/%fu sec elapsed %f sec"
@@ -177,6 +181,7 @@ parse_autovacuum_cancel(const Log *log)
 	}
 	else if (match(log->message, MSG_AUTOVACUUM_CANCEL))
 	{
+		AutovacuumLog	*av;
 		AVCancelRequest	*entry;
 
 		if ((params = capture(log->context,
@@ -186,30 +191,21 @@ parse_autovacuum_cancel(const Log *log)
 		/* get the query that caused cancel */
 		entry = get_avc_request(log->pid);
 
-		if (strcmp(list_nth(params, 0), "vacuum") == 0)
+		av = pgut_new(AutovacuumLog);
+		av->base.type = QUEUE_AUTOVACUUM;
+		av->base.free = (QueueItemFree) Autovacuum_free;
+		av->base.exec = (QueueItemExec) AutovacuumCancel_exec;
+		strlcpy(av->finish, log->timestamp, lengthof(av->finish));
+		av->params = params;
+		if (entry)
 		{
-			AutovacuumLog	*av;
-
-			av = pgut_new(AutovacuumLog);
-			av->base.type = QUEUE_AUTOVACUUM;
-			av->base.free = (QueueItemFree) Autovacuum_free;
-			av->base.exec = (QueueItemExec) AutovacuumCancel_exec;
-			strlcpy(av->finish, log->timestamp, lengthof(av->finish));
-			av->params = params;
-			if (entry)
-				av->params = lappend(av->params, pgut_strdup(entry->query));
-			else
-				av->params = lappend(av->params, NULL);
-
-			writer_send((QueueItem *) av);
+			av->params = lappend(av->params, pgut_strdup(entry->query));
+			remove_avc_request(entry);
 		}
 		else
-		{
-			/* does not collect in the case of analyze */
-			list_free_deep(params);
-		}
+			av->params = lappend(av->params, NULL);
 
-		remove_avc_request(entry);
+		writer_send((QueueItem *) av);
 	}
 	else
 		return false;
@@ -282,7 +278,8 @@ Autoanalyze_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 static bool
 AutovacuumCancel_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 {
-	const char	   *params[6];
+	const char	*params[6];
+	const char	*query;
 
 	elog(DEBUG2, "write (autovacuum cancel)");
 	Assert(list_length(av->params) == NUM_AUTOVACUUM_CANCEL);
@@ -294,7 +291,12 @@ AutovacuumCancel_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 	params[4] = list_nth(av->params, 3);	/* table */
 	params[5] = list_nth(av->params, 4);	/* query */
 
-	return pgut_command(conn, SQL_INSERT_AUTOVACUUM_CANCEL,
+	if (strcmp(list_nth(av->params, 0), "vacuum") == 0)
+		query = SQL_INSERT_AUTOVACUUM_CANCEL;
+	else
+		query = SQL_INSERT_AUTOANALYZE_CANCEL;
+
+	return pgut_command(conn, query,
 						lengthof(params), params) == PGRES_COMMAND_OK;
 }
 
