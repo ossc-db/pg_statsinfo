@@ -140,7 +140,9 @@ static bool do_put(PGconn *conn, const char *sql, PGresult *src,
 				   const char *snapid, const char *dbid);
 static bool has_pg_stat_statements(PGconn *conn);
 static bool has_pg_store_plans(PGconn *conn);
+#if PG_VERSION_NUM < 90400
 static bool has_pg_store_plans_hash_query(PGconn *conn);
+#endif
 static bool has_statsrepo_alert(PGconn *conn);
 
 QueueItem *
@@ -753,6 +755,7 @@ has_pg_store_plans(PGconn *conn)
 	return result;
 }
 
+#if PG_VERSION_NUM < 90400
 static bool
 has_pg_store_plans_hash_query(PGconn *conn)
 {
@@ -768,6 +771,7 @@ has_pg_store_plans_hash_query(PGconn *conn)
 
 	return result;
 }
+#endif
 
 static bool
 has_statsrepo_alert(PGconn *conn)
