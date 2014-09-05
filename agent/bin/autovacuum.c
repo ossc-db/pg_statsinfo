@@ -35,7 +35,9 @@ INSERT INTO statsrepo.autoanalyze_cancel VALUES \
 #define MSG_AUTOVACUUM_CANCEL \
 	"canceling autovacuum task"
 
-#if PG_VERSION_NUM >= 90200
+#if PG_VERSION_NUM >= 90400
+#define NUM_AUTOVACUUM			17
+#elif PG_VERSION_NUM >= 90200
 #define NUM_AUTOVACUUM			16
 #else
 #define NUM_AUTOVACUUM			9
@@ -243,7 +245,14 @@ Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 	params[7] = list_nth(av->params, 5);	/* page_remain */
 	params[8] = list_nth(av->params, 6);	/* tup_removed */
 	params[9] = list_nth(av->params, 7);	/* tup_remain */
-#if PG_VERSION_NUM >= 90200
+#if PG_VERSION_NUM >= 90400
+//	params[10] = list_nth(av->params, 8);	/* tup_dead */
+	params[10] = list_nth(av->params, 9);	/* page_hit */
+	params[11] = list_nth(av->params, 10);	/* page_miss */
+	params[12] = list_nth(av->params, 11);	/* page_dirty */
+	params[13] = list_nth(av->params, 12);	/* read_rate */
+	params[14] = list_nth(av->params, 14);	/* write_rate */
+#elif PG_VERSION_NUM >= 90200
 	params[10] = list_nth(av->params, 8);	/* page_hit */
 	params[11] = list_nth(av->params, 9);	/* page_miss */
 	params[12] = list_nth(av->params, 10);	/* page_dirty */

@@ -90,7 +90,15 @@
 	"received SIGHUP, reloading configuration files"
 
 /* log_autovacuum_min_duration: vacuum */
-#if PG_VERSION_NUM >= 90200
+#if PG_VERSION_NUM >= 90400
+#define MSG_AUTOVACUUM \
+	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
+	"pages: %d removed, %d remain\n" \
+	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable\n" \
+	"buffer usage: %d hits, %d misses, %d dirtied\n" \
+	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
+	"system usage: %s"
+#elif PG_VERSION_NUM >= 90200
 #define MSG_AUTOVACUUM \
 	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
 	"pages: %d removed, %d remain\n" \
@@ -2549,8 +2557,11 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 	MemoryContextSwitchTo(oldcontext);
 
 	relation = heap_open(TableSpaceRelationId, AccessShareLock);
-
+#if PG_VERSION_NUM >= 90400
+	scan = heap_beginscan_catalog(relation, 0, NULL);
+#else
 	scan = heap_beginscan(relation, SnapshotNow, 0, NULL);
+#endif
 	while ((tuple = heap_getnext(scan, ForwardScanDirection)) != NULL)
 	{
 		Form_pg_tablespace form = (Form_pg_tablespace) GETSTRUCT(tuple);

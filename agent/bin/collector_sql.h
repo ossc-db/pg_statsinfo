@@ -490,7 +490,7 @@ SELECT \
 	c.reltablespace, \
 	c.relname, \
 	c.reltoastrelid, \
-	c.reltoastidxid, \
+	x.indexrelid AS reltoastidxid, \
 	c.relkind, \
 	c.relpages, \
 	c.reltuples, \
@@ -506,7 +506,7 @@ SELECT \
 	pg_stat_get_tuples_deleted(c.oid) AS n_tup_del, \
 	pg_stat_get_tuples_hot_updated(c.oid) AS n_tup_hot_upd, \
 	pg_stat_get_live_tuples(c.oid) AS n_live_tup, \
-	pg_stat_get_dead_tuples(c.oid) AS n_dead_tup,\
+	pg_stat_get_dead_tuples(c.oid) AS n_dead_tup, \
 	pg_stat_get_blocks_fetched(c.oid) - \
 		pg_stat_get_blocks_hit(c.oid) AS heap_blks_read, \
 	pg_stat_get_blocks_hit(c.oid) AS heap_blks_hit, \
@@ -516,35 +516,34 @@ SELECT \
 	pg_stat_get_blocks_fetched(t.oid) - \
 		pg_stat_get_blocks_hit(t.oid) AS toast_blks_read, \
 	pg_stat_get_blocks_hit(t.oid) AS toast_blks_hit, \
-	pg_stat_get_blocks_fetched(x.oid) - \
-		pg_stat_get_blocks_hit(x.oid) AS tidx_blks_read, \
-	pg_stat_get_blocks_hit(x.oid) AS tidx_blks_hit, \
+	pg_stat_get_blocks_fetched(x.indexrelid) - \
+		pg_stat_get_blocks_hit(x.indexrelid) AS tidx_blks_read, \
+	pg_stat_get_blocks_hit(x.indexrelid) AS tidx_blks_hit, \
 	pg_stat_get_last_vacuum_time(c.oid) as last_vacuum, \
 	pg_stat_get_last_autovacuum_time(c.oid) as last_autovacuum, \
 	pg_stat_get_last_analyze_time(c.oid) as last_analyze, \
 	pg_stat_get_last_autoanalyze_time(c.oid) as last_autoanalyze \
-FROM  \
+FROM \
 	pg_class c LEFT JOIN \
 	pg_index i ON c.oid = i.indrelid LEFT JOIN \
 	pg_class t ON c.reltoastrelid = t.oid LEFT JOIN \
-	pg_class x ON t.reltoastidxid = x.oid LEFT JOIN \
+	pg_index x ON c.reltoastrelid = x.indrelid LEFT JOIN \
 	pg_namespace n ON c.relnamespace = n.oid \
 WHERE \
 	c.relkind IN ('r', 't') AND \
 	n.nspname <> ALL (('{' || $1 || '}')::text[]) \
 GROUP BY \
-    c.oid, \
-    c.relnamespace, \
-    c.reltablespace, \
-    c.relname, \
-    c.reltoastrelid, \
-    c.reltoastidxid, \
-    c.relkind, \
+	c.oid, \
+	c.relnamespace, \
+	c.reltablespace, \
+	c.relname, \
+	c.reltoastrelid, \
+	c.relkind, \
 	c.relpages, \
 	c.reltuples, \
-    c.reloptions, \
-    t.oid, \
-    x.oid"
+	c.reloptions, \
+	t.oid, \
+	x.indexrelid"
 
 /* column */
 #if PG_VERSION_NUM >= 90000
