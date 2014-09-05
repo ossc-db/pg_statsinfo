@@ -99,8 +99,15 @@ ORDER BY
 	snapid;
 EOF
 
-echo "/**--- Quasi-normal pattern ---**/"
-echo "/***-- Contain the snapshot that is same acquisition date --***/"
+echo "/*---- pg_statsinfo's agent start / stop ----*/"
+echo "/**--- Stop pg_statsinfo's agent ---**/"
+exec_command "exec_statsinfo2 --stop"
+
+echo "/**--- Start pg_statsinfo's agent ---**/"
+exec_command "exec_statsinfo2 --start"
+
+echo "/*---- Quasi-normal pattern ----*/"
+echo "/**--- Contain the snapshot that is same acquisition date ---**/"
 send_query << EOF > /dev/null
 DELETE FROM statsrepo.alert WHERE instid = 3;
 DELETE FROM statsrepo.instance WHERE instid = 3;

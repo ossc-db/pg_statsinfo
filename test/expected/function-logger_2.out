@@ -81,3 +81,14 @@ DELETE 4001
       1 | postgres | public | tbl01 | xxx   | xxx         | xxx          | xxx         | xxx         | xxx        | xxx      | xxx       | xxx        | xxx       | xxx        | xxx
 (1 row)
 
+/**--- Collect the cancelled AUTOVACUUM information ---**/
+server signaled
+TRUNCATE TABLE
+INSERT 0 100000
+DELETE 100000
+LOCK TABLE
+ instid | timestamp | database | schema | table |          query          
+--------+-----------+----------+--------+-------+-------------------------
+      1 | xxx       | postgres | public | tbl01 | BEGIN; LOCK TABLE tbl01
+(1 row)
+

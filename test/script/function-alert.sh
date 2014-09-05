@@ -22,9 +22,6 @@ setup_repository ${REPOSITORY_DATA} ${REPOSITORY_USER} ${REPOSITORY_PORT} ${REPO
 echo "/*---- Initialize monitored instance ----*/"
 setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG} "" "" ""
 sleep 3
-echo "shared_preload_libraries = 'pg_statsinfo, pg_stat_statements'" >> ${PGDATA}/postgresql-statsinfo.conf
-pg_ctl restart -w -D ${PGDATA} -o "-p ${PGPORT}" > /dev/null
-sleep 3
 if [ $(server_version) -ge 90100 ] ; then
 	psql -c "CREATE EXTENSION pg_stat_statements" > /dev/null
 else
@@ -193,3 +190,6 @@ send_query << EOF > /dev/null
 UPDATE statsrepo.alert SET rep_flush_delay = -1;
 UPDATE statsrepo.alert SET rep_replay_delay = -1;
 EOF
+
+echo "/**--- Collect alert messages ---**/"
+send_query -c "SELECT snapid, substr(message, 1, 30) || '...' AS message FROM statsrepo.alert_message"

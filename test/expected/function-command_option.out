@@ -140,8 +140,19 @@ exit: 0
       7 |      3 | ""
 (6 rows)
 
-/**--- Quasi-normal pattern ---**/
-/***-- Contain the snapshot that is same acquisition date --***/
+/*---- pg_statsinfo's agent start / stop ----*/
+/**--- Stop pg_statsinfo's agent ---**/
+LOG:  waiting for pg_statsinfod to shut down
+LOG:  pg_statsinfod stopped
+exit: 0
+
+/**--- Start pg_statsinfo's agent ---**/
+LOG:  waiting for pg_statsinfod to start
+LOG:  pg_statsinfod started
+exit: 0
+
+/*---- Quasi-normal pattern ----*/
+/**--- Contain the snapshot that is same acquisition date ---**/
 ----------------------------------------
 Snapshot List
 ----------------------------------------

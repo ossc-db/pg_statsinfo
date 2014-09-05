@@ -8,6 +8,7 @@ REGTEST = \
 	function-snapshot \
 	function-snapshot_replication \
 	function-logger \
+	function-logstore \
 	function-alert \
 	function-maintenance \
 	function-report \

@@ -3827,8 +3827,8 @@ Total Database Size  : 26 MiB
 Total Commits        : 66970
 Total Rollbacks      : 0
 
-/**--- Quasi-normal pattern ---**/
-/***-- Contain the snapshot that is same acquisition date --***/
+/*---- Quasi-normal pattern ----*/
+/**--- Contain the snapshot that is same acquisition date ---**/
 UPDATE 4
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)

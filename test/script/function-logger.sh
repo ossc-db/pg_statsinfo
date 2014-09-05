@@ -263,3 +263,29 @@ ORDER BY
 	database, schema, "table";
 EOF
 fi
+
+echo "/**--- Collect the cancelled AUTOVACUUM information ---**/"
+update_pgconfig ${PGDATA} "autovacuum_analyze_threshold" "2147483647"
+update_pgconfig ${PGDATA} "autovacuum_vacuum_threshold" "10000"
+update_pgconfig ${PGDATA} "autovacuum_vacuum_cost_delay" "100ms"
+update_pgconfig ${PGDATA} "autovacuum_vacuum_cost_limit" "1"
+pg_ctl reload && sleep ${RELOAD_DELAY}
+psql -c "TRUNCATE tbl01"
+psql -c "INSERT INTO tbl01 VALUES (generate_series(1,100000))"
+psql -c "DELETE FROM tbl01"
+sleep 3
+psql -c "BEGIN; LOCK TABLE tbl01"
+sleep 3
+send_query << EOF
+SELECT
+	instid,
+	CASE WHEN "timestamp" IS NOT NULL THEN 'xxx' END AS timestamp,
+	database,
+	schema,
+	"table",
+	query
+FROM
+	statsrepo.autovacuum_cancel
+ORDER BY
+	database, schema, "table";
+EOF

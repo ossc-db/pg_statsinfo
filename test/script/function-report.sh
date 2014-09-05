@@ -115,7 +115,7 @@ echo "/**--- Output the report to a file (overwrite) ---**/"
 exec_command "exec_statsinfo -r Summary -i 2 -o ${REPOSITORY_DATA}/report.log"
 cat ${REPOSITORY_DATA}/report.log
 
-echo "/**--- Quasi-normal pattern ---**/"
-echo "/***-- Contain the snapshot that is same acquisition date --***/"
+echo "/*---- Quasi-normal pattern ----*/"
+echo "/**--- Contain the snapshot that is same acquisition date ---**/"
 send_query -c "UPDATE statsrepo.snapshot SET time = '2012-11-01 00:00:00' WHERE instid = 5"
 exec_command "exec_statsinfo -r All -i 5"
