@@ -2563,6 +2563,98 @@ $$
 $$
 LANGUAGE sql;
 
+-- generate information that corresponds to 'Query Activity (Plans)'
+CREATE FUNCTION statsrepo.get_query_activity_plans_report(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT queryid			bigint,
+	OUT planid			bigint,
+	OUT rolname			text,
+	OUT datname			name,
+	OUT calls			bigint,
+	OUT total_time		numeric,
+	OUT time_per_call	numeric,
+	OUT blk_read_time	numeric,
+	OUT blk_write_time	numeric,
+	OUT first_call		timestamp,
+	OUT last_call		timestamp,
+	OUT query			text,
+	OUT snapid			bigint,
+	OUT dbid			oid,
+	OUT userid			oid
+) RETURNS SETOF record AS
+$$
+	SELECT
+		t1.queryid,
+		t1.planid,
+		t1.rolname,
+		t1.datname,
+		statsrepo.sub(t1.calls, t2.calls),
+		statsrepo.sub(t1.total_time, t2.total_time)::numeric(1000, 3),
+		statsrepo.div(
+			statsrepo.sub(t1.total_time, t2.total_time)::numeric,
+			statsrepo.sub(t1.calls, t2.calls)),
+		statsrepo.sub(t1.blk_read_time, t2.blk_read_time)::numeric(1000, 3),
+		statsrepo.sub(t1.blk_write_time, t2.blk_write_time)::numeric(1000, 3),
+		t1.first_call::timestamp(0),
+		t1.last_call::timestamp(0),
+		t1.query,
+		t1.snapid,
+		t1.dbid,
+		t1.userid
+	FROM
+		(
+			SELECT
+				max(p.snapid) AS snapid,
+				p.queryid,
+				p.planid,
+				p.dbid,
+				p.userid,
+				d.name AS datname,
+				r.name AS rolname,
+				max(p.calls) AS calls,
+				max(p.total_time) AS total_time,
+				max(p.blk_read_time) AS blk_read_time,
+				max(p.blk_write_time) AS blk_write_time,
+				max(p.first_call) AS first_call,
+				max(p.last_call) AS last_call,
+				s.query
+			FROM
+				statsrepo.plan p,
+				statsrepo.snapshot n,
+				statsrepo.database d,
+				statsrepo.role r,
+				statsrepo.statement s
+			WHERE
+				p.snapid = n.snapid
+				AND p.snapid = d.snapid
+				AND p.snapid = r.snapid
+				AND p.snapid = s.snapid
+				AND p.dbid = d.dbid
+				AND p.userid = r.userid
+				AND p.dbid = s.dbid
+				AND p.userid = s.userid
+				AND p.queryid = s.queryid
+				AND p.snapid > $1 AND p.snapid <= $2
+				AND n.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			GROUP BY
+				p.queryid,
+				p.planid,
+				p.dbid,
+				p.userid,
+				d.name,
+				r.name,
+				s.query
+		) t1 LEFT JOIN
+		(SELECT * FROM statsrepo.plan WHERE snapid = $1) t2 ON
+			t1.dbid = t2.dbid AND t1.userid = t2.userid
+			AND t1.queryid = t2.queryid AND t1.planid = t2.planid
+	ORDER BY
+		6 DESC,
+		5 DESC;
+$$
+LANGUAGE sql;
+
 -- generate information that corresponds to 'Lock Conflicts'
 CREATE FUNCTION statsrepo.get_lock_activity(
 	IN snapid_begin		bigint,
