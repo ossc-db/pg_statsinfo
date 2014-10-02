@@ -1676,7 +1676,6 @@ CREATE FUNCTION statsrepo.get_io_usage(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		DISTINCT ON (de.device_name, de.device_major, de.device_minor)
 		coalesce(de.device_name, 'unknown'),
 		de.device_tblspaces,
 		CASE WHEN de.device_readsector IS NULL THEN NULL ELSE
@@ -1714,9 +1713,12 @@ $$
 		 GROUP BY
 		 	d.device_major, d.device_minor) dx
 	WHERE
-		(de.device_major = dx.device_major AND de.device_minor = dx.device_minor)
-		AND ds.snapid = $1
+		ds.snapid = $1
 		AND de.snapid = $2
+		AND dx.device_major = ds.device_major
+		AND dx.device_minor = ds.device_minor
+		AND dx.device_major = de.device_major
+		AND dx.device_minor = de.device_minor
 	ORDER BY
 		de.device_name;
 $$
