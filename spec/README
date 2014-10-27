@@ -1,0 +1,32 @@
+How to create the pg_statsinfo rpm.
+=====================================
+
+1. Create required folders
+$ mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+2. Create .rpmmacros file
+$ echo "%_topdir %(echo $HOME)/rpmbuild" > ~/.rpmmacros
+
+3. Copy the pg_statsinfo tarball and SPEC file
+$ cp pg_statsinfo-X.X.X.tar.gz ~/rpmbuild/SOURCES
+$ cp pg_statsinfo.spec ~/rpmbuild/SPECS
+
+4. Edit the SPEC file
+edit the following parameters to be match with PostgreSQL version.
+
+$ vi ~/rpmbuild/SPECS/pg_statsinfo.spec
+----------------------------------------
+* %define _pgdir   /usr/pgsql-9.4
+* BuildRequires:   postgresql94-devel
+----------------------------------------
+
+5. Building the RPM package
+$ rpmbuild -ba ~/rpmbuild/SPECS/pg_statsinfo.spec
+
+
+Requirements
+-------------------------------------
+The following packages should be installed.
+
+* rpm-build
+* postgresql-devel
