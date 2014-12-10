@@ -27,9 +27,9 @@
 #define SECS_PER_DAY		86400	/* seconds per day */
 
 #define STATSINFO_CONTROL_FILE		"pg_statsinfo.control"
-#define STATSINFO_CONTROL_VERSION	30000
+#define STATSINFO_CONTROL_VERSION	30100
 
-#define STATSREPO_SCHEMA_VERSION	30000
+#define STATSREPO_SCHEMA_VERSION	30100
 
 /* read settings */
 #define SQL_SELECT_CUSTOM_SETTINGS "\
