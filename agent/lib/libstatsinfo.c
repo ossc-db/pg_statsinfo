@@ -2148,60 +2148,66 @@ statsinfo_profile(PG_FUNCTION_ARGS)
 	PG_RETURN_VOID();
 }
 
-static void
+static bool
 checked_write(int fd, const void *buf, int size)
 {
 	if (write(fd, buf, size) != size)
 	{
-		int		save_errno = errno;
-
-		close(fd);
-		errno = save_errno ? save_errno : ENOSPC;
-		ereport(ERROR,
+		errno = errno ? errno : ENOSPC;
+		ereport(WARNING,
 				(errcode_for_file_access(),
-				 errmsg("could not write to pipe: %m")));
+				 errmsg("pg_statsinfo launcher failed to pass startup parameters to pg_statsinfod: %m"),
+				 errdetail("pg_statsinfod might fail to start due to environmental reasons")));
+
+		return false;
 	}
+
+	return true;
 }
 
-static void
+static bool
 send_end(int fd)
 {
 	uint32	zero = 0;
 
-	checked_write(fd, &zero, sizeof(zero));
+	return checked_write(fd, &zero, sizeof(zero));
 }
 
-static void
+static bool
 send_str(int fd, const char *key, const char *value)
 {
 	uint32	size;
 
 	/* key */
 	size = strlen(key);
-	checked_write(fd, &size, sizeof(size));
-	checked_write(fd, key, size);
+	if (!checked_write(fd, &size, sizeof(size)) ||
+		!checked_write(fd, key, size))
+		return false;
 	/* value */
 	size = strlen(value);
-	checked_write(fd, &size, sizeof(size));
-	checked_write(fd, value, size);
+	if (!checked_write(fd, &size, sizeof(size)) ||
+		!checked_write(fd, value, size))
+		return false;
+
+	return true;
 }
 
-static void
+static bool
 send_i32(int fd, const char *key, int value)
 {
 	char	buf[32];
 
 	snprintf(buf, lengthof(buf), "%d", value);
-	send_str(fd, key, buf);
+	return send_str(fd, key, buf);
 }
 
-static void
+static bool
 send_u64(int fd, const char *key, uint64 value)
 {
 	char	buf[32];
 
 	snprintf(buf, lengthof(buf), UINT64_FORMAT, value);
-	send_str(fd, key, buf);
+	return send_str(fd, key, buf);
 }
 
 /*
@@ -2246,6 +2252,7 @@ StatsinfoLauncherMain(void)
 	int			launch_retry = 0;
 	pg_time_t	launch_time;
 	char		cmd[MAXPGPATH];
+	bool		StartAgentNeeded = true;
 
 	/* we are postmaster subprocess now */
 	IsUnderPostmaster = true;
@@ -2270,7 +2277,7 @@ StatsinfoLauncherMain(void)
 	pqsignal(SIGQUIT, SIG_DFL);
 	pqsignal(SIGTERM, SIG_DFL);
 	pqsignal(SIGALRM, SIG_DFL);
-	pqsignal(SIGPIPE, SIG_DFL);
+	pqsignal(SIGPIPE, SIG_IGN);
 	pqsignal(SIGTTIN, SIG_DFL);
 	pqsignal(SIGTTOU, SIG_DFL);
 
@@ -2288,81 +2295,23 @@ StatsinfoLauncherMain(void)
 		if (!postmaster_is_alive())
 			break;
 
-		/* instruct to stop pg_statsinfod process */
-		if (got_SIGUSR1)
+		/* If we have lost the pg_statsinfod, try to start a new one */
+		if (StartAgentNeeded && StatsinfoPID == 0)
 		{
-			got_SIGUSR1 = false;
+			time_t now = time(NULL);
 
-			if (StatsinfoPID == INVALID_PID)	/* not running */
-			{
-				ereport(WARNING,
-					(errmsg("pg_statsinfod is not running")));
-				continue;
-			}
-
-			/* send signal that instruct to shut down */
-			if (kill(StatsinfoPID, SIGUSR1) != 0)
-				ereport(WARNING,
-					(errmsg("could not send stop signal (PID %d): %m",
-						StatsinfoPID)));
-		}
-
-		/* instruct to start pg_statsinfod process */
-		if (got_SIGUSR2)
-		{
-			got_SIGUSR2 = false;
-
-			if (StatsinfoPID != INVALID_PID)	/* already running */
-			{
-				ereport(WARNING,
-					(errmsg("another pg_statsinfod might be running")));
-				continue;
-			}
-
-			/* launch the pg_statsinfo background process */
-			StatsinfoPID = exec_background_process(cmd);
-			launch_time = (pg_time_t) time(NULL);
-			launch_retry = 0;
-		}
-
-		/* pg_statsinfod process died */
-		if (got_SIGCHLD)
-		{
-			int status;
-
-			got_SIGCHLD = false;
-
-			waitpid(StatsinfoPID, &status, WNOHANG);
-			StatsinfoPID = INVALID_PID;
-
-			if (WIFEXITED(status))
-			{
-				/* pg_statsinfod is normally end */
-				if (WEXITSTATUS(status) == STATSINFO_EXIT_SUCCESS)
-					continue;
-
-				/* pg_statsinfod is aborted with fatal error */
-				if (WEXITSTATUS(status) == STATSINFO_EXIT_FAILED)
-				{
-					ereport(WARNING,
-						(errmsg("pg_statsinfod is aborted with fatal error")));
-					continue;
-				}
-			}
-
-			/* 
-			 * pg_statsinfod abnormally end, relaunch new pg_statsinfod process.
+			/*
+			 * relaunch new pg_statsinfod process.
 			 * if the pg_statsinfod was aborted continuously,
 			 * then not relaunch pg_statsinfod process.
 			 */
-			ereport(WARNING, (errmsg("pg_statsinfod is aborted")));
-
-			if (((pg_time_t) time(NULL) - launch_time) <= LAUNCH_RETRY_PERIOD)
+			if (now - launch_time <= LAUNCH_RETRY_PERIOD)
 			{
 				if (launch_retry >= LAUNCH_RETRY_MAX)
 				{
 					ereport(WARNING,
 						(errmsg("pg_statsinfod is aborted continuously")));
+					StartAgentNeeded = false;
 					continue;
 				}
 			}
@@ -2375,6 +2324,78 @@ StatsinfoLauncherMain(void)
 			StatsinfoPID = exec_background_process(cmd);
 			launch_time = (pg_time_t) time(NULL);
 			launch_retry++;
+		}
+
+		/* instruct to stop pg_statsinfod process */
+		if (got_SIGUSR1)
+		{
+			got_SIGUSR1 = false;
+			StartAgentNeeded = false;
+
+			if (StatsinfoPID != 0)
+			{
+				/* send signal that instruct to shut down */
+				if (kill(StatsinfoPID, SIGUSR1) != 0)
+					ereport(WARNING,
+						(errmsg("could not send stop signal (PID %d): %m",
+							StatsinfoPID)));
+			}
+			else	/* not running */
+				ereport(WARNING,
+					(errmsg("pg_statsinfod is not running")));
+		}
+
+		/* instruct to start pg_statsinfod process */
+		if (got_SIGUSR2)
+		{
+			got_SIGUSR2 = false;
+			StartAgentNeeded = true;
+
+			if (StatsinfoPID == 0)
+			{
+				StatsinfoPID = exec_background_process(cmd);
+				launch_time = (pg_time_t) time(NULL);
+				launch_retry = 0;
+			}
+			else	/* already running */
+				ereport(WARNING,
+					(errmsg("another pg_statsinfod might be running")));
+		}
+
+		/* pg_statsinfod process died */
+		if (got_SIGCHLD)
+		{
+			int status;
+
+			got_SIGCHLD = false;
+
+			if (StatsinfoPID != 0)
+			{
+				waitpid(StatsinfoPID, &status, WNOHANG);
+				StatsinfoPID = 0;
+
+				if (WIFEXITED(status))
+				{
+					/* pg_statsinfod is normally end */
+					if (WEXITSTATUS(status) == STATSINFO_EXIT_SUCCESS)
+					{
+						StartAgentNeeded = false;
+						continue;
+					}
+
+					/* pg_statsinfod is aborted with fatal error */
+					if (WEXITSTATUS(status) == STATSINFO_EXIT_FAILED)
+					{
+						ereport(WARNING,
+							(errmsg("pg_statsinfod is aborted with fatal error")));
+						StartAgentNeeded = false;
+						continue;
+					}
+				}
+
+				/* pg_statsinfod is abnormally end */
+				ereport(WARNING, (errmsg("pg_statsinfod is aborted")));
+			}
 		}
 
 		pg_usleep(100000L);		/* 100ms */
@@ -2421,37 +2442,44 @@ exec_background_process(char cmd[])
 	/* Execute a background process. */
 	fpid = forkexec(cmd, &fd);
 	if (fpid == 0 || fd < 0)
-		elog(ERROR, LOG_PREFIX "could not execute background process");
+	{
+		elog(WARNING, LOG_PREFIX "could not execute background process");
+		return 0;
+	}
 
 	/* send GUC variables to background process. */
-	send_u64(fd, "instance_id", sysident);
-	send_i32(fd, "postmaster_pid", postmaster_pid);
-	send_str(fd, "port", GetConfigOption("port", false));
-	send_str(fd, "server_version_num", GetConfigOption("server_version_num", false));
-	send_str(fd, "server_version_string", GetConfigOption("server_version", false));
-	send_str(fd, "share_path", share_path);
-	send_i32(fd, "server_encoding", GetDatabaseEncoding());
-	send_str(fd, "data_directory", DataDir);
-	send_str(fd, "log_timezone", pg_localtime(&log_ts, log_tz)->tm_zone);
-	send_str(fd, ":debug", _("DEBUG"));
-	send_str(fd, ":info", _("INFO"));
-	send_str(fd, ":notice", _("NOTICE"));
-	send_str(fd, ":log", _("LOG"));
-	send_str(fd, ":warning", _("WARNING"));
-	send_str(fd, ":error", _("ERROR"));
-	send_str(fd, ":fatal", _("FATAL"));
-	send_str(fd, ":panic", _("PANIC"));
-	send_str(fd, ":shutdown", _(MSG_SHUTDOWN));
-	send_str(fd, ":shutdown_smart", _(MSG_SHUTDOWN_SMART));
-	send_str(fd, ":shutdown_fast", _(MSG_SHUTDOWN_FAST));
-	send_str(fd, ":shutdown_immediate", _(MSG_SHUTDOWN_IMMEDIATE));
-	send_str(fd, ":sighup", _(MSG_SIGHUP));
-	send_str(fd, ":autovacuum", _(MSG_AUTOVACUUM));
-	send_str(fd, ":autoanalyze", _(MSG_AUTOANALYZE));
-	send_str(fd, ":checkpoint_starting", _(MSG_CHECKPOINT_STARTING));
-	send_str(fd, ":checkpoint_complete", _(MSG_CHECKPOINT_COMPLETE));
-	send_str(fd, ":restartpoint_complete", _(MSG_RESTARTPOINT_COMPLETE));
-	send_end(fd);
+	if (!send_u64(fd, "instance_id", sysident) ||
+		!send_i32(fd, "postmaster_pid", postmaster_pid) ||
+		!send_str(fd, "port", GetConfigOption("port", false)) ||
+		!send_str(fd, "server_version_num", GetConfigOption("server_version_num", false)) ||
+		!send_str(fd, "server_version_string", GetConfigOption("server_version", false)) ||
+		!send_str(fd, "share_path", share_path) ||
+		!send_i32(fd, "server_encoding", GetDatabaseEncoding()) ||
+		!send_str(fd, "data_directory", DataDir) ||
+		!send_str(fd, "log_timezone", pg_localtime(&log_ts, log_tz)->tm_zone) ||
+		!send_str(fd, ":debug", _("DEBUG")) ||
+		!send_str(fd, ":info", _("INFO")) ||
+		!send_str(fd, ":notice", _("NOTICE")) ||
+		!send_str(fd, ":log", _("LOG")) ||
+		!send_str(fd, ":warning", _("WARNING")) ||
+		!send_str(fd, ":error", _("ERROR")) ||
+		!send_str(fd, ":fatal", _("FATAL")) ||
+		!send_str(fd, ":panic", _("PANIC")) ||
+		!send_str(fd, ":shutdown", _(MSG_SHUTDOWN)) ||
+		!send_str(fd, ":shutdown_smart", _(MSG_SHUTDOWN_SMART)) ||
+		!send_str(fd, ":shutdown_fast", _(MSG_SHUTDOWN_FAST)) ||
+		!send_str(fd, ":shutdown_immediate", _(MSG_SHUTDOWN_IMMEDIATE)) ||
+		!send_str(fd, ":sighup", _(MSG_SIGHUP)) ||
+		!send_str(fd, ":autovacuum", _(MSG_AUTOVACUUM)) ||
+		!send_str(fd, ":autoanalyze", _(MSG_AUTOANALYZE)) ||
+		!send_str(fd, ":checkpoint_starting", _(MSG_CHECKPOINT_STARTING)) ||
+		!send_str(fd, ":checkpoint_complete", _(MSG_CHECKPOINT_COMPLETE)) ||
+		!send_str(fd, ":restartpoint_complete", _(MSG_RESTARTPOINT_COMPLETE)) ||
+		!send_end(fd))
+	{
+		close(fd);
+		return 0;
+	}
 	close(fd);
 
 	return fpid;
