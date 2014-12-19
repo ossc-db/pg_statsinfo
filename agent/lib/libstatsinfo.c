@@ -2444,7 +2444,7 @@ exec_background_process(char cmd[])
 	if (fpid == 0 || fd < 0)
 	{
 		elog(WARNING, LOG_PREFIX "could not execute background process");
-		return 0;
+		return fpid;
 	}
 
 	/* send GUC variables to background process. */
@@ -2477,8 +2477,7 @@ exec_background_process(char cmd[])
 		!send_str(fd, ":restartpoint_complete", _(MSG_RESTARTPOINT_COMPLETE)) ||
 		!send_end(fd))
 	{
-		close(fd);
-		return 0;
+		/* nothing to do */
 	}
 	close(fd);
 
