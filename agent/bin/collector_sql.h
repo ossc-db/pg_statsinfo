@@ -483,6 +483,12 @@ WHERE \
 	nspname <> ALL (('{' || $1 || '}')::text[])"
 
 /* table */
+#if PG_VERSION_NUM >= 90400
+#define SQL_SELECT_TABLE_N_MOD_SINCE_ANALYZE	"pg_stat_get_mod_since_analyze(c.oid)"
+#else
+#define SQL_SELECT_TABLE_N_MOD_SINCE_ANALYZE	"NULL"
+#endif
+
 #define SQL_SELECT_TABLE "\
 SELECT \
 	c.oid AS relid, \
@@ -507,6 +513,7 @@ SELECT \
 	pg_stat_get_tuples_hot_updated(c.oid) AS n_tup_hot_upd, \
 	pg_stat_get_live_tuples(c.oid) AS n_live_tup, \
 	pg_stat_get_dead_tuples(c.oid) AS n_dead_tup, \
+	" SQL_SELECT_TABLE_N_MOD_SINCE_ANALYZE " AS n_mod_since_analyze, \
 	pg_stat_get_blocks_fetched(c.oid) - \
 		pg_stat_get_blocks_hit(c.oid) AS heap_blks_read, \
 	pg_stat_get_blocks_hit(c.oid) AS heap_blks_hit, \

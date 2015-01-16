@@ -166,6 +166,11 @@ ORDER BY
 EOF
 
 echo "/**--- Statistics of table ---**/"
+if [ $(server_version) -ge 90400 ] ; then
+	SELECT_N_MOD_SINCE_ANALYZE="CASE WHEN t.n_mod_since_analyze IS NOT NULL THEN 'xxx' END"
+else
+	SELECT_N_MOD_SINCE_ANALYZE="CASE WHEN t.n_mod_since_analyze IS NULL THEN '(N/A)' END"
+fi
 send_query << EOF
 SELECT
 	t.snapid,
@@ -192,6 +197,7 @@ SELECT
 	CASE WHEN t.n_tup_hot_upd IS NOT NULL THEN 'xxx' END AS n_tup_hot_upd,
 	CASE WHEN t.n_live_tup IS NOT NULL THEN 'xxx' END AS n_live_tup,
 	CASE WHEN t.n_dead_tup IS NOT NULL THEN 'xxx' END AS n_dead_tup,
+	${SELECT_N_MOD_SINCE_ANALYZE} AS n_mod_since_analyze,
 	CASE WHEN t.heap_blks_read IS NOT NULL THEN 'xxx' END AS heap_blks_read,
 	CASE WHEN t.heap_blks_hit IS NOT NULL THEN 'xxx' END AS heap_blks_hit,
 	CASE WHEN t.idx_blks_read IS NOT NULL THEN 'xxx' END AS idx_blks_read,

@@ -109,41 +109,42 @@ CREATE TABLE statsrepo.schema
 
 CREATE TABLE statsrepo.table
 (
-	snapid			bigint,
-	dbid			oid,
-	tbl				oid,
-	nsp				oid,
-	date			date,
-	tbs				oid,
-	name			name,
-	toastrelid		oid,
-	toastidxid		oid,
-	relkind			"char",
-	relpages		integer,
-	reltuples		real,
-	reloptions		text[],
-	size			bigint,
-	seq_scan		bigint,
-	seq_tup_read	bigint,
-	idx_scan		bigint,
-	idx_tup_fetch	bigint,
-	n_tup_ins		bigint,
-	n_tup_upd		bigint,
-	n_tup_del		bigint,
-	n_tup_hot_upd	bigint,
-	n_live_tup		bigint,
-	n_dead_tup		bigint,
-	heap_blks_read	bigint,
-	heap_blks_hit	bigint,
-	idx_blks_read	bigint,
-	idx_blks_hit	bigint,
-	toast_blks_read	bigint,
-	toast_blks_hit	bigint,
-	tidx_blks_read	bigint,
-	tidx_blks_hit	bigint,
-	last_vacuum		timestamptz,
-	last_autovacuum	timestamptz,
-	last_analyze	timestamptz,
+	snapid				bigint,
+	dbid				oid,
+	tbl					oid,
+	nsp					oid,
+	date				date,
+	tbs					oid,
+	name				name,
+	toastrelid			oid,
+	toastidxid			oid,
+	relkind				"char",
+	relpages			integer,
+	reltuples			real,
+	reloptions			text[],
+	size				bigint,
+	seq_scan			bigint,
+	seq_tup_read		bigint,
+	idx_scan			bigint,
+	idx_tup_fetch		bigint,
+	n_tup_ins			bigint,
+	n_tup_upd			bigint,
+	n_tup_del			bigint,
+	n_tup_hot_upd		bigint,
+	n_live_tup			bigint,
+	n_dead_tup			bigint,
+	n_mod_since_analyze	bigint,
+	heap_blks_read		bigint,
+	heap_blks_hit		bigint,
+	idx_blks_read		bigint,
+	idx_blks_hit		bigint,
+	toast_blks_read		bigint,
+	toast_blks_hit		bigint,
+	tidx_blks_read		bigint,
+	tidx_blks_hit		bigint,
+	last_vacuum			timestamptz,
+	last_autovacuum		timestamptz,
+	last_analyze		timestamptz,
 	last_autoanalyze	timestamptz,
 	PRIMARY KEY (snapid, dbid, tbl),
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE,
@@ -705,6 +706,7 @@ CREATE VIEW statsrepo.tables AS
          t.n_tup_hot_upd,
          t.n_live_tup,
          t.n_dead_tup,
+         t.n_mod_since_analyze,
          t.heap_blks_read,
          t.heap_blks_hit,
          t.idx_blks_read,
@@ -2337,54 +2339,84 @@ CREATE FUNCTION statsrepo.get_autoanalyze_stats(
 	OUT max_duration	numeric,
 	OUT "count"			bigint,
 	OUT last_analyze	timestamp,
-	OUT cancels			bigint
+	OUT cancels			bigint,
+	OUT mod_rows_max	bigint
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		COALESCE(ta.database, tc.database),
-		COALESCE(ta.schema, tc.schema),
-		COALESCE(ta.table, tc.table),
-		round(COALESCE(ta.sum_duration, 0)::numeric, 3),
-		round(COALESCE(ta.avg_duration, 0)::numeric, 3),
-		round(COALESCE(ta.max_duration, 0)::numeric, 3),
-		COALESCE(ta.count, 0),
-		ta.last_analyze::timestamp(0),
-		COALESCE(tc.count, 0)
+		t1.database,
+		t1.schema,
+		t1.table,
+		t1.sum_duration,
+		t1.avg_duration,
+		t1.max_duration,
+		t1.count,
+		t1.last_analyze,
+		t1.cancels,
+		t2.mod_rows_max
 	FROM
 		(SELECT
-			a.database,
-			a.schema,
-			a.table,
-			sum(a.duration) AS sum_duration,
-			avg(a.duration) AS avg_duration,
-			max(a.duration) AS max_duration,
-			count(*),
-			max(a.start) AS last_analyze
+			COALESCE(ta.database, tc.database) AS database,
+			COALESCE(ta.schema, tc.schema) AS schema,
+			COALESCE(ta.table, tc.table) AS table,
+			round(COALESCE(ta.sum_duration, 0)::numeric, 3) AS sum_duration,
+			round(COALESCE(ta.avg_duration, 0)::numeric, 3) AS avg_duration,
+			round(COALESCE(ta.max_duration, 0)::numeric, 3) AS max_duration,
+			COALESCE(ta.count, 0) AS count,
+			ta.last_analyze::timestamp(0),
+			COALESCE(tc.count, 0) AS cancels
 		 FROM
-			statsrepo.autoanalyze a,
-			(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
-			(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
-		 WHERE
-			a.start BETWEEN b.time AND e.time
-			AND a.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-		 GROUP BY
-			a.database, a.schema, a.table) ta
-		 FULL JOIN
 			(SELECT
-				c.database,
-				c.schema,
-				c.table,
-				count(*)
+				a.database,
+				a.schema,
+				a.table,
+				sum(a.duration) AS sum_duration,
+				avg(a.duration) AS avg_duration,
+				max(a.duration) AS max_duration,
+				count(*),
+				max(a.start) AS last_analyze
 			 FROM
-				statsrepo.autoanalyze_cancel c,
+				statsrepo.autoanalyze a,
 				(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
 				(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
 			 WHERE
-				c.timestamp BETWEEN b.time AND e.time
-				AND c.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+				a.start BETWEEN b.time AND e.time
+				AND a.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 			 GROUP BY
-				c.database, c.schema, c.table) tc
-		 ON ta.database = tc.database AND ta.schema = tc.schema AND ta.table = tc.table
+				a.database, a.schema, a.table) ta
+			 FULL JOIN
+				(SELECT
+					c.database,
+					c.schema,
+					c.table,
+					count(*)
+				 FROM
+					statsrepo.autoanalyze_cancel c,
+					(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+					(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
+				 WHERE
+					c.timestamp BETWEEN b.time AND e.time
+					AND c.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+				 GROUP BY
+					c.database, c.schema, c.table) tc
+			 ON ta.database = tc.database AND ta.schema = tc.schema AND ta.table = tc.table
+		) t1
+		LEFT JOIN
+			(SELECT
+				t.database,
+				t.schema,
+				t.table,
+				max(t.n_mod_since_analyze) AS mod_rows_max
+			 FROM
+				statsrepo.tables t,
+				statsrepo.snapshot s
+			 WHERE
+			 	t.snapid = s.snapid
+				AND t.snapid BETWEEN $1 AND $2
+				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			 GROUP BY
+			 	t.database, t.schema, t.table) t2
+		ON t1.database = t2.database AND t1.schema = t2.schema AND t1.table = t2.table
 	ORDER BY
 		4 DESC;
 $$
