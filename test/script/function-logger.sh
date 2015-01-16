@@ -214,7 +214,7 @@ ORDER BY
 EOF
 
 echo "/**--- Collect the AUTOVACUUM information ---**/"
-if [ $(server_version) -ge 90200 ] ; then
+if [ $(server_version) -ge 90400 ] ; then
 	send_query << EOF
 SELECT
 	instid,
@@ -227,6 +227,32 @@ SELECT
 	CASE WHEN page_remain IS NOT NULL THEN 'xxx' END AS page_remain,
 	CASE WHEN tup_removed IS NOT NULL THEN 'xxx' END AS tup_removed,
 	CASE WHEN tup_remain IS NOT NULL THEN 'xxx' END AS tup_remain,
+	CASE WHEN tup_dead IS NOT NULL THEN 'xxx' END AS tup_dead,
+	CASE WHEN page_hit IS NOT NULL THEN 'xxx' END AS page_hit,
+	CASE WHEN page_miss IS NOT NULL THEN 'xxx' END AS page_miss,
+	CASE WHEN page_dirty IS NOT NULL THEN 'xxx' END AS page_dirty,
+	CASE WHEN read_rate IS NOT NULL THEN 'xxx' END AS read_rate,
+	CASE WHEN write_rate IS NOT NULL THEN 'xxx' END AS write_rate,
+	CASE WHEN duration IS NOT NULL THEN 'xxx' END AS duration
+FROM
+	statsrepo.autovacuum
+ORDER BY
+	database, schema, "table";
+EOF
+elif [ $(server_version) -ge 90200 ] ; then
+	send_query << EOF
+SELECT
+	instid,
+	database,
+	schema,
+	"table",
+	CASE WHEN start IS NOT NULL THEN 'xxx' END AS start,
+	CASE WHEN index_scans IS NOT NULL THEN 'xxx' END AS index_scans,
+	CASE WHEN page_removed IS NOT NULL THEN 'xxx' END AS page_removed,
+	CASE WHEN page_remain IS NOT NULL THEN 'xxx' END AS page_remain,
+	CASE WHEN tup_removed IS NOT NULL THEN 'xxx' END AS tup_removed,
+	CASE WHEN tup_remain IS NOT NULL THEN 'xxx' END AS tup_remain,
+	CASE WHEN tup_dead IS NULL THEN '(N/A)' END AS tup_dead,
 	CASE WHEN page_hit IS NOT NULL THEN 'xxx' END AS page_hit,
 	CASE WHEN page_miss IS NOT NULL THEN 'xxx' END AS page_miss,
 	CASE WHEN page_dirty IS NOT NULL THEN 'xxx' END AS page_dirty,
@@ -251,6 +277,7 @@ SELECT
 	CASE WHEN page_remain IS NOT NULL THEN 'xxx' END AS page_remain,
 	CASE WHEN tup_removed IS NOT NULL THEN 'xxx' END AS tup_removed,
 	CASE WHEN tup_remain IS NOT NULL THEN 'xxx' END AS tup_remain,
+	CASE WHEN tup_dead IS NULL THEN '(N/A)' END AS tup_dead,
 	CASE WHEN page_hit IS NULL THEN '(N/A)' END AS page_hit,
 	CASE WHEN page_miss IS NULL THEN '(N/A)' END AS page_miss,
 	CASE WHEN page_dirty IS NULL THEN '(N/A)' END AS page_dirty,

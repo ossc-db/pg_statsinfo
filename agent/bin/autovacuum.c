@@ -8,8 +8,8 @@
 
 #define SQL_INSERT_AUTOVACUUM "\
 INSERT INTO statsrepo.autovacuum VALUES \
-($1, $2::timestamptz - interval '1sec' * $16, \
- $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)"
+($1, $2::timestamptz - interval '1sec' * $17, \
+ $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)"
 
 #define SQL_INSERT_AUTOANALYZE "\
 INSERT INTO statsrepo.autoanalyze VALUES \
@@ -228,7 +228,7 @@ Autovacuum_free(AutovacuumLog *av)
 static bool
 Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 {
-	const char	   *params[16];
+	const char	   *params[17];
 
 	elog(DEBUG2, "write (autovacuum)");
 	Assert(list_length(av->params) == NUM_AUTOVACUUM + NUM_RUSAGE);
@@ -246,20 +246,20 @@ Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 	params[8] = list_nth(av->params, 6);	/* tup_removed */
 	params[9] = list_nth(av->params, 7);	/* tup_remain */
 #if PG_VERSION_NUM >= 90400
-//	params[10] = list_nth(av->params, 8);	/* tup_dead */
-	params[10] = list_nth(av->params, 9);	/* page_hit */
-	params[11] = list_nth(av->params, 10);	/* page_miss */
-	params[12] = list_nth(av->params, 11);	/* page_dirty */
-	params[13] = list_nth(av->params, 12);	/* read_rate */
-	params[14] = list_nth(av->params, 14);	/* write_rate */
+	params[10] = list_nth(av->params, 8);	/* tup_dead */
+	params[11] = list_nth(av->params, 9);	/* page_hit */
+	params[12] = list_nth(av->params, 10);	/* page_miss */
+	params[13] = list_nth(av->params, 11);	/* page_dirty */
+	params[14] = list_nth(av->params, 12);	/* read_rate */
+	params[15] = list_nth(av->params, 14);	/* write_rate */
 #elif PG_VERSION_NUM >= 90200
-	params[10] = list_nth(av->params, 8);	/* page_hit */
-	params[11] = list_nth(av->params, 9);	/* page_miss */
-	params[12] = list_nth(av->params, 10);	/* page_dirty */
-	params[13] = list_nth(av->params, 11);	/* read_rate */
-	params[14] = list_nth(av->params, 13);	/* write_rate */
+	params[11] = list_nth(av->params, 8);	/* page_hit */
+	params[12] = list_nth(av->params, 9);	/* page_miss */
+	params[13] = list_nth(av->params, 10);	/* page_dirty */
+	params[14] = list_nth(av->params, 11);	/* read_rate */
+	params[15] = list_nth(av->params, 13);	/* write_rate */
 #endif
-	params[15] = list_nth(av->params, NUM_AUTOVACUUM + 2);	/* duration */
+	params[16] = list_nth(av->params, NUM_AUTOVACUUM + 2);	/* duration */
 
 	return pgut_command(conn, SQL_INSERT_AUTOVACUUM,
 						lengthof(params), params) == PGRES_COMMAND_OK;

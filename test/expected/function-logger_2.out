@@ -76,9 +76,9 @@ DELETE 4001
 (1 row)
 
 /**--- Collect the AUTOVACUUM information ---**/
- instid | database | schema | table | start | index_scans | page_removed | page_remain | tup_removed | tup_remain | page_hit | page_miss | page_dirty | read_rate | write_rate | duration 
---------+----------+--------+-------+-------+-------------+--------------+-------------+-------------+------------+----------+-----------+------------+-----------+------------+----------
-      1 | postgres | public | tbl01 | xxx   | xxx         | xxx          | xxx         | xxx         | xxx        | xxx      | xxx       | xxx        | xxx       | xxx        | xxx
+ instid | database | schema | table | start | index_scans | page_removed | page_remain | tup_removed | tup_remain | tup_dead | page_hit | page_miss | page_dirty | read_rate | write_rate | duration 
+--------+----------+--------+-------+-------+-------------+--------------+-------------+-------------+------------+----------+----------+-----------+------------+-----------+------------+----------
+      1 | postgres | public | tbl01 | xxx   | xxx         | xxx          | xxx         | xxx         | xxx        | (N/A)    | xxx      | xxx       | xxx        | xxx       | xxx        | xxx
 (1 row)
 
 /**--- Collect the cancelled AUTOVACUUM information ---**/

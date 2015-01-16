@@ -62,10 +62,10 @@ $$
 	--
 	-- Data for Name: autovacuum; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
-	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_branches', 1, 0, 6, 3, 1, 56, 0, 2, 0, 30.5180000000000007, 0);
-	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_tellers', 1, 0, 6, 300, 23, 36, 0, 1, 0, 17.5960000000000001, 0);
-	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_branches', 1, 0, 7, 1, 0, 59, 0, 0, 0, 0, 0);
-	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_tellers', 0, 0, 6, 114, 16, 35, 0, 0, 0, 0, 0);
+	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_branches', 1, 0, 6, 3, 1, 10, 56, 0, 2, 0, 30.5180000000000007, 0);
+	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_tellers', 1, 0, 6, 300, 23, 20, 36, 0, 1, 0, 17.5960000000000001, 0);
+	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_branches', 1, 0, 7, 1, 0, 30, 59, 0, 0, 0, 0, 0);
+	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_tellers', 0, 0, 6, 114, 16, 40, 35, 0, 0, 0, 0, 0);
 
 	--
 	-- Data for Name: autovacuum_cancel; Type: TABLE DATA; Schema: statsrepo; Owner: postgres

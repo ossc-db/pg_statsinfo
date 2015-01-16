@@ -62,6 +62,7 @@ SELECT \
 	\"count\", \
 	avg_tup_removed, \
 	avg_tup_remain, \
+	avg_tup_dead, \
 	avg_index_scans, \
 	avg_duration, \
 	max_duration, \
@@ -869,23 +870,24 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Vacuum Basic Statistics (Average) **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-32s  %8s  %12s  %12s  %12s  %12s  %13s  %7s\n",
-		"Table", "Count", "Removed Rows", "Remain Rows", "Index Scans",
-		"Duration", "Duration(Max)", "Cancels");
-	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "%-32s  %8s  %12s  %12s  %12s  %12s  %12s  %13s  %7s\n",
+		"Table", "Count", "Removed Rows", "Remain Rows", "Remain Dead",
+		"Index Scans", "Duration", "Duration(Max)", "Cancels");
+	fprintf(out, "-------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_ACTIVITY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-32s  %8s  %12s  %12s  %12s  %10s s  %11s s  %7s\n",
+		fprintf(out, "%-32s  %8s  %12s  %12s  %12s  %12s  %10s s  %11s s  %7s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
 			PQgetvalue(res, i, 3),
-			PQgetvalue(res, i, 4),
+			scope->version >= 90400 ? PQgetvalue(res, i, 4) : "(N/A)",
 			PQgetvalue(res, i, 5),
 			PQgetvalue(res, i, 6),
-			PQgetvalue(res, i, 7));
+			PQgetvalue(res, i, 7),
+			PQgetvalue(res, i, 8));
 	}
 	fprintf(out, "\n");
 	PQclear(res);
