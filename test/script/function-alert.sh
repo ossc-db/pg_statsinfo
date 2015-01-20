@@ -179,7 +179,7 @@ send_query << EOF
 UPDATE statsrepo.alert SET rep_flush_delay = default;
 UPDATE statsrepo.alert SET rep_replay_delay = default;
 INSERT INTO statsrepo.replication VALUES (
-2, 2673, 10, 'postgres', 'sby', '127.0.0.1', NULL, 56442, '2013-01-01 00:00:00', 'streaming',
+2, 2673, 10, 'postgres', 'sby', '127.0.0.1', NULL, 56442, '2013-01-01 00:00:00', '100', 'streaming',
 '0/C900000 (00000001000000000000000C)', '0/6400000 (000000010000000000000006)',
 '0/6400000 (000000010000000000000006)', '0/6400000 (000000010000000000000006)',
 '0/0 (000000010000000000000000)', 0, 'sync');

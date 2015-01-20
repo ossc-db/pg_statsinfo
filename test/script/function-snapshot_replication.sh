@@ -86,6 +86,12 @@ else
 fi
 
 echo "/***-- Statistics of replication (MASTER) --***/"
+
+if [ $(server_version) -ge 90400 ] ; then
+	SELECT_BACKEND_XMIN="CASE WHEN backend_xmin IS NOT NULL THEN 'xxx' END"
+else
+	SELECT_BACKEND_XMIN="CASE WHEN backend_xmin IS NULL THEN '(N/A)' END"
+fi
 send_query << EOF
 SELECT
 	snapid,
@@ -97,6 +103,7 @@ SELECT
 	CASE WHEN client_hostname IS NOT NULL THEN 'xxx' END AS client_hostname,
 	CASE WHEN client_port IS NOT NULL THEN 'xxx' END AS client_port,
 	CASE WHEN backend_start IS NOT NULL THEN 'xxx' END AS backend_start,
+	${SELECT_BACKEND_XMIN} AS backend_xmin,
 	state,
 	CASE WHEN current_location IS NOT NULL THEN 'xxx' END AS current_location,
 	CASE WHEN sent_location IS NOT NULL THEN 'xxx' END AS sent_location,

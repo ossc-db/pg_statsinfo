@@ -393,6 +393,12 @@ WHERE \
 	sb.query_start < statement_timestamp() - current_setting('" GUC_PREFIX ".long_lock_threashold')::interval"
 
 /* replication */
+#if PG_VERSION_NUM >= 90400
+#define SQL_SELECT_REPLICATION_BACKEND_XMIN		"backend_xmin"
+#else
+#define SQL_SELECT_REPLICATION_BACKEND_XMIN		"NULL"
+#endif
+
 #define SQL_SELECT_REPLICATION "\
 SELECT \
 	" PG_STAT_REPLICATION_ATTNAME_PID ", \
@@ -403,6 +409,7 @@ SELECT \
 	client_hostname, \
 	client_port, \
 	backend_start, \
+	" SQL_SELECT_REPLICATION_BACKEND_XMIN ", \
 	state, \
 	CASE WHEN pg_is_in_recovery() THEN \
 		pg_last_xlog_receive_location() || ' (N/A)' ELSE \

@@ -172,8 +172,8 @@ DROP TABLE
 
 /**--- Statistics of replication ---**/
 /***-- Monitored instance is a stand-alone configuration --***/
- snapid | procpid | usesysid | usename | application_name | client_addr | client_hostname | client_port | backend_start | state | current_location | sent_location | write_location | flush_location | replay_location | sync_priority | sync_state 
---------+---------+----------+---------+------------------+-------------+-----------------+-------------+---------------+-------+------------------+---------------+----------------+----------------+-----------------+---------------+------------
+ snapid | procpid | usesysid | usename | application_name | client_addr | client_hostname | client_port | backend_start | backend_xmin | state | current_location | sent_location | write_location | flush_location | replay_location | sync_priority | sync_state 
+--------+---------+----------+---------+------------------+-------------+-----------------+-------------+---------------+--------------+-------+------------------+---------------+----------------+----------------+-----------------+---------------+------------
 (0 rows)
 
 /**--- Statistics of query ---**/

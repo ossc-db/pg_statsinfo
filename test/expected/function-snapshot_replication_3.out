@@ -14,9 +14,9 @@ NOTICE:  pg_stop_backup complete, all required WAL segments have been archived
 (1 row)
 
 /***-- Statistics of replication (MASTER) --***/
- snapid | procpid | usesysid | usename  | application_name | client_addr | client_hostname | client_port | backend_start |   state   | current_location | sent_location | write_location | flush_location | replay_location | sync_priority | sync_state 
---------+---------+----------+----------+------------------+-------------+-----------------+-------------+---------------+-----------+------------------+---------------+----------------+----------------+-----------------+---------------+------------
-      2 | xxx     | xxx      | postgres | xxx              | xxx         | xxx             | xxx         | xxx           | streaming | xxx              | xxx           | xxx            | xxx            | xxx             |             0 | async
+ snapid | procpid | usesysid | usename  | application_name | client_addr | client_hostname | client_port | backend_start | backend_xmin |   state   | current_location | sent_location | write_location | flush_location | replay_location | sync_priority | sync_state 
+--------+---------+----------+----------+------------------+-------------+-----------------+-------------+---------------+--------------+-----------+------------------+---------------+----------------+----------------+-----------------+---------------+------------
+      2 | xxx     | xxx      | postgres | xxx              | xxx         | xxx             | xxx         | xxx           | xxx          | streaming | xxx              | xxx           | xxx            | xxx            | xxx             |             0 | async
 (1 row)
 
 /***-- Statistics of WAL (STANDBY) --***/
@@ -31,7 +31,7 @@ NOTICE:  pg_stop_backup complete, all required WAL segments have been archived
 (1 row)
 
 /***-- Statistics of replication (STANDBY) --***/
- snapid | procpid | usesysid | usename | application_name | client_addr | client_hostname | client_port | backend_start | state | current_location | sent_location | write_location | flush_location | replay_location | sync_priority | sync_state 
---------+---------+----------+---------+------------------+-------------+-----------------+-------------+---------------+-------+------------------+---------------+----------------+----------------+-----------------+---------------+------------
+ snapid | procpid | usesysid | usename | application_name | client_addr | client_hostname | client_port | backend_start | backend_xmin | state | current_location | sent_location | write_location | flush_location | replay_location | sync_priority | sync_state 
+--------+---------+----------+---------+------------------+-------------+-----------------+-------------+---------------+--------------+-------+------------------+---------------+----------------+----------------+-----------------+---------------+------------
 (0 rows)
 

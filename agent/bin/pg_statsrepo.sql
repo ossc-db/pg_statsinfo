@@ -506,6 +506,7 @@ CREATE TABLE statsrepo.replication
 	client_hostname		text,
 	client_port			integer,
 	backend_start		timestamptz,
+	backend_xmin		xid,
 	state				text,
 	current_location	text,
 	sent_location		text,
