@@ -439,6 +439,10 @@ SELECT \
 	pg_xlogfile_name(pg_current_xlog_location())"
 #endif
 
+/* archive */
+#define SQL_SELECT_ARCHIVE "\
+SELECT * FROM pg_stat_archiver"
+
 /* cpu */
 #define SQL_SELECT_CPU "\
 SELECT * FROM statsinfo.cpustats($1)"

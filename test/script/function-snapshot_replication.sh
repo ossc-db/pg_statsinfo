@@ -58,6 +58,33 @@ WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
 EOF
 
+echo "/***-- Statistics of archive (MASTER) --***/"
+if [ $(server_version) -ge 90400 ] ; then
+	psql -p ${PGPORT_ACT} << EOF > /dev/null
+SELECT pg_stat_reset_shared('archiver');
+SELECT pg_switch_xlog();
+SELECT pg_sleep(1);
+EOF
+	get_snapshot ${PGPORT_ACT}
+	send_query << EOF
+SELECT
+	snapid,
+	archived_count,
+	CASE WHEN last_archived_wal IS NOT NULL THEN 'xxx' END AS last_archived_wal,
+	CASE WHEN last_archived_time IS NOT NULL THEN 'xxx' END AS last_archived_time,
+	failed_count,
+	CASE WHEN last_failed_wal IS NOT NULL THEN 'xxx' END AS last_failed_wal,
+	CASE WHEN last_failed_time IS NOT NULL THEN 'xxx' END AS last_failed_time,
+	CASE WHEN stats_reset IS NOT NULL THEN 'xxx' END AS stats_reset
+FROM
+	statsrepo.archive
+WHERE
+	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
+EOF
+else
+	send_query -c "SELECT * FROM statsrepo.archive"
+fi
+
 echo "/***-- Statistics of replication (MASTER) --***/"
 send_query << EOF
 SELECT
@@ -87,6 +114,23 @@ EOF
 echo "/***-- Statistics of WAL (STANDBY) --***/"
 get_snapshot ${PGPORT_SBY}
 send_query -c "SELECT * FROM statsrepo.xlog WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
+
+echo "/***-- Statistics of archive (STANDBY) --***/"
+send_query << EOF
+SELECT
+	snapid,
+	archived_count,
+	last_archived_wal,
+	last_archived_time,
+	failed_count,
+	last_failed_wal,
+	last_failed_time,
+	CASE WHEN stats_reset IS NOT NULL THEN 'xxx' END AS stats_reset
+FROM
+	statsrepo.archive
+WHERE
+	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
+EOF
 
 echo "/***-- Statistics of replication (STANDBY) --***/"
 send_query -c "SELECT * FROM statsrepo.replication WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"

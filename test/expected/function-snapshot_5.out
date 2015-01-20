@@ -163,6 +163,13 @@ DROP TABLE
       6 | xxx      | xxx
 (1 row)
 
+/**--- Statistics of archive ---**/
+/***-- Monitored instance is a stand-alone configuration --***/
+ snapid | archived_count | last_archived_wal | last_archived_time | failed_count | last_failed_wal | last_failed_time | stats_reset 
+--------+----------------+-------------------+--------------------+--------------+-----------------+------------------+-------------
+      7 |              1 | xxx               | xxx                |            0 |                 |                  | xxx
+(1 row)
+
 /**--- Statistics of replication ---**/
 /***-- Monitored instance is a stand-alone configuration --***/
  snapid | procpid | usesysid | usename | application_name | client_addr | client_hostname | client_port | backend_start | state | current_location | sent_location | write_location | flush_location | replay_location | sync_priority | sync_state 
@@ -179,7 +186,7 @@ DROP TABLE
 CREATE EXTENSION
  snapid | database |  role  |             query             | calls | total_time | rows | shared_blks_hit | shared_blks_read | shared_blks_dirtied | shared_blks_written | local_blks_hit | local_blks_read | local_blks_dirtied | local_blks_written | temp_blks_read | temp_blks_written | blk_read_time | blk_write_time 
 --------+----------+--------+-------------------------------+-------+------------+------+-----------------+------------------+---------------------+---------------------+----------------+-----------------+--------------------+--------------------+----------------+-------------------+---------------+----------------
-      7 | db01     | user01 | SELECT schema01.func01(?, ?); |     2 | xxx        | xxx  | xxx             | xxx              | xxx                 | xxx                 | xxx            | xxx             | xxx                | xxx                | xxx            | xxx               | xxx           | xxx
+      8 | db01     | user01 | SELECT schema01.func01(?, ?); |     2 | xxx        | xxx  | xxx             | xxx              | xxx                 | xxx                 | xxx            | xxx             | xxx                | xxx                | xxx            | xxx               | xxx           | xxx
 (1 row)
 
 /**--- Collect statistics after database crash recovery ---**/
@@ -195,5 +202,6 @@ INSERT 0 1
       6 |      1 | xxx  |         | xxx       | xxx
       7 |      1 | xxx  |         | xxx       | xxx
       8 |      1 | xxx  |         | xxx       | xxx
-(8 rows)
+      9 |      1 | xxx  |         | xxx       | xxx
+(9 rows)
 

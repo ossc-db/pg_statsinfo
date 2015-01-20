@@ -41,6 +41,14 @@ $$
 	INSERT INTO statsrepo.alert_message VALUES ($6 + 2, 'dead tuple size exceeds threshold in snapshot ''2012-11-01 00:02:00'' --- 245.15 MiB (threshold = 100 MiB)');
 
 	--
+	-- Data for Name: archive; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
+	--
+	INSERT INTO statsrepo.archive VALUES ($6, 0, NULL, NULL, 0, NULL, NULL, '2012-11-01 00:00:00+09');
+	INSERT INTO statsrepo.archive VALUES ($6 + 1, 1, '000000010000000000000002', '2012-11-01 00:00:30+09', 0, NULL, NULL, '2012-11-01 00:00:00+09');
+	INSERT INTO statsrepo.archive VALUES ($6 + 2, 3, '000000010000000000000004', '2012-11-01 00:01:30+09', 1, '000000010000000000000003', '2012-11-01 00:01:00+09', '2012-11-01 00:00:00+09');
+	INSERT INTO statsrepo.archive VALUES ($6 + 3, 4, '000000010000000000000005', '2012-11-01 00:02:30+09', 1, '000000010000000000000003', '2012-11-01 00:01:00+09', '2012-11-01 00:00:00+09');
+
+	--
 	-- Data for Name: autoanalyze; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
 	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_branches', 0.841124545);

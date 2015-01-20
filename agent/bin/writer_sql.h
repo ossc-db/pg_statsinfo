@@ -53,6 +53,9 @@ INSERT INTO statsrepo.replication VALUES \
 #define SQL_INSERT_XLOG "\
 INSERT INTO statsrepo.xlog VALUES ($1, $2, $3)"
 
+#define SQL_INSERT_ARCHIVE "\
+INSERT INTO statsrepo.archive VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
+
 #define SQL_INSERT_SETTING "\
 INSERT INTO statsrepo.setting VALUES ($1, $2, $3, $4, $5)"
 

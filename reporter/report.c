@@ -484,29 +484,38 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	if (PQntuples(res) == 0)
 		return;
 	if (PQgetisnull(res, 0, 0))
-		fprintf(out, "WAL Write Total  : (N/A)\n");
+		fprintf(out, "WAL Write Total    : (N/A)\n");
 	else
-		fprintf(out, "WAL Write Total  : %s MiB\n", PQgetvalue(res, 0, 0));
+		fprintf(out, "WAL Write Total    : %s MiB\n", PQgetvalue(res, 0, 0));
 	if (PQgetisnull(res, 0, 1))
-		fprintf(out, "WAL Write Speed  : (N/A)\n\n");
+		fprintf(out, "WAL Write Speed    : (N/A)\n");
 	else
-		fprintf(out, "WAL Write Speed  : %s MiB/s\n\n", PQgetvalue(res, 0, 1));
+		fprintf(out, "WAL Write Speed    : %s MiB/s\n", PQgetvalue(res, 0, 1));
+	if (scope->version >= 90400 && !PQgetisnull(res, 0, 2))
+		fprintf(out, "WAL Archive Total  : %s file(s)\n", PQgetvalue(res, 0, 2));
+	else
+		fprintf(out, "WAL Archive Total  : (N/A)\n");
+	if (scope->version >= 90400 && !PQgetisnull(res, 0, 3))
+		fprintf(out, "WAL Archive Failed : %s file(s)\n\n", PQgetvalue(res, 0, 3));
+	else
+		fprintf(out, "WAL Archive Failed : (N/A)\n\n");
 	PQclear(res);
 
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-17s  %-24s  %14s  %14s\n",
-		"DateTime", "Location", "Segment File", "Write Size", "Write Size/s");
-	fprintf(out, "------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "%-16s  %-17s  %-24s  %14s  %14s  %-17s\n",
+		"DateTime", "Location", "Segment File", "Write Size", "Write Size/s", "Last Archived WAL");
+	fprintf(out, "-------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_WALSTATS_TENDENCY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-17s  %-24s  %10s MiB  %10s MiB\n",
+		fprintf(out, "%-16s  %-17s  %-24s  %10s MiB  %10s MiB  %-17s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
 			PQgetvalue(res, i, 3),
-			PQgetvalue(res, i, 4));
+			PQgetvalue(res, i, 4),
+			scope->version >= 90400 ? PQgetvalue(res, i, 5) : "(N/A)");
 	}
 	fprintf(out, "\n");
 	PQclear(res);

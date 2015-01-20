@@ -163,6 +163,12 @@ DROP TABLE
       6 | xxx      | xxx
 (1 row)
 
+/**--- Statistics of archive ---**/
+/***-- Monitored instance is a stand-alone configuration --***/
+ snapid | archived_count | last_archived_wal | last_archived_time | failed_count | last_failed_wal | last_failed_time | stats_reset 
+--------+----------------+-------------------+--------------------+--------------+-----------------+------------------+-------------
+(0 rows)
+
 /**--- Statistics of replication ---**/
 /***-- Monitored instance is a stand-alone configuration --***/
  snapid | procpid | usesysid | usename | application_name | client_addr | client_hostname | client_port | backend_start | state | current_location | sent_location | write_location | flush_location | replay_location | sync_priority | sync_state 

@@ -532,6 +532,19 @@ CREATE TABLE statsrepo.alert_message
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
+CREATE TABLE statsrepo.archive
+(
+	snapid				bigint,
+	archived_count		bigint,
+	last_archived_wal	text,
+	last_archived_time	timestamptz,
+	failed_count		bigint,
+	last_failed_wal		text,
+	last_failed_time	timestamptz,
+	stats_reset			timestamptz,
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
 CREATE TABLE statsrepo.log
 (
 	instid				bigint,
@@ -1426,7 +1439,10 @@ CREATE FUNCTION statsrepo.get_xlog_tendency(
 	OUT location			text,
 	OUT xlogfile			text,
 	OUT write_size			numeric,
-	OUT write_size_per_sec	numeric
+	OUT write_size_per_sec	numeric,
+	OUT last_archived_wal	text,
+	OUT archive_count		bigint,
+	OUT archive_failed		bigint
 ) RETURNS SETOF record AS
 $$
 	SELECT
@@ -1434,7 +1450,10 @@ $$
 		location,
 		xlogfile,
 		(write_size / 1024 / 1024)::numeric(1000, 3),
-		(statsrepo.tps(write_size, duration) / 1024 / 1024)::numeric(1000, 3)
+		(statsrepo.tps(write_size, duration) / 1024 / 1024)::numeric(1000, 3),
+		last_archived_wal,
+		archive_count,
+		archive_failed
 	FROM
 	(
 		SELECT
@@ -1444,9 +1463,14 @@ $$
 			x.xlogfile,
 			statsrepo.xlog_location_diff(
 				x.location, lag(x.location) OVER w, i.xlog_file_size) AS write_size,
-			s.time - lag(s.time) OVER w AS duration
+			s.time - lag(s.time) OVER w AS duration,
+			a.archived_count - lag(a.archived_count) OVER w AS archive_count,
+			a.failed_count - lag(a.failed_count) OVER w AS archive_failed,
+			CASE WHEN a.last_archived_time BETWEEN lag(s.time) OVER w AND s.time THEN
+				a.last_archived_wal ELSE NULL END AS last_archived_wal
 		 FROM
-			statsrepo.xlog x,
+			statsrepo.xlog x LEFT JOIN statsrepo.archive a
+				ON x.snapid = a.snapid,
 			statsrepo.snapshot s,
 			statsrepo.instance i
 		 WHERE
@@ -1468,12 +1492,16 @@ CREATE FUNCTION statsrepo.get_xlog_stats(
 	IN snapid_begin		bigint,
 	IN snapid_end		bigint,
 	OUT write_total		numeric,
-	OUT write_speed		numeric
+	OUT write_speed		numeric,
+	OUT archive_total	numeric,
+	OUT archive_failed	numeric
 ) RETURNS SETOF record AS
 $$
 	SELECT
 		sum(write_size)::numeric(1000, 3),
-		avg(write_size_per_sec)::numeric(1000, 3)
+		avg(write_size_per_sec)::numeric(1000, 3),
+		sum(archive_count),
+		sum(archive_failed)
 	FROM
 		statsrepo.get_xlog_tendency($1, $2);
 $$

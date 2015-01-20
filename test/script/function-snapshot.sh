@@ -658,13 +658,41 @@ WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
 EOF
 
+echo "/**--- Statistics of archive ---**/"
+echo "/***-- Monitored instance is a stand-alone configuration --***/"
+if [ $(server_version) -ge 90400 ] ; then
+	psql << EOF > /dev/null
+SELECT pg_stat_reset_shared('archiver');
+SELECT pg_switch_xlog();
+SELECT pg_sleep(1);
+EOF
+	get_snapshot
+	send_query << EOF
+SELECT
+	snapid,
+	archived_count,
+	CASE WHEN last_archived_wal IS NOT NULL THEN 'xxx' END AS last_archived_wal,
+	CASE WHEN last_archived_time IS NOT NULL THEN 'xxx' END AS last_archived_time,
+	failed_count,
+	CASE WHEN last_failed_wal IS NOT NULL THEN 'xxx' END AS last_failed_wal,
+	CASE WHEN last_failed_time IS NOT NULL THEN 'xxx' END AS last_failed_time,
+	CASE WHEN stats_reset IS NOT NULL THEN 'xxx' END AS stats_reset
+FROM
+	statsrepo.archive
+WHERE
+	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
+EOF
+else
+	send_query -c "SELECT * FROM statsrepo.archive"
+fi
+
 echo "/**--- Statistics of replication ---**/"
 echo "/***-- Monitored instance is a stand-alone configuration --***/"
-send_query -c "SELECT * FROM statsrepo.replication WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
+send_query -c "SELECT * FROM statsrepo.replication"
 
 echo "/**--- Statistics of query ---**/"
 echo "/***-- pg_stat_statements is not installed --***/"
-send_query -c "SELECT * FROM statsrepo.statement WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
+send_query -c "SELECT * FROM statsrepo.statement"
 
 echo "/***-- pg_stat_statements is installed --***/"
 cat << EOF >> ${PGDATA}/postgresql-statsinfo.conf
