@@ -244,7 +244,7 @@ pg_statsinfo の運用管理向けの操作を行うコマンドを提供しま�
 <h3 id="requirement">動作環境</h3>
 <dl>
   <dt>PostgreSQL</dt>
-  <dd>バージョン 8.4, 9.0, 9.1, 9.2, 9.3</dd>
+  <dd>バージョン 8.4, 9.0, 9.1, 9.2, 9.3, 9.4</dd>
   <dt>動作検証済みOS</dt>
   <dd>RHEL 5.x, RHEL 6.x, CentOS 5.x, CentOS 6.x</dd>
 </dl>
@@ -253,10 +253,10 @@ pg_statsinfo の運用管理向けの操作を行うコマンドを提供しま�
 <h3 id="procedure">インストール手順</h3>
 
 <h4>RPM</h4>
-以下はPostgreSQL9.2のRHEL6のx86_64用のrpmをインストールする例です。
+以下はPostgreSQL9.4のRHEL6のx86_64用のrpmをインストールする例です。
 <pre>
 $ su
-# rpm -ivh pg_statsinfo-3.1.0-1.pg92.rhel6.x86_64.rpm
+# rpm -ivh pg_statsinfo-3.1.0-1.pg94.rhel6.x86_64.rpm
 </pre>
 
 <h4>source</h4>
@@ -1670,11 +1670,21 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
 <h2 id="change">pg_statsinfo 3.0 からの変更点</h2>
 <p>pg_statsinfo 3.0 からの変更点は以下の通りです。</p>
 <ul>
-  <li>スナップショットの情報に、クエリ実行計画の情報を追加</li>
-  <li>スナップショットの情報に、AUTOANALYZE のキャンセル数の情報を追加</li>
-  <li>コマンドライン機能(簡易レポート機能)が生成するレポートに、クエリ実行計画の項目を追加</li>
-  <li>コマンドライン機能(簡易レポート機能)が生成するレポートに、AUTOANALYZE のキャンセル数の情報を追加</li>
+  <li>スナップショット情報および簡易レポート機能のレポートに以下の項目を追加</li>
+  <ul>
+    <li>クエリ実行計画</li>
+    <li>AUTOANALYZE のキャンセル数</li>
+    <li>AUTOVACUUM の未回収タプル数 (*1)</li>
+    <li>最後の ANALYZE 以降に変更されたタプル数 (*1)</li>
+    <li>WALアーカイブに関する情報 (*1)</li>
+    <li>レプリケーション構成のスタンバイのトランザクションID(xmin) (*1)(*2)</li>
+  </ul>
 </ul>
+
+<p>
+(*1) 監視対象DBが PostgreSQL 9.4 の場合のみ収集およびレポートが行われます。<br>
+(*2) スナップショット情報への追加のみでレポートは行われません。
+</p>
 <br>
 
 <h2 id="details">詳細情報</h2>
@@ -1829,7 +1839,7 @@ pg_statsinfo は、この SystemTap が収集するプロファイリング情�
   <a href="http://pgstatsinfo.projects.postgresql.org/index_ja.html">Top</a> &gt;
   <a href="http://pgstatsinfo.projects.postgresql.org/pg_statsinfo-ja.html">pg_statsinfo</a>
 <div>
-<p class="footer">Copyright (c) 2009-2014, NIPPON TELEGRAPH AND TELEPHONE CORPORATION</p>
+<p class="footer">Copyright (c) 2009-2015, NIPPON TELEGRAPH AND TELEPHONE CORPORATION</p>
 
 <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
