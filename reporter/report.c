@@ -943,7 +943,7 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 			PQgetvalue(res, i, 4),
 			PQgetvalue(res, i, 5),
 			PQgetvalue(res, i, 6),
-			PQgetvalue(res, i, 7));
+			scope->version >= 90400 ? PQgetvalue(res, i, 7) : "(N/A)");
 	}
 	fprintf(out, "\n");
 	PQclear(res);
