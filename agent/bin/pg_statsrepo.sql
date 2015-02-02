@@ -1465,10 +1465,9 @@ $$
 			statsrepo.xlog_location_diff(
 				x.location, lag(x.location) OVER w, i.xlog_file_size) AS write_size,
 			s.time - lag(s.time) OVER w AS duration,
+			a.last_archived_wal,
 			a.archived_count - lag(a.archived_count) OVER w AS archive_count,
-			a.failed_count - lag(a.failed_count) OVER w AS archive_failed,
-			CASE WHEN a.last_archived_time BETWEEN lag(s.time) OVER w AND s.time THEN
-				a.last_archived_wal ELSE NULL END AS last_archived_wal
+			a.failed_count - lag(a.failed_count) OVER w AS archive_failed
 		 FROM
 			statsrepo.xlog x LEFT JOIN statsrepo.archive a
 				ON x.snapid = a.snapid,
