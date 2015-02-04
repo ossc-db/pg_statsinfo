@@ -708,6 +708,7 @@ CREATE VIEW statsrepo.tables AS
          t.toastrelid,
          t.toastidxid,
          t.relkind,
+         t.reltuples,
          t.reloptions,
          t.size,
          t.seq_scan,
@@ -1489,19 +1490,23 @@ LANGUAGE sql;
 
 -- generate information that corresponds to 'WAL Statistics'
 CREATE FUNCTION statsrepo.get_xlog_stats(
-	IN snapid_begin		bigint,
-	IN snapid_end		bigint,
-	OUT write_total		numeric,
-	OUT write_speed		numeric,
-	OUT archive_total	numeric,
-	OUT archive_failed	numeric
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT write_total			numeric,
+	OUT write_speed			numeric,
+	OUT archive_total		numeric,
+	OUT archive_failed		numeric,
+	OUT last_wal_file		text,
+	OUT last_archive_file	text
 ) RETURNS SETOF record AS
 $$
 	SELECT
 		sum(write_size)::numeric(1000, 3),
 		avg(write_size_per_sec)::numeric(1000, 3),
 		sum(archive_count),
-		sum(archive_failed)
+		sum(archive_failed),
+		max(xlogfile),
+		max(last_archived_wal)
 	FROM
 		statsrepo.get_xlog_tendency($1, $2);
 $$
@@ -2447,6 +2452,58 @@ $$
 		ON t1.database = t2.database AND t1.schema = t2.schema AND t1.table = t2.table
 	ORDER BY
 		4 DESC;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Autovacuum Activity'
+CREATE FUNCTION statsrepo.get_modified_row_ratio(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	IN table_num		integer,
+	OUT "timestamp"		text,
+	OUT datname			name,
+	OUT nspname			name,
+	OUT relname			name,
+	OUT ratio			numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		to_char(s.time, 'YYYY-MM-DD HH24:MI') AS timestamp,
+		t.database,
+		t.schema,
+		t.table,
+		max(statsrepo.div(t.n_mod_since_analyze, t.reltuples::bigint) * 100) AS ratio
+	FROM
+		statsrepo.tables t,
+		statsrepo.snapshot s,
+		(
+			SELECT
+				t.dbid,
+				t.nsp,
+				t.tbl
+			FROM
+				statsrepo.table t,
+				statsrepo.snapshot s
+			WHERE
+				t.snapid = s.snapid
+				AND t.snapid BETWEEN $1 AND $2
+				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+			GROUP BY
+				t.dbid, t.nsp, t.tbl
+			ORDER BY
+				max(t.reltuples) DESC LIMIT $3
+		) t1
+	WHERE
+		t.snapid = s.snapid
+		AND t.dbid = t1.dbid
+		AND t.nsp = t1.nsp
+		AND t.tbl = t1.tbl
+		AND t.snapid BETWEEN $1 AND $2
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+	GROUP BY
+		timestamp, t.database, t.schema, t.table
+	ORDER BY
+		timestamp, t.database, t.schema, t.table;
 $$
 LANGUAGE sql;
 
