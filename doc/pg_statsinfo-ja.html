@@ -244,9 +244,9 @@ pg_statsinfo の運用管理向けの操作を行うコマンドを提供しま�
 <h3 id="requirement">動作環境</h3>
 <dl>
   <dt>PostgreSQL</dt>
-  <dd>バージョン 8.4, 9.0, 9.1, 9.2, 9.3, 9.4</dd>
+  <dd>バージョン 9.0, 9.1, 9.2, 9.3, 9.4</dd>
   <dt>動作検証済みOS</dt>
-  <dd>RHEL 5.x, RHEL 6.x, CentOS 5.x, CentOS 6.x</dd>
+  <dd>RHEL 6.x (x86_64), CentOS 6.x (x86_64)</dd>
 </dl>
 <p><b>(注1) リポジトリDBの PostgreSQL は、configureオプションに --with-libxml が指定されたビルドである必要があります。 (RPM版の PostgreSQL には --with-libxml が指定されています)</b></p>
 
@@ -340,7 +340,7 @@ local   all             postgres                                ident
 
 <h4 id="pg_stat_statements">クエリの統計情報の取得設定</h4>
 <p>
-PostgreSQL のバージョン 8.4 以上を使っている場合、監視対象インスタンスの postgres データベースに <a href="http://www.postgresql.jp/document/current/html/pgstatstatements.html">pg_stat_statements</a> をインストールすることで、クエリの統計情報もスナップショットとして収集できるようになります。<br>
+PostgreSQL のバージョン 9.0 以上を使っている場合、監視対象インスタンスの postgres データベースに <a href="http://www.postgresql.jp/document/current/html/pgstatstatements.html">pg_stat_statements</a> をインストールすることで、クエリの統計情報もスナップショットとして収集できるようになります。<br>
 利用する場合には、postgresql.conf の shared_preload_libraries に pg_stat_statements を追加し、初回起動時に以下の手順で登録してください。 
 </p>
 <pre>
@@ -373,6 +373,11 @@ $ psql -d postgres -c "CREATE EXTENSION pg_store_plans"
   <li>pg_statsinfo.stat_statements_exclude_users</li>
 </ul>
 <p>上記のパラメータの説明は<a href="#configuration">設定ファイル</a>をご覧ください。</p>
+
+<p>
+(注1) pg_stats_reporter を利用する場合は、リポジトリDBにも pg_store_plans をインストールする必要があります。<br>
+なお、リポジトリDBへのインストールの際は上記の shared_preload_libraries の設定は不要です。
+</p>
 
 <p>以上でインストールは終了です。</p>
 
@@ -1209,7 +1214,7 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
     <td>custom_variable_classes</td>
     <td>(空文字)</td>
     <td>独自変数クラス名の設定。<br>
-        PostgreSQL 8.4 ～ 9.1 で利用する場合には 'pg_statsinfo' を指定してください。<br>
+        PostgreSQL 9.1以前で利用する場合には 'pg_statsinfo' を指定してください。<br>
         PostgreSQL 9.2以降で利用する場合は当パラメータの設定は不要です。<br>
   </tr>
   <tr>
@@ -1603,7 +1608,7 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
 アラート機能が正常に動作したことを確認した後は、秒間のコミット数のアラート条件(閾値)を元に戻してください。
 </p>
 
-<h4>Q5. 古いバージョン(2.x)からアップグレードする方法を教えてください。</h4>
+<h4>Q5. 古いバージョン(3.0以前)からアップグレードする方法を教えてください。</h4>
 <p>
 古いバージョンをアンインストールした後、新しいバージョンをインストールしてください。<br>
 また、古いバージョンで取得済みのスナップショットは新しいバージョンでは利用できません。<br>
