@@ -579,7 +579,7 @@ report_resource_usage(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "/** IO Usage **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-12s  %-24s  %12s  %12s  %17s  %17s  %16s  %15s\n",
-		"Device", "Including TabelSpaces", "Total Read", "Total Write",
+		"Device", "Including TableSpaces", "Total Read", "Total Write",
 		"Total Read Time", "Total Write Time", "Current IO Queue", "Total IO Time");
 	fprintf(out, "----------------------------------------------------------------------------------------------------------------------------------------------\n");
 
