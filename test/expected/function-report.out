@@ -598,7 +598,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 
 /** IO Usage **/
 -----------------------------------
-Device        Including TabelSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
+Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
@@ -637,7 +637,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 
 /** IO Usage **/
 -----------------------------------
-Device        Including TabelSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
+Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
@@ -676,7 +676,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 
 /** IO Usage **/
 -----------------------------------
-Device        Including TabelSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
+Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
@@ -715,7 +715,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 
 /** IO Usage **/
 -----------------------------------
-Device        Including TabelSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
+Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
@@ -754,7 +754,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 
 /** IO Usage **/
 -----------------------------------
-Device        Including TabelSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
+Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
@@ -793,7 +793,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 
 /** IO Usage **/
 -----------------------------------
-Device        Including TabelSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
+Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
@@ -2518,7 +2518,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 
 /** IO Usage **/
 -----------------------------------
-Device        Including TabelSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
+Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
@@ -2846,7 +2846,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 
 /** IO Usage **/
 -----------------------------------
-Device        Including TabelSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
+Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
@@ -3175,7 +3175,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 
 /** IO Usage **/
 -----------------------------------
-Device        Including TabelSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
+Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
@@ -3504,7 +3504,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 
 /** IO Usage **/
 -----------------------------------
-Device        Including TabelSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
+Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
@@ -3840,7 +3840,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 
 /** IO Usage **/
 -----------------------------------
-Device        Including TabelSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
+Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
@@ -4176,7 +4176,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 
 /** IO Usage **/
 -----------------------------------
-Device        Including TabelSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
+Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
@@ -4709,7 +4709,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 
 /** IO Usage **/
 -----------------------------------
-Device        Including TabelSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
+Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
