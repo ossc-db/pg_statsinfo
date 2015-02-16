@@ -410,6 +410,8 @@ SELECT
 	CASE WHEN device_writetime IS NOT NULL THEN 'xxx' END AS device_writetime,
 	CASE WHEN device_ioqueue IS NOT NULL THEN 'xxx' END AS device_ioqueue,
 	CASE WHEN device_iototaltime IS NOT NULL THEN 'xxx' END AS device_iototaltime,
+	CASE WHEN device_rsps_max IS NOT NULL THEN 'xxx' END AS device_rsps_max,
+	CASE WHEN device_wsps_max IS NOT NULL THEN 'xxx' END AS device_wsps_max,
 	CASE WHEN overflow_drs IS NOT NULL THEN 'xxx' END AS overflow_drs,
 	CASE WHEN overflow_drt IS NOT NULL THEN 'xxx' END AS overflow_drt,
 	CASE WHEN overflow_dws IS NOT NULL THEN 'xxx' END AS overflow_dws,

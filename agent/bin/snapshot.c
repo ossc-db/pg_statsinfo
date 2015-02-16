@@ -14,12 +14,10 @@
 #ifdef HAVE_LONG_INT_64
 #ifndef HAVE_INT64
 #define PARAMS_FORMAT_CPUSTATS		"(%ld,%ld,%ld,%ld)"
-#define PARAMS_FORMAT_DEVICESTATS	"\"(\\\"%s\\\",%ld,%ld,%ld,%ld,%ld)\""
 #endif
 #elif defined(HAVE_LONG_LONG_INT_64)
 #ifndef HAVE_INT64
 #define PARAMS_FORMAT_CPUSTATS		"(%lld,%lld,%lld,%lld)"
-#define PARAMS_FORMAT_DEVICESTATS	"\"(\\\"%s\\\",%lld,%lld,%lld,%lld,%lld)\""
 #endif
 #else
 /* neither HAVE_LONG_INT_64 nor HAVE_LONG_LONG_INT_64 */
@@ -48,26 +46,14 @@ typedef struct CPUstats
 	int64	 iowait;
 } CPUstats;
 
-/* diskstats data */
-typedef struct Diskstats
-{
-	char	 device[256];
-	int64	 readsector;
-	int64	 readtime;
-	int64	 writesector;
-	int64	 writetime;
-	int64	 iototaltime;
-} Diskstats;
-
 static CPUstats	 prev_cpustats = {0, 0, 0, 0};
-static List		*prev_diskstats_list = NIL;
 
 static const char *instance_gets[] =
 {
 /*	SQL_SELECT_ACTIVITY,			*/
 /*	SQL_SELECT_LONG_TRANSACTION,	*/
 /*	SQL_SELECT_CPU,					*/
-/*	SQL_SELECT_DEVICE,				*/
+	SQL_SELECT_DEVICE,
 	SQL_SELECT_LOADAVG,
 	SQL_SELECT_MEMORY,
 	SQL_SELECT_TABLESPACE,
@@ -158,13 +144,11 @@ get_snapshot(char *comment)
 	PGresult	*activity = NULL;
 	PGresult	*long_xact = NULL;
 	PGresult	*cpuinfo = NULL;
-	PGresult	*deviceinfo = NULL;
 	Snap		*snap;
 	int64		 cpu_user;
 	int64		 cpu_system;
 	int64		 cpu_idle;
 	int64		 cpu_iowait;
-	List		*diskstats_list = NIL;
 	int			 r;
 	int			 rows;
 	int			 retry;
@@ -234,83 +218,6 @@ get_snapshot(char *comment)
 			parse_int64(PQgetvalue(cpuinfo, 0, 4), &cpu_iowait);
 		}
 
-		/* query deviceinfo as a separated transaction. */
-		if (deviceinfo == NULL)
-		{
-			const char *params[1];
-			int i;
-
-			if (prev_diskstats_list)
-			{
-				StringInfoData buf;
-				int len = list_length(prev_diskstats_list);
-				int j;
-
-				initStringInfo(&buf);
-				appendStringInfo(&buf, "{");
-
-				for (j = 0; j < len; j++)
-				{
-					Diskstats *prev_diskstats = list_nth(prev_diskstats_list, j);
-
-					appendStringInfo(&buf, PARAMS_FORMAT_DEVICESTATS,
-						prev_diskstats->device,
-						prev_diskstats->readsector,
-						prev_diskstats->readtime,
-						prev_diskstats->writesector,
-						prev_diskstats->writetime,
-						prev_diskstats->iototaltime);
-
-					if (j < len - 1)
-						appendStringInfo(&buf, ",");
-				}
-				appendStringInfo(&buf, "}");
-
-				params[0] = buf.data;
-				deviceinfo = do_get(conn, SQL_SELECT_DEVICE, 1, params);
-				termStringInfo(&buf);
-			}
-			else
-			{
-				params[0] = NULL;
-				deviceinfo = do_get(conn, SQL_SELECT_DEVICE, 1, params);
-			}
-
-			if (deviceinfo == NULL)
-				continue;
-
-			for (i = 0; i < PQntuples(deviceinfo); i++)
-			{
-				Diskstats	*diskstats;
-				char		*device;
-				int64		 readsector;
-				int64		 readtime;
-				int64		 writesector;
-				int64		 writetime;
-				int64		 iototaltime;
-
-				/* don't record data of an unknown device */
-				if (PQgetisnull(deviceinfo, i, 2))
-					continue;
-
-				device = PQgetvalue(deviceinfo, i, 2); /* device name */
-				parse_int64(PQgetvalue(deviceinfo, i, 3), &readsector);  /* read sector */
-				parse_int64(PQgetvalue(deviceinfo, i, 4), &readtime);    /* read time */
-				parse_int64(PQgetvalue(deviceinfo, i, 5), &writesector); /* write sector */
-				parse_int64(PQgetvalue(deviceinfo, i, 6), &writetime);   /* write time */
-				parse_int64(PQgetvalue(deviceinfo, i, 8), &iototaltime); /* io total time */
-
-				diskstats = (Diskstats *) pgut_malloc(sizeof(Diskstats));
-				strncpy(diskstats->device, device, sizeof(diskstats->device));
-				diskstats->readsector = readsector;
-				diskstats->readtime = readtime;
-				diskstats->writesector = writesector;
-				diskstats->writetime = writetime;
-				diskstats->iototaltime = iototaltime;
-				diskstats_list = lappend(diskstats_list, diskstats);
-			}
-		}
-
 		/* enum databases */
 		if (snap->dbnames == NULL)
 		{
@@ -335,14 +242,10 @@ get_snapshot(char *comment)
 		PQclear(activity);		/* activity has not been assigned yet */
 		PQclear(long_xact);		/* long transaction has not been assigned yet */
 		PQclear(cpuinfo);		/* cpuinfo has not been assigned yet */
-		PQclear(deviceinfo);	/* deviceinfo has not been assigned yet */
-		list_destroy(diskstats_list, free);
 		Snap_free(snap);
 		return NULL;
 	}
 
-	/* prepend the deviceinfo to the instance statistics */
-	snap->instance = lcons(deviceinfo, snap->instance);
 	/* prepend the cpuinfo to the instance statistics */
 	snap->instance = lcons(cpuinfo, snap->instance);
 	/* prepend the long transaction to the instance statistics */
@@ -434,9 +337,6 @@ get_snapshot(char *comment)
 	prev_cpustats.system = cpu_system;
 	prev_cpustats.idle = cpu_idle;
 	prev_cpustats.iowait = cpu_iowait;
-
-	list_destroy(prev_diskstats_list, free);
-	prev_diskstats_list = diskstats_list;
 
 	return (QueueItem *) snap;
 }

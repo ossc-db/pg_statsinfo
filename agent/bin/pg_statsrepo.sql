@@ -434,6 +434,8 @@ CREATE TABLE statsrepo.device
 	device_writetime	bigint,
 	device_ioqueue		bigint,
 	device_iototaltime	bigint,
+	device_rsps_max		float8,
+	device_wsps_max		float8,
 	overflow_drs		smallint,
 	overflow_drt		smallint,
 	overflow_dws		smallint,
@@ -1823,14 +1825,16 @@ LANGUAGE sql;
 
 -- generate information that corresponds to 'IO Usage'
 CREATE FUNCTION statsrepo.get_io_usage_tendency_report(
-	IN snapid_begin		bigint,
-	IN snapid_end		bigint,
-	OUT "timestamp"		text,
-	OUT device_name		text,
-	OUT read_size_tps	numeric,
-	OUT write_size_tps	numeric,
-	OUT read_time_tps	numeric,
-	OUT write_time_tps	numeric
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT "timestamp"			text,
+	OUT device_name			text,
+	OUT read_size_tps		numeric,
+	OUT write_size_tps		numeric,
+	OUT read_time_tps		numeric,
+	OUT write_time_tps		numeric,
+	OUT read_size_tps_peak	numeric,
+	OUT write_size_tps_peak	numeric
 ) RETURNS SETOF record AS
 $$
 	SELECT
@@ -1839,18 +1843,22 @@ $$
 		coalesce(statsrepo.tps(read_size, duration) / 2, 0)::numeric(1000,2),
 		coalesce(statsrepo.tps(write_size, duration) / 2, 0)::numeric(1000,2),
 		coalesce(statsrepo.tps(read_time, duration), 0)::numeric(1000,2),
-		coalesce(statsrepo.tps(write_time, duration), 0)::numeric(1000,2)
+		coalesce(statsrepo.tps(write_time, duration), 0)::numeric(1000,2),
+		(rsps_peak / 2)::numeric(1000,2),
+		(wsps_peak / 2)::numeric(1000,2)
 	FROM
 	(
 		SELECT
 			snapid,
 			time,
 			device_name,
-			CASE WHEN overflow_drs = 1 THEN rs + 4294967296 ELSE rs END - lag(rs) OVER w AS read_size,
-			CASE WHEN overflow_dws = 1 THEN ws + 4294967296 ELSE ws END - lag(ws) OVER w AS write_size,
-			CASE WHEN overflow_drt = 1 THEN rt + 4294967296 ELSE rt END - lag(rt) OVER w AS read_time,
-			CASE WHEN overflow_dwt = 1 THEN wt + 4294967296 ELSE wt END - lag(wt) OVER w AS write_time,
-			time - lag(time) OVER w AS duration
+			(rs + (overflow_drs * 4294967296)) - lag(rs) OVER w AS read_size,
+			(ws + (overflow_dws * 4294967296)) - lag(ws) OVER w AS write_size,
+			(rt + (overflow_drt * 4294967296)) - lag(rt) OVER w AS read_time,
+			(wt + (overflow_dwt * 4294967296)) - lag(wt) OVER w AS write_time,
+			time - lag(time) OVER w AS duration,
+			rsps_peak,
+			wsps_peak
 		FROM
 			(SELECT
 				s.snapid,
@@ -1863,7 +1871,9 @@ $$
 				sum(overflow_drs) AS overflow_drs,
 				sum(overflow_dws) AS overflow_dws,
 				sum(overflow_drt) AS overflow_drt,
-				sum(overflow_dwt) AS overflow_dwt
+				sum(overflow_dwt) AS overflow_dwt,
+				sum(device_rsps_max) AS rsps_peak,
+				sum(device_wsps_max) AS wsps_peak
 			 FROM
 				statsrepo.device d,
 				statsrepo.snapshot s

@@ -285,7 +285,6 @@ extern Datum PGUT_EXPORT statsinfo_restart(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_cpustats(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_cpustats_noarg(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_devicestats(PG_FUNCTION_ARGS);
-extern Datum PGUT_EXPORT statsinfo_devicestats_noarg(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_loadavg(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_memory(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_profile(PG_FUNCTION_ARGS);
@@ -317,7 +316,7 @@ typedef struct LongXactHashKey
 	TimestampTz		start;
 } LongXactHashKey;
 
-/* long transaction */
+/* hashtable entry for long transaction */
 typedef struct LongXactEntry
 {
 	LongXactHashKey	key;		/* hash key of entry - MUST BE FIRST */
@@ -329,13 +328,57 @@ typedef struct LongXactEntry
 	/* Note: the allocated length of query[] is actually pgstat_track_activity_query_size */
 } LongXactEntry;
 
-static void inet_to_cstring(const SockAddr *addr, char host[NI_MAXHOST]);
+/* structures describing the devices and partitions */
+typedef struct DiskStats
+{
+	unsigned int	dev_major;		/* major number of device */
+	unsigned int	dev_minor;		/* minor number of device */
+	char			dev_name[128];	/* device name */
+	unsigned long	rd_ios;			/* # of reads completed */
+	unsigned long	rd_merges;		/* # of reads merged */
+	unsigned long	rd_sectors;		/* # of sectors read */
+	unsigned int	rd_ticks;		/* # of milliseconds spent reading */
+	unsigned long	wr_ios;			/* # of writes completed */
+	unsigned long	wr_merges;		/* # of writes merged */
+	unsigned long	wr_sectors;		/* # of sectors written */
+	unsigned int	wr_ticks;		/* # of milliseconds spent writing  */
+	unsigned int	ios_pgr;		/* # of I/Os currently in progress */
+	unsigned int	tot_ticks;		/* # of milliseconds spent doing I/Os */
+	unsigned int	rq_ticks;		/* weighted # of milliseconds spent doing I/Os */
+} DiskStats;
+
+/* hashtable key for diskstats */
+typedef struct DiskStatsHashKey
+{
+	unsigned int	dev_major;
+	unsigned int	dev_minor;
+} DiskStatsHashKey;
+
+/* hashtable entry for diskstats */
+typedef struct DiskStatsEntry
+{
+	DiskStatsHashKey	key;			/* hash key of entry - MUST BE FIRST */
+	time_t				timestamp;		/* timestamp */
+	unsigned int		field_num;		/* number of fields in diskstats */
+	DiskStats			stats;			/* I/O statistics */
+	float8				drs_ps_max;		/* number of sectors read per second (max) */
+	float8				dws_ps_max;		/* number of sectors write per second (max) */
+	int16				overflow_drs;	/* overflow counter of rd_sectors */
+	int16				overflow_drt;	/* overflow counter of rd_ticks */
+	int16				overflow_dws;	/* overflow counter of wr_sectors */
+	int16				overflow_dwt;	/* overflow counter of wr_ticks */
+	int16				overflow_dit;	/* overflow counter of tot_ticks */
+} DiskStatsEntry;
+
 static void StartStatsinfoLauncher(void);
 static void StatsinfoLauncherMain(void);
 static void sil_sigusr1_handler(SIGNAL_ARGS);
 static void sil_sigusr2_handler(SIGNAL_ARGS);
 static void sil_sigchld_handler(SIGNAL_ARGS);
 static pid_t exec_background_process(char cmd[]);
+static void sample_activity(void);
+static void sample_diskstats(void);
+static void parse_diskstats(HTAB *diskstats);
 static uint64 get_sysident(void);
 static void must_be_superuser(void);
 static int get_devinfo(const char *path, Datum values[], bool nulls[]);
@@ -348,20 +391,20 @@ static bool verify_timestr(const char *timestr);
 static bool postmaster_is_alive(void);
 static bool is_shared_preload(const char *library);
 static pid_t get_statsinfo_pid(const char *pid_file);
+static void inet_to_cstring(const SockAddr *addr, char host[NI_MAXHOST]);
 static Datum get_cpustats(FunctionCallInfo fcinfo,
 	int64 prev_cpu_user, int64 prev_cpu_system, int64 prev_cpu_idle, int64 prev_cpu_iowait);
-static Datum get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats);
 static int exec_grep(const char *filename, const char *regex, List **records);
 static int exec_split(const char *rawstring, const char *regex, List **fields);
 static bool parse_int64(const char *value, int64 *result);
 static bool parse_float8(const char *value, double *result);
-static char *b_trim(char *str);
-static HeapTupleHeader search_devicestats(ArrayType *devicestats, const char *device_name);
 static uint32 lx_hash_fn(const void *key, Size keysize);
 static int lx_match_fn(const void *key1, const void *key2, Size keysize);
 static LongXactEntry *lx_entry_alloc(LongXactHashKey *key, PgBackendStatus *be);
 static void lx_entry_dealloc(void);
 static int lx_entry_cmp(const void *lhs, const void *rhs);
+static uint32 ds_hash_fn(const void *key, Size keysize);
+static int ds_match_fn(const void *key1, const void *key2, Size keysize);
 
 #if defined(WIN32)
 static int str_to_elevel(const char *name, const char *str,
@@ -380,6 +423,7 @@ static const char *assign_maintenance_time(const char *newval, bool doit, GucSou
 
 static Activity		 activity = { 0, 0, 0, 0, 0, 0 };
 static HTAB			*long_xacts = NULL;
+static HTAB			*diskstats = NULL;
 
 /* variables for pg_statsinfo launcher */
 static volatile bool	got_SIGCHLD = false;
@@ -393,6 +437,17 @@ static pid_t			sil_pid = INVALID_PID;
 Datum
 statsinfo_sample(PG_FUNCTION_ARGS)
 {
+	must_be_superuser();
+
+	sample_activity();
+	sample_diskstats();
+
+	PG_RETURN_VOID();
+}
+
+static void
+sample_activity(void)
+{
 	TimestampTz	now;
 	int			backends;
 	int			idle;
@@ -401,14 +456,11 @@ statsinfo_sample(PG_FUNCTION_ARGS)
 	int			running;
 	int			i;
 
-	must_be_superuser();
-
-	if (long_xacts == NULL)
+	if (!long_xacts)
 	{
 		/* create hash table when first needed */
 		HASHCTL		ctl;
 
-		memset(&ctl, 0, sizeof(ctl));
 		ctl.keysize = sizeof(LongXactHashKey);
 		ctl.entrysize = offsetof(LongXactEntry, query) +
 							pgstat_track_activity_query_size;
@@ -521,35 +573,184 @@ statsinfo_sample(PG_FUNCTION_ARGS)
 	activity.samples++;
 
 	lx_entry_dealloc();
-
-	PG_RETURN_VOID();
 }
 
 static void
-inet_to_cstring(const SockAddr *addr, char host[NI_MAXHOST])
+sample_diskstats(void)
 {
-	host[0] = '\0';
-
-	if (addr->addr.ss_family == AF_INET
-#ifdef HAVE_IPV6
-		|| addr->addr.ss_family == AF_INET6
-#endif
-		)
+	if (!diskstats)
 	{
-		char		port[NI_MAXSERV];
-		int			ret;
+		/* create hash table when first needed */
+		HASHCTL		ctl;
 
-		port[0] = '\0';
-		ret = pg_getnameinfo_all(&addr->addr,
-								 addr->salen,
-								 host, NI_MAXHOST,
-								 port, sizeof(port),
-								 NI_NUMERICHOST | NI_NUMERICSERV);
-		if (ret == 0)
-			clean_ipv6_addr(addr->addr.ss_family, host);
-		else
-			host[0] = '\0';
+		ctl.keysize = sizeof(DiskStatsHashKey);
+		ctl.entrysize = sizeof(DiskStatsEntry);
+		ctl.hash = ds_hash_fn;
+		ctl.match = ds_match_fn;
+		diskstats = hash_create("diskstats", 30, &ctl,
+								HASH_ELEM | HASH_FUNCTION | HASH_COMPARE);
 	}
+
+	parse_diskstats(diskstats);
+}
+
+static void
+check_io_peak(DiskStatsEntry *entry, unsigned long rd_sec,
+			  unsigned long wr_sec, time_t duration)
+{
+	float8	calc;
+
+	if (duration <= 0)
+		return;
+
+	if (rd_sec >= entry->stats.rd_sectors)
+	{
+		calc = (float8) (rd_sec - entry->stats.rd_sectors) / duration;
+		if (calc > entry->drs_ps_max)
+			entry->drs_ps_max = calc;
+	}
+	if (wr_sec >= entry->stats.wr_sectors)
+	{
+		calc = (float8) (wr_sec - entry->stats.wr_sectors) / duration;
+		if (calc > entry->dws_ps_max)
+			entry->dws_ps_max = calc;
+	}
+}
+
+static void
+check_io_overflow(DiskStatsEntry *entry, unsigned long rd_sec,
+				  unsigned long wr_sec, unsigned int rd_ticks,
+				  unsigned int wr_ticks, unsigned int tot_ticks)
+{
+	if (entry->stats.rd_sectors > rd_sec)
+		entry->overflow_drs++;
+	if (entry->stats.wr_sectors > wr_sec)
+		entry->overflow_dws++;
+	if (entry->stats.rd_ticks > rd_ticks)
+		entry->overflow_drt++;
+	if (entry->stats.wr_ticks > wr_ticks)
+		entry->overflow_dwt++;
+	if (entry->stats.tot_ticks > tot_ticks)
+		entry->overflow_dit++;
+}
+
+#define FILE_DISKSTATS					"/proc/diskstats"
+#define NUM_DISKSTATS_FIELDS			14
+#define NUM_DISKSTATS_PARTITION_FIELDS	7
+
+static void
+parse_diskstats(HTAB *htab)
+{
+	FILE			*fp;
+	char			 line[256];
+	char			 dev_name[128];
+	unsigned int	 dev_major, dev_minor;
+	unsigned int	 ios_pgr, tot_ticks, rq_ticks, wr_ticks;
+	unsigned long	 rd_ios, rd_merges_or_rd_sec, rd_ticks_or_wr_sec, wr_ios;
+	unsigned long	 wr_merges, rd_sec_or_wr_ios, wr_sec;
+	DiskStatsHashKey key;
+	DiskStatsEntry	*entry;
+	bool			 found;
+	int				 i;
+	time_t			 now;
+
+	if ((fp = fopen(FILE_DISKSTATS, "r")) == NULL)
+		ereport(ERROR,
+			(errcode_for_file_access(),
+			 errmsg("could not open file \"%s\": ", FILE_DISKSTATS)));
+
+	now = time(NULL);
+
+	while (fgets(line, sizeof(line), fp) != NULL)
+	{
+		/* major minor name rio rmerge rsect ruse wio wmerge wsect wuse running use aveq */
+		i = sscanf(line, "%u %u %s %lu %lu %lu %lu %lu %lu %lu %u %u %u %u",
+				&dev_major, &dev_minor, dev_name,
+				&rd_ios, &rd_merges_or_rd_sec, &rd_sec_or_wr_ios, &rd_ticks_or_wr_sec,
+				&wr_ios, &wr_merges, &wr_sec, &wr_ticks, &ios_pgr, &tot_ticks, &rq_ticks);
+
+		if (i != NUM_DISKSTATS_FIELDS &&
+			i != NUM_DISKSTATS_PARTITION_FIELDS)
+			/* unknown entry: ignore it */
+			continue;
+
+		/* lookup the hash table entry */
+		key.dev_major = dev_major;
+		key.dev_minor = dev_minor;
+		entry = (DiskStatsEntry *) hash_search(htab, &key, HASH_ENTER, &found);
+
+		if (found)
+		{
+			/* check I/O peak and overflow if there is previous sample */
+			time_t duration;
+
+			duration = now - entry->timestamp;
+			if (i == NUM_DISKSTATS_FIELDS)
+			{
+				check_io_peak(entry, rd_sec_or_wr_ios, wr_sec, duration);
+				check_io_overflow(entry, rd_sec_or_wr_ios, wr_sec,
+					rd_ticks_or_wr_sec, wr_ticks, tot_ticks);
+			}
+			else
+			{
+				check_io_peak(entry, rd_merges_or_rd_sec, rd_ticks_or_wr_sec, duration);
+				check_io_overflow(entry, rd_merges_or_rd_sec,
+					rd_ticks_or_wr_sec, 0, 0, 0);
+			}
+		}
+		else
+		{
+			/* initialize new entry */
+			memset(&entry->stats, 0, sizeof(entry->stats));
+			entry->field_num = i;
+			entry->stats.dev_major = dev_major;
+			entry->stats.dev_minor = dev_minor;
+			strlcpy(entry->stats.dev_name, dev_name, sizeof(entry->stats.dev_name));
+			entry->drs_ps_max = 0;
+			entry->dws_ps_max = 0;
+			entry->overflow_drs = 0;
+			entry->overflow_drt = 0;
+			entry->overflow_dws = 0;
+			entry->overflow_dwt = 0;
+			entry->overflow_dit = 0;
+		}
+
+		/* set I/O statistics */
+		if (i == NUM_DISKSTATS_FIELDS)
+		{
+			/* device or partition */
+			entry->stats.rd_ios     = rd_ios;				/* Field 1 -- # of reads completed */
+			entry->stats.rd_merges  = rd_merges_or_rd_sec;	/* Field 2 -- # of reads merged */
+			entry->stats.rd_sectors = rd_sec_or_wr_ios;		/* Field 3 -- # of sectors read */
+			entry->stats.rd_ticks   = (unsigned int) rd_ticks_or_wr_sec;	/* Field 4 -- # of milliseconds spent reading */
+			entry->stats.wr_ios     = wr_ios;				/* Field 5 -- # of writes completed */
+			entry->stats.wr_merges  = wr_merges;			/* Field 6 -- # of writes merged */
+			entry->stats.wr_sectors = wr_sec;				/* Field 7 -- # of sectors written */
+			entry->stats.wr_ticks   = wr_ticks;				/* Field 8 -- # of milliseconds spent writing  */
+			entry->stats.ios_pgr    = ios_pgr;				/* Field 9 -- # of I/Os currently in progress */
+			entry->stats.tot_ticks  = tot_ticks;			/* Field 10 -- # of milliseconds spent doing I/Os */
+			entry->stats.rq_ticks   = rq_ticks;				/* Field 11 -- weighted # of milliseconds spent doing I/Os */
+		}
+		else
+		{
+			/* partition without extended statistics */
+			entry->stats.rd_ios     = rd_ios;				/* Field 1 -- # of reads issued */
+			entry->stats.rd_sectors = rd_merges_or_rd_sec;	/* Field 2 -- # of sectors read */
+			entry->stats.wr_ios     = rd_sec_or_wr_ios;		/* Field 3 -- # of writes issued */
+			entry->stats.wr_sectors = rd_ticks_or_wr_sec;	/* Field 4 -- # of sectors written */
+		}
+		entry->timestamp = now;
+	}
+
+	if (ferror(fp) && errno != EINTR)
+	{
+		fclose(fp);
+		ereport(ERROR,
+			(errcode_for_file_access(),
+			 errmsg("could not read file \"%s\": ", FILE_DISKSTATS)));
+	}
+
+	fclose(fp);
 }
 
 #define NUM_ACTIVITY_COLS		5
@@ -1597,38 +1798,13 @@ get_cpustats(FunctionCallInfo fcinfo,
 	return HeapTupleGetDatum(tuple);
 }
 
-/*
- * statsinfo_devicestats - get device information
- */
-Datum
-statsinfo_devicestats(PG_FUNCTION_ARGS)
-{
-	ArrayType	*devicestats = NULL;
-
-	if (!PG_ARGISNULL(0))
-		devicestats = PG_GETARG_ARRAYTYPE_P(0);
-
-	PG_RETURN_DATUM(get_devicestats(fcinfo, devicestats));
-}
-
-/*
- * statsinfo_devicestats - get device information 
- * (remains of the old interface)
- */
-Datum
-statsinfo_devicestats_noarg(PG_FUNCTION_ARGS)
-{
-	PG_RETURN_DATUM(get_devicestats(fcinfo, NULL));
-}
-
-#define FILE_DISKSTATS					"/proc/diskstats"
-#define NUM_DEVICESTATS_COLS			15
+#define NUM_DEVICESTATS_COLS			17
 #define TYPE_DEVICE_TABLESPACES			TEXTOID
-#define NUM_DISKSTATS_FIELDS			14
-#define NUM_DISKSTATS_PARTITION_FIELDS	7
 #define SQL_SELECT_TABLESPACES "\
 SELECT \
 	device, \
+	split_part(device, ':', 1), \
+	split_part(device, ':', 2), \
 	statsinfo.array_agg(name) \
 FROM \
 	statsinfo.tablespaces \
@@ -1637,14 +1813,11 @@ WHERE \
 GROUP BY \
 	device"
 
-#define ARRNELEMS(x)	ArrayGetNItems(ARR_NDIM(x), ARR_DIMS(x))
-#define ARRPTR(x)		((HeapTupleHeader) ARR_DATA_PTR(x))
-
 /*
  * statsinfo_devicestats - get device information
  */
-static Datum
-get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
+Datum
+statsinfo_devicestats(PG_FUNCTION_ARGS)
 {
 	ReturnSetInfo	*rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	TupleDesc		 tupdesc;
@@ -1683,6 +1856,9 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 
 	MemoryContextSwitchTo(oldcontext);
 
+	/* take a sample of diskstats */
+	sample_diskstats();
+
 	if (SPI_connect() != SPI_OK_CONNECT)
 		elog(ERROR, "SPI connect failure");
 
@@ -1693,46 +1869,27 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 	{
 		HeapTuple tup = tuptable->vals[row];
 		TupleDesc desc = tuptable->tupdesc;
-		HeapTupleHeader prev_devicestats;
-		char *device;
-		char *dev_major;
-		char *dev_minor;
-		char *dev_name = NULL;
-		int64 readsector;
-		int64 readtime;
-		int64 writesector;
-		int64 writetime;
-		int64 ioqueue;
-		int64 iototaltime;
-		char *record;
-		char  regex[64];
-		List *devicenum = NIL;
-		List *records = NIL;
-		List *fields = NIL;
-		int   nfield;
-
-		device = SPI_getvalue(tup, desc, 1);
-
-		/* <device_mejor>:<device_minor> */
-		exec_split(device, ":", &devicenum);
-
-		dev_major = (char *) list_nth(devicenum, 0);
-		dev_minor = (char *) list_nth(devicenum, 1);
+		char *device = SPI_getvalue(tup, desc, 1);
+		char *dev_major = SPI_getvalue(tup, desc, 2);
+		char *dev_minor = SPI_getvalue(tup, desc, 3);
+		DiskStatsHashKey key;
+		DiskStatsEntry *entry;
 
 		memset(nulls, 0, sizeof(nulls));
 		memset(values, 0, sizeof(values));
 		values[0] = CStringGetTextDatum(dev_major);			/* device_major */
 		values[1] = CStringGetTextDatum(dev_minor);			/* device_minor */
-		values[14] = SPI_getbinval(tup, desc, 2, &isnull);	/* device_tblspaces */
+		values[16] = SPI_getbinval(tup, desc, 4, &isnull);	/* device_tblspaces */
 
-		snprintf(regex, lengthof(regex), "^\\s*%s\\s+%s\\s+", dev_major, dev_minor);
+		key.dev_major = atoi(dev_major);
+		key.dev_minor = atoi(dev_minor);
+		entry = hash_search(diskstats, &key, HASH_FIND, NULL);
 
-		/* extract device information */
-		if (exec_grep(FILE_DISKSTATS, regex, &records) <= 0)
+		if (!entry)
 		{
 			ereport(DEBUG2,
 				(errmsg("device information of \"%s\" used by tablespace \"%s\" does not exist in \"%s\"",
-					device, SPI_getvalue(tup, desc, 2), FILE_DISKSTATS)));
+					device, SPI_getvalue(tup, desc, 4), FILE_DISKSTATS)));
 
 			nulls[2] = true;	/* device_name */
 			nulls[3] = true;	/* device_readsector */
@@ -1741,51 +1898,37 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 			nulls[6] = true;	/* device_writetime */
 			nulls[7] = true;	/* device_queue */
 			nulls[8] = true;	/* device_iototaltime */
-			nulls[9] = true;	/* overflow_drs */
-			nulls[10] = true;	/* overflow_drt */
-			nulls[11] = true;	/* overflow_dws */
-			nulls[12] = true;	/* overflow_dwt */
-			nulls[13] = true;	/* overflow_dit */
+			nulls[9] = true;	/* device_rsps_max */
+			nulls[10] = true;	/* device_wsps_max */
+			nulls[11] = true;	/* overflow_drs */
+			nulls[12] = true;	/* overflow_drt */
+			nulls[13] = true;	/* overflow_dws */
+			nulls[14] = true;	/* overflow_dwt */
+			nulls[15] = true;	/* overflow_dit */
 
 			tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 			continue;
 		}
 
-		record = b_trim((char *) list_nth(records, 0));
-
-		nfield = exec_split(record, "\\s+", &fields);
-
-		if (nfield  == NUM_DISKSTATS_FIELDS)
+		if (entry->field_num  == NUM_DISKSTATS_FIELDS)
 		{
-			dev_name = list_nth(fields, 2);
-			parse_int64(list_nth(fields, 5), &readsector);
-			parse_int64(list_nth(fields, 6), &readtime);
-			parse_int64(list_nth(fields, 9), &writesector);
-			parse_int64(list_nth(fields, 10), &writetime);
-			parse_int64(list_nth(fields, 11), &ioqueue);
-			parse_int64(list_nth(fields, 13), &iototaltime);
-
-			values[2] = CStringGetTextDatum(dev_name);	/* device_name */
-			values[3] = Int64GetDatum(readsector);		/* device_readsector */
-			values[4] = Int64GetDatum(readtime);		/* device_readtime */
-			values[5] = Int64GetDatum(writesector);		/* device_writesector */
-			values[6] = Int64GetDatum(writetime);		/* device_writetime */
-			values[7] = Int64GetDatum(ioqueue);			/* device_queue */
-			values[8] = Int64GetDatum(iototaltime);		/* device_iototaltime */
+			values[2] = CStringGetTextDatum(entry->stats.dev_name);	/* device_name */
+			values[3] = Int64GetDatum(entry->stats.rd_sectors);		/* device_readsector */
+			values[4] = Int64GetDatum(entry->stats.rd_ticks);		/* device_readtime */
+			values[5] = Int64GetDatum(entry->stats.wr_sectors);		/* device_writesector */
+			values[6] = Int64GetDatum(entry->stats.wr_ticks);		/* device_writetime */
+			values[7] = Int64GetDatum(entry->stats.ios_pgr);		/* device_queue */
+			values[8] = Int64GetDatum(entry->stats.rq_ticks);		/* device_iototaltime */
 		}
-		else if (nfield == NUM_DISKSTATS_PARTITION_FIELDS)
+		else if (entry->field_num == NUM_DISKSTATS_PARTITION_FIELDS)
 		{
-			dev_name = list_nth(fields, 2);
-			parse_int64(list_nth(fields, 4), &readsector);
-			parse_int64(list_nth(fields, 6), &writesector);
-
-			values[2] = CStringGetTextDatum(dev_name);	/* device_name */
-			values[3] = Int64GetDatum(readsector);		/* device_readsector */
-			nulls[4] = true;							/* device_readtime */
-			values[5] = Int64GetDatum(writesector);		/* device_writesector */
-			nulls[6] = true;							/* device_writetime */
-			nulls[7] = true;							/* device_queue */
-			nulls[8] = true;							/* device_iototaltime */
+			values[2] = CStringGetTextDatum(entry->stats.dev_name);	/* device_name */
+			values[3] = Int64GetDatum(entry->stats.rd_sectors);		/* device_readsector */
+			nulls[4] = true;										/* device_readtime */
+			values[5] = Int64GetDatum(entry->stats.wr_sectors);		/* device_writesector */
+			nulls[6] = true;										/* device_writetime */
+			nulls[7] = true;										/* device_queue */
+			nulls[8] = true;										/* device_iototaltime */
 		}
 		else
 			ereport(ERROR,
@@ -1793,43 +1936,26 @@ get_devicestats(FunctionCallInfo fcinfo, ArrayType *devicestats)
 				 errmsg("unexpected file format: \"%s\"", FILE_DISKSTATS),
 				 errdetail("number of fields is not corresponding")));
 
-		/* set the overflow flag if value is smaller than previous value */
-		prev_devicestats = search_devicestats(devicestats, dev_name);
-
-		if (prev_devicestats)
-		{
-			int64 prev_readsector;
-			int64 prev_readtime;
-			int64 prev_writesector;
-			int64 prev_writetime;
-			int64 prev_iototaltime;
-
-			prev_readsector = DatumGetInt64(GetAttributeByNum(prev_devicestats, 2, &isnull));
-			prev_readtime = DatumGetInt64(GetAttributeByNum(prev_devicestats, 3, &isnull));
-			prev_writesector = DatumGetInt64(GetAttributeByNum(prev_devicestats, 4, &isnull));
-			prev_writetime = DatumGetInt64(GetAttributeByNum(prev_devicestats, 5, &isnull));
-			prev_iototaltime = DatumGetInt64(GetAttributeByNum(prev_devicestats, 6, &isnull));
-
-			/* overflow_drs */
-			if (readsector < prev_readsector)
-				values[9] = Int16GetDatum(1);
-			/* overflow_drt */
-			if (nfield  == NUM_DISKSTATS_FIELDS && readtime < prev_readtime)
-				values[10] = Int16GetDatum(1);
-			/* overflow_dws */
-			if (writesector < prev_writesector)
-				values[11] = Int16GetDatum(1);
-			/* overflow_dwt */
-			if (nfield  == NUM_DISKSTATS_FIELDS && writetime < prev_writetime)
-				values[12] = Int16GetDatum(1);
-			/* overflow_dit */
-			if (nfield  == NUM_DISKSTATS_FIELDS && iototaltime < prev_iototaltime)
-				values[13] = Int16GetDatum(1);
-		}
+		values[9] = Float8GetDatum(entry->drs_ps_max);		/* device_rsps_max */
+		values[10] = Float8GetDatum(entry->dws_ps_max);		/* device_wsps_max */
+		values[11] = Int16GetDatum(entry->overflow_drs);	/* overflow_drs */
+		values[12] = Int16GetDatum(entry->overflow_drt);	/* overflow_drt */
+		values[13] = Int16GetDatum(entry->overflow_dws);	/* overflow_dws */
+		values[14] = Int16GetDatum(entry->overflow_dwt);	/* overflow_dwt */
+		values[15] = Int16GetDatum(entry->overflow_dit);	/* overflow_dit */
 
 		tuplestore_putvalues(tupstore, tupdesc, values, nulls);
-	}
 
+		/* reset counter */
+		entry->drs_ps_max = 0;
+		entry->dws_ps_max = 0;
+		entry->overflow_drs = 0;
+		entry->overflow_drt = 0;
+		entry->overflow_dws = 0;
+		entry->overflow_dwt = 0;
+		entry->overflow_dit = 0;
+	}
+		
 	/* clean up and return the tuplestore */
 	tuplestore_donestoring(tupstore);
 	SPI_finish();
@@ -3417,65 +3543,6 @@ parse_float8(const char *value, double *result)
 }
 
 /*
- * Note: this function modify the argument string
- */
-static char *
-b_trim(char *str)
-{
-	size_t	 len;
-	char	*start;
-
-	if (str == NULL)
-		return NULL;
-
-	/* remove space character from prefix */
-	len = strlen(str);
-	while (len > 0 && isspace(str[len - 1])) { len--; }
-	str[len] = '\0';
-
-	/* remove space character from suffix */
-	start = str;
-	while (isspace(start[0])) { start++; }
-	memmove(str, start, strlen(start) + 1);
-
-	return str;
-}
-
-static HeapTupleHeader
-search_devicestats(ArrayType *devicestats, const char *device_name)
-{
-	int16	 elmlen;
-	bool	 elmbyval;
-	char	 elmalign;
-	Datum	*elems;
-	bool	*elemnulls;
-	int		 nelems;
-	int		 i;
-
-	if (devicestats == NULL || device_name == NULL)
-		return NULL;
-
-	get_typlenbyvalalign(
-		ARR_ELEMTYPE(devicestats), &elmlen, &elmbyval, &elmalign);
-
-	deconstruct_array(devicestats, ARR_ELEMTYPE(devicestats),
-			elmlen, elmbyval, elmalign, &elems, &elemnulls, &nelems);
-
-	for (i = 0; i < nelems; i++)
-	{
-		HeapTupleHeader tuple = (HeapTupleHeader) elems[i];
-		char *dev_name;
-		bool isnull;
-
-		dev_name = TextDatumGetCString(GetAttributeByNum(tuple, 1, &isnull));
-		if (strcmp(device_name, dev_name) == 0)
-			return tuple;
-	}
-	/* not found */
-	return NULL;
-}
-
-/*
  * postmaster_is_alive - check whether postmaster process is still alive
  */
 static bool
@@ -3564,6 +3631,33 @@ get_statsinfo_pid(const char *pid_file)
 		elog(ERROR, "invalid data in PID file \"%s\"", pid_file);
 	fclose(fp);
 	return pid;
+}
+
+static void
+inet_to_cstring(const SockAddr *addr, char host[NI_MAXHOST])
+{
+	host[0] = '\0';
+
+	if (addr->addr.ss_family == AF_INET
+#ifdef HAVE_IPV6
+		|| addr->addr.ss_family == AF_INET6
+#endif
+		)
+	{
+		char		port[NI_MAXSERV];
+		int			ret;
+
+		port[0] = '\0';
+		ret = pg_getnameinfo_all(&addr->addr,
+								 addr->salen,
+								 host, NI_MAXHOST,
+								 port, sizeof(port),
+								 NI_NUMERICHOST | NI_NUMERICSERV);
+		if (ret == 0)
+			clean_ipv6_addr(addr->addr.ss_family, host);
+		else
+			host[0] = '\0';
+	}
 }
 
 /*
@@ -3667,4 +3761,32 @@ lx_entry_cmp(const void *lhs, const void *rhs)
 		return +1;
 	else
 		return 0;
+}
+
+/*
+ * ds_hash_fn - calculate hash value for a key
+ */
+static uint32
+ds_hash_fn(const void *key, Size keysize)
+{
+	const DiskStatsHashKey	*k = (const DiskStatsHashKey *) key;
+
+	return hash_uint32((uint32) k->dev_major) ^
+		   hash_uint32((uint32) k->dev_minor);
+}
+
+/*
+ * ds_match_fn - compare two keys, zero means match
+ */
+static int
+ds_match_fn(const void *key1, const void *key2, Size keysize)
+{
+	const DiskStatsHashKey	*k1 = (const DiskStatsHashKey *) key1;
+	const DiskStatsHashKey	*k2 = (const DiskStatsHashKey *) key2;
+
+	if (k1->dev_major == k2->dev_major &&
+		k1->dev_minor == k2->dev_minor)
+		return 0;
+	else
+		return 1;
 }

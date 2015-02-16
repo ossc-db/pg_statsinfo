@@ -90,9 +90,9 @@ vacuumdb: vacuuming database "template1"
 (1 row)
 
 /**--- OS resource usage (disk I/O) ---**/
- snapid | device_major | device_minor | device_name | device_readsector | device_readtime | device_writesector | device_writetime | device_ioqueue | device_iototaltime | overflow_drs | overflow_drt | overflow_dws | overflow_dwt | overflow_dit |                      device_tblspaces                       
---------+--------------+--------------+-------------+-------------------+-----------------+--------------------+------------------+----------------+--------------------+--------------+--------------+--------------+--------------+--------------+-------------------------------------------------------------
-      1 | xxx          | xxx          | xxx         | xxx               | xxx             | xxx                | xxx              | xxx            | xxx                | xxx          | xxx          | xxx          | xxx          | xxx          | {pg_default,pg_global,tblspc01,<pg_xlog>,<pg_xlog_archive>}
+ snapid | device_major | device_minor | device_name | device_readsector | device_readtime | device_writesector | device_writetime | device_ioqueue | device_iototaltime | device_rsps_max | device_wsps_max | overflow_drs | overflow_drt | overflow_dws | overflow_dwt | overflow_dit |                      device_tblspaces                       
+--------+--------------+--------------+-------------+-------------------+-----------------+--------------------+------------------+----------------+--------------------+-----------------+-----------------+--------------+--------------+--------------+--------------+--------------+-------------------------------------------------------------
+      1 | xxx          | xxx          | xxx         | xxx               | xxx             | xxx                | xxx              | xxx            | xxx                | xxx             | xxx             | xxx          | xxx          | xxx          | xxx          | xxx          | {pg_default,pg_global,tblspc01,<pg_xlog>,<pg_xlog_archive>}
 (1 row)
 
 /**--- Statistics of tablespace ---**/

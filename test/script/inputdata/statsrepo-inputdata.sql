@@ -107,10 +107,10 @@ $$
 	--
 	-- Data for Name: device; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
-	INSERT INTO statsrepo.device VALUES ($6, '253', '2', 'dm-2', 221572802, 37740555, 4256657192, 240757474, 0, 278506145, 0, 0, 0, 0, 0, '{pg_default,pg_global}');
-	INSERT INTO statsrepo.device VALUES ($6 + 1, '253', '2', 'dm-2', 221573098, 37750828, 4257081528, 241681044, 33, 279451174, 0, 0, 0, 0, 0, '{pg_default,pg_global}');
-	INSERT INTO statsrepo.device VALUES ($6 + 2, '253', '2', 'dm-2', 221573098, 37750828, 4257587368, 245987644, 0, 283746582, 0, 0, 0, 0, 0, '{pg_default,pg_global}');
-	INSERT INTO statsrepo.device VALUES ($6 + 3, '253', '2', 'dm-2', 221573114, 37751872, 4258019304, 247459366, 2, 285219350, 0, 0, 0, 0, 0, '{pg_default,pg_global}');
+	INSERT INTO statsrepo.device VALUES ($6, '253', '2', 'dm-2', 221572802, 37740555, 4256657192, 240757474, 0, 278506145, 0, 0, 0, 0, 0, 0, 0, '{pg_default,pg_global}');
+	INSERT INTO statsrepo.device VALUES ($6 + 1, '253', '2', 'dm-2', 221573098, 37750828, 4257081528, 241681044, 33, 279451174, 400, 8000, 0, 0, 0, 0, 0, '{pg_default,pg_global}');
+	INSERT INTO statsrepo.device VALUES ($6 + 2, '253', '2', 'dm-2', 221573098, 37750828, 4257587368, 245987644, 0, 283746582, 0, 10000, 0, 0, 0, 0, 0, '{pg_default,pg_global}');
+	INSERT INTO statsrepo.device VALUES ($6 + 3, '253', '2', 'dm-2', 221573114, 37751872, 4258019304, 247459366, 2, 285219350, 200, 6000, 0, 0, 0, 0, 0, '{pg_default,pg_global}');
 
 	--
 	-- Data for Name: function; Type: TABLE DATA; Schema: statsrepo; Owner: postgres

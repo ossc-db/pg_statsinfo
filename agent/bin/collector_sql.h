@@ -456,7 +456,7 @@ SELECT * FROM statsinfo.cpustats($1)"
 
 /* device */
 #define SQL_SELECT_DEVICE "\
-SELECT * FROM statsinfo.devicestats($1)"
+SELECT * FROM statsinfo.devicestats()"
 
 /* loadavg */
 #define SQL_SELECT_LOADAVG "\

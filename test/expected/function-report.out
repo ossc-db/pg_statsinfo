@@ -603,11 +603,11 @@ Device        Including TableSpaces       Total Read   Total Write    Total Read
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
 -----------------------------------
-DateTime          Device           Read Size/s    Write Size/s      Read Time/s     Write Time/s
----------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2                2.47 KiB     3536.13 KiB        171.22 ms      15392.83 ms
-2012-11-01 00:02  dm-2                0.00 KiB     4215.33 KiB          0.00 ms      71776.67 ms
-2012-11-01 00:03  dm-2                0.13 KiB     3599.47 KiB         17.40 ms      24528.70 ms
+DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
+---------------------------------------------------------------------------------------------------------------------------------
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)        171.22 ms      15392.83 ms
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)          0.00 ms      71776.67 ms
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)         17.40 ms      24528.70 ms
 
 /** Memory Usage **/
 -----------------------------------
@@ -642,11 +642,11 @@ Device        Including TableSpaces       Total Read   Total Write    Total Read
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
 -----------------------------------
-DateTime          Device           Read Size/s    Write Size/s      Read Time/s     Write Time/s
----------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2                2.47 KiB     3536.13 KiB        171.22 ms      15392.83 ms
-2012-11-01 00:02  dm-2                0.00 KiB     4215.33 KiB          0.00 ms      71776.67 ms
-2012-11-01 00:03  dm-2                0.13 KiB     3599.47 KiB         17.40 ms      24528.70 ms
+DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
+---------------------------------------------------------------------------------------------------------------------------------
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)        171.22 ms      15392.83 ms
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)          0.00 ms      71776.67 ms
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)         17.40 ms      24528.70 ms
 
 /** Memory Usage **/
 -----------------------------------
@@ -681,11 +681,11 @@ Device        Including TableSpaces       Total Read   Total Write    Total Read
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
 -----------------------------------
-DateTime          Device           Read Size/s    Write Size/s      Read Time/s     Write Time/s
----------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2                2.47 KiB     3536.13 KiB        171.22 ms      15392.83 ms
-2012-11-01 00:02  dm-2                0.00 KiB     4215.33 KiB          0.00 ms      71776.67 ms
-2012-11-01 00:03  dm-2                0.13 KiB     3599.47 KiB         17.40 ms      24528.70 ms
+DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
+---------------------------------------------------------------------------------------------------------------------------------
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)        171.22 ms      15392.83 ms
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)          0.00 ms      71776.67 ms
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)         17.40 ms      24528.70 ms
 
 /** Memory Usage **/
 -----------------------------------
@@ -720,11 +720,11 @@ Device        Including TableSpaces       Total Read   Total Write    Total Read
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
 -----------------------------------
-DateTime          Device           Read Size/s    Write Size/s      Read Time/s     Write Time/s
----------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2                2.47 KiB     3536.13 KiB        171.22 ms      15392.83 ms
-2012-11-01 00:02  dm-2                0.00 KiB     4215.33 KiB          0.00 ms      71776.67 ms
-2012-11-01 00:03  dm-2                0.13 KiB     3599.47 KiB         17.40 ms      24528.70 ms
+DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
+---------------------------------------------------------------------------------------------------------------------------------
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)        171.22 ms      15392.83 ms
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)          0.00 ms      71776.67 ms
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)         17.40 ms      24528.70 ms
 
 /** Memory Usage **/
 -----------------------------------
@@ -759,11 +759,11 @@ Device        Including TableSpaces       Total Read   Total Write    Total Read
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
 -----------------------------------
-DateTime          Device           Read Size/s    Write Size/s      Read Time/s     Write Time/s
----------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2                2.47 KiB     3536.13 KiB        171.22 ms      15392.83 ms
-2012-11-01 00:02  dm-2                0.00 KiB     4215.33 KiB          0.00 ms      71776.67 ms
-2012-11-01 00:03  dm-2                0.13 KiB     3599.47 KiB         17.40 ms      24528.70 ms
+DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
+---------------------------------------------------------------------------------------------------------------------------------
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)        171.22 ms      15392.83 ms
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)          0.00 ms      71776.67 ms
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)         17.40 ms      24528.70 ms
 
 /** Memory Usage **/
 -----------------------------------
@@ -798,11 +798,11 @@ Device        Including TableSpaces       Total Read   Total Write    Total Read
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
 -----------------------------------
-DateTime          Device           Read Size/s    Write Size/s      Read Time/s     Write Time/s
----------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2                2.47 KiB     3536.13 KiB        171.22 ms      15392.83 ms
-2012-11-01 00:02  dm-2                0.00 KiB     4215.33 KiB          0.00 ms      71776.67 ms
-2012-11-01 00:03  dm-2                0.13 KiB     3599.47 KiB         17.40 ms      24528.70 ms
+DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
+---------------------------------------------------------------------------------------------------------------------------------
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)        171.22 ms      15392.83 ms
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)          0.00 ms      71776.67 ms
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)         17.40 ms      24528.70 ms
 
 /** Memory Usage **/
 -----------------------------------
@@ -2523,11 +2523,11 @@ Device        Including TableSpaces       Total Read   Total Write    Total Read
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
 -----------------------------------
-DateTime          Device           Read Size/s    Write Size/s      Read Time/s     Write Time/s
----------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2                2.47 KiB     3536.13 KiB        171.22 ms      15392.83 ms
-2012-11-01 00:02  dm-2                0.00 KiB     4215.33 KiB          0.00 ms      71776.67 ms
-2012-11-01 00:03  dm-2                0.13 KiB     3599.47 KiB         17.40 ms      24528.70 ms
+DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
+---------------------------------------------------------------------------------------------------------------------------------
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)        171.22 ms      15392.83 ms
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)          0.00 ms      71776.67 ms
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)         17.40 ms      24528.70 ms
 
 /** Memory Usage **/
 -----------------------------------
@@ -2851,11 +2851,11 @@ Device        Including TableSpaces       Total Read   Total Write    Total Read
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
 -----------------------------------
-DateTime          Device           Read Size/s    Write Size/s      Read Time/s     Write Time/s
----------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2                2.47 KiB     3536.13 KiB        171.22 ms      15392.83 ms
-2012-11-01 00:02  dm-2                0.00 KiB     4215.33 KiB          0.00 ms      71776.67 ms
-2012-11-01 00:03  dm-2                0.13 KiB     3599.47 KiB         17.40 ms      24528.70 ms
+DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
+---------------------------------------------------------------------------------------------------------------------------------
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)        171.22 ms      15392.83 ms
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)          0.00 ms      71776.67 ms
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)         17.40 ms      24528.70 ms
 
 /** Memory Usage **/
 -----------------------------------
@@ -3180,11 +3180,11 @@ Device        Including TableSpaces       Total Read   Total Write    Total Read
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
 -----------------------------------
-DateTime          Device           Read Size/s    Write Size/s      Read Time/s     Write Time/s
----------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2                2.47 KiB     3536.13 KiB        171.22 ms      15392.83 ms
-2012-11-01 00:02  dm-2                0.00 KiB     4215.33 KiB          0.00 ms      71776.67 ms
-2012-11-01 00:03  dm-2                0.13 KiB     3599.47 KiB         17.40 ms      24528.70 ms
+DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
+---------------------------------------------------------------------------------------------------------------------------------
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)        171.22 ms      15392.83 ms
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)          0.00 ms      71776.67 ms
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)         17.40 ms      24528.70 ms
 
 /** Memory Usage **/
 -----------------------------------
@@ -3509,11 +3509,11 @@ Device        Including TableSpaces       Total Read   Total Write    Total Read
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
 -----------------------------------
-DateTime          Device           Read Size/s    Write Size/s      Read Time/s     Write Time/s
----------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2                2.47 KiB     3536.13 KiB        171.22 ms      15392.83 ms
-2012-11-01 00:02  dm-2                0.00 KiB     4215.33 KiB          0.00 ms      71776.67 ms
-2012-11-01 00:03  dm-2                0.13 KiB     3599.47 KiB         17.40 ms      24528.70 ms
+DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
+---------------------------------------------------------------------------------------------------------------------------------
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)        171.22 ms      15392.83 ms
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)          0.00 ms      71776.67 ms
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)         17.40 ms      24528.70 ms
 
 /** Memory Usage **/
 -----------------------------------
@@ -3845,11 +3845,11 @@ Device        Including TableSpaces       Total Read   Total Write    Total Read
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
 -----------------------------------
-DateTime          Device           Read Size/s    Write Size/s      Read Time/s     Write Time/s
----------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2                2.47 KiB     3536.13 KiB        171.22 ms      15392.83 ms
-2012-11-01 00:02  dm-2                0.00 KiB     4215.33 KiB          0.00 ms      71776.67 ms
-2012-11-01 00:03  dm-2                0.13 KiB     3599.47 KiB         17.40 ms      24528.70 ms
+DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
+---------------------------------------------------------------------------------------------------------------------------------
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)        171.22 ms      15392.83 ms
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)          0.00 ms      71776.67 ms
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)         17.40 ms      24528.70 ms
 
 /** Memory Usage **/
 -----------------------------------
@@ -4181,11 +4181,11 @@ Device        Including TableSpaces       Total Read   Total Write    Total Read
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
 -----------------------------------
-DateTime          Device           Read Size/s    Write Size/s      Read Time/s     Write Time/s
----------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2                2.47 KiB     3536.13 KiB        171.22 ms      15392.83 ms
-2012-11-01 00:02  dm-2                0.00 KiB     4215.33 KiB          0.00 ms      71776.67 ms
-2012-11-01 00:03  dm-2                0.13 KiB     3599.47 KiB         17.40 ms      24528.70 ms
+DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
+---------------------------------------------------------------------------------------------------------------------------------
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)        171.22 ms      15392.83 ms
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)          0.00 ms      71776.67 ms
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)         17.40 ms      24528.70 ms
 
 /** Memory Usage **/
 -----------------------------------
@@ -4714,11 +4714,11 @@ Device        Including TableSpaces       Total Read   Total Write    Total Read
 dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
 
 -----------------------------------
-DateTime          Device           Read Size/s    Write Size/s      Read Time/s     Write Time/s
----------------------------------------------------------------------------------------------------
-2012-11-01 00:00  dm-2                0.00 KiB        0.00 KiB          0.00 ms          0.00 ms
-2012-11-01 00:00  dm-2                0.00 KiB        0.00 KiB          0.00 ms          0.00 ms
-2012-11-01 00:00  dm-2                0.00 KiB        0.00 KiB          0.00 ms          0.00 ms
+DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
+---------------------------------------------------------------------------------------------------------------------------------
+2012-11-01 00:00  dm-2               0.00 KiB (   200.00 KiB)       0.00 KiB (  4000.00 KiB)          0.00 ms          0.00 ms
+2012-11-01 00:00  dm-2               0.00 KiB (     0.00 KiB)       0.00 KiB (  5000.00 KiB)          0.00 ms          0.00 ms
+2012-11-01 00:00  dm-2               0.00 KiB (   100.00 KiB)       0.00 KiB (  3000.00 KiB)          0.00 ms          0.00 ms
 
 /** Memory Usage **/
 -----------------------------------

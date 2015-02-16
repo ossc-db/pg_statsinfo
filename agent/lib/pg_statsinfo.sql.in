@@ -162,19 +162,8 @@ LANGUAGE C STRICT;
 --
 -- statsinfo.devicestats()
 --
-CREATE TYPE statsinfo.devicestats_type AS
-(
-	device_name			text,
-	device_readsector	bigint,
-	device_readtime		bigint,
-	device_writesector	bigint,
-	device_writetime	bigint,
-	device_iototaltime	bigint
-);
-
 CREATE FUNCTION statsinfo.devicestats
 (
-	IN  prev_devicestats	statsinfo.devicestats_type[],
 	OUT device_major		text,
 	OUT device_minor		text,
 	OUT device_name			text,
@@ -183,7 +172,9 @@ CREATE FUNCTION statsinfo.devicestats
 	OUT device_writesector	bigint,
 	OUT device_writetime	bigint,
 	OUT device_ioqueue		bigint,
-	OUT device_iototaltime	bigint,
+	OUT device_iototaltime	bigint,	
+	OUT device_rsps_max		float8,
+	OUT device_wsps_max		float8,
 	OUT overflow_drs		smallint,
 	OUT overflow_drt		smallint,
 	OUT overflow_dws		smallint,
@@ -193,28 +184,6 @@ CREATE FUNCTION statsinfo.devicestats
 )
 RETURNS SETOF record
 AS 'MODULE_PATHNAME', 'statsinfo_devicestats'
-LANGUAGE C;
-
-CREATE FUNCTION statsinfo.devicestats
-(
-	OUT device_major		text,
-	OUT device_minor		text,
-	OUT device_name			text,
-	OUT device_readsector	bigint,
-	OUT device_readtime		bigint,
-	OUT device_writesector	bigint,
-	OUT device_writetime	bigint,
-	OUT device_ioqueue		bigint,
-	OUT device_iototaltime	bigint,
-	OUT overflow_drs		smallint,
-	OUT overflow_drt		smallint,
-	OUT overflow_dws		smallint,
-	OUT overflow_dwt		smallint,
-	OUT overflow_dit		smallint,
-	OUT device_tblspaces	name[]
-)
-RETURNS SETOF record
-AS 'MODULE_PATHNAME', 'statsinfo_devicestats_noarg'
 LANGUAGE C;
 
 --
