@@ -367,7 +367,7 @@ typedef struct DiskStatsEntry
 	int16				overflow_drt;	/* overflow counter of rd_ticks */
 	int16				overflow_dws;	/* overflow counter of wr_sectors */
 	int16				overflow_dwt;	/* overflow counter of wr_ticks */
-	int16				overflow_dit;	/* overflow counter of tot_ticks */
+	int16				overflow_dit;	/* overflow counter of rq_ticks */
 } DiskStatsEntry;
 
 static void StartStatsinfoLauncher(void);
@@ -620,7 +620,7 @@ check_io_peak(DiskStatsEntry *entry, unsigned long rd_sec,
 static void
 check_io_overflow(DiskStatsEntry *entry, unsigned long rd_sec,
 				  unsigned long wr_sec, unsigned int rd_ticks,
-				  unsigned int wr_ticks, unsigned int tot_ticks)
+				  unsigned int wr_ticks, unsigned int rq_ticks)
 {
 	if (entry->stats.rd_sectors > rd_sec)
 		entry->overflow_drs++;
@@ -630,7 +630,7 @@ check_io_overflow(DiskStatsEntry *entry, unsigned long rd_sec,
 		entry->overflow_drt++;
 	if (entry->stats.wr_ticks > wr_ticks)
 		entry->overflow_dwt++;
-	if (entry->stats.tot_ticks > tot_ticks)
+	if (entry->stats.rq_ticks > rq_ticks)
 		entry->overflow_dit++;
 }
 
@@ -689,7 +689,7 @@ parse_diskstats(HTAB *htab)
 			{
 				check_io_peak(entry, rd_sec_or_wr_ios, wr_sec, duration);
 				check_io_overflow(entry, rd_sec_or_wr_ios, wr_sec,
-					rd_ticks_or_wr_sec, wr_ticks, tot_ticks);
+					rd_ticks_or_wr_sec, wr_ticks, rq_ticks);
 			}
 			else
 			{
