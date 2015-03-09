@@ -1723,7 +1723,9 @@ CREATE FUNCTION statsrepo.get_io_usage(
 	OUT total_read_time		bigint,
 	OUT total_write_time	bigint,
 	OUT io_queue			numeric,
-	OUT total_io_time		bigint
+	OUT total_io_time		bigint,
+	OUT read_size_tps_peak	numeric,
+	OUT write_size_tps_peak	numeric
 ) RETURNS SETOF record AS
 $$
 	SELECT
@@ -1734,7 +1736,9 @@ $$
 		coalesce(sum(read_time), 0)::bigint,
 		coalesce(sum(write_time), 0)::bigint,
 		avg(device_ioqueue)::numeric(1000,3),
-		coalesce(sum(io_time), 0)::bigint
+		coalesce(sum(io_time), 0)::bigint,
+		(max(device_rsps_max) / 2)::numeric(1000,2),
+		(max(device_wsps_max) / 2)::numeric(1000,2)
 	FROM
 	(
 		SELECT
@@ -1746,7 +1750,9 @@ $$
 			(d.device_readtime + (d.overflow_drt * 4294967296)) - lag(d.device_readtime) OVER w AS read_time,
 			(d.device_writetime + (d.overflow_dwt * 4294967296)) - lag(d.device_writetime) OVER w AS write_time,
 			(d.device_iototaltime + (d.overflow_dit * 4294967296)) - lag(d.device_iototaltime) OVER w AS io_time,
-			d.device_ioqueue
+			d.device_ioqueue,
+			d.device_rsps_max,
+			d.device_wsps_max
 		FROM
 			statsrepo.device d,
 			statsrepo.snapshot s
