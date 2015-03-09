@@ -3015,14 +3015,16 @@ CREATE FUNCTION statsrepo.get_profiles(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		processing,
-		(sum(execute)::float / ($2::bigint - $1::bigint + 1)::float)::numeric(1000,2) AS executes
+		p.processing,
+		sum(p.execute) AS executes
 	FROM
-		statsrepo.profile
+		statsrepo.profile p LEFT JOIN statsrepo.snapshot s
+			ON p.snapid = s.snapid
 	WHERE
-		snapid BETWEEN $1 and $2
+		s.snapid BETWEEN $1 and $2
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 	GROUP BY
-		processing
+		p.processing
 	ORDER BY
 		executes;
 $$
