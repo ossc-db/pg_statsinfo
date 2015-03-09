@@ -612,13 +612,13 @@ report_resource_usage(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %-12s  %29s  %29s  %15s  %15s\n",
-		"DateTime", "Device", "Read Size/s (Peak)", "Write Size/s (Peak)", "Read Time/s", "Write Time/s");
+		"DateTime", "Device", "Read Size/s (Peak)", "Write Size/s (Peak)", "Read Time Rate", "Write Time Rate");
 	fprintf(out, "---------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_IO_USAGE_TENDENCY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-12s  %9s KiB (%9s KiB)  %9s KiB (%9s KiB)  %12s ms  %12s ms\n",
+		fprintf(out, "%-16s  %-12s  %9s KiB (%9s KiB)  %9s KiB (%9s KiB)  %13s %%  %13s %%\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),

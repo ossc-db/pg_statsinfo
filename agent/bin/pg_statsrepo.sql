@@ -1782,8 +1782,8 @@ CREATE FUNCTION statsrepo.get_io_usage_tendency_report(
 	OUT device_name			text,
 	OUT read_size_tps		numeric,
 	OUT write_size_tps		numeric,
-	OUT read_time_tps		numeric,
-	OUT write_time_tps		numeric,
+	OUT read_time_rate		numeric,
+	OUT write_time_rate		numeric,
 	OUT read_size_tps_peak	numeric,
 	OUT write_size_tps_peak	numeric
 ) RETURNS SETOF record AS
@@ -1793,8 +1793,8 @@ $$
 		device_name,
 		coalesce(statsrepo.tps(read_size, duration) / 2, 0)::numeric(1000,2),
 		coalesce(statsrepo.tps(write_size, duration) / 2, 0)::numeric(1000,2),
-		coalesce(statsrepo.tps(read_time, duration), 0)::numeric(1000,2),
-		coalesce(statsrepo.tps(write_time, duration), 0)::numeric(1000,2),
+		coalesce(statsrepo.tps(read_time, duration) / 10, 0)::numeric(1000,2),
+		coalesce(statsrepo.tps(write_time, duration) / 10, 0)::numeric(1000,2),
 		(rsps_peak / 2)::numeric(1000,2),
 		(wsps_peak / 2)::numeric(1000,2)
 	FROM
