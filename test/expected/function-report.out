@@ -600,7 +600,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 -----------------------------------
 Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
-dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
+dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms            11.667       6713205 ms
 
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
@@ -639,7 +639,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 -----------------------------------
 Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
-dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
+dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms            11.667       6713205 ms
 
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
@@ -678,7 +678,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 -----------------------------------
 Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
-dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
+dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms            11.667       6713205 ms
 
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
@@ -717,7 +717,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 -----------------------------------
 Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
-dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
+dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms            11.667       6713205 ms
 
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
@@ -756,7 +756,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 -----------------------------------
 Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
-dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
+dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms            11.667       6713205 ms
 
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
@@ -795,7 +795,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 -----------------------------------
 Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
-dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
+dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms            11.667       6713205 ms
 
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
@@ -2520,7 +2520,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 -----------------------------------
 Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
-dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
+dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms            11.667       6713205 ms
 
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
@@ -2848,7 +2848,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 -----------------------------------
 Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
-dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
+dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms            11.667       6713205 ms
 
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
@@ -3177,7 +3177,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 -----------------------------------
 Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
-dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
+dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms            11.667       6713205 ms
 
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
@@ -3506,7 +3506,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 -----------------------------------
 Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
-dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
+dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms            11.667       6713205 ms
 
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
@@ -3842,7 +3842,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 -----------------------------------
 Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
-dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
+dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms            11.667       6713205 ms
 
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
@@ -4178,7 +4178,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 -----------------------------------
 Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
-dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
+dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms            11.667       6713205 ms
 
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s
@@ -4711,7 +4711,7 @@ Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563    
 -----------------------------------
 Device        Including TableSpaces       Total Read   Total Write    Total Read Time   Total Write Time  Current IO Queue    Total IO Time
 ----------------------------------------------------------------------------------------------------------------------------------------------
-dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms             8.750       6713205 ms
+dm-2          {pg_default,pg_global}           0 MiB       665 MiB           11317 ms         6701892 ms            11.667       6713205 ms
 
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)      Read Time/s     Write Time/s

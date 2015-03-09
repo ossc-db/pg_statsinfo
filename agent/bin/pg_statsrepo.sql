@@ -697,6 +697,19 @@ END;
 $$
 LANGUAGE plpgsql IMMUTABLE STRICT;
 
+-- array_unique() - eliminate duplicate array values
+CREATE FUNCTION statsrepo.array_unique(anyarray) RETURNS anyarray AS
+'SELECT array_agg(DISTINCT i ORDER BY i) FROM unnest($1) AS t(i)'
+LANGUAGE sql;
+
+-- array_accum - array concatenation aggregate function
+CREATE AGGREGATE statsrepo.array_accum(anyarray)
+(
+	sfunc = array_cat,
+	stype = anyarray,
+	initcond = '{}'
+);
+
 -- tables - pre-JOINed tables
 CREATE VIEW statsrepo.tables AS
   SELECT t.snapid,
@@ -1714,51 +1727,44 @@ CREATE FUNCTION statsrepo.get_io_usage(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		coalesce(de.device_name, 'unknown'),
-		de.device_tblspaces,
-		CASE WHEN de.device_readsector IS NULL THEN NULL ELSE
-			statsrepo.sub(de.device_readsector + dx.drs_add, ds.device_readsector) / 2 / 1024 END,
-		CASE WHEN de.device_writesector IS NULL THEN NULL ELSE
-			statsrepo.sub(de.device_writesector + dx.dws_add, ds.device_writesector) / 2 / 1024 END,
-		CASE WHEN de.device_readtime IS NULL THEN NULL ELSE
-			statsrepo.sub(de.device_readtime + dx.drt_add, ds.device_readtime) END,
-		CASE WHEN de.device_writetime IS NULL THEN NULL ELSE
-			statsrepo.sub(de.device_writetime + dx.dwt_add, ds.device_writetime) END,
-		CASE WHEN de.device_ioqueue IS NULL THEN NULL ELSE
-			round((dx.diq + ds.device_ioqueue) / (dx.cnt + 1), 3) END,
-		CASE WHEN de.device_iototaltime IS NULL THEN NULL ELSE
-			statsrepo.sub(de.device_iototaltime + dx.dit_add, ds.device_iototaltime) END
+		device_name,
+		statsrepo.array_unique(statsrepo.array_accum(device_tblspaces)),
+		coalesce(sum(read_sector) / 2 / 1024, 0)::bigint,
+		coalesce(sum(write_sector) / 2 / 1024, 0)::bigint,
+		coalesce(sum(read_time), 0)::bigint,
+		coalesce(sum(write_time), 0)::bigint,
+		avg(device_ioqueue)::numeric(1000,3),
+		coalesce(sum(io_time), 0)::bigint
 	FROM
-		statsrepo.device de,
-		statsrepo.device ds,
-		(SELECT
-			d.device_major,
-			d.device_minor,
-			(sum(d.overflow_drs) * 4294967296)::bigint AS drs_add,
-			(sum(d.overflow_drt) * 4294967296)::bigint AS drt_add,
-			(sum(d.overflow_dws) * 4294967296)::bigint AS dws_add,
-			(sum(d.overflow_dwt) * 4294967296)::bigint AS dwt_add,
-			(sum(d.overflow_dit) * 4294967296)::bigint AS dit_add,
-			sum(d.device_ioqueue) AS diq,
-			count(*) AS cnt
-		 FROM
+	(
+		SELECT
+			s.snapid,
+			d.device_name,
+			d.device_tblspaces,
+			(d.device_readsector + (d.overflow_drs * 4294967296)) - lag(d.device_readsector) OVER w AS read_sector,
+			(d.device_writesector + (d.overflow_dws * 4294967296)) - lag(d.device_writesector) OVER w AS write_sector,
+			(d.device_readtime + (d.overflow_drt * 4294967296)) - lag(d.device_readtime) OVER w AS read_time,
+			(d.device_writetime + (d.overflow_dwt * 4294967296)) - lag(d.device_writetime) OVER w AS write_time,
+			(d.device_iototaltime + (d.overflow_dit * 4294967296)) - lag(d.device_iototaltime) OVER w AS io_time,
+			d.device_ioqueue
+		FROM
 			statsrepo.device d,
 			statsrepo.snapshot s
-		 WHERE
-		 	d.snapid = s.snapid
-			AND s.snapid > $1 AND s.snapid <= $2
+		WHERE
+			s.snapid = d.snapid
+			AND s.snapid BETWEEN $1 AND $2
 			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-		 GROUP BY
-		 	d.device_major, d.device_minor) dx
+			AND d.device_name IS NOT NULL
+		WINDOW w AS (PARTITION BY d.device_name ORDER BY d.snapid)
+		ORDER BY
+			snapid, device_name
+	) t
 	WHERE
-		ds.snapid = $1
-		AND de.snapid = $2
-		AND dx.device_major = ds.device_major
-		AND dx.device_minor = ds.device_minor
-		AND dx.device_major = de.device_major
-		AND dx.device_minor = de.device_minor
+		snapid > $1
+	GROUP BY
+		device_name
 	ORDER BY
-		de.device_name;
+		device_name;
 $$
 LANGUAGE sql;
 
