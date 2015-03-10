@@ -125,7 +125,7 @@ Database Size              : 26 MiB
 Database Size Increase     : 3 MiB
 Commit/s                   : 372.056
 Rollback/s                 : 0.000
-Cache Hit Ratio            : 100.000 %
+Cache Hit Ratio            : 100.0 %
 Block Read/s (disk+cache)  : 10394.122
 Block Read/s (disk)        : 3.333
 Rows Read/s                : 5709.183
@@ -169,7 +169,7 @@ Database Size              : 26 MiB
 Database Size Increase     : 3 MiB
 Commit/s                   : 372.056
 Rollback/s                 : 0.000
-Cache Hit Ratio            : 100.000 %
+Cache Hit Ratio            : 100.0 %
 Block Read/s (disk+cache)  : 10394.122
 Block Read/s (disk)        : 3.333
 Rows Read/s                : 5709.183
@@ -213,7 +213,7 @@ Database Size              : 26 MiB
 Database Size Increase     : 3 MiB
 Commit/s                   : 372.056
 Rollback/s                 : 0.000
-Cache Hit Ratio            : 100.000 %
+Cache Hit Ratio            : 100.0 %
 Block Read/s (disk+cache)  : 10394.122
 Block Read/s (disk)        : 3.333
 Rows Read/s                : 5709.183
@@ -258,7 +258,7 @@ Database Size              : 26 MiB
 Database Size Increase     : 3 MiB
 Commit/s                   : 372.056
 Rollback/s                 : 0.000
-Cache Hit Ratio            : 100.000 %
+Cache Hit Ratio            : 100.0 %
 Block Read/s (disk+cache)  : 10394.122
 Block Read/s (disk)        : 3.333
 Rows Read/s                : 5709.183
@@ -303,7 +303,7 @@ Database Size              : 26 MiB
 Database Size Increase     : 3 MiB
 Commit/s                   : 372.056
 Rollback/s                 : 0.000
-Cache Hit Ratio            : 100.000 %
+Cache Hit Ratio            : 100.0 %
 Block Read/s (disk+cache)  : 10394.122
 Block Read/s (disk)        : 3.333
 Rows Read/s                : 5709.183
@@ -348,7 +348,7 @@ Database Size              : 26 MiB
 Database Size Increase     : 3 MiB
 Commit/s                   : 372.056
 Rollback/s                 : 0.000
-Cache Hit Ratio            : 100.000 %
+Cache Hit Ratio            : 100.0 %
 Block Read/s (disk+cache)  : 10394.122
 Block Read/s (disk)        : 3.333
 Rows Read/s                : 5709.183
@@ -410,11 +410,11 @@ DateTime          Location           Segment File                  Write Size   
 -----------------------------------
 DateTime                  Idle  Idle In Xact       Waiting       Running
 ---------------------------------------------------------------------------
-2012-11-01 00:00        3.57 %        3.57 %       60.71 %       32.14 %
-2012-11-01 00:01        6.25 %       20.83 %       52.08 %       20.83 %
-2012-11-01 00:02        0.00 %       14.58 %       56.25 %       29.17 %
-2012-11-01 00:03        2.08 %       16.67 %       52.08 %       29.17 %
-Average                 2.98 %       13.91 %       55.28 %       27.83 %
+2012-11-01 00:00         3.6 %         3.6 %        60.7 %        32.1 %
+2012-11-01 00:01         6.3 %        20.8 %        52.1 %        20.8 %
+2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
+2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
+Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
@@ -442,11 +442,11 @@ DateTime          Location           Segment File                  Write Size   
 -----------------------------------
 DateTime                  Idle  Idle In Xact       Waiting       Running
 ---------------------------------------------------------------------------
-2012-11-01 00:00        3.57 %        3.57 %       60.71 %       32.14 %
-2012-11-01 00:01        6.25 %       20.83 %       52.08 %       20.83 %
-2012-11-01 00:02        0.00 %       14.58 %       56.25 %       29.17 %
-2012-11-01 00:03        2.08 %       16.67 %       52.08 %       29.17 %
-Average                 2.98 %       13.91 %       55.28 %       27.83 %
+2012-11-01 00:00         3.6 %         3.6 %        60.7 %        32.1 %
+2012-11-01 00:01         6.3 %        20.8 %        52.1 %        20.8 %
+2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
+2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
+Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -474,11 +474,11 @@ DateTime          Location           Segment File                  Write Size   
 -----------------------------------
 DateTime                  Idle  Idle In Xact       Waiting       Running
 ---------------------------------------------------------------------------
-2012-11-01 00:00        3.57 %        3.57 %       60.71 %       32.14 %
-2012-11-01 00:01        6.25 %       20.83 %       52.08 %       20.83 %
-2012-11-01 00:02        0.00 %       14.58 %       56.25 %       29.17 %
-2012-11-01 00:03        2.08 %       16.67 %       52.08 %       29.17 %
-Average                 2.98 %       13.91 %       55.28 %       27.83 %
+2012-11-01 00:00         3.6 %         3.6 %        60.7 %        32.1 %
+2012-11-01 00:01         6.3 %        20.8 %        52.1 %        20.8 %
+2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
+2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
+Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
@@ -506,11 +506,11 @@ DateTime          Location           Segment File                  Write Size   
 -----------------------------------
 DateTime                  Idle  Idle In Xact       Waiting       Running
 ---------------------------------------------------------------------------
-2012-11-01 00:00        3.57 %        3.57 %       60.71 %       32.14 %
-2012-11-01 00:01        6.25 %       20.83 %       52.08 %       20.83 %
-2012-11-01 00:02        0.00 %       14.58 %       56.25 %       29.17 %
-2012-11-01 00:03        2.08 %       16.67 %       52.08 %       29.17 %
-Average                 2.98 %       13.91 %       55.28 %       27.83 %
+2012-11-01 00:00         3.6 %         3.6 %        60.7 %        32.1 %
+2012-11-01 00:01         6.3 %        20.8 %        52.1 %        20.8 %
+2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
+2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
+Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
@@ -538,11 +538,11 @@ DateTime          Location           Segment File                  Write Size   
 -----------------------------------
 DateTime                  Idle  Idle In Xact       Waiting       Running
 ---------------------------------------------------------------------------
-2012-11-01 00:00        3.57 %        3.57 %       60.71 %       32.14 %
-2012-11-01 00:01        6.25 %       20.83 %       52.08 %       20.83 %
-2012-11-01 00:02        0.00 %       14.58 %       56.25 %       29.17 %
-2012-11-01 00:03        2.08 %       16.67 %       52.08 %       29.17 %
-Average                 2.98 %       13.91 %       55.28 %       27.83 %
+2012-11-01 00:00         3.6 %         3.6 %        60.7 %        32.1 %
+2012-11-01 00:01         6.3 %        20.8 %        52.1 %        20.8 %
+2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
+2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
+Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5437)
@@ -570,11 +570,11 @@ DateTime          Location           Segment File                  Write Size   
 -----------------------------------
 DateTime                  Idle  Idle In Xact       Waiting       Running
 ---------------------------------------------------------------------------
-2012-11-01 00:00        3.57 %        3.57 %       60.71 %       32.14 %
-2012-11-01 00:01        6.25 %       20.83 %       52.08 %       20.83 %
-2012-11-01 00:02        0.00 %       14.58 %       56.25 %       29.17 %
-2012-11-01 00:03        2.08 %       16.67 %       52.08 %       29.17 %
-Average                 2.98 %       13.91 %       55.28 %       27.83 %
+2012-11-01 00:00         3.6 %         3.6 %        60.7 %        32.1 %
+2012-11-01 00:01         6.3 %        20.8 %        52.1 %        20.8 %
+2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
+2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
+Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
 exit: 0
 
@@ -591,10 +591,10 @@ STATSINFO Report (host: statsinfo, port: 5432)
 -----------------------------------
 DateTime              User    System      Idle    IOwait  Loadavg1  Loadavg5  Loadavg15
 ------------------------------------------------------------------------------------------
-2012-11-01 00:01   37.70 %   14.70 %    0.10 %   47.50 %     0.940     0.390      0.690
-2012-11-01 00:02   30.90 %   12.10 %    0.00 %   57.00 %     1.320     0.600      0.740
-2012-11-01 00:03   32.40 %   12.30 %    0.10 %   55.20 %     1.200     0.700      0.770
-Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563      0.733
+2012-11-01 00:01    37.7 %    14.7 %     0.1 %    47.5 %     0.940     0.390      0.690
+2012-11-01 00:02    30.9 %    12.1 %     0.0 %    57.0 %     1.320     0.600      0.740
+2012-11-01 00:03    32.4 %    12.3 %     0.1 %    55.2 %     1.200     0.700      0.770
+Average             33.7 %    13.0 %     0.1 %    53.2 %     1.153     0.563      0.733
 
 /** IO Usage **/
 -----------------------------------
@@ -605,9 +605,9 @@ dm-2          {pg_default,pg_global}           0 MiB       665 MiB           113
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)   Read Time Rate  Write Time Rate
 ---------------------------------------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)          17.12 %        1539.28 %
-2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)           0.00 %        7177.67 %
-2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)           1.74 %        2452.87 %
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)           17.1 %         1539.3 %
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)            0.0 %         7177.7 %
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)            1.7 %         2452.9 %
 
 /** Memory Usage **/
 -----------------------------------
@@ -630,10 +630,10 @@ STATSINFO Report (host: statsinfo, port: 5433)
 -----------------------------------
 DateTime              User    System      Idle    IOwait  Loadavg1  Loadavg5  Loadavg15
 ------------------------------------------------------------------------------------------
-2012-11-01 00:01   37.70 %   14.70 %    0.10 %   47.50 %     0.940     0.390      0.690
-2012-11-01 00:02   30.90 %   12.10 %    0.00 %   57.00 %     1.320     0.600      0.740
-2012-11-01 00:03   32.40 %   12.30 %    0.10 %   55.20 %     1.200     0.700      0.770
-Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563      0.733
+2012-11-01 00:01    37.7 %    14.7 %     0.1 %    47.5 %     0.940     0.390      0.690
+2012-11-01 00:02    30.9 %    12.1 %     0.0 %    57.0 %     1.320     0.600      0.740
+2012-11-01 00:03    32.4 %    12.3 %     0.1 %    55.2 %     1.200     0.700      0.770
+Average             33.7 %    13.0 %     0.1 %    53.2 %     1.153     0.563      0.733
 
 /** IO Usage **/
 -----------------------------------
@@ -644,9 +644,9 @@ dm-2          {pg_default,pg_global}           0 MiB       665 MiB           113
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)   Read Time Rate  Write Time Rate
 ---------------------------------------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)          17.12 %        1539.28 %
-2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)           0.00 %        7177.67 %
-2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)           1.74 %        2452.87 %
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)           17.1 %         1539.3 %
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)            0.0 %         7177.7 %
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)            1.7 %         2452.9 %
 
 /** Memory Usage **/
 -----------------------------------
@@ -669,10 +669,10 @@ STATSINFO Report (host: statsinfo, port: 5434)
 -----------------------------------
 DateTime              User    System      Idle    IOwait  Loadavg1  Loadavg5  Loadavg15
 ------------------------------------------------------------------------------------------
-2012-11-01 00:01   37.70 %   14.70 %    0.10 %   47.50 %     0.940     0.390      0.690
-2012-11-01 00:02   30.90 %   12.10 %    0.00 %   57.00 %     1.320     0.600      0.740
-2012-11-01 00:03   32.40 %   12.30 %    0.10 %   55.20 %     1.200     0.700      0.770
-Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563      0.733
+2012-11-01 00:01    37.7 %    14.7 %     0.1 %    47.5 %     0.940     0.390      0.690
+2012-11-01 00:02    30.9 %    12.1 %     0.0 %    57.0 %     1.320     0.600      0.740
+2012-11-01 00:03    32.4 %    12.3 %     0.1 %    55.2 %     1.200     0.700      0.770
+Average             33.7 %    13.0 %     0.1 %    53.2 %     1.153     0.563      0.733
 
 /** IO Usage **/
 -----------------------------------
@@ -683,9 +683,9 @@ dm-2          {pg_default,pg_global}           0 MiB       665 MiB           113
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)   Read Time Rate  Write Time Rate
 ---------------------------------------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)          17.12 %        1539.28 %
-2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)           0.00 %        7177.67 %
-2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)           1.74 %        2452.87 %
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)           17.1 %         1539.3 %
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)            0.0 %         7177.7 %
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)            1.7 %         2452.9 %
 
 /** Memory Usage **/
 -----------------------------------
@@ -708,10 +708,10 @@ STATSINFO Report (host: statsinfo, port: 5435)
 -----------------------------------
 DateTime              User    System      Idle    IOwait  Loadavg1  Loadavg5  Loadavg15
 ------------------------------------------------------------------------------------------
-2012-11-01 00:01   37.70 %   14.70 %    0.10 %   47.50 %     0.940     0.390      0.690
-2012-11-01 00:02   30.90 %   12.10 %    0.00 %   57.00 %     1.320     0.600      0.740
-2012-11-01 00:03   32.40 %   12.30 %    0.10 %   55.20 %     1.200     0.700      0.770
-Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563      0.733
+2012-11-01 00:01    37.7 %    14.7 %     0.1 %    47.5 %     0.940     0.390      0.690
+2012-11-01 00:02    30.9 %    12.1 %     0.0 %    57.0 %     1.320     0.600      0.740
+2012-11-01 00:03    32.4 %    12.3 %     0.1 %    55.2 %     1.200     0.700      0.770
+Average             33.7 %    13.0 %     0.1 %    53.2 %     1.153     0.563      0.733
 
 /** IO Usage **/
 -----------------------------------
@@ -722,9 +722,9 @@ dm-2          {pg_default,pg_global}           0 MiB       665 MiB           113
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)   Read Time Rate  Write Time Rate
 ---------------------------------------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)          17.12 %        1539.28 %
-2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)           0.00 %        7177.67 %
-2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)           1.74 %        2452.87 %
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)           17.1 %         1539.3 %
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)            0.0 %         7177.7 %
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)            1.7 %         2452.9 %
 
 /** Memory Usage **/
 -----------------------------------
@@ -747,10 +747,10 @@ STATSINFO Report (host: statsinfo, port: 5436)
 -----------------------------------
 DateTime              User    System      Idle    IOwait  Loadavg1  Loadavg5  Loadavg15
 ------------------------------------------------------------------------------------------
-2012-11-01 00:01   37.70 %   14.70 %    0.10 %   47.50 %     0.940     0.390      0.690
-2012-11-01 00:02   30.90 %   12.10 %    0.00 %   57.00 %     1.320     0.600      0.740
-2012-11-01 00:03   32.40 %   12.30 %    0.10 %   55.20 %     1.200     0.700      0.770
-Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563      0.733
+2012-11-01 00:01    37.7 %    14.7 %     0.1 %    47.5 %     0.940     0.390      0.690
+2012-11-01 00:02    30.9 %    12.1 %     0.0 %    57.0 %     1.320     0.600      0.740
+2012-11-01 00:03    32.4 %    12.3 %     0.1 %    55.2 %     1.200     0.700      0.770
+Average             33.7 %    13.0 %     0.1 %    53.2 %     1.153     0.563      0.733
 
 /** IO Usage **/
 -----------------------------------
@@ -761,9 +761,9 @@ dm-2          {pg_default,pg_global}           0 MiB       665 MiB           113
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)   Read Time Rate  Write Time Rate
 ---------------------------------------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)          17.12 %        1539.28 %
-2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)           0.00 %        7177.67 %
-2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)           1.74 %        2452.87 %
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)           17.1 %         1539.3 %
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)            0.0 %         7177.7 %
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)            1.7 %         2452.9 %
 
 /** Memory Usage **/
 -----------------------------------
@@ -786,10 +786,10 @@ STATSINFO Report (host: statsinfo, port: 5437)
 -----------------------------------
 DateTime              User    System      Idle    IOwait  Loadavg1  Loadavg5  Loadavg15
 ------------------------------------------------------------------------------------------
-2012-11-01 00:01   37.70 %   14.70 %    0.10 %   47.50 %     0.940     0.390      0.690
-2012-11-01 00:02   30.90 %   12.10 %    0.00 %   57.00 %     1.320     0.600      0.740
-2012-11-01 00:03   32.40 %   12.30 %    0.10 %   55.20 %     1.200     0.700      0.770
-Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563      0.733
+2012-11-01 00:01    37.7 %    14.7 %     0.1 %    47.5 %     0.940     0.390      0.690
+2012-11-01 00:02    30.9 %    12.1 %     0.0 %    57.0 %     1.320     0.600      0.740
+2012-11-01 00:03    32.4 %    12.3 %     0.1 %    55.2 %     1.200     0.700      0.770
+Average             33.7 %    13.0 %     0.1 %    53.2 %     1.153     0.563      0.733
 
 /** IO Usage **/
 -----------------------------------
@@ -800,9 +800,9 @@ dm-2          {pg_default,pg_global}           0 MiB       665 MiB           113
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)   Read Time Rate  Write Time Rate
 ---------------------------------------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)          17.12 %        1539.28 %
-2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)           0.00 %        7177.67 %
-2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)           1.74 %        2452.87 %
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)           17.1 %         1539.3 %
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)            0.0 %         7177.7 %
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)            1.7 %         2452.9 %
 
 /** Memory Usage **/
 -----------------------------------
@@ -828,8 +828,8 @@ STATSINFO Report (host: statsinfo, port: 5432)
 -----------------------------------
 Tablespace        Location                          Device                Used         Avail      Remain
 -----------------------------------------------------------------------------------------------------------
-pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
-pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
+pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
+pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
 
 /** Disk Usage per Table **/
 -----------------------------------
@@ -852,8 +852,8 @@ STATSINFO Report (host: statsinfo, port: 5433)
 -----------------------------------
 Tablespace        Location                          Device                Used         Avail      Remain
 -----------------------------------------------------------------------------------------------------------
-pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
-pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
+pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
+pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
 
 /** Disk Usage per Table **/
 -----------------------------------
@@ -876,8 +876,8 @@ STATSINFO Report (host: statsinfo, port: 5434)
 -----------------------------------
 Tablespace        Location                          Device                Used         Avail      Remain
 -----------------------------------------------------------------------------------------------------------
-pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
-pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
+pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
+pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
 
 /** Disk Usage per Table **/
 -----------------------------------
@@ -900,8 +900,8 @@ STATSINFO Report (host: statsinfo, port: 5435)
 -----------------------------------
 Tablespace        Location                          Device                Used         Avail      Remain
 -----------------------------------------------------------------------------------------------------------
-pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
-pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
+pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
+pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
 
 /** Disk Usage per Table **/
 -----------------------------------
@@ -924,8 +924,8 @@ STATSINFO Report (host: statsinfo, port: 5436)
 -----------------------------------
 Tablespace        Location                          Device                Used         Avail      Remain
 -----------------------------------------------------------------------------------------------------------
-pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
-pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
+pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
+pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
 
 /** Disk Usage per Table **/
 -----------------------------------
@@ -948,8 +948,8 @@ STATSINFO Report (host: statsinfo, port: 5437)
 -----------------------------------
 Tablespace        Location                          Device                Used         Avail      Remain
 -----------------------------------------------------------------------------------------------------------
-pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
-pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
+pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
+pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
 
 /** Disk Usage per Table **/
 -----------------------------------
@@ -1062,23 +1062,23 @@ STATSINFO Report (host: statsinfo, port: 5432)
 -----------------------------------
 Database          Schema            Table              INSERT Rows   UPDATE Rows   DELETE Rows    Total Rows  HOT Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_branches             0         66535             0         66535       100.000
-postgres          public            pgbench_tellers              0         66534             0         66534       100.000
-postgres          public            pgbench_history          66533             0             0         66533         0.000
-postgres          public            pgbench_accounts             0         66533             0         66533        97.800
+postgres          public            pgbench_branches             0         66535             0         66535         100.0
+postgres          public            pgbench_tellers              0         66534             0         66534         100.0
+postgres          public            pgbench_history          66533             0             0         66533           0.0
+postgres          public            pgbench_accounts             0         66533             0         66533          97.8
 
 /** Heavily Accessed Tables **/
 -----------------------------------
 Database          Schema            Table                Seq Scans     Read Rows  Read Rows/Scan  Cache Hit Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_tellers          81067        665330           8.207             100.000
-postgres          public            pgbench_branches        109143         66533           0.610             100.000
+postgres          public            pgbench_tellers          81067        665330           8.207               100.0
+postgres          public            pgbench_branches        109143         66533           0.610               100.0
 
 /** Low Density Tables **/
 -----------------------------------
 Database          Schema            Table              Live Tuples   Logical Pages  Physical Pages  Logical Page Ratio(%)
 ----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts        100002            1640            1700                     96
+postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
 /** Fragmented Tables **/
 -----------------------------------
@@ -1099,23 +1099,23 @@ STATSINFO Report (host: statsinfo, port: 5433)
 -----------------------------------
 Database          Schema            Table              INSERT Rows   UPDATE Rows   DELETE Rows    Total Rows  HOT Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_branches             0         66535             0         66535       100.000
-postgres          public            pgbench_tellers              0         66534             0         66534       100.000
-postgres          public            pgbench_history          66533             0             0         66533         0.000
-postgres          public            pgbench_accounts             0         66533             0         66533        97.800
+postgres          public            pgbench_branches             0         66535             0         66535         100.0
+postgres          public            pgbench_tellers              0         66534             0         66534         100.0
+postgres          public            pgbench_history          66533             0             0         66533           0.0
+postgres          public            pgbench_accounts             0         66533             0         66533          97.8
 
 /** Heavily Accessed Tables **/
 -----------------------------------
 Database          Schema            Table                Seq Scans     Read Rows  Read Rows/Scan  Cache Hit Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_tellers          81067        665330           8.207             100.000
-postgres          public            pgbench_branches        109143         66533           0.610             100.000
+postgres          public            pgbench_tellers          81067        665330           8.207               100.0
+postgres          public            pgbench_branches        109143         66533           0.610               100.0
 
 /** Low Density Tables **/
 -----------------------------------
 Database          Schema            Table              Live Tuples   Logical Pages  Physical Pages  Logical Page Ratio(%)
 ----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts        100002            1640            1700                     96
+postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
 /** Fragmented Tables **/
 -----------------------------------
@@ -1136,23 +1136,23 @@ STATSINFO Report (host: statsinfo, port: 5434)
 -----------------------------------
 Database          Schema            Table              INSERT Rows   UPDATE Rows   DELETE Rows    Total Rows  HOT Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_branches             0         66535             0         66535       100.000
-postgres          public            pgbench_tellers              0         66534             0         66534       100.000
-postgres          public            pgbench_history          66533             0             0         66533         0.000
-postgres          public            pgbench_accounts             0         66533             0         66533        97.800
+postgres          public            pgbench_branches             0         66535             0         66535         100.0
+postgres          public            pgbench_tellers              0         66534             0         66534         100.0
+postgres          public            pgbench_history          66533             0             0         66533           0.0
+postgres          public            pgbench_accounts             0         66533             0         66533          97.8
 
 /** Heavily Accessed Tables **/
 -----------------------------------
 Database          Schema            Table                Seq Scans     Read Rows  Read Rows/Scan  Cache Hit Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_tellers          81067        665330           8.207             100.000
-postgres          public            pgbench_branches        109143         66533           0.610             100.000
+postgres          public            pgbench_tellers          81067        665330           8.207               100.0
+postgres          public            pgbench_branches        109143         66533           0.610               100.0
 
 /** Low Density Tables **/
 -----------------------------------
 Database          Schema            Table              Live Tuples   Logical Pages  Physical Pages  Logical Page Ratio(%)
 ----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts        100002            1640            1700                     96
+postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
 /** Fragmented Tables **/
 -----------------------------------
@@ -1173,23 +1173,23 @@ STATSINFO Report (host: statsinfo, port: 5435)
 -----------------------------------
 Database          Schema            Table              INSERT Rows   UPDATE Rows   DELETE Rows    Total Rows  HOT Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_branches             0         66535             0         66535       100.000
-postgres          public            pgbench_tellers              0         66534             0         66534       100.000
-postgres          public            pgbench_history          66533             0             0         66533         0.000
-postgres          public            pgbench_accounts             0         66533             0         66533        97.800
+postgres          public            pgbench_branches             0         66535             0         66535         100.0
+postgres          public            pgbench_tellers              0         66534             0         66534         100.0
+postgres          public            pgbench_history          66533             0             0         66533           0.0
+postgres          public            pgbench_accounts             0         66533             0         66533          97.8
 
 /** Heavily Accessed Tables **/
 -----------------------------------
 Database          Schema            Table                Seq Scans     Read Rows  Read Rows/Scan  Cache Hit Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_tellers          81067        665330           8.207             100.000
-postgres          public            pgbench_branches        109143         66533           0.610             100.000
+postgres          public            pgbench_tellers          81067        665330           8.207               100.0
+postgres          public            pgbench_branches        109143         66533           0.610               100.0
 
 /** Low Density Tables **/
 -----------------------------------
 Database          Schema            Table              Live Tuples   Logical Pages  Physical Pages  Logical Page Ratio(%)
 ----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts        100002            1640            1700                     96
+postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
 /** Fragmented Tables **/
 -----------------------------------
@@ -1210,23 +1210,23 @@ STATSINFO Report (host: statsinfo, port: 5436)
 -----------------------------------
 Database          Schema            Table              INSERT Rows   UPDATE Rows   DELETE Rows    Total Rows  HOT Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_branches             0         66535             0         66535       100.000
-postgres          public            pgbench_tellers              0         66534             0         66534       100.000
-postgres          public            pgbench_history          66533             0             0         66533         0.000
-postgres          public            pgbench_accounts             0         66533             0         66533        97.800
+postgres          public            pgbench_branches             0         66535             0         66535         100.0
+postgres          public            pgbench_tellers              0         66534             0         66534         100.0
+postgres          public            pgbench_history          66533             0             0         66533           0.0
+postgres          public            pgbench_accounts             0         66533             0         66533          97.8
 
 /** Heavily Accessed Tables **/
 -----------------------------------
 Database          Schema            Table                Seq Scans     Read Rows  Read Rows/Scan  Cache Hit Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_tellers          81067        665330           8.207             100.000
-postgres          public            pgbench_branches        109143         66533           0.610             100.000
+postgres          public            pgbench_tellers          81067        665330           8.207               100.0
+postgres          public            pgbench_branches        109143         66533           0.610               100.0
 
 /** Low Density Tables **/
 -----------------------------------
 Database          Schema            Table              Live Tuples   Logical Pages  Physical Pages  Logical Page Ratio(%)
 ----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts        100002            1640            1700                     96
+postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
 /** Fragmented Tables **/
 -----------------------------------
@@ -1247,23 +1247,23 @@ STATSINFO Report (host: statsinfo, port: 5437)
 -----------------------------------
 Database          Schema            Table              INSERT Rows   UPDATE Rows   DELETE Rows    Total Rows  HOT Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_branches             0         66535             0         66535       100.000
-postgres          public            pgbench_tellers              0         66534             0         66534       100.000
-postgres          public            pgbench_history          66533             0             0         66533         0.000
-postgres          public            pgbench_accounts             0         66533             0         66533        97.800
+postgres          public            pgbench_branches             0         66535             0         66535         100.0
+postgres          public            pgbench_tellers              0         66534             0         66534         100.0
+postgres          public            pgbench_history          66533             0             0         66533           0.0
+postgres          public            pgbench_accounts             0         66533             0         66533          97.8
 
 /** Heavily Accessed Tables **/
 -----------------------------------
 Database          Schema            Table                Seq Scans     Read Rows  Read Rows/Scan  Cache Hit Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_tellers          81067        665330           8.207             100.000
-postgres          public            pgbench_branches        109143         66533           0.610             100.000
+postgres          public            pgbench_tellers          81067        665330           8.207               100.0
+postgres          public            pgbench_branches        109143         66533           0.610               100.0
 
 /** Low Density Tables **/
 -----------------------------------
 Database          Schema            Table              Live Tuples   Logical Pages  Physical Pages  Logical Page Ratio(%)
 ----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts        100002            1640            1700                     96
+postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
 /** Fragmented Tables **/
 -----------------------------------
@@ -2443,7 +2443,7 @@ Database Size              : 26 MiB
 Database Size Increase     : 3 MiB
 Commit/s                   : 372.056
 Rollback/s                 : 0.000
-Cache Hit Ratio            : 100.000 %
+Cache Hit Ratio            : 100.0 %
 Block Read/s (disk+cache)  : 10394.122
 Block Read/s (disk)        : 3.333
 Rows Read/s                : 5709.183
@@ -2497,11 +2497,11 @@ DateTime          Location           Segment File                  Write Size   
 -----------------------------------
 DateTime                  Idle  Idle In Xact       Waiting       Running
 ---------------------------------------------------------------------------
-2012-11-01 00:00        3.57 %        3.57 %       60.71 %       32.14 %
-2012-11-01 00:01        6.25 %       20.83 %       52.08 %       20.83 %
-2012-11-01 00:02        0.00 %       14.58 %       56.25 %       29.17 %
-2012-11-01 00:03        2.08 %       16.67 %       52.08 %       29.17 %
-Average                 2.98 %       13.91 %       55.28 %       27.83 %
+2012-11-01 00:00         3.6 %         3.6 %        60.7 %        32.1 %
+2012-11-01 00:01         6.3 %        20.8 %        52.1 %        20.8 %
+2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
+2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
+Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -2511,10 +2511,10 @@ Average                 2.98 %       13.91 %       55.28 %       27.83 %
 -----------------------------------
 DateTime              User    System      Idle    IOwait  Loadavg1  Loadavg5  Loadavg15
 ------------------------------------------------------------------------------------------
-2012-11-01 00:01   37.70 %   14.70 %    0.10 %   47.50 %     0.940     0.390      0.690
-2012-11-01 00:02   30.90 %   12.10 %    0.00 %   57.00 %     1.320     0.600      0.740
-2012-11-01 00:03   32.40 %   12.30 %    0.10 %   55.20 %     1.200     0.700      0.770
-Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563      0.733
+2012-11-01 00:01    37.7 %    14.7 %     0.1 %    47.5 %     0.940     0.390      0.690
+2012-11-01 00:02    30.9 %    12.1 %     0.0 %    57.0 %     1.320     0.600      0.740
+2012-11-01 00:03    32.4 %    12.3 %     0.1 %    55.2 %     1.200     0.700      0.770
+Average             33.7 %    13.0 %     0.1 %    53.2 %     1.153     0.563      0.733
 
 /** IO Usage **/
 -----------------------------------
@@ -2525,9 +2525,9 @@ dm-2          {pg_default,pg_global}           0 MiB       665 MiB           113
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)   Read Time Rate  Write Time Rate
 ---------------------------------------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)          17.12 %        1539.28 %
-2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)           0.00 %        7177.67 %
-2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)           1.74 %        2452.87 %
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)           17.1 %         1539.3 %
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)            0.0 %         7177.7 %
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)            1.7 %         2452.9 %
 
 /** Memory Usage **/
 -----------------------------------
@@ -2546,8 +2546,8 @@ DateTime               Memfree       Buffers        Cached          Swap        
 -----------------------------------
 Tablespace        Location                          Device                Used         Avail      Remain
 -----------------------------------------------------------------------------------------------------------
-pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
-pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
+pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
+pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
 
 /** Disk Usage per Table **/
 -----------------------------------
@@ -2576,23 +2576,23 @@ PID       Client Address          When To Start    Duration  Query
 -----------------------------------
 Database          Schema            Table              INSERT Rows   UPDATE Rows   DELETE Rows    Total Rows  HOT Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_branches             0         66535             0         66535       100.000
-postgres          public            pgbench_tellers              0         66534             0         66534       100.000
-postgres          public            pgbench_history          66533             0             0         66533         0.000
-postgres          public            pgbench_accounts             0         66533             0         66533        97.800
+postgres          public            pgbench_branches             0         66535             0         66535         100.0
+postgres          public            pgbench_tellers              0         66534             0         66534         100.0
+postgres          public            pgbench_history          66533             0             0         66533           0.0
+postgres          public            pgbench_accounts             0         66533             0         66533          97.8
 
 /** Heavily Accessed Tables **/
 -----------------------------------
 Database          Schema            Table                Seq Scans     Read Rows  Read Rows/Scan  Cache Hit Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_tellers          81067        665330           8.207             100.000
-postgres          public            pgbench_branches        109143         66533           0.610             100.000
+postgres          public            pgbench_tellers          81067        665330           8.207               100.0
+postgres          public            pgbench_branches        109143         66533           0.610               100.0
 
 /** Low Density Tables **/
 -----------------------------------
 Database          Schema            Table              Live Tuples   Logical Pages  Physical Pages  Logical Page Ratio(%)
 ----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts        100002            1640            1700                     96
+postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
 /** Fragmented Tables **/
 -----------------------------------
@@ -2771,7 +2771,7 @@ Database Size              : 26 MiB
 Database Size Increase     : 3 MiB
 Commit/s                   : 372.056
 Rollback/s                 : 0.000
-Cache Hit Ratio            : 100.000 %
+Cache Hit Ratio            : 100.0 %
 Block Read/s (disk+cache)  : 10394.122
 Block Read/s (disk)        : 3.333
 Rows Read/s                : 5709.183
@@ -2825,11 +2825,11 @@ DateTime          Location           Segment File                  Write Size   
 -----------------------------------
 DateTime                  Idle  Idle In Xact       Waiting       Running
 ---------------------------------------------------------------------------
-2012-11-01 00:00        3.57 %        3.57 %       60.71 %       32.14 %
-2012-11-01 00:01        6.25 %       20.83 %       52.08 %       20.83 %
-2012-11-01 00:02        0.00 %       14.58 %       56.25 %       29.17 %
-2012-11-01 00:03        2.08 %       16.67 %       52.08 %       29.17 %
-Average                 2.98 %       13.91 %       55.28 %       27.83 %
+2012-11-01 00:00         3.6 %         3.6 %        60.7 %        32.1 %
+2012-11-01 00:01         6.3 %        20.8 %        52.1 %        20.8 %
+2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
+2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
+Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -2839,10 +2839,10 @@ Average                 2.98 %       13.91 %       55.28 %       27.83 %
 -----------------------------------
 DateTime              User    System      Idle    IOwait  Loadavg1  Loadavg5  Loadavg15
 ------------------------------------------------------------------------------------------
-2012-11-01 00:01   37.70 %   14.70 %    0.10 %   47.50 %     0.940     0.390      0.690
-2012-11-01 00:02   30.90 %   12.10 %    0.00 %   57.00 %     1.320     0.600      0.740
-2012-11-01 00:03   32.40 %   12.30 %    0.10 %   55.20 %     1.200     0.700      0.770
-Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563      0.733
+2012-11-01 00:01    37.7 %    14.7 %     0.1 %    47.5 %     0.940     0.390      0.690
+2012-11-01 00:02    30.9 %    12.1 %     0.0 %    57.0 %     1.320     0.600      0.740
+2012-11-01 00:03    32.4 %    12.3 %     0.1 %    55.2 %     1.200     0.700      0.770
+Average             33.7 %    13.0 %     0.1 %    53.2 %     1.153     0.563      0.733
 
 /** IO Usage **/
 -----------------------------------
@@ -2853,9 +2853,9 @@ dm-2          {pg_default,pg_global}           0 MiB       665 MiB           113
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)   Read Time Rate  Write Time Rate
 ---------------------------------------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)          17.12 %        1539.28 %
-2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)           0.00 %        7177.67 %
-2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)           1.74 %        2452.87 %
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)           17.1 %         1539.3 %
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)            0.0 %         7177.7 %
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)            1.7 %         2452.9 %
 
 /** Memory Usage **/
 -----------------------------------
@@ -2874,8 +2874,8 @@ DateTime               Memfree       Buffers        Cached          Swap        
 -----------------------------------
 Tablespace        Location                          Device                Used         Avail      Remain
 -----------------------------------------------------------------------------------------------------------
-pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
-pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
+pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
+pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
 
 /** Disk Usage per Table **/
 -----------------------------------
@@ -2904,23 +2904,23 @@ PID       Client Address          When To Start    Duration  Query
 -----------------------------------
 Database          Schema            Table              INSERT Rows   UPDATE Rows   DELETE Rows    Total Rows  HOT Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_branches             0         66535             0         66535       100.000
-postgres          public            pgbench_tellers              0         66534             0         66534       100.000
-postgres          public            pgbench_history          66533             0             0         66533         0.000
-postgres          public            pgbench_accounts             0         66533             0         66533        97.800
+postgres          public            pgbench_branches             0         66535             0         66535         100.0
+postgres          public            pgbench_tellers              0         66534             0         66534         100.0
+postgres          public            pgbench_history          66533             0             0         66533           0.0
+postgres          public            pgbench_accounts             0         66533             0         66533          97.8
 
 /** Heavily Accessed Tables **/
 -----------------------------------
 Database          Schema            Table                Seq Scans     Read Rows  Read Rows/Scan  Cache Hit Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_tellers          81067        665330           8.207             100.000
-postgres          public            pgbench_branches        109143         66533           0.610             100.000
+postgres          public            pgbench_tellers          81067        665330           8.207               100.0
+postgres          public            pgbench_branches        109143         66533           0.610               100.0
 
 /** Low Density Tables **/
 -----------------------------------
 Database          Schema            Table              Live Tuples   Logical Pages  Physical Pages  Logical Page Ratio(%)
 ----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts        100002            1640            1700                     96
+postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
 /** Fragmented Tables **/
 -----------------------------------
@@ -3099,7 +3099,7 @@ Database Size              : 26 MiB
 Database Size Increase     : 3 MiB
 Commit/s                   : 372.056
 Rollback/s                 : 0.000
-Cache Hit Ratio            : 100.000 %
+Cache Hit Ratio            : 100.0 %
 Block Read/s (disk+cache)  : 10394.122
 Block Read/s (disk)        : 3.333
 Rows Read/s                : 5709.183
@@ -3154,11 +3154,11 @@ DateTime          Location           Segment File                  Write Size   
 -----------------------------------
 DateTime                  Idle  Idle In Xact       Waiting       Running
 ---------------------------------------------------------------------------
-2012-11-01 00:00        3.57 %        3.57 %       60.71 %       32.14 %
-2012-11-01 00:01        6.25 %       20.83 %       52.08 %       20.83 %
-2012-11-01 00:02        0.00 %       14.58 %       56.25 %       29.17 %
-2012-11-01 00:03        2.08 %       16.67 %       52.08 %       29.17 %
-Average                 2.98 %       13.91 %       55.28 %       27.83 %
+2012-11-01 00:00         3.6 %         3.6 %        60.7 %        32.1 %
+2012-11-01 00:01         6.3 %        20.8 %        52.1 %        20.8 %
+2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
+2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
+Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -3168,10 +3168,10 @@ Average                 2.98 %       13.91 %       55.28 %       27.83 %
 -----------------------------------
 DateTime              User    System      Idle    IOwait  Loadavg1  Loadavg5  Loadavg15
 ------------------------------------------------------------------------------------------
-2012-11-01 00:01   37.70 %   14.70 %    0.10 %   47.50 %     0.940     0.390      0.690
-2012-11-01 00:02   30.90 %   12.10 %    0.00 %   57.00 %     1.320     0.600      0.740
-2012-11-01 00:03   32.40 %   12.30 %    0.10 %   55.20 %     1.200     0.700      0.770
-Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563      0.733
+2012-11-01 00:01    37.7 %    14.7 %     0.1 %    47.5 %     0.940     0.390      0.690
+2012-11-01 00:02    30.9 %    12.1 %     0.0 %    57.0 %     1.320     0.600      0.740
+2012-11-01 00:03    32.4 %    12.3 %     0.1 %    55.2 %     1.200     0.700      0.770
+Average             33.7 %    13.0 %     0.1 %    53.2 %     1.153     0.563      0.733
 
 /** IO Usage **/
 -----------------------------------
@@ -3182,9 +3182,9 @@ dm-2          {pg_default,pg_global}           0 MiB       665 MiB           113
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)   Read Time Rate  Write Time Rate
 ---------------------------------------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)          17.12 %        1539.28 %
-2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)           0.00 %        7177.67 %
-2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)           1.74 %        2452.87 %
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)           17.1 %         1539.3 %
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)            0.0 %         7177.7 %
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)            1.7 %         2452.9 %
 
 /** Memory Usage **/
 -----------------------------------
@@ -3203,8 +3203,8 @@ DateTime               Memfree       Buffers        Cached          Swap        
 -----------------------------------
 Tablespace        Location                          Device                Used         Avail      Remain
 -----------------------------------------------------------------------------------------------------------
-pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
-pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
+pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
+pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
 
 /** Disk Usage per Table **/
 -----------------------------------
@@ -3233,23 +3233,23 @@ PID       Client Address          When To Start    Duration  Query
 -----------------------------------
 Database          Schema            Table              INSERT Rows   UPDATE Rows   DELETE Rows    Total Rows  HOT Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_branches             0         66535             0         66535       100.000
-postgres          public            pgbench_tellers              0         66534             0         66534       100.000
-postgres          public            pgbench_history          66533             0             0         66533         0.000
-postgres          public            pgbench_accounts             0         66533             0         66533        97.800
+postgres          public            pgbench_branches             0         66535             0         66535         100.0
+postgres          public            pgbench_tellers              0         66534             0         66534         100.0
+postgres          public            pgbench_history          66533             0             0         66533           0.0
+postgres          public            pgbench_accounts             0         66533             0         66533          97.8
 
 /** Heavily Accessed Tables **/
 -----------------------------------
 Database          Schema            Table                Seq Scans     Read Rows  Read Rows/Scan  Cache Hit Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_tellers          81067        665330           8.207             100.000
-postgres          public            pgbench_branches        109143         66533           0.610             100.000
+postgres          public            pgbench_tellers          81067        665330           8.207               100.0
+postgres          public            pgbench_branches        109143         66533           0.610               100.0
 
 /** Low Density Tables **/
 -----------------------------------
 Database          Schema            Table              Live Tuples   Logical Pages  Physical Pages  Logical Page Ratio(%)
 ----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts        100002            1640            1700                     96
+postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
 /** Fragmented Tables **/
 -----------------------------------
@@ -3428,7 +3428,7 @@ Database Size              : 26 MiB
 Database Size Increase     : 3 MiB
 Commit/s                   : 372.056
 Rollback/s                 : 0.000
-Cache Hit Ratio            : 100.000 %
+Cache Hit Ratio            : 100.0 %
 Block Read/s (disk+cache)  : 10394.122
 Block Read/s (disk)        : 3.333
 Rows Read/s                : 5709.183
@@ -3483,11 +3483,11 @@ DateTime          Location           Segment File                  Write Size   
 -----------------------------------
 DateTime                  Idle  Idle In Xact       Waiting       Running
 ---------------------------------------------------------------------------
-2012-11-01 00:00        3.57 %        3.57 %       60.71 %       32.14 %
-2012-11-01 00:01        6.25 %       20.83 %       52.08 %       20.83 %
-2012-11-01 00:02        0.00 %       14.58 %       56.25 %       29.17 %
-2012-11-01 00:03        2.08 %       16.67 %       52.08 %       29.17 %
-Average                 2.98 %       13.91 %       55.28 %       27.83 %
+2012-11-01 00:00         3.6 %         3.6 %        60.7 %        32.1 %
+2012-11-01 00:01         6.3 %        20.8 %        52.1 %        20.8 %
+2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
+2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
+Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -3497,10 +3497,10 @@ Average                 2.98 %       13.91 %       55.28 %       27.83 %
 -----------------------------------
 DateTime              User    System      Idle    IOwait  Loadavg1  Loadavg5  Loadavg15
 ------------------------------------------------------------------------------------------
-2012-11-01 00:01   37.70 %   14.70 %    0.10 %   47.50 %     0.940     0.390      0.690
-2012-11-01 00:02   30.90 %   12.10 %    0.00 %   57.00 %     1.320     0.600      0.740
-2012-11-01 00:03   32.40 %   12.30 %    0.10 %   55.20 %     1.200     0.700      0.770
-Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563      0.733
+2012-11-01 00:01    37.7 %    14.7 %     0.1 %    47.5 %     0.940     0.390      0.690
+2012-11-01 00:02    30.9 %    12.1 %     0.0 %    57.0 %     1.320     0.600      0.740
+2012-11-01 00:03    32.4 %    12.3 %     0.1 %    55.2 %     1.200     0.700      0.770
+Average             33.7 %    13.0 %     0.1 %    53.2 %     1.153     0.563      0.733
 
 /** IO Usage **/
 -----------------------------------
@@ -3511,9 +3511,9 @@ dm-2          {pg_default,pg_global}           0 MiB       665 MiB           113
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)   Read Time Rate  Write Time Rate
 ---------------------------------------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)          17.12 %        1539.28 %
-2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)           0.00 %        7177.67 %
-2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)           1.74 %        2452.87 %
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)           17.1 %         1539.3 %
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)            0.0 %         7177.7 %
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)            1.7 %         2452.9 %
 
 /** Memory Usage **/
 -----------------------------------
@@ -3532,8 +3532,8 @@ DateTime               Memfree       Buffers        Cached          Swap        
 -----------------------------------
 Tablespace        Location                          Device                Used         Avail      Remain
 -----------------------------------------------------------------------------------------------------------
-pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
-pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
+pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
+pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
 
 /** Disk Usage per Table **/
 -----------------------------------
@@ -3562,23 +3562,23 @@ PID       Client Address          When To Start    Duration  Query
 -----------------------------------
 Database          Schema            Table              INSERT Rows   UPDATE Rows   DELETE Rows    Total Rows  HOT Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_branches             0         66535             0         66535       100.000
-postgres          public            pgbench_tellers              0         66534             0         66534       100.000
-postgres          public            pgbench_history          66533             0             0         66533         0.000
-postgres          public            pgbench_accounts             0         66533             0         66533        97.800
+postgres          public            pgbench_branches             0         66535             0         66535         100.0
+postgres          public            pgbench_tellers              0         66534             0         66534         100.0
+postgres          public            pgbench_history          66533             0             0         66533           0.0
+postgres          public            pgbench_accounts             0         66533             0         66533          97.8
 
 /** Heavily Accessed Tables **/
 -----------------------------------
 Database          Schema            Table                Seq Scans     Read Rows  Read Rows/Scan  Cache Hit Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_tellers          81067        665330           8.207             100.000
-postgres          public            pgbench_branches        109143         66533           0.610             100.000
+postgres          public            pgbench_tellers          81067        665330           8.207               100.0
+postgres          public            pgbench_branches        109143         66533           0.610               100.0
 
 /** Low Density Tables **/
 -----------------------------------
 Database          Schema            Table              Live Tuples   Logical Pages  Physical Pages  Logical Page Ratio(%)
 ----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts        100002            1640            1700                     96
+postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
 /** Fragmented Tables **/
 -----------------------------------
@@ -3764,7 +3764,7 @@ Database Size              : 26 MiB
 Database Size Increase     : 3 MiB
 Commit/s                   : 372.056
 Rollback/s                 : 0.000
-Cache Hit Ratio            : 100.000 %
+Cache Hit Ratio            : 100.0 %
 Block Read/s (disk+cache)  : 10394.122
 Block Read/s (disk)        : 3.333
 Rows Read/s                : 5709.183
@@ -3819,11 +3819,11 @@ DateTime          Location           Segment File                  Write Size   
 -----------------------------------
 DateTime                  Idle  Idle In Xact       Waiting       Running
 ---------------------------------------------------------------------------
-2012-11-01 00:00        3.57 %        3.57 %       60.71 %       32.14 %
-2012-11-01 00:01        6.25 %       20.83 %       52.08 %       20.83 %
-2012-11-01 00:02        0.00 %       14.58 %       56.25 %       29.17 %
-2012-11-01 00:03        2.08 %       16.67 %       52.08 %       29.17 %
-Average                 2.98 %       13.91 %       55.28 %       27.83 %
+2012-11-01 00:00         3.6 %         3.6 %        60.7 %        32.1 %
+2012-11-01 00:01         6.3 %        20.8 %        52.1 %        20.8 %
+2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
+2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
+Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -3833,10 +3833,10 @@ Average                 2.98 %       13.91 %       55.28 %       27.83 %
 -----------------------------------
 DateTime              User    System      Idle    IOwait  Loadavg1  Loadavg5  Loadavg15
 ------------------------------------------------------------------------------------------
-2012-11-01 00:01   37.70 %   14.70 %    0.10 %   47.50 %     0.940     0.390      0.690
-2012-11-01 00:02   30.90 %   12.10 %    0.00 %   57.00 %     1.320     0.600      0.740
-2012-11-01 00:03   32.40 %   12.30 %    0.10 %   55.20 %     1.200     0.700      0.770
-Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563      0.733
+2012-11-01 00:01    37.7 %    14.7 %     0.1 %    47.5 %     0.940     0.390      0.690
+2012-11-01 00:02    30.9 %    12.1 %     0.0 %    57.0 %     1.320     0.600      0.740
+2012-11-01 00:03    32.4 %    12.3 %     0.1 %    55.2 %     1.200     0.700      0.770
+Average             33.7 %    13.0 %     0.1 %    53.2 %     1.153     0.563      0.733
 
 /** IO Usage **/
 -----------------------------------
@@ -3847,9 +3847,9 @@ dm-2          {pg_default,pg_global}           0 MiB       665 MiB           113
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)   Read Time Rate  Write Time Rate
 ---------------------------------------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)          17.12 %        1539.28 %
-2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)           0.00 %        7177.67 %
-2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)           1.74 %        2452.87 %
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)           17.1 %         1539.3 %
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)            0.0 %         7177.7 %
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)            1.7 %         2452.9 %
 
 /** Memory Usage **/
 -----------------------------------
@@ -3868,8 +3868,8 @@ DateTime               Memfree       Buffers        Cached          Swap        
 -----------------------------------
 Tablespace        Location                          Device                Used         Avail      Remain
 -----------------------------------------------------------------------------------------------------------
-pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
-pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
+pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
+pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
 
 /** Disk Usage per Table **/
 -----------------------------------
@@ -3898,23 +3898,23 @@ PID       Client Address          When To Start    Duration  Query
 -----------------------------------
 Database          Schema            Table              INSERT Rows   UPDATE Rows   DELETE Rows    Total Rows  HOT Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_branches             0         66535             0         66535       100.000
-postgres          public            pgbench_tellers              0         66534             0         66534       100.000
-postgres          public            pgbench_history          66533             0             0         66533         0.000
-postgres          public            pgbench_accounts             0         66533             0         66533        97.800
+postgres          public            pgbench_branches             0         66535             0         66535         100.0
+postgres          public            pgbench_tellers              0         66534             0         66534         100.0
+postgres          public            pgbench_history          66533             0             0         66533           0.0
+postgres          public            pgbench_accounts             0         66533             0         66533          97.8
 
 /** Heavily Accessed Tables **/
 -----------------------------------
 Database          Schema            Table                Seq Scans     Read Rows  Read Rows/Scan  Cache Hit Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_tellers          81067        665330           8.207             100.000
-postgres          public            pgbench_branches        109143         66533           0.610             100.000
+postgres          public            pgbench_tellers          81067        665330           8.207               100.0
+postgres          public            pgbench_branches        109143         66533           0.610               100.0
 
 /** Low Density Tables **/
 -----------------------------------
 Database          Schema            Table              Live Tuples   Logical Pages  Physical Pages  Logical Page Ratio(%)
 ----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts        100002            1640            1700                     96
+postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
 /** Fragmented Tables **/
 -----------------------------------
@@ -4100,7 +4100,7 @@ Database Size              : 26 MiB
 Database Size Increase     : 3 MiB
 Commit/s                   : 372.056
 Rollback/s                 : 0.000
-Cache Hit Ratio            : 100.000 %
+Cache Hit Ratio            : 100.0 %
 Block Read/s (disk+cache)  : 10394.122
 Block Read/s (disk)        : 3.333
 Rows Read/s                : 5709.183
@@ -4155,11 +4155,11 @@ DateTime          Location           Segment File                  Write Size   
 -----------------------------------
 DateTime                  Idle  Idle In Xact       Waiting       Running
 ---------------------------------------------------------------------------
-2012-11-01 00:00        3.57 %        3.57 %       60.71 %       32.14 %
-2012-11-01 00:01        6.25 %       20.83 %       52.08 %       20.83 %
-2012-11-01 00:02        0.00 %       14.58 %       56.25 %       29.17 %
-2012-11-01 00:03        2.08 %       16.67 %       52.08 %       29.17 %
-Average                 2.98 %       13.91 %       55.28 %       27.83 %
+2012-11-01 00:00         3.6 %         3.6 %        60.7 %        32.1 %
+2012-11-01 00:01         6.3 %        20.8 %        52.1 %        20.8 %
+2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
+2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
+Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -4169,10 +4169,10 @@ Average                 2.98 %       13.91 %       55.28 %       27.83 %
 -----------------------------------
 DateTime              User    System      Idle    IOwait  Loadavg1  Loadavg5  Loadavg15
 ------------------------------------------------------------------------------------------
-2012-11-01 00:01   37.70 %   14.70 %    0.10 %   47.50 %     0.940     0.390      0.690
-2012-11-01 00:02   30.90 %   12.10 %    0.00 %   57.00 %     1.320     0.600      0.740
-2012-11-01 00:03   32.40 %   12.30 %    0.10 %   55.20 %     1.200     0.700      0.770
-Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563      0.733
+2012-11-01 00:01    37.7 %    14.7 %     0.1 %    47.5 %     0.940     0.390      0.690
+2012-11-01 00:02    30.9 %    12.1 %     0.0 %    57.0 %     1.320     0.600      0.740
+2012-11-01 00:03    32.4 %    12.3 %     0.1 %    55.2 %     1.200     0.700      0.770
+Average             33.7 %    13.0 %     0.1 %    53.2 %     1.153     0.563      0.733
 
 /** IO Usage **/
 -----------------------------------
@@ -4183,9 +4183,9 @@ dm-2          {pg_default,pg_global}           0 MiB       665 MiB           113
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)   Read Time Rate  Write Time Rate
 ---------------------------------------------------------------------------------------------------------------------------------
-2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)          17.12 %        1539.28 %
-2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)           0.00 %        7177.67 %
-2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)           1.74 %        2452.87 %
+2012-11-01 00:01  dm-2               2.47 KiB (   200.00 KiB)    3536.13 KiB (  4000.00 KiB)           17.1 %         1539.3 %
+2012-11-01 00:02  dm-2               0.00 KiB (     0.00 KiB)    4215.33 KiB (  5000.00 KiB)            0.0 %         7177.7 %
+2012-11-01 00:03  dm-2               0.13 KiB (   100.00 KiB)    3599.47 KiB (  3000.00 KiB)            1.7 %         2452.9 %
 
 /** Memory Usage **/
 -----------------------------------
@@ -4204,8 +4204,8 @@ DateTime               Memfree       Buffers        Cached          Swap        
 -----------------------------------
 Tablespace        Location                          Device                Used         Avail      Remain
 -----------------------------------------------------------------------------------------------------------
-pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
-pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
+pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
+pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
 
 /** Disk Usage per Table **/
 -----------------------------------
@@ -4234,23 +4234,23 @@ PID       Client Address          When To Start    Duration  Query
 -----------------------------------
 Database          Schema            Table              INSERT Rows   UPDATE Rows   DELETE Rows    Total Rows  HOT Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_branches             0         66535             0         66535       100.000
-postgres          public            pgbench_tellers              0         66534             0         66534       100.000
-postgres          public            pgbench_history          66533             0             0         66533         0.000
-postgres          public            pgbench_accounts             0         66533             0         66533        97.800
+postgres          public            pgbench_branches             0         66535             0         66535         100.0
+postgres          public            pgbench_tellers              0         66534             0         66534         100.0
+postgres          public            pgbench_history          66533             0             0         66533           0.0
+postgres          public            pgbench_accounts             0         66533             0         66533          97.8
 
 /** Heavily Accessed Tables **/
 -----------------------------------
 Database          Schema            Table                Seq Scans     Read Rows  Read Rows/Scan  Cache Hit Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_tellers          81067        665330           8.207             100.000
-postgres          public            pgbench_branches        109143         66533           0.610             100.000
+postgres          public            pgbench_tellers          81067        665330           8.207               100.0
+postgres          public            pgbench_branches        109143         66533           0.610               100.0
 
 /** Low Density Tables **/
 -----------------------------------
 Database          Schema            Table              Live Tuples   Logical Pages  Physical Pages  Logical Page Ratio(%)
 ----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts        100002            1640            1700                     96
+postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
 /** Fragmented Tables **/
 -----------------------------------
@@ -4633,7 +4633,7 @@ Database Size              : 26 MiB
 Database Size Increase     : 3 MiB
 Commit/s                   : 0.000
 Rollback/s                 : 0.000
-Cache Hit Ratio            : 100.000 %
+Cache Hit Ratio            : 100.0 %
 Block Read/s (disk+cache)  : 0.000
 Block Read/s (disk)        : 0.000
 Rows Read/s                : 0.000
@@ -4688,11 +4688,11 @@ DateTime          Location           Segment File                  Write Size   
 -----------------------------------
 DateTime                  Idle  Idle In Xact       Waiting       Running
 ---------------------------------------------------------------------------
-2012-11-01 00:00        3.57 %        3.57 %       60.71 %       32.14 %
-2012-11-01 00:00        6.25 %       20.83 %       52.08 %       20.83 %
-2012-11-01 00:00        0.00 %       14.58 %       56.25 %       29.17 %
-2012-11-01 00:00        2.08 %       16.67 %       52.08 %       29.17 %
-Average                 2.98 %       13.91 %       55.28 %       27.83 %
+2012-11-01 00:00         3.6 %         3.6 %        60.7 %        32.1 %
+2012-11-01 00:00         6.3 %        20.8 %        52.1 %        20.8 %
+2012-11-01 00:00         0.0 %        14.6 %        56.3 %        29.2 %
+2012-11-01 00:00         2.1 %        16.7 %        52.1 %        29.2 %
+Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -4702,10 +4702,10 @@ Average                 2.98 %       13.91 %       55.28 %       27.83 %
 -----------------------------------
 DateTime              User    System      Idle    IOwait  Loadavg1  Loadavg5  Loadavg15
 ------------------------------------------------------------------------------------------
-2012-11-01 00:00   37.70 %   14.70 %    0.10 %   47.50 %     0.940     0.390      0.690
-2012-11-01 00:00   30.90 %   12.10 %    0.00 %   57.00 %     1.320     0.600      0.740
-2012-11-01 00:00   32.40 %   12.30 %    0.10 %   55.20 %     1.200     0.700      0.770
-Average            33.67 %   13.03 %    0.07 %   53.23 %     1.153     0.563      0.733
+2012-11-01 00:00    37.7 %    14.7 %     0.1 %    47.5 %     0.940     0.390      0.690
+2012-11-01 00:00    30.9 %    12.1 %     0.0 %    57.0 %     1.320     0.600      0.740
+2012-11-01 00:00    32.4 %    12.3 %     0.1 %    55.2 %     1.200     0.700      0.770
+Average             33.7 %    13.0 %     0.1 %    53.2 %     1.153     0.563      0.733
 
 /** IO Usage **/
 -----------------------------------
@@ -4716,9 +4716,9 @@ dm-2          {pg_default,pg_global}           0 MiB       665 MiB           113
 -----------------------------------
 DateTime          Device                   Read Size/s (Peak)            Write Size/s (Peak)   Read Time Rate  Write Time Rate
 ---------------------------------------------------------------------------------------------------------------------------------
-2012-11-01 00:00  dm-2               0.00 KiB (   200.00 KiB)       0.00 KiB (  4000.00 KiB)           0.00 %           0.00 %
-2012-11-01 00:00  dm-2               0.00 KiB (     0.00 KiB)       0.00 KiB (  5000.00 KiB)           0.00 %           0.00 %
-2012-11-01 00:00  dm-2               0.00 KiB (   100.00 KiB)       0.00 KiB (  3000.00 KiB)           0.00 %           0.00 %
+2012-11-01 00:00  dm-2               0.00 KiB (   200.00 KiB)       0.00 KiB (  4000.00 KiB)            0.0 %            0.0 %
+2012-11-01 00:00  dm-2               0.00 KiB (     0.00 KiB)       0.00 KiB (  5000.00 KiB)            0.0 %            0.0 %
+2012-11-01 00:00  dm-2               0.00 KiB (   100.00 KiB)       0.00 KiB (  3000.00 KiB)            0.0 %            0.0 %
 
 /** Memory Usage **/
 -----------------------------------
@@ -4737,8 +4737,8 @@ DateTime               Memfree       Buffers        Cached          Swap        
 -----------------------------------
 Tablespace        Location                          Device                Used         Avail      Remain
 -----------------------------------------------------------------------------------------------------------
-pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
-pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB    53.374 %
+pg_default        /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
+pg_global         /var/pgdata                       253:2            22805 MiB     26106 MiB      53.4 %
 
 /** Disk Usage per Table **/
 -----------------------------------
@@ -4767,23 +4767,23 @@ PID       Client Address          When To Start    Duration  Query
 -----------------------------------
 Database          Schema            Table              INSERT Rows   UPDATE Rows   DELETE Rows    Total Rows  HOT Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_branches             0         66535             0         66535       100.000
-postgres          public            pgbench_tellers              0         66534             0         66534       100.000
-postgres          public            pgbench_history          66533             0             0         66533         0.000
-postgres          public            pgbench_accounts             0         66533             0         66533        97.800
+postgres          public            pgbench_branches             0         66535             0         66535         100.0
+postgres          public            pgbench_tellers              0         66534             0         66534         100.0
+postgres          public            pgbench_history          66533             0             0         66533           0.0
+postgres          public            pgbench_accounts             0         66533             0         66533          97.8
 
 /** Heavily Accessed Tables **/
 -----------------------------------
 Database          Schema            Table                Seq Scans     Read Rows  Read Rows/Scan  Cache Hit Ratio(%)
 -----------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_tellers          81067        665330           8.207             100.000
-postgres          public            pgbench_branches        109143         66533           0.610             100.000
+postgres          public            pgbench_tellers          81067        665330           8.207               100.0
+postgres          public            pgbench_branches        109143         66533           0.610               100.0
 
 /** Low Density Tables **/
 -----------------------------------
 Database          Schema            Table              Live Tuples   Logical Pages  Physical Pages  Logical Page Ratio(%)
 ----------------------------------------------------------------------------------------------------------------------------
-postgres          public            pgbench_accounts        100002            1640            1700                     96
+postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
 /** Fragmented Tables **/
 -----------------------------------

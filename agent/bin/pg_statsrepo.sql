@@ -1128,10 +1128,10 @@ $$
 		statsrepo.tps(
 			statsrepo.sub(ed.xact_rollback, sd.xact_rollback),
 			es.time - ss.time),
-		statsrepo.div(
+		(statsrepo.div(
 			statsrepo.sub(ed.blks_hit, sd.blks_hit),
 			statsrepo.sub(ed.blks_read, sd.blks_read) +
-			statsrepo.sub(ed.blks_hit, sd.blks_hit)) * 100,
+			statsrepo.sub(ed.blks_hit, sd.blks_hit)) * 100)::numeric(1000, 1),
 		statsrepo.tps(
 			statsrepo.sub(ed.blks_read, sd.blks_read) +
 			statsrepo.sub(ed.blks_hit, sd.blks_hit),
@@ -1356,13 +1356,13 @@ CREATE FUNCTION statsrepo.get_proc_ratio(
 $$
 	SELECT
 		CASE WHEN sum(total)::float4 = 0 THEN 0
-			ELSE (100 * sum(idle)::float / sum(total)::float4)::numeric(5,2) END,
+			ELSE (100 * sum(idle)::float / sum(total)::float4)::numeric(5,1) END,
 		CASE WHEN sum(total)::float4 = 0 THEN 0
-			ELSE (100 * sum(idle_in_xact)::float / sum(total)::float4)::numeric(5,2) END,
+			ELSE (100 * sum(idle_in_xact)::float / sum(total)::float4)::numeric(5,1) END,
 		CASE WHEN sum(total)::float4 = 0 THEN 0
-			ELSE (100 * sum(waiting)::float / sum(total)::float4)::numeric(5,2) END,
+			ELSE (100 * sum(waiting)::float / sum(total)::float4)::numeric(5,1) END,
 		CASE WHEN sum(total)::float4 = 0 THEN 0
-			ELSE (100 * sum(running)::float / sum(total)::float4)::numeric(5,2) END
+			ELSE (100 * sum(running)::float / sum(total)::float4)::numeric(5,1) END
 	FROM 
 		(SELECT
 			snapid,
@@ -1394,13 +1394,13 @@ $$
 	SELECT
 		a.snapid,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,2) END,
+			ELSE (100 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,2) END,
+			ELSE (100 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,2) END,
+			ELSE (100 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * running / (idle + idle_in_xact + waiting + running))::numeric(5,2) END
+			ELSE (100 * running / (idle + idle_in_xact + waiting + running))::numeric(5,1) END
 	FROM
 		statsrepo.activity a,
 		statsrepo.snapshot s
@@ -1428,13 +1428,13 @@ $$
 	SELECT
 		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,2) END,
+			ELSE (100 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,2) END,
+			ELSE (100 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,2) END,
+			ELSE (100 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * running / (idle + idle_in_xact + waiting + running))::numeric(5,2) END
+			ELSE (100 * running / (idle + idle_in_xact + waiting + running))::numeric(5,1) END
 	FROM
 		statsrepo.activity a,
 		statsrepo.snapshot s
@@ -1538,10 +1538,10 @@ CREATE FUNCTION statsrepo.get_cpu_usage(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		(100 * statsrepo.sub(a.cpu_user + o.cpu_user_add, b.cpu_user)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,2),
-		(100 * statsrepo.sub(a.cpu_system + o.cpu_system_add, b.cpu_system)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,2),
-		(100 * statsrepo.sub(a.cpu_idle + o.cpu_idle_add, b.cpu_idle)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,2),
-		(100 * statsrepo.sub(a.cpu_iowait + o.cpu_iowait_add, b.cpu_iowait)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,2)
+		(100 * statsrepo.sub(a.cpu_user + o.cpu_user_add, b.cpu_user)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,1),
+		(100 * statsrepo.sub(a.cpu_system + o.cpu_system_add, b.cpu_system)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,1),
+		(100 * statsrepo.sub(a.cpu_idle + o.cpu_idle_add, b.cpu_idle)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,1),
+		(100 * statsrepo.sub(a.cpu_iowait + o.cpu_iowait_add, b.cpu_iowait)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,1)
 	FROM
 		(SELECT
 			snapid,
@@ -1597,10 +1597,10 @@ CREATE FUNCTION statsrepo.get_cpu_usage_tendency(
 $$
 	SELECT
 		t.snapid,
-		(100 * statsrepo.div(t.user, t.total))::numeric(5,2),
-		(100 * statsrepo.div(t.system, t.total))::numeric(5,2),
-		(100 * statsrepo.div(t.idle, t.total))::numeric(5,2),
-		(100 * statsrepo.div(t.iowait, t.total))::numeric(5,2)
+		(100 * statsrepo.div(t.user, t.total))::numeric(5,1),
+		(100 * statsrepo.div(t.system, t.total))::numeric(5,1),
+		(100 * statsrepo.div(t.idle, t.total))::numeric(5,1),
+		(100 * statsrepo.div(t.iowait, t.total))::numeric(5,1)
 	FROM
 	(
 		SELECT
@@ -1643,10 +1643,10 @@ CREATE FUNCTION statsrepo.get_cpu_usage_tendency_report(
 $$
 	SELECT
 		to_char(t.time, 'YYYY-MM-DD HH24:MI'),
-		(100 * statsrepo.div(t.user, t.total))::numeric(5,2),
-		(100 * statsrepo.div(t.system, t.total))::numeric(5,2),
-		(100 * statsrepo.div(t.idle, t.total))::numeric(5,2),
-		(100 * statsrepo.div(t.iowait, t.total))::numeric(5,2)
+		(100 * statsrepo.div(t.user, t.total))::numeric(5,1),
+		(100 * statsrepo.div(t.system, t.total))::numeric(5,1),
+		(100 * statsrepo.div(t.idle, t.total))::numeric(5,1),
+		(100 * statsrepo.div(t.iowait, t.total))::numeric(5,1)
 	FROM
 	(
 		SELECT
@@ -1793,8 +1793,8 @@ $$
 		device_name,
 		coalesce(statsrepo.tps(read_size, duration) / 2, 0)::numeric(1000,2),
 		coalesce(statsrepo.tps(write_size, duration) / 2, 0)::numeric(1000,2),
-		coalesce(statsrepo.tps(read_time, duration) / 10, 0)::numeric(1000,2),
-		coalesce(statsrepo.tps(write_time, duration) / 10, 0)::numeric(1000,2),
+		coalesce(statsrepo.tps(read_time, duration) / 10, 0)::numeric(1000,1),
+		coalesce(statsrepo.tps(write_time, duration) / 10, 0)::numeric(1000,1),
 		(rsps_peak / 2)::numeric(1000,2),
 		(wsps_peak / 2)::numeric(1000,2)
 	FROM
@@ -1920,7 +1920,7 @@ $$
 		device,
 		(total - avail) / 1024 / 1024,
 		avail / 1024 / 1024,
-		(100.0 * avail / total)::numeric(1000, 3)
+		(100.0 * avail / total)::numeric(1000,1)
 	FROM
 		statsrepo.tablespace
 	WHERE
@@ -2023,9 +2023,9 @@ $$
 		statsrepo.sub(e.n_tup_ins, b.n_tup_ins) +
 			statsrepo.sub(e.n_tup_upd, b.n_tup_upd) +
 			statsrepo.sub(e.n_tup_del, b.n_tup_del),
-		statsrepo.div(
+		(statsrepo.div(
 			statsrepo.sub(e.n_tup_hot_upd, b.n_tup_hot_upd),
-			statsrepo.sub(e.n_tup_upd, b.n_tup_upd)) * 100
+			statsrepo.sub(e.n_tup_upd, b.n_tup_upd)) * 100)::numeric(1000,1)
 	FROM
 		statsrepo.tables e LEFT JOIN statsrepo.table b
 			ON e.tbl = b.tbl AND e.nsp = b.nsp AND e.dbid = b.dbid AND b.snapid = $1
@@ -2061,7 +2061,7 @@ $$
 		statsrepo.div(
 			statsrepo.sub(e.seq_tup_read, b.seq_tup_read),
 			statsrepo.sub(e.seq_scan, b.seq_scan)),
-		statsrepo.div(
+		(statsrepo.div(
 			statsrepo.sub(e.heap_blks_hit, b.heap_blks_hit) +
 			statsrepo.sub(e.idx_blks_hit, b.idx_blks_hit) +
 			statsrepo.sub(e.toast_blks_hit, b.toast_blks_hit) +
@@ -2073,7 +2073,7 @@ $$
 			statsrepo.sub(e.heap_blks_read, b.heap_blks_read) +
 			statsrepo.sub(e.idx_blks_read, b.idx_blks_read) +
 			statsrepo.sub(e.toast_blks_read, b.toast_blks_read) +
-			statsrepo.sub(e.tidx_blks_read, b.tidx_blks_read)) * 100
+			statsrepo.sub(e.tidx_blks_read, b.tidx_blks_read)) * 100)::numeric(1000,1)
 	FROM
 		statsrepo.tables e LEFT JOIN statsrepo.table b
 			ON e.tbl = b.tbl AND e.nsp = b.nsp AND e.dbid = b.dbid AND b.snapid = $1
@@ -2096,7 +2096,7 @@ CREATE FUNCTION statsrepo.get_low_density_tables(
 	OUT n_live_tup		bigint,
 	OUT logical_pages	bigint,
 	OUT physical_pages	bigint,
-	OUT tratio			bigint
+	OUT tratio			numeric
 ) RETURNS SETOF record AS
 $$
 	SELECT
@@ -2107,7 +2107,7 @@ $$
 		logical_pages,
 		physical_pages,
 		CASE physical_pages
-			WHEN 0 THEN NULL ELSE logical_pages * 100 / physical_pages END AS tratio
+			WHEN 0 THEN NULL ELSE (logical_pages * 100.0 / physical_pages)::numeric(1000,1) END AS tratio
 	FROM
 	(
 		SELECT
