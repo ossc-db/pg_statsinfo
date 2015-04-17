@@ -268,7 +268,6 @@ PG_FUNCTION_INFO_V1(statsinfo_restart);
 PG_FUNCTION_INFO_V1(statsinfo_cpustats);
 PG_FUNCTION_INFO_V1(statsinfo_cpustats_noarg);
 PG_FUNCTION_INFO_V1(statsinfo_devicestats);
-PG_FUNCTION_INFO_V1(statsinfo_devicestats_noarg);
 PG_FUNCTION_INFO_V1(statsinfo_loadavg);
 PG_FUNCTION_INFO_V1(statsinfo_memory);
 PG_FUNCTION_INFO_V1(statsinfo_profile);
