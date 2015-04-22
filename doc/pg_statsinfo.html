@@ -57,7 +57,7 @@
 statistics of PostgreSQL server in the form of time series of
 snapshots. You can examine the snapshots on graphical representations
 by
-using <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter.html">pg_stats_reporter</a>.
+using <a href="http://pgstatsinfo.sourceforge.net/pg_stats_reporter.html">pg_stats_reporter</a>.
 </p>
 
 
@@ -66,13 +66,13 @@ using <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter.html
 
 <p>Two or more PostgreSQL <i>instances</i> can share single repository database.
 
-<p>You can check for server health and activities in easy-to-grasp graphical representation by using  <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter.html">pg_stats_reporter</a>. It shows various information as interactive tables and graphs.</p>
+<p>You can check for server health and activities in easy-to-grasp graphical representation by using  <a href="http://pgstatsinfo.sourceforge.net/pg_stats_reporter.html">pg_stats_reporter</a>. It shows various information as interactive tables and graphs.</p>
 
 <p>Components of pg_statsinfo are typically placed as the picture
 below. Each pg_statsinfo collects the information of the <i>Database
 Server</i> where it resides on and sends snapshots to
 the <i>Repository
-Server</i>. <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter.html">pg_stats_reporter</a>
+Server</i>. <a href="http://pgstatsinfo.sourceforge.net/pg_stats_reporter.html">pg_stats_reporter</a>
 runs behind web server so that the Users can get graphical reports on
 web browser on the <i>Client</i>.</p>
 
@@ -190,8 +190,8 @@ pg_statsinfo has some functions which could be done in command line. Besides, yo
 
 <p>
 The comprehensive list of report items is shown in <a href="files/pg_statsinfo_v3.0_report_infomation.xls">"report item list of pg_statsinfo v3.0".</a> (.xls in Japanese)<br>
-Report items are equivalent with <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter.html">pg_stats_reporter</a>.<br>
-If you would like to see graphical reports, please try <a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter.html">pg_stats_reporter</a>.
+Report items are equivalent with <a href="http://pgstatsinfo.sourceforge.net/pg_stats_reporter.html">pg_stats_reporter</a>.<br>
+If you would like to see graphical reports, please try <a href="http://pgstatsinfo.sourceforge.net/pg_stats_reporter.html">pg_stats_reporter</a>.
 </p>
 
 <h4>Administrative operations</h4>
@@ -1424,7 +1424,7 @@ $psql -d postgres -c "SELECT * FROM statsrepo.snapshot WHERE COMMENT = 'test'"
 </pre>
 <h4>Q2. How to utilize snapshots in repository?</h4>
 <p>The snapshots in repository can be of course inspected using sql queries but it needs too much labor for most cases.
-You can use pg_statsinfo's command line reporting feature to see them as simple reports in text format. For those who wants to see them in graphically interface, <a href='http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter.html'>pg_stats_reporter</a> provides sortable tables with pager and manipulative graphs. 
+You can use pg_statsinfo's command line reporting feature to see them as simple reports in text format. For those who wants to see them in graphically interface, <a href='http://pgstatsinfo.sourceforge.net/pg_stats_reporter.html'>pg_stats_reporter</a> provides sortable tables with pager and manipulative graphs. 
 An operable sample report of pg_reporter is available <a href='files/details.html'>here</a>.
 </p>
 
@@ -1618,7 +1618,7 @@ See also "<a href="pg_statsinfo-internal.html">pg_statsinfo: internal</a>" for d
 <a href="http://www.postgresql.org/docs/current/static/monitoring-stats.html">The Statistics Collector</a>,
 <a href="http://www.postgresql.org/docs/current/static/catalogs.html">System Catalogs</a>,
 <a href="http://www.postgresql.org/docs/current/static/pgstatstatements.html">pg_stat_statements</a>,
-<a href="http://pgstatsinfo.projects.postgresql.org/pg_stats_reporter.html">pg_stats_reporter</a>
+<a href="http://pgstatsinfo.sourceforge.net/pg_stats_reporter.html">pg_stats_reporter</a>
 
 <hr />
 <div class="navigation">
