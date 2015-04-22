@@ -28,7 +28,7 @@ function server_version()
 
 function verify_libraries()
 {
-	local libdir=$(pg_config --libdir)
+	local pkglibdir=$(pg_config --pkglibdir)
 	local failed=0
 
 	pg_config --configure | grep -q -- "--with-libxml"
@@ -40,16 +40,16 @@ function verify_libraries()
 		failed=1
 	fi
 
-	if [ -f "${libdir}/pg_statsinfo.so" -o \
-		 -f "${libdir}/pgsql/pg_statsinfo.so" ] ; then
+	if [ -f "${pkglibdir}/pg_statsinfo.so" -o \
+		 -f "${pkglibdir}/pgsql/pg_statsinfo.so" ] ; then
 		printf "%-35s ... ok\n" "pg_statsinfo"
 	else
 		printf "%-35s ... not installed\n" "pg_statsinfo"
 		failed=1
 	fi
 
-	if [ -f "${libdir}/pg_stat_statements.so" -o \
-		 -f "${libdir}/pgsql/pg_stat_statements.so" ] ; then
+	if [ -f "${pkglibdir}/pg_stat_statements.so" -o \
+		 -f "${pkglibdir}/pgsql/pg_stat_statements.so" ] ; then
 		printf "%-35s ... ok\n" "pg_stat_statements"
 	else
 		printf "%-35s ... not installed\n" "pg_stat_statements"
