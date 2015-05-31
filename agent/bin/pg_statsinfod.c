@@ -10,8 +10,7 @@
 #include <sys/stat.h> 
 
 const char *PROGRAM_VERSION	= "3.1.0";
-const char *PROGRAM_URL		= "http://pgstatsinfo.projects.postgresql.org/";
-const char *PROGRAM_EMAIL	= "pgstatsinfo-general@pgfoundry.org";
+const char *PROGRAM_URL		= "http://pgstatsinfo.sourceforge.net/";
 
 typedef struct ParamMap
 {
@@ -304,7 +303,6 @@ help(void)
 	printf("  Add 'pg_statsinfo' to shared_preload_libraries in postgresql.conf.\n");
 	printf("\n");
 	printf("Read the website for details. <%s>\n", PROGRAM_URL);
-	printf("Report bugs to <%s>.\n", PROGRAM_EMAIL);
 
 	return 1;
 }

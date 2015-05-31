@@ -15,7 +15,7 @@ Release:    1%{?dist}
 Summary:    Performance monitoring tool for PostgreSQL
 Group:      Applications/Databases
 License:    BSD
-URL:        http://pgfoundry.org/projects/pgstatsinfo/
+URL:        http://sourceforge.net/projects/pgstatsinfo/
 Source0:    %{name}-%{version}.tar.gz
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 
