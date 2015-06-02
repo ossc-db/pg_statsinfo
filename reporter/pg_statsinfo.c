@@ -8,6 +8,7 @@
 
 const char *PROGRAM_VERSION	= "3.1.0";
 const char *PROGRAM_URL		= "http://pgstatsinfo.sourceforge.net/";
+const char *PROGRAM_EMAIL   = NULL;
 
 static bool			 mode_list;
 static bool			 mode_size;
