@@ -2869,23 +2869,21 @@ CREATE FUNCTION statsrepo.get_setting_parameters(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		se.name,
-		CASE WHEN se.setting <> sb.setting THEN
-			coalesce(sb.setting, '(default)') || ' -> ' || coalesce(se.setting, '(default)')
+		coalesce(se.name, sb.name),
+		CASE WHEN sb.setting = se.setting THEN
+			sb.setting
 		ELSE
-			se.setting
+			coalesce(sb.setting, '(default)') || ' -> ' || coalesce(se.setting, '(default)')
 		END,
-		se.unit,
-		se.source
+		coalesce(se.unit, sb.unit),
+		coalesce(se.source, sb.source)
 	FROM
-		statsrepo.setting sb,
-		statsrepo.setting se
-	WHERE
-		sb.name = se.name
-		AND sb.snapid = $1
-		AND se.snapid = $2
+		(SELECT * FROM statsrepo.setting WHERE snapid = $1) AS sb
+	FULL JOIN
+		(SELECT * FROM statsrepo.setting WHERE snapid = $2) AS se
+		ON sb.name = se.name
 	ORDER BY
-		se.name;
+		1;
 $$
 LANGUAGE sql;
 
