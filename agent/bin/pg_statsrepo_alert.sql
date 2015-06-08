@@ -35,7 +35,7 @@ CREATE TABLE statsrepo.alert
 	rep_replay_delay		integer	NOT NULL DEFAULT 200     CHECK (rep_replay_delay >= -1),
 	enable_alert			boolean	NOT NULL DEFAULT TRUE,
 	PRIMARY KEY (instid),
-	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid)
+	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
 );
 
 -- add alert settings when adding a new instance
