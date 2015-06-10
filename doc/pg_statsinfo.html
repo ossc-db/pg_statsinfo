@@ -40,7 +40,7 @@
   <li><a href="#uninstall">Uninstallation</a></li>
   <li><a href="#restrictions">Restrictions</a></li>
   <li><a href="#QA">Q&A</a></li>
-  <li><a href="#change">Changes From pg_statsinfo 2.5</a></li>
+  <li><a href="#change">Changes From pg_statsinfo 3.0</a></li>
   <li><a href="#details">Detailed Information</a>
     <ol>
       <li><a href="#many-instances">Sharing Repository Database</a></li>
@@ -51,7 +51,7 @@
   <li><a href="#seealso">See Also</a></li>
 </ol>
 </div>
-<h1 id="pg_statsinfo">pg_statsinfo 3.0</h1>
+<h1 id="pg_statsinfo">pg_statsinfo 3.1</h1>
 <h2 id="name">What is pg_statsinfo ?</h2>
 <p>pg_statsinfo is a monitoring tool to record activities and
 statistics of PostgreSQL server in the form of time series of
@@ -88,29 +88,28 @@ web browser on the <i>Client</i>.</p>
 
 <h3 id="features-snapshot">Statistics Snapshot</h3>
 <p>
-pg_statsinfo periodically gathers various statistics and stores them
+pg_statsinfo periodically gathers various information and stores them
 as snapshots into a repository database. The repository database may
-reside on the monitored PostgreSQL server (DB cluster) and one
+reside on one of the monitored PostgreSQL server (DB cluster) and one
 repository server can store snapshots from multiple servers. Snapshots
 are generated for every 10 minutes as default and when commanded
 manually.
 </p>
 
-<p>Every snapshots holds the following statistics information:</p>
+<p>Every snapshots holds the following information:</p>
 <ul>
   <li>All of the information collected by <a href="http://www.postgresql.org/docs/current/static/monitoring-stats.html">the statistics collector</a>.
       For example, numbers of INSERT/UPDATE/DELETEs and buffer access counters.</li>
-  <li>Disk usages of each tablespace, pg_xlog, and archive log directory.</li>
+  <li>Disk usage per tablespace, pg_xlog, and archive log directory.</li>
   <li>Long transactions and their query strings.</li>
-  <li>Session time distribution among session statuses - in running,
-  waiting for locks, idles in transaction, and idle.</li>
-  <li>WAL output size.</li>
+  <li>Session state statistics.</li>
+  <li>WAL write rate.</li>
   <li>Number of CHECKPOINTs ,VACUUMs, and their execution time and buffer access statistics.</li>
-  <li>Long queries and functions, and frequently executed ones.</li>
+  <li>Long queries and execution statitics on queries, functions and plans.</li>
   <li>PostgreSQL configuration parameters.</li>
   <li>OS resource information. (CPU usage, memory usage, disk I/O, load average)</li>
-  <li>Lock information.</li>
-  <li>Number of query cancellations caused by conflicts with recovery.</li>
+  <li>Long lock conflicts.</li>
+  <li>Number of query cancellations caused by conflict with recovery.</li>
   <li>Replication status.</li>
   <li>Alert messages emitted by user-defined alert function.</li>
   <li>Profiling information using SystemTap (experimental).</li>
@@ -120,7 +119,7 @@ manually.
 The required storage for every snapshot depends on the numbers of objects in the monitored database. It occupies about 600 - 800kB in typical cases. pg_statsinfo takes snapshots for every 10 minutes by default, so the required storage for all snapshots in a day from every monitored database is roughly estimated to be  90 - 120MB.
 </p>
 <p>
-You can see the structure of the tables in pg_statsinfo's repository database in <a href="files/pg_statsinfo_v3.0_repository_infomation.xls">this</a> document. (MS Excel document in Japanese).
+You can see the structure of the tables in pg_statsinfo's repository database in <a href="files/pg_statsinfo_v3.1_repository_infomation.xls">this</a> document. (MS Excel document in Japanese).
 </p>
 
 <h3 id="features-log-route">Server Log Filter</h3>
@@ -189,7 +188,7 @@ pg_statsinfo has some functions which could be done in command line. Besides, yo
 </ul>
 
 <p>
-The comprehensive list of report items is shown in <a href="files/pg_statsinfo_v3.0_report_infomation.xls">"report item list of pg_statsinfo v3.0".</a> (.xls in Japanese)<br>
+The comprehensive list of report items is shown in <a href="files/pg_statsinfo_v3.1_report_infomation.xls">"report item list of pg_statsinfo v3.1".</a> (.xls in Japanese)<br>
 Report items are equivalent with <a href="http://pgstatsinfo.sourceforge.net/pg_stats_reporter.html">pg_stats_reporter</a>.<br>
 If you would like to see graphical reports, please try <a href="http://pgstatsinfo.sourceforge.net/pg_stats_reporter.html">pg_stats_reporter</a>.
 </p>
@@ -231,7 +230,7 @@ Setup reference of this feature is <a href="#usage-maintenance">here</a>.
 <h3 id="requirement">Requirement</h3>
 <dl>
 <dt>PostgreSQL versions</dt>
-<dd>PostgreSQL 8.4, 9.0, 9.1, 9.2, 9.3 (--with-libxml is required. Standard RPM's are built with this option.)</dd>
+<dd>PostgreSQL 9.0, 9.1, 9.2, 9.3, 9.4 (--with-libxml is required. Standard RPM's are built with this option.)</dd>
 <dt>OS</dt>
 <dd>RHEL 6.x (x86_64), CentOS 6.x (x86_64), RHEL 7.x (x86_64), CentOS 7.x (x86_64)</dd>
 </dl>
@@ -242,7 +241,7 @@ Setup reference of this feature is <a href="#usage-maintenance">here</a>.
 Example steps to installing pg_statsinfo using rpm follow.
 <pre>
 $ su
-# rpm -ivh pg_statsinfo-3.0.0-1/pg92.rhel6.x86_64.rpm
+# rpm -ivh pg_statsinfo-3.1.0-1.pg94.rhel6.x86_64.rpm
 </pre>
 
 <h4>Installing from source</h4>
@@ -251,8 +250,8 @@ $ su
 
 <pre>
 $ cd pg_statsinfo
-$ tar xzvf pg_statsinfo-3.0.0.tar.gz 
-$ cd pg_statsinfo-3.0.0
+$ tar xzvf pg_statsinfo-3.1.0.tar.gz 
+$ cd pg_statsinfo-3.1.0
 $ make USE_PGXS=1
 $ su
 # make USE_PGXS=1 install
@@ -320,7 +319,7 @@ local   all             postgres                                ident
 
 <h4>Configuration for involving query statistics</h4>
 <p>
-For PostgreSQL 8.4 or later, you can have snapshots involving query statistics using <a href="http://www.postgresql.org/docs/current/static/pgstatstatements.html">pg_stat_statements</a>. pg_statsinfo automatically detects pg_stat_statements and use it. Installation of pg_stat_statements would be done in the following steps after adding it to shared_preload_libraries in postgresql.conf.
+For PostgreSQL 9.0 or later, you can have snapshots involving query statistics using <a href="http://www.postgresql.org/docs/current/static/pgstatstatements.html">pg_stat_statements</a>. pg_statsinfo automatically detects pg_stat_statements and use it. Installation of pg_stat_statements would be done in the following steps after adding it to shared_preload_libraries in postgresql.conf.
 </p>
 
 <pre>
@@ -337,6 +336,22 @@ $ psql -d postgres -f $PGSHARE/contrib/pg_stat_statements.sql
   <li>pg_statsinfo.stat_statements_exclude_users</li>
 </ul>
 <p>Explanation for these parameters is seen in the <a href="#configuration">Configuration</a> section.</p>
+
+<h4 id="pg_store_plans">Collection execution plan statistics</h4>
+<p>Execution statistics itemized by execution plans are available for PostgreSQL 9.3 or later. By installing pg_store_plans on the monitored system, pg_statsinfo collects the execution plan statistics and stores as snapshots.<br>
+<p>The parameters below affect the behavior of this feature.</p>
+<ul>
+  <li>pg_statsinfo.stat_statements_max</li>
+  <li>pg_statsinfo.stat_statements_exclude_users</li>
+</ul>
+<p>You can see the details in <a href="#configuration">Configuraion File</a>.</p>
+
+<p>pg_stats_reporter requires a SQL function provided by
+pg_store_plans so it is required to be installed also on repository
+server to show the plan statistics perperly in reports. There's no
+need to load the library so shared_preload_libraries may be left
+untouched.
+</p>
 
 <p>That's all. Have fun.</p>
 
@@ -723,7 +738,7 @@ Available options are described below,
   <dt>-r, --report=REPORTID</dt>
   <dd>Generates a report of the type specified by REPORTID.</dd>
   <dd>The following REPORTID are available.</dd>
-  <dd>More details are shown in  <a href="files/pg_statsinfo_v3.0_report_infomation.xls">Items of a report in pg_statsinfo v3.0</a>(Both filename and contents are only in Japanese).</dd>
+  <dd>More details are shown in  <a href="files/pg_statsinfo_v3.1_report_infomation.xls">Items of a report in pg_statsinfo v3.1</a>(Both filename and contents are only in Japanese).</dd>
   <dd>
     <ul>
       <li>Summary</li>
@@ -1256,12 +1271,12 @@ postgresql.conf for the monitored instance. Reloading configuration file of Post
   <tr>
     <td>pg_statsinfo.stat_statements_max</td>
     <td>30</td>
-    <td>Maximum number of entries of pg_stat_statements to be recorded for every snapshot.</td>
+    <td>Maximum number of entries for both of pg_stat_statements and pg_store_plans to be recorded on every snapshot.</td>
   </tr>
   <tr>
     <td>pg_statsinfo.stat_statements_exclude_users</td>
     <td>-</td>
-    <td>Exclude queries of these users separated by commas from snapshots.</td>
+    <td>Name of users in comma-separated list whose queries in pg_stat_statements and pg_store_plans are not recorded.</td>
   </tr>
   <tr>
     <td>pg_statsinfo.controlfile_fsync_interval</td>
@@ -1336,7 +1351,7 @@ If you want to change log levels corresponding to the SQLSTATEs of 42P01 or 42P0
 <dl>
 <dt>Character encoding and lc_messages have to be the same among all databases on one monitored instance.</dt>
 <dd>
-pg_statsinfo supports encodings and message locales that PostgreSQL supports, but all of database in an instance must use the same encoding and locale because pg_statsinfo would fail in parsing logs with mixed-encodings.
+pg_statsinfo supports encodings and message locales that PostgreSQL supports, but all databases in an instance must use the same encoding and locale because pg_statsinfo would fail in parsing logs with mixed-encodings.
 </dd>
 
 <dt>Restrictions for log_filename</dt>
@@ -1353,15 +1368,16 @@ unexpectedly. It does no harm in spite of some error messages.</dd>
 <dt>Shutdown checkpoint cannot be recorded in repository if it shares monitored instance.</dt>
 <dd>Shutdown checkpoint cannot be recorded in this configuration because the repository database has been shutdown before pg_statsinfo detects it.</dd>
 
-<dt>Simultaneous snapshot and maintenance would fail.</dt>
+<dt>Snapshots taken during repository maintenance would fail once.</dt>
 <dd>Repository maintenance takes exclusive locks which prevents
-snapshots from being recorded. The failed snapshot registering will be retried soon.</dd>
+snapshots from being recorded. The snapshots failed to be stored will
+be retried soon.</dd>
 
 <dt>Limitation on multi-instance configuration</dt>
 <dd>Monitored instance are distinguished by the combination of database system identifier, host name and waiting port number, so pg_statsinfo get confused if any two instances share the same values for them.</dd>
 
-<dt>Note about auto maintenance with shared repository.</dt>
-<dd>As described above, shortest setting will be in effect finally if multiple monitored instances sharing one repository database have different preserving periods for auto maintenance.</dd>
+<dt>Note about auto maintenance of shared repository.</dt>
+<dd>As described above, the shortest setting will be in effect finally if multiple monitored instances sharing one repository database have different preserving periods for auto maintenance.</dd>
 
 <dt>Limitation for WAL statistics.</dt>
 <dd>WAL amount is not available on standby server so you will see WAL
@@ -1369,15 +1385,18 @@ statistics only on master side.</dd>
 
 <dt>Rounding off of sub-integer values</dt>
 <dd>Values represented in integer format may be rounded off to be zero
-for sub integer values.</dd>
+for sub-integer values.</dd>
 
 <dt>Logs accumulated in repository might be retarded.</dt>
 <dd>Manually deletion of CSV log when repository log accumulation is
-heavily retarded by some reason could cause loss of log entries
-in the deleted CSV log file.</dd>
+heavily retarded by some reason could cause loss of unstored log
+entries in deleted CSV log file.</dd>
 
 <dt>Connection to repository as a non-superuser.</dt>
-<dd>If you want to connect to repository database as a user other than superuser, make sure that the user has required privileges.  The recommended way to accomplish this is creating repository database specifying its owner to be that user. Following steps would do that.
+<dd>If you want to connect to repository database as a non-superuser,
+make sure that the user has required privileges.  The recommended way
+to accomplish this is creating repository database specifying its
+owner to be that user. Following steps would do that.
 <pre>
 $ createuser -DRSl -U &lt;superuser&gt; &lt;connection user&gt;
 $ createdb -U &lt;superuser&gt; -O &lt;connection user&gt; &lt;repository database&gt;
@@ -1389,15 +1408,15 @@ $ createdb -U &lt;superuser&gt; -O &lt;connection user&gt; &lt;repository databa
 other means as its working timezone. If it is different from
 log_timezone, log entries that pg_statsinfo generates have seemingly
 shifted timestamp in text log file, and log entries in repository will
-be sorted in wrong order.
+be shown in wrong order.
 </dd>
 
 <dt>Summertime and switching timezone</dt>
-<dd>Switching of summertime and switching timezone to another one possibly rewinds the time representation, that is, name of the new log file. Note that pg_statsinfo always processes the CSV log file with the 'largest' name so the new log file with the 'older' name will be skipped and its contents will disappear.
+<dd>Switching of summertime and switching timezone to another one possibly rewinds the time representation, that is, a part of the name of new log file. Note that pg_statsinfo always processes the CSV log file with the 'largest' name so the new log file with the 'older' name will be skipped and its contents will disappear.
 </dd>
 
 <dt>Storing logs under some timezones</dt>
-<dd>Each log entry has a timestamp followed by an abbreviated timezone names. This abbreviation may represent two or more timezones so the log entries will be stored with wrong timestamp if the abbreviation represents a different timezone from your assumption. For example, CST is an abbreviation for timezones with three different offsets, which defaultly represents US/Central(CST-6), so timestamps of log entries sent from a server where log_timezone is China(PRC = CST+8) are wrongly advanced by 14 hours on a repository where no change is made about timezone abbreviations. You need <a href="http://www.postgresql.org/docs/9.3/static/datetime-config-files.html">additional setup</a> if you get a wrong result as follows on repository database.
+<dd>Each log entry has a timestamp followed by an abbreviated timezone names. This abbreviation may represent two or more timezones so the log entries will be stored with unexpected timestamp if the abbreviation represents a different timezone from your assumption. For example, CST is an abbreviation for timezones with three different offsets, which defaultly represents US/Central(CST-6), so timestamps of log entries sent from a server where log_timezone is China(PRC = CST+8) are wrongly advanced by 14 hours on a repository where no additional setup is made about timezone abbreviations. You need <a href="http://www.postgresql.org/docs/current/static/datetime-config-files.html">additional setup</a> if you get a wrong result as follows on repository database for the time zone on your system.
 <pre>
 repository=$ SET TIME ZONE '<u>PRC</u>'; select '2014/1/1 0:0:0 <u>CST</u>'::timestamptz;
       timestamptz       
@@ -1415,7 +1434,7 @@ repository=$ SET TIME ZONE '<u>PRC</u>'; select '2014/1/1 0:0:0 <u>CST</u>'::tim
 
 <h2 id="QA">Q&A</h2>
 <h4>Q1. How can I check if pg_statsinfo is working fine?</h4>
-<p>Take manual snapshot, then confirm that the snapshot be stored in repository.
+<p>Take manual snapshot, then confirm that the snapshot is stored in repository.
 The following steps will do.
 </p>
 <pre>
@@ -1425,13 +1444,13 @@ $psql -d postgres -c "SELECT * FROM statsrepo.snapshot WHERE COMMENT = 'test'"
 <h4>Q2. How to utilize snapshots in repository?</h4>
 <p>The snapshots in repository can be of course inspected using sql queries but it needs too much labor for most cases.
 You can use pg_statsinfo's command line reporting feature to see them as simple reports in text format. For those who wants to see them in graphically interface, <a href='http://pgstatsinfo.sourceforge.net/pg_stats_reporter.html'>pg_stats_reporter</a> provides sortable tables with pager and manipulative graphs. 
-An operable sample report of pg_reporter is available <a href='files/details.html'>here</a>.
+An operable sample is available <a href='files/details.html'>here</a>.
 </p>
 
 <h4>Q3. Auto maintenance seems not cleaning up snapshots. </h4>
 <p>
 Perhaps it might be misconfigured.  Make sure your configuration is
-correct. Above all, enable_maintenance should be 'on' or include 'snapshot'.
+correct. Above all, enable_maintenance should be 'on' or includes 'snapshot'.
 </p>
 
 <ul>
@@ -1442,7 +1461,7 @@ correct. Above all, enable_maintenance should be 'on' or include 'snapshot'.
 
 <h4>Q4. How can I confirm that alert function is working?</h4>
 <p>
-Set commit alert threshold to 0, then taking a snapshot manually should give you a commit count alert message into server log.<br>
+Set commit alert threshold to 0, then taking a snapshot manually should give you a commit count alert message in server log.<br>
 </p>
 <pre>
 # UPDATE statsrepo.alert SET enable_alert = true, commit_tps = 0;
@@ -1452,10 +1471,10 @@ Set commit alert threshold to 0, then taking a snapshot manually should give you
 Don't forget to restore the setting as before.
 </p>
 
-<h4>Q5. How can I upgrade statsinfo from 2.x to 3.x in place?</h4>
+<h4>Q5. How can I upgrade statsinfo from older versions in place?</h4>
 <p>
-Sorry but you can't. You should uninstall older version first, then install new one. Furthermore, the repository database schema of 3.0 is not compatible with 2.x.
-Please <a href="#uninstall">uninstall</a> the old repository, and drop its schema before running new version.<br><br>
+Sorry but you can't. You should uninstall the older version first, then install new one. Furthermore, the repository database schema of 3.1 is not compatible with the older versions.
+Please <a href="#uninstall">uninstall</a> the old repository, and drop its schema before running new version. Then restart all the monitored instances.<br><br>
 </p>
 
 <h4>Q6. Command line reporting won't give me anything.</h4>
@@ -1472,6 +1491,9 @@ Two or more snapshots in repository are needed to generate a report. If there wa
   
   <dt>Query Activity (Statements)</dt>
   <dd>Needs pg_stat_statement to be installed.</dd>
+
+  <dt>Query Activity (Plans)</dt>
+  <dd>Needs pg_store_plans to be installed.</dd>
   
   <dt>Autovacuum Activity</dt>
   <dd>Needs log_autovacuum_min_duration to be non-negative value in postgresql.conf.</dd>
@@ -1499,14 +1521,22 @@ Two or more snapshots in repository are needed to generate a report. If there wa
 </dl>
 <br>
 
-<h2 id="change">Changes from pg_statsinfo 2.5</h2>
-<p>Following changes have been made after pg_statsinfo 2.5.</p>
+<h2 id="change">Changes from pg_statsinfo 3.0</h2>
+<p>Following changes have been made after pg_statsinfo 3.0.</p>
 <ul>
-  <li>Server logs are now able to be stored in repository.</li>
-  <li>Alert information is now included in snapshots.</li>
-  <li>Alert report is available on command line now.</li>
-  <li>PostgreSQL 8.3 is no more supported.</li>
+  <li>Execution statistics itemized by execution plans</li>
+  <li>Number of cancellations of AUTOANALYZE</li>
+  <li>Number of tuples that are dead but not-VACUUMed on AUTOVACUUM (*1)</li>
+  <li>Number of tuples modifed since last ANALYZE (*1)</li>
+  <li>WAL archive status (*1)</li>
+  <li>XMIN of replication standby (*1)(*2)</li>
+  <li>Peak rate of disk reads/writes</li>
 </ul>
+
+<p>
+(*1) Avalilable only on PostgreSQL 9.4 or later<br>
+(*2) Collected in repository but not used in report
+</p>
 <br>
 
 <h2 id="details">Detailed information</h2>
@@ -1625,7 +1655,7 @@ See also "<a href="pg_statsinfo-internal.html">pg_statsinfo: internal</a>" for d
   <a href="index.html">Top</a> &gt;
   <a href="pg_statsinfo.html">pg_statsinfo</a>
 <div>
-<p class="footer">Copyright (c) 2009-2014, NIPPON TELEGRAPH AND TELEPHONE CORPORATION</p>
+<p class="footer">Copyright (c) 2009-2015, NIPPON TELEGRAPH AND TELEPHONE CORPORATION</p>
 
 <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
