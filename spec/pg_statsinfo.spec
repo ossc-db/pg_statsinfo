@@ -117,3 +117,5 @@ fi
 
 # History of pg_statsinfo-v3.1 RPM.
 %changelog
+* Thu Jun  11 2015 - NTT OSS Center 3.1.0-1
+- pg_statsinfo 3.1.0 released
