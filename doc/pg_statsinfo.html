@@ -1519,6 +1519,15 @@ Two or more snapshots in repository are needed to generate a report. If there wa
   <dt>Schema Information</dt>
   <dd>Make sure the settings so that all target instances can be connected without prompting for password. See <a href="http://www.postgresql.org/docs/current/static/client-authentication.html">here</a> for details.</dd>
 </dl>
+
+<h4>Q8. There's no plan statistics in report although pg_store_plans has been installed.</h4>
+<p>
+pg_store_plans may be installed in the schema other than "public". You will find the following lines in server log for the case.
+<pre>ERROR: pg_statsinfo: query failed: ERROR: relation "pg_store_plans" does not exist</pre>
+Do DROP EXTENSION, then CREATE EXTENSION again explicitly specifying public as installation schema in order to fix this.
+<pre>CREATE EXTENSION pg_store_plans SCHEMA public;</pre>
+</p>
+
 <br>
 
 <h2 id="change">Changes from pg_statsinfo 3.0</h2>

@@ -1670,6 +1670,15 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
   <dd>一部のデータベースのスキーマ情報が含まれてない場合は、該当のデータベースに接続できる設定になっているか <a href="http://www.postgresql.jp/document/current/html/client-authentication.html">クライアント認証</a> などを確認してください。</dd>
 </dl>
 
+<h4>Q8. pg_store_plans をインストールしているのにレポートでプランの統計情報が出てきません。</h4>
+<p>
+pg_store_plans が public 以外のスキーマにインストールされている可能性があります。<br>
+この場合はログを確認すると繰り返し以下の様なエラーが記録されているはずです。
+<pre>ERROR: pg_statsinfo: query failed: ERROR:  relation "pg_store_plans" does not exist</pre>
+この場合は一旦 DROP EXTENSION したのち、明示的にスキーマを public と指定して CREATE EXTENSION を実行しなおしてください。
+<pre>CREATE EXTENSION pg_store_plans SCHEMA public;</pre>
+</p>
+
 <br>
 
 <h2 id="change">pg_statsinfo 3.0 からの変更点</h2>
