@@ -2527,50 +2527,58 @@ CREATE FUNCTION statsrepo.get_query_activity_statements(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		t1.rolname,
-		t1.datname,
+		t1.rolname::text,
+		t1.dbname::name,
 		t1.query,
-		statsrepo.sub(t1.calls, t2.calls),
-		statsrepo.sub(t1.total_time, t2.total_time)::numeric(1000, 3),
-		statsrepo.div(
-			statsrepo.sub(t1.total_time, t2.total_time)::numeric,
-			statsrepo.sub(t1.calls, t2.calls)),
-		statsrepo.sub(t1.blk_read_time, t2.blk_read_time)::numeric(1000, 3),
-		statsrepo.sub(t1.blk_write_time, t2.blk_write_time)::numeric(1000, 3)
+		t1.calls,
+		t1.total_time::numeric(1000, 3),
+		(t1.total_time / t1.calls)::numeric(1000, 3),
+		t1.blk_read_time::numeric(1000, 3),
+		t1.blk_write_time::numeric(1000, 3)
 	FROM
-		(
-			SELECT
+		(SELECT
+			rol.name AS rolname,
+			db.name AS dbname,
+			reg.query,
+			statsrepo.sub(st2.calls, st1.calls) AS calls,
+			statsrepo.sub(st2.total_time, st1.total_time) AS total_time,
+			statsrepo.sub(st2.blk_read_time, st1.blk_read_time) AS blk_read_time,
+			statsrepo.sub(st2.blk_write_time, st1.blk_write_time) AS blk_write_time
+		 FROM
+		 	(SELECT
+		 		s.dbid,
+		 		s.userid,
+		 		s.queryid,
+		 		s.query,
+				$1 AS first,
+				max(s.snapid) AS last
+			 FROM
+			 	statsrepo.statement s
+				JOIN statsrepo.snapshot ss ON (ss.snapid = s.snapid)
+			 WHERE
+			 	s.snapid >= $1 AND s.snapid <= $2
+				AND ss.instid = (SELECT instid FROM statsrepo.snapshot ss1 WHERE ss1.snapid = $2)
+			 GROUP BY
 				s.dbid,
 				s.userid,
-				d.name AS datname,
-				r.name AS rolname,
-				s.query,
-				max(s.calls) AS calls,
-				max(s.total_time) AS total_time,
-				max(s.blk_read_time) AS blk_read_time,
-				max(s.blk_write_time) AS blk_write_time
-			FROM
-				statsrepo.statement s,
-				statsrepo.snapshot n,
-				statsrepo.database d,
-				statsrepo.role r
-			WHERE
-				s.snapid = n.snapid
-				AND s.snapid = d.snapid
-				AND s.snapid = r.snapid
-				AND s.dbid = d.dbid
-				AND s.userid = r.userid
-				AND s.snapid > $1 AND s.snapid <= $2
-				AND n.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-			GROUP BY
-				s.dbid,
-				s.userid,
-				d.name,
-				r.name,
+				s.queryid,
 				s.query
-		) t1 LEFT JOIN
-		(SELECT * FROM statsrepo.statement WHERE snapid = $1) t2 ON
-			t1.dbid = t2.dbid AND t1.userid = t2.userid AND t1.query = t2.query
+			) AS reg
+		LEFT JOIN statsrepo.statement st1 ON
+			(st1.dbid = reg.dbid AND st1.userid = reg.userid AND
+			 st1.queryid = reg.queryid AND
+			 st1.query = reg.query AND st1.snapid = reg.first)
+		JOIN statsrepo.statement st2 ON
+			(st2.dbid = reg.dbid AND st2.userid = reg.userid AND
+			 st2.queryid = reg.queryid AND
+			 st2.query = reg.query AND st2.snapid = reg.last)
+		JOIN statsrepo.database db ON
+			(db.snapid = reg.first AND db.dbid = reg.dbid)
+		JOIN statsrepo.role rol ON
+			(rol.snapid = reg.first AND rol.userid = reg.userid)
+	) AS t1
+	WHERE
+		t1.calls > 0 and t1.total_time > 0
 	ORDER BY
 		5 DESC,
 		4 DESC;
@@ -2595,52 +2603,58 @@ $$
 	SELECT
 		t1.queryid,
 		t1.planid,
-		t1.rolname,
-		t1.datname,
-		statsrepo.sub(t1.calls, t2.calls),
-		statsrepo.sub(t1.total_time, t2.total_time)::numeric(1000, 3),
-		statsrepo.div(
-			statsrepo.sub(t1.total_time, t2.total_time)::numeric,
-			statsrepo.sub(t1.calls, t2.calls)),
-		statsrepo.sub(t1.blk_read_time, t2.blk_read_time)::numeric(1000, 3),
-		statsrepo.sub(t1.blk_write_time, t2.blk_write_time)::numeric(1000, 3)
+		t1.rolname::text,
+		t1.datname::name,
+		t1.calls,
+		t1.total_time::Numeric(1000, 3),
+		(t1.total_time / t1.calls)::numeric(1000, 3),
+		t1.blk_read_time::numeric(1000, 3),
+		t1.blk_write_time::numeric(1000, 3)
 	FROM
-		(
-			SELECT
+		(SELECT
+			reg.queryid,
+			reg.planid,
+			rol.name AS rolname,
+			db.name AS datname,
+			statsrepo.sub(pl2.calls, pl1.calls) AS calls,
+			statsrepo.sub(pl2.total_time, pl1.total_time) AS total_time,
+			statsrepo.sub(pl2.blk_read_time, pl1.blk_read_time) AS blk_read_time,
+			statsrepo.sub(pl2.blk_write_time, pl1.blk_write_time) AS blk_write_time
+		 FROM
+			(SELECT
 				p.queryid,
 				p.planid,
 				p.dbid,
 				p.userid,
-				d.name AS datname,
-				r.name AS rolname,
-				max(p.calls) AS calls,
-				max(p.total_time) AS total_time,
-				max(p.blk_read_time) AS blk_read_time,
-				max(p.blk_write_time) AS blk_write_time
-			FROM
-				statsrepo.plan p,
-				statsrepo.snapshot n,
-				statsrepo.database d,
-				statsrepo.role r
-			WHERE
-				p.snapid = n.snapid
-				AND p.snapid = d.snapid
-				AND p.snapid = r.snapid
-				AND p.dbid = d.dbid
-				AND p.userid = r.userid
-				AND p.snapid > $1 AND p.snapid <= $2
-				AND n.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-			GROUP BY
-				p.queryid,
-				p.planid,
-				p.dbid,
-				p.userid,
-				d.name,
-				r.name
-		) t1 LEFT JOIN
-		(SELECT * FROM statsrepo.plan WHERE snapid = $1) t2 ON
-			t1.dbid = t2.dbid AND t1.userid = t2.userid
-			AND t1.queryid = t2.queryid AND t1.planid = t2.planid
+				$1 AS first,
+				max(p.snapid) AS last
+			 FROM
+			 	statsrepo.plan p
+				JOIN statsrepo.snapshot ss ON (ss.snapid = p.snapid)
+			 WHERE
+			 	p.snapid >= $1 AND p.snapid <= $2
+				AND ss.instid = (SELECT instid FROM statsrepo.snapshot ss1 WHERE ss1.snapid = $2)
+			 GROUP BY
+			 	p.queryid,
+			 	p.planid,
+			 	p.dbid,
+			 	p.userid
+			) AS reg
+		LEFT JOIN statsrepo.plan pl1 ON
+			(pl1.queryid = reg.queryid AND pl1.planid = reg.planid AND
+			 pl1.dbid = reg.dbid AND pl1.userid = reg.userid AND
+			 pl1.snapid = reg.first)
+		JOIN statsrepo.plan pl2 ON
+			(pl2.queryid = reg.queryid AND pl2.planid = reg.planid AND
+			 pl2.dbid = reg.dbid AND pl2.userid = reg.userid AND
+			 pl2.snapid = reg.last)
+		JOIN statsrepo.database db ON
+			(db.snapid = reg.first AND db.dbid = reg.dbid)
+		JOIN statsrepo.role rol ON
+			(rol.snapid = reg.first AND rol.userid = reg.userid)
+	) AS t1
+	WHERE
+		t1.calls > 0 and t1.total_time > 0
 	ORDER BY
 		6 DESC,
 		5 DESC;
@@ -2671,15 +2685,13 @@ $$
 	SELECT
 		t1.queryid,
 		t1.planid,
-		t1.rolname,
-		t1.datname,
-		statsrepo.sub(t1.calls, t2.calls),
-		statsrepo.sub(t1.total_time, t2.total_time)::numeric(1000, 3),
-		statsrepo.div(
-			statsrepo.sub(t1.total_time, t2.total_time)::numeric,
-			statsrepo.sub(t1.calls, t2.calls)),
-		statsrepo.sub(t1.blk_read_time, t2.blk_read_time)::numeric(1000, 3),
-		statsrepo.sub(t1.blk_write_time, t2.blk_write_time)::numeric(1000, 3),
+		t1.rolname::text,
+		t1.datname::name,
+		t1.calls,
+		t1.total_time::Numeric(1000, 3),
+		(t1.total_time / t1.calls)::numeric(1000, 3),
+		t1.blk_read_time::numeric(1000, 3),
+		t1.blk_write_time::numeric(1000, 3),
 		t1.first_call::timestamp(0),
 		t1.last_call::timestamp(0),
 		t1.query,
@@ -2687,52 +2699,59 @@ $$
 		t1.dbid,
 		t1.userid
 	FROM
-		(
-			SELECT
-				max(p.snapid) AS snapid,
+		(SELECT
+			reg.queryid,
+			pl2.planid,
+			rol.name AS rolname,
+			db.name AS datname,
+			statsrepo.sub(pl2.calls, pl1.calls) AS calls,
+			statsrepo.sub(pl2.total_time, pl1.total_time) AS total_time,
+			statsrepo.sub(pl2.blk_read_time, pl1.blk_read_time) AS blk_read_time,
+			statsrepo.sub(pl2.blk_write_time, pl1.blk_write_time) AS blk_write_time,
+			pl2.first_call,
+			pl2.last_call,
+			st.query,
+			pl2.snapid,
+			pl2.dbid,
+			pl2.userid
+		 FROM
+			(SELECT
 				p.queryid,
 				p.planid,
 				p.dbid,
 				p.userid,
-				d.name AS datname,
-				r.name AS rolname,
-				max(p.calls) AS calls,
-				max(p.total_time) AS total_time,
-				max(p.blk_read_time) AS blk_read_time,
-				max(p.blk_write_time) AS blk_write_time,
-				max(p.first_call) AS first_call,
-				max(p.last_call) AS last_call,
-				s.query
-			FROM
-				statsrepo.plan p,
-				statsrepo.snapshot n,
-				statsrepo.database d,
-				statsrepo.role r,
-				statsrepo.statement s
-			WHERE
-				p.snapid = n.snapid
-				AND p.snapid = d.snapid
-				AND p.snapid = r.snapid
-				AND p.snapid = s.snapid
-				AND p.dbid = d.dbid
-				AND p.userid = r.userid
-				AND p.dbid = s.dbid
-				AND p.userid = s.userid
-				AND p.queryid = s.queryid
-				AND p.snapid > $1 AND p.snapid <= $2
-				AND n.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-			GROUP BY
+				$1 AS first,
+				max(p.snapid) AS last
+			 FROM
+				statsrepo.plan p
+				JOIN statsrepo.snapshot ss ON (ss.snapid = p.snapid)
+			 WHERE
+				p.snapid >= $1 AND p.snapid <= $2
+				AND ss.instid = (SELECT instid FROM statsrepo.snapshot ss1 WHERE ss1.snapid = $2)
+			 GROUP BY
 				p.queryid,
 				p.planid,
 				p.dbid,
-				p.userid,
-				d.name,
-				r.name,
-				s.query
-		) t1 LEFT JOIN
-		(SELECT * FROM statsrepo.plan WHERE snapid = $1) t2 ON
-			t1.dbid = t2.dbid AND t1.userid = t2.userid
-			AND t1.queryid = t2.queryid AND t1.planid = t2.planid
+				p.userid
+			) AS reg
+		LEFT JOIN statsrepo.plan pl1 ON
+			(pl1.queryid = reg.queryid AND pl1.planid = reg.planid AND
+			 pl1.dbid = reg.dbid AND pl1.userid = reg.userid AND
+			 pl1.snapid = reg.first)
+		JOIN statsrepo.plan pl2 ON
+			(pl2.queryid = reg.queryid AND pl2.planid = reg.planid AND
+			 pl2.dbid = reg.dbid AND pl2.userid = reg.userid AND
+			 pl2.snapid = reg.last)
+		JOIN statsrepo.database db ON
+			(db.snapid = reg.last AND db.dbid = reg.dbid)
+		JOIN statsrepo.role rol ON
+			(rol.snapid = reg.last AND rol.userid = reg.userid)
+		JOIN statsrepo.statement st ON
+			(st.snapid = reg.last AND st.queryid = reg.queryid AND
+			 st.dbid = reg.dbid AND st.userid = reg.userid)
+	) AS t1
+	WHERE
+		t1.calls > 0 and t1.total_time > 0
 	ORDER BY
 		6 DESC,
 		5 DESC;
