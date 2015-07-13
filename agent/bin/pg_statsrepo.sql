@@ -1224,34 +1224,42 @@ $$
 		coalesce(statsrepo.tps(xact_commit, duration), 0)::numeric(1000,3),
 		coalesce(statsrepo.tps(xact_rollback, duration), 0)::numeric(1000,3)
 	FROM
-	(
-		SELECT
+		(SELECT
 			snapid,
 			time,
 			name,
-			xact_commit - lag(xact_commit) OVER w AS xact_commit,
-			xact_rollback - lag(xact_rollback) OVER w AS xact_rollback,
-			time - lag(time) OVER w AS duration
+			CASE WHEN xact_commit >= 0 THEN xact_commit ELSE 0 END AS xact_commit,
+			CASE WHEN xact_rollback >= 0 THEN xact_rollback ELSE 0 END AS xact_rollback,
+			duration
 		FROM
 			(SELECT
-				s.snapid,
-				s.time,
-				d.name,
-				sum(xact_commit) AS xact_commit,
-				sum(xact_rollback) AS xact_rollback
-			 FROM
-				statsrepo.database d,
-				statsrepo.snapshot s
-			 WHERE
-			 	d.snapid = s.snapid
-			 	AND d.snapid BETWEEN $1 AND $2
-				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-			 GROUP BY
-			 	s.snapid, s.time, d.name) AS d
-		WINDOW w AS (PARTITION BY name ORDER BY snapid)
-		ORDER BY
-			snapid, name
-	) t
+				snapid,
+				time,
+				name,
+				xact_commit - lag(xact_commit) OVER w AS xact_commit,
+				xact_rollback - lag(xact_rollback) OVER w AS xact_rollback,
+				time - lag(time) OVER w AS duration
+			FROM
+				(SELECT
+					s.snapid,
+					s.time,
+					d.name,
+					sum(xact_commit) AS xact_commit,
+					sum(xact_rollback) AS xact_rollback
+				 FROM
+					statsrepo.database d,
+					statsrepo.snapshot s
+				 WHERE
+				 	d.snapid = s.snapid
+				 	AND d.snapid BETWEEN $1 AND $2
+					AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+				 GROUP BY
+				 	s.snapid, s.time, d.name) AS d
+			WINDOW w AS (PARTITION BY name ORDER BY snapid)
+			ORDER BY
+				snapid, name
+		) t
+	) t1
 	WHERE
 		snapid > $1;
 $$
