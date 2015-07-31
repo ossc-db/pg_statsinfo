@@ -179,7 +179,7 @@ default_log_maintenance_command(void)
 #define DEFAULT_REPOSITORY_KEEPDAY			7		/* day */
 #define DEFAULT_REPOLOG_KEEPDAY				7		/* day */
 #define DEFAULT_LOG_MAINTENANCE_COMMAND		default_log_maintenance_command()
-#define DEFAULT_LONG_LOCK_THREASHOLD		30		/* sec */
+#define DEFAULT_LONG_LOCK_THRESHOLD			30		/* sec */
 #define DEFAULT_STAT_STATEMENTS_MAX			30
 #define DEFAULT_CONTROLFILE_FSYNC_INTERVAL	60		/* sec */
 #define DEFAULT_LONG_TRANSACTION_MAX		10
@@ -248,7 +248,7 @@ static char	   *maintenance_time = NULL;
 static int		repository_keepday = DEFAULT_REPOSITORY_KEEPDAY;
 static int		repolog_keepday = DEFAULT_REPOLOG_KEEPDAY;
 static char	   *log_maintenance_command = NULL;
-static int		long_lock_threashold = DEFAULT_LONG_LOCK_THREASHOLD;
+static int		long_lock_threshold = DEFAULT_LONG_LOCK_THRESHOLD;
 static int		stat_statements_max = DEFAULT_STAT_STATEMENTS_MAX;
 static char	   *stat_statements_exclude_users = NULL;
 static int		long_transaction_max = DEFAULT_LONG_TRANSACTION_MAX;
@@ -1295,11 +1295,11 @@ _PG_init(void)
 							   NULL,
 							   NULL);
 
-	DefineCustomIntVariable(GUC_PREFIX ".long_lock_threashold",
+	DefineCustomIntVariable(GUC_PREFIX ".long_lock_threshold",
 							"Sets the threshold of lock wait time.",
 							NULL,
-							&long_lock_threashold,
-							DEFAULT_LONG_LOCK_THREASHOLD,
+							&long_lock_threshold,
+							DEFAULT_LONG_LOCK_THRESHOLD,
 							0,
 							INT_MAX,
 							PGC_SIGHUP,

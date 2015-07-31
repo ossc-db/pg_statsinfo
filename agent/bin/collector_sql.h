@@ -390,7 +390,7 @@ FROM \
 	 LEFT JOIN pg_namespace nb ON cb.relnamespace = nb.oid \
 WHERE \
 	(la.transactionid = lb.transactionid OR la.relation = lb.relation) AND \
-	sb.query_start < statement_timestamp() - current_setting('" GUC_PREFIX ".long_lock_threashold')::interval"
+	sb.query_start < statement_timestamp() - current_setting('" GUC_PREFIX ".long_lock_threshold')::interval"
 
 /* replication */
 #if PG_VERSION_NUM >= 90400

@@ -310,7 +310,7 @@ pg_statsinfo.syslog_line_prefix = '%t %p %c-%l %x %q(%u, %d, %r, %a) '
 track_functions = 'all'                         # ストアドプロシージャの呼び出しに関する統計情報を収集する
 log_checkpoints = on                            # チェックポイントを記録
 log_autovacuum_min_duration = 0                 # 自動バキュームを記録
-#pg_statsinfo.long_lock_threashold = 30s        # ロック競合情報に記録する対象の条件(閾値)を指定する
+#pg_statsinfo.long_lock_threshold = 30s         # ロック競合情報に記録する対象の条件(閾値)を指定する
 </pre>
 
 <p>pg_statsinfo は以下の設定を強制的に上書きすることに注意してください。</p>
@@ -1368,7 +1368,7 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
     <td>サーバログのログファイルの整理を実行するシェルコマンドを指定します。文字列内に'%l'を記述した場合は'%l'がログファイル格納ディレクトリの絶対パスに置き換わります。シェルコマンドは正常にコマンドが終了した場合にのみ正常終了値(0)を返してください。</td>
   </tr>
   <tr>
-    <td>pg_statsinfo.long_lock_threashold</td>
+    <td>pg_statsinfo.long_lock_threshold</td>
     <td>30s</td>
     <td>ロック競合情報の収集対象とする条件(閾値)。スナップショットの時点で発生しているロック競合の内、ロック待ちの経過時間(秒)が閾値を越えているものが収集対象となります。</td>
   </tr>
