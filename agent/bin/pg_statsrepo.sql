@@ -2782,24 +2782,51 @@ CREATE FUNCTION statsrepo.get_lock_activity(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		l.datname,
-		l.nspname,
-		l.relname,
-		l.duration,
-		l.blockee_pid,
-		l.blocker_pid,
-		l.blocker_gid,
-		l.blockee_query,
-		l.blocker_query
+		t1.datname,
+		t1.nspname,
+		t1.relname,
+		t2.duration,
+		t1.blockee_pid,
+		t1.blocker_pid,
+		t1.blocker_gid,
+		t1.blockee_query,
+		t2.blocker_query
 	FROM
-		statsrepo.lock l,
-		statsrepo.snapshot s
-	WHERE
-		l.snapid BETWEEN $1 AND $2
-		AND l.snapid = s.snapid
-		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+		(SELECT
+			max(l.snapid) AS snapid,
+			l.datname,
+			l.nspname,
+			l.relname,
+			l.blockee_pid,
+			l.blocker_pid,
+			l.blocker_gid,
+			l.blockee_query
+		 FROM
+			statsrepo.lock l,
+			statsrepo.snapshot s
+		 WHERE
+			l.snapid > $1 AND l.snapid <= $2
+			AND l.snapid = s.snapid
+			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+		 GROUP BY
+			l.datname,
+			l.nspname,
+			l.relname,
+			l.blockee_pid,
+			l.blocker_pid,
+			l.blocker_gid,
+			l.blockee_query) t1
+		LEFT JOIN statsrepo.lock t2 ON
+			t2.snapid = t1.snapid
+			AND coalesce(t2.datname, '') = coalesce(t1.datname, '')
+			AND coalesce(t2.nspname, '') = coalesce(t1.nspname, '')
+			AND coalesce(t2.relname, '') = coalesce(t1.relname, '')
+			AND t2.blockee_pid = t1.blockee_pid
+			AND t2.blocker_pid = t1.blocker_pid
+			AND coalesce(t2.blocker_gid, '') = coalesce(t1.blocker_gid, '')
+			AND t2.blockee_query = t1.blockee_query
 	ORDER BY
-		l.duration DESC;
+		t2.duration DESC;
 $$
 LANGUAGE sql;
 
