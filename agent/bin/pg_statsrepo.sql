@@ -2783,8 +2783,8 @@ CREATE FUNCTION statsrepo.get_lock_activity(
 $$
 	SELECT
 		t1.datname,
-		t1.nspname,
-		t1.relname,
+		t3.schema,
+		CASE WHEN t3.table IS NOT NULL THEN t3.table ELSE CAST('OID:[' || t1.relname || ']' AS name) END,
 		t2.duration,
 		t1.blockee_pid,
 		t1.blocker_pid,
@@ -2825,6 +2825,10 @@ $$
 			AND t2.blocker_pid = t1.blocker_pid
 			AND coalesce(t2.blocker_gid, '') = coalesce(t1.blocker_gid, '')
 			AND t2.blockee_query = t1.blockee_query
+		LEFT JOIN statsrepo.tables t3 ON
+			t3.snapid =t1.snapid
+			AND t3.database = t1.datname
+			AND t3.tbl = CAST(t1.relname AS oid)
 	ORDER BY
 		t2.duration DESC;
 $$

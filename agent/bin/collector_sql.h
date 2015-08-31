@@ -354,7 +354,7 @@ ORDER BY \
 SELECT \
 	db.datname, \
 	nb.nspname, \
-	cb.relname, \
+	lb.relation, \
 	" SQL_SELECT_LOCK_APPNAME ", \
 	sa.client_addr, \
 	" SQL_SELECT_LOCK_CLIENT_HOSTNAME ", \

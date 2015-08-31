@@ -152,8 +152,8 @@ DROP TABLE
 /***-- There are lock conflicts --***/
  snapid | datname | nspname | relname | blocker_appname | blocker_addr | blocker_hostname | blocker_port | blockee_pid | blocker_pid | blocker_gid | duration |                       blockee_query                       |            blocker_query             
 --------+---------+---------+---------+-----------------+--------------+------------------+--------------+-------------+-------------+-------------+----------+-----------------------------------------------------------+--------------------------------------
-      6 | db01    |         |         |                 |              |                  | xxx          | xxx         | xxx         |             | xxx      | LOCK TABLE schema01.tbl01 IN ACCESS SHARE MODE;           | (library might not have been loaded)
-      6 | db01    |         |         |                 |              |                  | xxx          | xxx         | xxx         |             | xxx      | LOCK TABLE schema01.tbl01 IN SHARE UPDATE EXCLUSIVE MODE; | (library might not have been loaded)
+      6 | db01    |         | xxx     |                 |              |                  | xxx          | xxx         | xxx         |             | xxx      | LOCK TABLE schema01.tbl01 IN ACCESS SHARE MODE;           | (library might not have been loaded)
+      6 | db01    |         | xxx     |                 |              |                  | xxx          | xxx         | xxx         |             | xxx      | LOCK TABLE schema01.tbl01 IN SHARE UPDATE EXCLUSIVE MODE; | (library might not have been loaded)
 (2 rows)
 
 /**--- Statistics of WAL ---**/
