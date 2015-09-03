@@ -1685,6 +1685,12 @@ pg_store_plans が public 以外のスキーマにインストールされてい
 <pre>CREATE EXTENSION pg_store_plans SCHEMA public;</pre>
 </p>
 
+<h4>Q9. スナップショットが取得できていないことがあります。</h4>
+<p>
+前回のスナップショット取得が未完了の状態で次のスナップショット取得が行われた場合、今回分のスナップショット取得はスキップされます。<br>
+なお、スナップショット取得ではテーブルおよびインデックスに対してAccessShareLockを獲得するため、AccessExclusiveLockが獲得されているとスナップショット取得が遅延することがあります。
+</p>
+
 <br>
 
 <h2 id="change">pg_statsinfo 3.0 からの変更点</h2>
