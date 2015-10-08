@@ -1335,6 +1335,10 @@ If you want to change log levels corresponding to the SQLSTATEs of 42P01 or 42P0
 <p>pg_statsinfo doesn't involve PostgreSQL in its crash but it won't restart automatically. Manually start the agent will help.
 </p>
 
+<h4 id="instance-deletion">Removing specific instances from repository</h4>
+<p>pg_statsinfo doesn't remove the data of no-longer-monitored instance automatically. Manually deleting corresponding records in statsrepo.instance removes all the data of the instance from repository. </p>
+<pre>$ psql -d postgres -c "DELETE FROM statsrepo.instance WHERE instid = &lt;instance ID to delete&gt;"</pre>
+
 <h3 id="uninstall">Uninstallation</h3>
 <p>When you uninstall pg_statsinfo, you have to restart PostgreSQL server after removing 'pg_statsinfo' from <code>shared_preload_libraries</code> and all of <code>pg_statsinfo.*</code> parameters in postgresql.conf.
 </p>
@@ -1527,6 +1531,10 @@ pg_store_plans may be installed in the schema other than "public". You will find
 <pre>ERROR: pg_statsinfo: query failed: ERROR: relation "pg_store_plans" does not exist</pre>
 Do DROP EXTENSION, then CREATE EXTENSION again explicitly specifying public as installation schema in order to fix this.
 <pre>CREATE EXTENSION pg_store_plans SCHEMA public;</pre>
+</p>
+
+<h4>Q9. What is the gaps among snapshots?</h4>
+<p>An attempt of taking snapshot will be canceled if the previous snapshot has not completed. The completion of a snapshot could be prolonged by Access Exclusive Locks on tables or indexes since it acquires Access Share Lock on them.
 </p>
 
 <br>
