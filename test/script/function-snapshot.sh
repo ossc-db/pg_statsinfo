@@ -23,6 +23,7 @@ mkdir -p ${PGDATA}/tblspc01
 createuser -ldrs user01
 createdb db01
 psql -d postgres -At << EOF
+SET client_min_messages TO error;
 CREATE TABLESPACE tblspc01 LOCATION '${PGDATA}/tblspc01';
 EOF
 psql -U user01 -d db01 -At << EOF

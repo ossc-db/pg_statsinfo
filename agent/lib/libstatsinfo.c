@@ -90,7 +90,15 @@
 	"received SIGHUP, reloading configuration files"
 
 /* log_autovacuum_min_duration: vacuum */
-#if PG_VERSION_NUM >= 90400
+#if PG_VERSION_NUM >= 90500
+#define MSG_AUTOVACUUM \
+	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
+	"pages: %d removed, %d remain, %d skipped due to pins\n" \
+	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable\n" \
+	"buffer usage: %d hits, %d misses, %d dirtied\n" \
+	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
+	"system usage: %s"
+#elif PG_VERSION_NUM >= 90400
 #define MSG_AUTOVACUUM \
 	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
 	"pages: %d removed, %d remain\n" \
@@ -123,7 +131,14 @@
 	"%s starting: %s"
 
 /* log_checkpoint: complete */
-#if PG_VERSION_NUM >= 90100
+#if PG_VERSION_NUM >= 90500
+#define MSG_CHECKPOINT_COMPLETE \
+	"checkpoint complete: wrote %d buffers (%.1f%%); " \
+	"%d transaction log file(s) added, %d removed, %d recycled; " \
+	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
+	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s; " \
+	"distance=%d kB, estimate=%d kB"
+#elif PG_VERSION_NUM >= 90100
 #define MSG_CHECKPOINT_COMPLETE \
 	"checkpoint complete: wrote %d buffers (%.1f%%); " \
 	"%d transaction log file(s) added, %d removed, %d recycled; " \
@@ -137,7 +152,14 @@
 #endif
 
 /* log_restartpoint: complete */
-#if PG_VERSION_NUM >= 90100
+#if PG_VERSION_NUM >= 90500
+#define MSG_RESTARTPOINT_COMPLETE \
+	"restartpoint complete: wrote %d buffers (%.1f%%); " \
+	"%d transaction log file(s) added, %d removed, %d recycled; " \
+	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
+	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s; " \
+	"distance=%d kB, estimate=%d kB"
+#elif PG_VERSION_NUM >= 90100
 #define MSG_RESTARTPOINT_COMPLETE \
 	"restartpoint complete: wrote %d buffers (%.1f%%); " \
 	"%d transaction log file(s) added, %d removed, %d recycled; " \

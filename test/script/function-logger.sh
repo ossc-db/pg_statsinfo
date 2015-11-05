@@ -161,7 +161,11 @@ echo "/**--- Collect the CHECKPOINT information ---**/"
 set_pgconfig ${PGCONFIG} ${PGDATA}
 update_pgconfig ${PGDATA} "log_checkpoints" "on"
 update_pgconfig ${PGDATA} "checkpoint_timeout" "30"
-update_pgconfig ${PGDATA} "checkpoint_segments" "1"
+if [ $(server_version) -ge 90500 ] ; then
+	update_pgconfig ${PGDATA} "max_wal_size" "2"
+else
+	update_pgconfig ${PGDATA} "checkpoint_segments" "1"
+fi
 pg_ctl restart -w -D ${PGDATA} -o "-p ${PGPORT}" > /dev/null
 sleep 3
 psql -c "CHECKPOINT"
@@ -305,14 +309,26 @@ psql -c "BEGIN; LOCK TABLE tbl01"
 sleep 3
 send_query << EOF
 SELECT
-	instid,
-	CASE WHEN "timestamp" IS NOT NULL THEN 'xxx' END AS timestamp,
-	database,
-	schema,
-	"table",
-	query
+	t1.instid,
+	CASE WHEN t1.timestamp IS NOT NULL THEN 'xxx' END AS timestamp,
+	t1.database,
+	t1.schema,
+	t1.table,
+	CASE WHEN
+		(t2.major_version = '901' AND t2.minor_version >= '19') OR
+		(t2.major_version = '902' AND t2.minor_version >= '14') OR
+		(t2.major_version = '903' AND t2.minor_version >= '10') OR
+		(t2.major_version = '904' AND t2.minor_version >= '05') OR
+		 t2.major_version >= '905'
+	THEN
+		'(N/A)'
+	ELSE
+		t1.query
+	END
 FROM
-	statsrepo.autovacuum_cancel
+	statsrepo.autovacuum_cancel t1,
+	(SELECT substring(current_setting('server_version_num'), 1, 3) AS major_version,
+			substring(current_setting('server_version_num'), 4, 5) AS minor_version) t2
 ORDER BY
-	database, schema, "table";
+	t1.database, t1.schema, t1.table;
 EOF

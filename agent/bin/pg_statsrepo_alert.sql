@@ -263,9 +263,9 @@ $$
 DECLARE
 	val_tablespace  text;
 	val_disk_pct    float8;
-	val_loadavg1    float8;
-	val_loadavg5    float8;
-	val_loadavg15   float8;
+	val_loadavg1    float4;
+	val_loadavg5    float4;
+	val_loadavg15   float4;
 	val_swap_size   bigint;
 BEGIN
 	-- alert if free-disk-space ratio of each tablespaces is higher than threshold.

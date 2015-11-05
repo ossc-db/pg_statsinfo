@@ -1,5 +1,6 @@
 /*---- Initialize repository DB ----*/
 /*---- Initialize monitored instance ----*/
+SET
 CREATE TABLESPACE
 SET
 CREATE SCHEMA

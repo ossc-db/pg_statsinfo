@@ -246,13 +246,8 @@ list_truncate(List *list, int new_size)
  * Locate the n'th cell (counting from 0) of the list.  It is an assertion
  * failure if there is no such cell.
  */
-#if PG_VERSION_NUM >= 90200
 static ListCell *
 list_nth_cell(const List *list, int n)
-#else
-static ListCell *
-list_nth_cell(List *list, int n)
-#endif
 {
 	ListCell   *match;
 
@@ -274,13 +269,8 @@ list_nth_cell(List *list, int n)
  * Return the data value contained in the n'th element of the
  * specified list. (List elements begin at 0.)
  */
-#if PG_VERSION_NUM >= 90200
 void *
 list_nth(const List *list, int n)
-#else
-void *
-list_nth(List *list, int n)
-#endif
 {
 	Assert(IsPointerList(list));
 	return lfirst(list_nth_cell(list, n));
@@ -290,13 +280,8 @@ list_nth(List *list, int n)
  * Return true iff 'datum' is a member of the list. Equality is
  * determined by using simple pointer comparison.
  */
-#if PG_VERSION_NUM >= 90200
 bool
 list_member_ptr(const List *list, const void *datum)
-#else
-bool
-list_member_ptr(List *list, void *datum)
-#endif
 {
 	ListCell   *cell;
 
@@ -425,13 +410,8 @@ list_free_deep(List *list)
 /*
  * Return a shallow copy of the specified list.
  */
-#if PG_VERSION_NUM >= 90200
 List *
 list_copy(const List *oldlist)
-#else
-List *
-list_copy(List *oldlist)
-#endif
 {
 	List	   *newlist;
 	ListCell   *newlist_prev;
@@ -472,13 +452,8 @@ list_copy(List *oldlist)
 /*
  * Return a shallow copy of the specified list, without the first N elements.
  */
-#if PG_VERSION_NUM >= 90200
 List *
 list_copy_tail(const List *oldlist, int nskip)
-#else
-List *
-list_copy_tail(List *oldlist, int nskip)
-#endif
 {
 	List	   *newlist;
 	ListCell   *newlist_prev;
@@ -528,17 +503,11 @@ list_copy_tail(List *oldlist, int nskip)
 
 /*
  * When using non-GCC compilers, we can't define these as inline
- * functions in pg_list.h, so they are defined here.
+ * functions, so they are defined here.
  */
 #ifndef __GNUC__
-
-#if PG_VERSION_NUM >= 90200
 ListCell *
 list_head(const List *l)
-#else
-ListCell *
-list_head(List *l)
-#endif
 {
 	return l ? l->head : NULL;
 }
@@ -549,13 +518,8 @@ list_tail(List *l)
 	return l ? l->tail : NULL;
 }
 
-#if PG_VERSION_NUM >= 90200
 int
 list_length(const List *l)
-#else
-int
-list_length(List *l)
-#endif
 {
 	return l ? l->length : 0;
 }

@@ -35,7 +35,9 @@ INSERT INTO statsrepo.autoanalyze_cancel VALUES \
 #define MSG_AUTOVACUUM_CANCEL \
 	"canceling autovacuum task"
 
-#if PG_VERSION_NUM >= 90400
+#if PG_VERSION_NUM >= 90500
+#define NUM_AUTOVACUUM			18
+#elif PG_VERSION_NUM >= 90400
 #define NUM_AUTOVACUUM			17
 #elif PG_VERSION_NUM >= 90200
 #define NUM_AUTOVACUUM			16
@@ -243,9 +245,19 @@ Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 	params[5] = list_nth(av->params, 3);	/* index_scans */
 	params[6] = list_nth(av->params, 4);	/* page_removed */
 	params[7] = list_nth(av->params, 5);	/* page_remain */
+#if PG_VERSION_NUM >= 90500
+//	params[8] = list_nth(av->params, 6);	/* pinned_pages */
+	params[8] = list_nth(av->params, 7);	/* tup_removed */
+	params[9] = list_nth(av->params, 8);	/* tup_remain */
+	params[10] = list_nth(av->params, 9);	/* tup_dead */
+	params[11] = list_nth(av->params, 10);	/* page_hit */
+	params[12] = list_nth(av->params, 11);	/* page_miss */
+	params[13] = list_nth(av->params, 12);	/* page_dirty */
+	params[14] = list_nth(av->params, 13);	/* read_rate */
+	params[15] = list_nth(av->params, 15);	/* write_rate */
+#elif PG_VERSION_NUM >= 90400
 	params[8] = list_nth(av->params, 6);	/* tup_removed */
 	params[9] = list_nth(av->params, 7);	/* tup_remain */
-#if PG_VERSION_NUM >= 90400
 	params[10] = list_nth(av->params, 8);	/* tup_dead */
 	params[11] = list_nth(av->params, 9);	/* page_hit */
 	params[12] = list_nth(av->params, 10);	/* page_miss */
@@ -253,12 +265,16 @@ Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 	params[14] = list_nth(av->params, 12);	/* read_rate */
 	params[15] = list_nth(av->params, 14);	/* write_rate */
 #elif PG_VERSION_NUM >= 90200
+	params[8] = list_nth(av->params, 6);	/* tup_removed */
+	params[9] = list_nth(av->params, 7);	/* tup_remain */
 	params[11] = list_nth(av->params, 8);	/* page_hit */
 	params[12] = list_nth(av->params, 9);	/* page_miss */
 	params[13] = list_nth(av->params, 10);	/* page_dirty */
 	params[14] = list_nth(av->params, 11);	/* read_rate */
 	params[15] = list_nth(av->params, 13);	/* write_rate */
 #endif
+	params[8] = list_nth(av->params, 6);	/* tup_removed */
+	params[9] = list_nth(av->params, 7);	/* tup_remain */
 	params[16] = list_nth(av->params, NUM_AUTOVACUUM + 2);	/* duration */
 
 	return pgut_command(conn, SQL_INSERT_AUTOVACUUM,
