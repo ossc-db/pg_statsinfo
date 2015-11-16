@@ -41,7 +41,7 @@
   <li><a href="#uninstall">Uninstallation</a></li>
   <li><a href="#restrictions">Restrictions</a></li>
   <li><a href="#QA">Q&A</a></li>
-  <li><a href="#change">Changes From pg_statsinfo 3.0</a></li>
+  <li><a href="#change">Changes From pg_statsinfo 3.1</a></li>
   <li><a href="#details">Detailed Information</a>
     <ol>
       <li><a href="#many-instances">Sharing Repository Database</a></li>
@@ -52,7 +52,7 @@
   <li><a href="#seealso">See Also</a></li>
 </ol>
 </div>
-<h1 id="pg_statsinfo">pg_statsinfo 3.1</h1>
+<h1 id="pg_statsinfo">pg_statsinfo 3.2</h1>
 <h2 id="name">What is pg_statsinfo ?</h2>
 <p>pg_statsinfo is a monitoring tool to record activities and
 statistics of PostgreSQL server in the form of time series of
@@ -120,7 +120,7 @@ manually.
 The required storage for every snapshot depends on the numbers of objects in the monitored database. It occupies about 600 - 800kB in typical cases. pg_statsinfo takes snapshots for every 10 minutes by default, so the required storage for all snapshots in a day from every monitored database is roughly estimated to be  90 - 120MB.
 </p>
 <p>
-You can see the structure of the tables in pg_statsinfo's repository database in <a href="files/pg_statsinfo_v3.1_repository_infomation.xls">this</a> document. (MS Excel document in Japanese).
+You can see the structure of the tables in pg_statsinfo's repository database in <a href="files/pg_statsinfo_v3.2_repository_infomation.xls">this</a> document. (MS Excel document in Japanese).
 </p>
 
 <h3 id="features-log-route">Server Log Filter</h3>
@@ -189,7 +189,7 @@ pg_statsinfo has some functions which could be done in command line. Besides, yo
 </ul>
 
 <p>
-The comprehensive list of report items is shown in <a href="files/pg_statsinfo_v3.1_report_infomation.xls">"report item list of pg_statsinfo v3.1".</a> (.xls in Japanese)<br>
+The comprehensive list of report items is shown in <a href="files/pg_statsinfo_v3.2_report_infomation.xls">"report item list of pg_statsinfo v3.2".</a> (.xls in Japanese)<br>
 Report items are equivalent with <a href="http://pgstatsinfo.sourceforge.net/pg_stats_reporter.html">pg_stats_reporter</a>.<br>
 If you would like to see graphical reports, please try <a href="http://pgstatsinfo.sourceforge.net/pg_stats_reporter.html">pg_stats_reporter</a>.
 </p>
@@ -231,9 +231,9 @@ Setup reference of this feature is <a href="#usage-maintenance">here</a>.
 <h3 id="requirement">Requirement</h3>
 <dl>
 <dt>PostgreSQL versions</dt>
-<dd>PostgreSQL 9.0, 9.1, 9.2, 9.3, 9.4 (--with-libxml is required. Standard RPM's are built with this option.)</dd>
+<dd>PostgreSQL 9.1, 9.2, 9.3, 9.4, 9.5 (--with-libxml is required. Standard RPM's are built with this option.)</dd>
 <dt>OS</dt>
-<dd>RHEL 6.x (x86_64), CentOS 6.x (x86_64), RHEL 7.x (x86_64), CentOS 7.x (x86_64)</dd>
+<dd>RHEL 7.x (x86_64), CentOS 7.x (x86_64)</dd>
 </dl>
 
 <h3 id="procedure">Installation</h3>
@@ -242,7 +242,7 @@ Setup reference of this feature is <a href="#usage-maintenance">here</a>.
 Example steps to installing pg_statsinfo using rpm follow.
 <pre>
 $ su
-# rpm -ivh pg_statsinfo-3.1.0-1.pg94.rhel6.x86_64.rpm
+# rpm -ivh pg_statsinfo-3.2.0-1.pg94.rhel6.x86_64.rpm
 </pre>
 
 <h4>Installing from source</h4>
@@ -251,8 +251,8 @@ $ su
 
 <pre>
 $ cd pg_statsinfo
-$ tar xzvf pg_statsinfo-3.1.0.tar.gz 
-$ cd pg_statsinfo-3.1.0
+$ tar xzvf pg_statsinfo-3.2.0.tar.gz 
+$ cd pg_statsinfo-3.2.0
 $ make USE_PGXS=1
 $ su
 # make USE_PGXS=1 install
@@ -320,15 +320,11 @@ local   all             postgres                                ident
 
 <h4>Configuration for involving query statistics</h4>
 <p>
-For PostgreSQL 9.0 or later, you can have snapshots involving query statistics using <a href="http://www.postgresql.org/docs/current/static/pgstatstatements.html">pg_stat_statements</a>. pg_statsinfo automatically detects pg_stat_statements and use it. Installation of pg_stat_statements would be done in the following steps after adding it to shared_preload_libraries in postgresql.conf.
+You can have snapshots involving query statistics using <a href="http://www.postgresql.org/docs/current/static/pgstatstatements.html">pg_stat_statements</a>. pg_statsinfo automatically detects pg_stat_statements and use it. Installation of pg_stat_statements would be done in the following steps after adding it to shared_preload_libraries in postgresql.conf.
 </p>
 
 <pre>
-# If you use PostgreSQL 9.1 or higher,
 $ psql -d postgres -c "CREATE EXTENSION pg_stat_statements"
-
-# If you use PostgreSQL earlier than 9.1,
-$ psql -d postgres -f $PGSHARE/contrib/pg_stat_statements.sql
 </pre>
 
 <p>You can set the following parameters in postgresql.conf as needed.</p>
@@ -367,7 +363,8 @@ untouched.
 
 <p>Likewise, pg_statsinfo stops gracefully along with PostgreSQL's
 shutdown. Shutting down in other than smart mode might cause some
-error messages, but they do no harm. Just ignore them.</p>
+error messages, but they do no harm. Just ignore them.
+Note that the default shutdown mode has been changed to "fast" from "smart" since PostgreSQL 9.5.</p>
 <pre>$ pg_ctl stop -m smart [OPTIONS]</pre>
 
 <p>pg_statsinfo can stop individually on running PostgreSQL server by the following command.</p>
@@ -739,7 +736,7 @@ Available options are described below,
   <dt>-r, --report=REPORTID</dt>
   <dd>Generates a report of the type specified by REPORTID.</dd>
   <dd>The following REPORTID are available.</dd>
-  <dd>More details are shown in  <a href="files/pg_statsinfo_v3.1_report_infomation.xls">Items of a report in pg_statsinfo v3.1</a>(Both filename and contents are only in Japanese).</dd>
+  <dd>More details are shown in  <a href="files/pg_statsinfo_v3.2_report_infomation.xls">Items of a report in pg_statsinfo v3.2</a>(Both filename and contents are only in Japanese).</dd>
   <dd>
     <ul>
       <li>Summary</li>
@@ -1430,10 +1427,18 @@ repository=$ SET TIME ZONE '<u>PRC</u>'; select '2014/1/1 0:0:0 <u>CST</u>'::tim
 (1 row)
 </pre>
 
+<dt>Limitation about AUTOVACUUM/AUTOANALYZE information</dt>
+<dd>Because the log level of a required message has been changed in
+the following minor versions, canceler process information of
+AUTOVACUUM/AUTOANALYZE is not collected and not shown in reports for
+these minor versions and later. <ul>
+  <li>PostgreSQL 9.1.19</li>
+  <li>PostgreSQL 9.2.14</li>
+  <li>PostgreSQL 9.3.10</li>
+  <li>PostgreSQL 9.4.5</li>
+  <li>PostgreSQL 9.5.0</li>
+</ul>
 </dd>
-
-
-
 </dl>
 <br/>
 
@@ -1478,7 +1483,7 @@ Don't forget to restore the setting as before.
 
 <h4>Q5. How can I upgrade statsinfo from older versions in place?</h4>
 <p>
-Sorry but you can't. You should uninstall the older version first, then install new one. Furthermore, the repository database schema of 3.1 is not compatible with the older versions.
+Sorry but you can't. You should uninstall the older version first, then install new one. Furthermore, the repository database schema of 3.2 is not compatible with the older versions.
 Please <a href="#uninstall">uninstall</a> the old repository, and drop its schema before running new version. Then restart all the monitored instances.<br><br>
 </p>
 
@@ -1539,22 +1544,12 @@ Do DROP EXTENSION, then CREATE EXTENSION again explicitly specifying public as i
 
 <br>
 
-<h2 id="change">Changes from pg_statsinfo 3.0</h2>
-<p>Following changes have been made after pg_statsinfo 3.0.</p>
+<h2 id="change">Changes from pg_statsinfo 3.1</h2>
+<p>Following changes have been made after pg_statsinfo 3.1.</p>
 <ul>
-  <li>Execution statistics itemized by execution plans</li>
-  <li>Number of cancellations of AUTOANALYZE</li>
-  <li>Number of tuples that are dead but not-VACUUMed on AUTOVACUUM (*1)</li>
-  <li>Number of tuples modifed since last ANALYZE (*1)</li>
-  <li>WAL archive status (*1)</li>
-  <li>XMIN of replication standby (*1)(*2)</li>
-  <li>Peak rate of disk reads/writes</li>
+  <li>Supports PostgreSQL 9.5. No functional changes have been made.</li>
+  <li>Dropped support for PostgreSQL 9.0.</li>
 </ul>
-
-<p>
-(*1) Avalilable only on PostgreSQL 9.4 or later<br>
-(*2) Collected in repository but not used in report
-</p>
 <br>
 
 <h2 id="details">Detailed information</h2>
