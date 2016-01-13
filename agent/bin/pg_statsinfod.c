@@ -29,6 +29,11 @@ int				server_version_num;		/* PG_VERSION_NUM */
 char		   *server_version_string;	/* PG_VERSION */
 int				server_encoding = -1;	/* server character encoding */
 char		   *log_timezone_name;
+int				page_size;				/* page size */
+int				xlog_seg_size;			/* size of each WAL segment */
+int				page_header_size;		/* page header size */
+int				htup_header_size;		/* tuple header size */
+int				item_id_size;			/* itemid size */
 /*---- GUC variables (collector) -------*/
 char		   *data_directory;
 char		   *excluded_dbnames;
@@ -134,6 +139,11 @@ static struct ParamMap PARAM_MAP[] =
 	{"log_error_verbosity", assign_string, &log_error_verbosity},
 	{"syslog_facility", assign_syslog, &syslog_facility},
 	{"syslog_ident", assign_string, &syslog_ident},
+	{"page_size", assign_int, &page_size},
+	{"xlog_seg_size", assign_int, &xlog_seg_size},
+	{"page_header_size", assign_int, &page_header_size},
+	{"htup_header_size", assign_int, &htup_header_size},
+	{"item_id_size", assign_int, &item_id_size},
 	{GUC_PREFIX ".excluded_dbnames", assign_string, &excluded_dbnames},
 	{GUC_PREFIX ".excluded_schemas", assign_string, &excluded_schemas},
 	{GUC_PREFIX ".stat_statements_max", assign_string, &stat_statements_max},

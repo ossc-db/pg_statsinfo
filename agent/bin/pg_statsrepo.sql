@@ -36,6 +36,10 @@ CREATE TABLE statsrepo.instance
 	port				integer NOT NULL,
 	pg_version			text,
 	xlog_file_size		bigint,
+	page_size			integer,
+	page_header_size	smallint,
+	htup_header_size	smallint,
+	item_id_size		smallint,
 	PRIMARY KEY (instid),
 	UNIQUE (name, hostname, port)
 );
@@ -2123,14 +2127,16 @@ $$
 			t.schema, 
 	 		t.table, 
 			t.n_live_tup,
-			ceil(t.n_live_tup::real / (8168 * statsrepo.pg_fillfactor(t.reloptions, 0) / 100 /
-				(width + 28)))::bigint AS logical_pages,
-			(t.size + CASE t.toastrelid WHEN 0 THEN 0 ELSE tt.size END) / 8192 AS physical_pages
+			ceil(t.n_live_tup::real / ((i.page_size - i.page_header_size) * statsrepo.pg_fillfactor(t.reloptions, 0) / 100 /
+				(width + i.htup_header_size + i.item_id_size)))::bigint AS logical_pages,
+			(t.size + CASE t.toastrelid WHEN 0 THEN 0 ELSE tt.size END) / i.page_size AS physical_pages
 		 FROM
 		 	statsrepo.tables t
+		 	LEFT JOIN statsrepo.snapshot s ON t.snapid = s.snapid
+		 	LEFT JOIN statsrepo.instance i ON s.instid = i.instid
 		 	LEFT JOIN
 		 		(SELECT
-		 			snapid, dbid, tbl, sum(avg_width)::integer + 7 & ~7 AS width
+		 			snapid, dbid, tbl, (sum(avg_width)::integer + 7) & ~7 AS width
 				 FROM
 				 	statsrepo."column" 
 				 WHERE

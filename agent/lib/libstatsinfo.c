@@ -400,7 +400,6 @@ static pid_t exec_background_process(char cmd[]);
 static void sample_activity(void);
 static void sample_diskstats(void);
 static void parse_diskstats(HTAB *diskstats);
-static uint64 get_sysident(void);
 static void must_be_superuser(void);
 static int get_devinfo(const char *path, Datum values[], bool nulls[]);
 static char *get_archive_path(void);
@@ -2349,6 +2348,15 @@ send_i32(int fd, const char *key, int value)
 }
 
 static bool
+send_u32(int fd, const char *key, int value)
+{
+	char	buf[32];
+
+	snprintf(buf, lengthof(buf), "%u", value);
+	return send_str(fd, key, buf);
+}
+
+static bool
 send_u64(int fd, const char *key, uint64 value)
 {
 	char	buf[32];
@@ -2555,20 +2563,24 @@ StatsinfoLauncherMain(void)
 	proc_exit(0);
 }
 
+#ifndef SizeofHeapTupleHeader
+#define SizeofHeapTupleHeader offsetof(HeapTupleHeaderData, t_bits)
+#endif
+
 /*
  * exec_background_process - Start statsinfo background process.
  */
 static pid_t
 exec_background_process(char cmd[])
 {
-	char		binpath[MAXPGPATH];
-	char		share_path[MAXPGPATH];
-	uint64		sysident;
-	int			fd;
-	pid_t		fpid;
-	pid_t		postmaster_pid = get_postmaster_pid();
-	pg_time_t	log_ts;
-	pg_tz	   *log_tz;
+	char			binpath[MAXPGPATH];
+	char			share_path[MAXPGPATH];
+	int				fd;
+	pid_t			fpid;
+	pid_t			postmaster_pid = get_postmaster_pid();
+	pg_time_t		log_ts;
+	pg_tz		   *log_tz;
+	ControlFileData	ctrl;
 
 	log_ts = (pg_time_t) time(NULL);
 	log_tz = pg_tzset(GetConfigOption("log_timezone", false));
@@ -2580,8 +2592,12 @@ exec_background_process(char cmd[])
 	/* $PGHOME/share */
 	get_share_path(my_exec_path, share_path);
 
-	/* ControlFile: system_identifier */
-	sysident = get_sysident();
+	/*
+	 * Read control file. We cannot retrieve it from "Control File" shared memory
+	 * because the shared memory might not be initialized yet.
+	 */
+	if (!readControlFile(&ctrl, DataDir))
+		elog(ERROR,  LOG_PREFIX "could not read control file: %m");
 
 	/* Make command line. Add postmaster pid only for ps display */
 	snprintf(cmd, MAXPGPATH, "%s/%s %d", binpath, PROGRAM_NAME, postmaster_pid);
@@ -2595,7 +2611,7 @@ exec_background_process(char cmd[])
 	}
 
 	/* send GUC variables to background process. */
-	if (!send_u64(fd, "instance_id", sysident) ||
+	if (!send_u64(fd, "instance_id", ctrl.system_identifier) ||
 		!send_i32(fd, "postmaster_pid", postmaster_pid) ||
 		!send_str(fd, "port", GetConfigOption("port", false)) ||
 		!send_str(fd, "server_version_num", GetConfigOption("server_version_num", false)) ||
@@ -2604,6 +2620,11 @@ exec_background_process(char cmd[])
 		!send_i32(fd, "server_encoding", GetDatabaseEncoding()) ||
 		!send_str(fd, "data_directory", DataDir) ||
 		!send_str(fd, "log_timezone", pg_localtime(&log_ts, log_tz)->tm_zone) ||
+		!send_u32(fd, "page_size", ctrl.blcksz) ||
+		!send_u32(fd, "xlog_seg_size", ctrl.xlog_seg_size) ||
+		!send_u32(fd, "page_header_size", MAXALIGN(SizeOfPageHeaderData)) ||
+		!send_u32(fd, "htup_header_size", MAXALIGN(SizeofHeapTupleHeader)) ||
+		!send_u32(fd, "item_id_size", sizeof(ItemIdData)) ||
 		!send_str(fd, ":debug", _("DEBUG")) ||
 		!send_str(fd, ":info", _("INFO")) ||
 		!send_str(fd, ":notice", _("NOTICE")) ||
@@ -2650,22 +2671,6 @@ static void
 sil_sigchld_handler(SIGNAL_ARGS)
 {
 	got_SIGCHLD = true;
-}
-
-/*
- * Read control file. We cannot retrieve it from "Control File" shared memory
- * because the shared memory might not be initialized yet.
- */
-static uint64
-get_sysident(void)
-{
-	ControlFileData	ctrl;
-
-	if (!readControlFile(&ctrl, DataDir))
-		elog(ERROR,
-			LOG_PREFIX "could not read control file: %m");
-
-	return ctrl.system_identifier;
 }
 
 /*

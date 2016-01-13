@@ -299,7 +299,7 @@ static char *
 get_instid(PGconn *conn)
 {
 	PGresult	   *res = NULL;
-	const char	   *params[5];
+	const char	   *params[9];
 	char		   *instid;
 
 	if (pgut_command(conn, "BEGIN TRANSACTION READ WRITE", 0, NULL) != PGRES_COMMAND_OK)
@@ -339,19 +339,43 @@ get_instid(PGconn *conn)
 	else
 	{
 		/* register as a new instance */
-		char	xlog_file_size[32];
+		char	page_size_str[32];
+		char	xlog_file_size_str[32];
+		char	page_header_size_str[32];
+		char	htup_header_size_str[32];
+		char	item_id_size_str[32];
 
+		snprintf(page_size_str,
+			sizeof(page_size_str), "%u", page_size);
+#if PG_VERSION_NUM >= 90300
+		snprintf(xlog_file_size_str,
+			sizeof(xlog_file_size_str), UINT64_FORMAT,
+			(UINT64CONST(0x100000000) / xlog_seg_size) * xlog_seg_size);
+#else
+		snprintf(xlog_file_size_str,
+			sizeof(xlog_file_size_str), "%u",
+			(((uint32) 0xffffffff) / xlog_seg_size) * xlog_seg_size);
+#endif
+		snprintf(page_header_size_str,
+			sizeof(page_header_size_str), "%d", page_header_size);
+		snprintf(htup_header_size_str,
+			sizeof(htup_header_size_str), "%d", htup_header_size);
+		snprintf(item_id_size_str,
+			sizeof(item_id_size_str), "%d", item_id_size);
 		PQclear(res);
-		snprintf(xlog_file_size,
-			sizeof(xlog_file_size), XLOGFILESIZE_FORMAT, XLogFileSize);
 
 		params[3] = server_version_string;
-		params[4] = xlog_file_size;
+		params[4] = xlog_file_size_str;
+		params[5] = page_size_str;
+		params[6] = page_header_size_str;
+		params[7] = htup_header_size_str;
+		params[8] = item_id_size_str;
 		res = pgut_execute(conn,
-			"INSERT INTO statsrepo.instance" 
-			" (name, hostname, port, pg_version, xlog_file_size)"
-			" VALUES ($1, $2, $3, $4, $5) RETURNING instid",
-			5, params);
+			"INSERT INTO statsrepo.instance "
+			"(name, hostname, port, pg_version, xlog_file_size, page_size,"
+			" page_header_size, htup_header_size, item_id_size) "
+			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING instid",
+			lengthof(params), params);
 		if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) < 1)
 			goto error;
 

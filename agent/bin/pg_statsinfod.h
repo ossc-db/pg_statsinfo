@@ -76,17 +76,6 @@ FROM \
 	LEFT JOIN pg_settings s \
 	ON t.name = s.name"
 
-/* reworked from access/xlog_internal.h */
-#define XLogSegSize		((uint32) XLOG_SEG_SIZE)
-#if PG_VERSION_NUM >= 90300
-#define XLogSegsPerFile		(UINT64CONST(0x100000000) / XLogSegSize)
-#define XLOGFILESIZE_FORMAT	UINT64_FORMAT
-#else
-#define XLogSegsPerFile		(((uint32) 0xffffffff) / XLogSegSize)
-#define XLOGFILESIZE_FORMAT	"%u"
-#endif
-#define XLogFileSize	(XLogSegsPerFile * XLogSegSize)
-
 /* number of columns of csvlog */
 #if PG_VERSION_NUM < 90000
 #define CSV_COLS			22
@@ -143,6 +132,11 @@ extern int			server_version_num;
 extern char		   *server_version_string;
 extern int			server_encoding;
 extern char		   *log_timezone_name;
+extern int			page_size;
+extern int			xlog_seg_size;
+extern int			page_header_size;
+extern int			htup_header_size;
+extern int			item_id_size;
 /*---- GUC variables (collector) -------*/
 extern char		   *data_directory;
 extern char		   *excluded_dbnames;
