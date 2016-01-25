@@ -887,7 +887,7 @@ do_complement(Logger *logger, ControlFile *ctrl)
 	{
 		/* csvlog which parsed at last is missed */
 		ereport(WARNING,
-			(errmsg("csvlog file \"%s\" not found or incurrect offset",
+			(errmsg("csvlog file \"%s\" not found or incorrect offset",
 				ctrl->csv_name)));
 
 		/*

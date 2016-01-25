@@ -383,7 +383,7 @@ logger_setup(Logger *logger, ControlFile *ctrl)
 
 		/* csvlog which stored at last is missed */
 		ereport(WARNING,
-			(errmsg("csvlog file \"%s\" not found or incurrect offset",
+			(errmsg("csvlog file \"%s\" not found or incorrect offset",
 				csv_name)));
 	}
 
