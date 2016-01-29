@@ -304,11 +304,6 @@ pgut_error(int elevel, int code, const char *msg, const char *detail)
 		return;
 	}
 
-#ifndef USE_DAEMON
-	if (log_required(elevel, pgut_log_level))
-		write_console(elevel, msg, detail);
-#endif
-
 	/* avoid recursive errors */
 	if (pthread_self() == th_logger && recursive_level > 0)
 		return;
