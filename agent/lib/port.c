@@ -1,7 +1,7 @@
 /*
  * lib/port.c
  *
- * Copyright (c) 2009-2015, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2009-2016, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 #include "libstatsinfo.h"
