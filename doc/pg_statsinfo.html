@@ -48,6 +48,7 @@
       <li><a href="#warm-standby">Warm Standby</a></li>
       <li><a href="#fallback-mode">Fall-Back Mode</a></li>
       <li><a href="#internal">Internals</a></li>
+      <li><a href="#internal-log-route">Distibuting server log</a></li>
     </ol>
   <li><a href="#seealso">See Also</a></li>
 </ol>
@@ -283,9 +284,7 @@ custom_variable_classes = 'pg_statsinfo'        # not required for PostgreSQL 9.
 pg_statsinfo.snapshot_interval = 30min          # snapshot interval 
 pg_statsinfo.enable_maintenance = 'on'          # enable automatic maintenance ('on' or 'off')
 pg_statsinfo.maintenance_time = '00:02:00'      # delete old snapshots every day at this time.
-pg_statsinfo.repository_keepday = 7             # keep snapshots for this period.
-pg_statsinfo.repolog_keepday = 7                # keep logs in repository for this period.
-
+pg_statsinfo.repolog_min_messages = disable     # disable log accumulation
 log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log' # pg_statsinfo requires this log_filename setting
 log_min_messages = 'log'
 pg_statsinfo.syslog_min_messages = 'error'
@@ -388,7 +387,8 @@ Pg_statsinfo takes snapshots periodically with the interval determined by pg_sta
 <p>Alongside the automatic snapshots, manual snapshots can be taken any time by the following command. The function statsinfo.snapshot takes the label for the snapshot as parameter (text DEFAULT NULL).
 </p>
 <pre>$ psql -d postgres -c "SELECT statsinfo.snapshot('comment')"</pre>
-
+<p>Manual snapshot is an asynchronous operation so you may find
+the result of an operation after a while.</p>
 <h4>Deleting snapshots automatically</h4>
 <p>Old snapshots are automatically deleted by the automatic repository maintenance function if tuned on. </p>
 <p>Detailed explanation for setting up of the function is shown <a href="#usage-maintenance">here</a>.</p>
@@ -433,9 +433,11 @@ The types of log files that pg_statsinfo handles and methods of filtering is des
     </ul>
   </dd>
 
-  <dt>Behavior at the time of log rotation</dt>
-  <dd>The file pg_statsinfo.log is renamed to have the same base name to the source CSV log file followed by the extension ".log" on rotating log files. Then the new text log file is created.<br/><br/>
-  PostgreSQL may create a file with the new name mentioned above, which possibly contains stderr messages originate outside PostgreSQL processes. The existing and non-empty "console log" file will be renamed before the rotation.
+  <dt>Preserved text log file (e.g. postgresql-2013-10-01_000000.log)</dt>
+  <dd>Text log files mentioned above is renamed for preservation. The renamed file is created by log rotation.<br/>
+<p>Note 1: PostgreSQL may create a file with the new name mentioned above, which possibly containes stderr messages originate outside PostgreSQL processes. The existing and non-empty "console log" file will be renamed before the rotation.</p>
+<p>Note 2: Files with extension ".copy" or ".err.<i>n</i>" may be created at log rotaion. In detail <a href="#internal-log-route">see below</a>.</p>
+
 <br/>
 Following is an example how the rotation looks like.<br/>
 <pre>
@@ -519,6 +521,15 @@ Click <a href="#usage-maintenance">here</a> for more of the automatic maintenanc
 <h3 id="log-store">Server log accumulation into repository</h3>
 <p>pg_statsinfo also can accumulate logs into repository database.<br>
 The same types of filtering to text log file can be used with partially different settings.
+</p>
+<p><b>Log accumulation is recommended to be disabled when the
+repository is located on the same instance as observed database.</b>
+Log accumulation inserts records into a repository database so with
+log_statements set to "all" or "dml", an insertion of an issued log
+message in turn issues another log message. This self-recursive log
+emitting will be prevented by setting the user-id for the repository
+connection to superusers or setting log_statements to other than "all"
+or "dml" in the configuration file.
 </p>
 
 <h4>Types of filtering</h4>
@@ -1148,7 +1159,10 @@ postgresql.conf for the monitored instance. Reloading configuration file of Post
   <tr>
     <td>pg_statsinfo.repolog_min_messages</td>
     <td>warning</td>
-    <td>Minimum message levels for repository log <a href="#configuration-a1">(*1)</a>.</td>
+    <td>Minimum message levels for repository
+    log <a href="#configuration-a1">(*1)</a>.<br>Log accumulation is
+    recommended to be disabled when the repository is located on the
+    same instance as observed database.</td>
   </tr>
   <tr>
     <td>pg_statsinfo.repolog_nologging_users</td>
@@ -1542,6 +1556,24 @@ Do DROP EXTENSION, then CREATE EXTENSION again explicitly specifying public as i
 <p>An attempt of taking snapshot will be canceled if the previous snapshot has not completed. The completion of a snapshot could be prolonged by Access Exclusive Locks on tables or indexes since it acquires Access Share Lock on them.
 </p>
 
+<h4>Q10. My PostgreSQL is compiled with non-default page size.</h4>
+<p>
+pg_statsinfo defaultly assumes the page size as 8192 bytes on
+generating reports. You can change the page size by defining the
+following function.
+</p>
+<pre>
+# CREATE OR REPLACE FUNCTION statsrepo.page_size() RETURNS integer AS 'SELECT <i>&ltpage_size&gt</i>' LANGUAGE sql IMMUTABLE;
+</pre>
+
+<h4>Q11. The master server in a HA cluster is shown as a different
+instance in reporter after a fail-over.</h4>
+<p>pg_statsinfo identifies an "instance" by instance-id, which is
+generated from hostname, port number and database system ID, which
+pg_controldata shows. Among the triplet, the host name of the master
+will generally be changed by a failover so this situation happens.
+Currently there is no available means of preventing this to occur.
+</p>
 <br>
 
 <h2 id="change">Changes from pg_statsinfo 3.1</h2>
@@ -1651,9 +1683,34 @@ LOG:  pg_statsinfo: pg_statsinfo is starting in fallback mode
 <p>This is an experimental feature requires --enable-debug and puts some burden on running server so please refrain from using this on commercial systems.
 <h3 id="internal">Internals</h3>
 <p>pg_statsinfo consists of a library loaded on PostgreSQL and a daemon process.
-Since the daemon is executed implicitly by the library at server startup, users don't have to execute the daemon explicitly.
+Since the daemon is executed implicitly by the library at server startup, users don't have to execute the daemon explicitly.</p>
 See also "<a href="pg_statsinfo-internal.html">pg_statsinfo: internal</a>" for details.
+
+<h3 id="internal-log-route">Distributing server log</h3>
+<p>
+We will explain how to rotate log when pg_statsinfo distribute server log. At first, the case files with ".copy" extension is created. After, the case files with ".err.<i>n</i>"is created.
 </p>
+<h4>The "*.copy" files in pg_log directory</h4>
+<p>
+This file is created to prevent overwriting existing files on a log
+rotation. The files of the name are storing some server logs that
+doesn't fit csv format such like error messages from restore_command.
+</p>
+<h4>The "*.err.<i>n</i>" files in pg_log directory</h4>
+<p>
+Restarting after a server crash or stopping agent may leave a file of
+the name. This occurs when pg_statsinfo could not resume reading the
+last *.csv log file it had processed on stopping, and then
+pg_statsinfo renames existing *.log file corresponding to the CSV log
+file with that extension. The content of the CSV file might not be fully
+processed for the case.
+</p>
+<p>
+This file also can be created on starting from a base backup. Removing
+the file $PGDATA/pg_statsinfo.control before starting a server
+prevents this from occurring for this case.
+</p>
+
 <h2 id="seealso">See Also</h2>
 <a href="http://www.postgresql.org/docs/current/static/app-pg-ctl.html">pg_ctl</a>,
 <a href="http://www.postgresql.org/docs/current/static/app-psql.html">psql</a>,
@@ -1668,7 +1725,7 @@ See also "<a href="pg_statsinfo-internal.html">pg_statsinfo: internal</a>" for d
   <a href="index.html">Top</a> &gt;
   <a href="pg_statsinfo.html">pg_statsinfo</a>
 <div>
-<p class="footer">Copyright (c) 2009-2015, NIPPON TELEGRAPH AND TELEPHONE CORPORATION</p>
+<p class="footer">Copyright (c) 2009-2016, NIPPON TELEGRAPH AND TELEPHONE CORPORATION</p>
 
 <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
