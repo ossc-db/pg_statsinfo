@@ -3058,21 +3058,9 @@ check_enable_maintenance(char **newval, void **extra, GucSource source)
 	List		*elemlist;
 	ListCell	*cell;
 	bool		 bool_val;
-	int			 mode = 0x00;
-	char		 mode_string[32];
 
 	if (parse_bool(*newval, &bool_val))
-	{
-		if (bool_val)
-		{
-			mode |= MAINTENANCE_MODE_SNAPSHOT;
-			mode |= MAINTENANCE_MODE_LOG;
-			mode |= MAINTENANCE_MODE_REPOLOG;
-		}
-		snprintf(mode_string, sizeof(mode_string), "%d", mode);
-		*newval = strdup(mode_string);
 		return true;
-	}
 
 	/* Need a modifiable copy of string */
 	rawstring = pstrdup(*newval);
@@ -3087,13 +3075,9 @@ check_enable_maintenance(char **newval, void **extra, GucSource source)
 	{
 		char *tok = (char *) lfirst(cell);
 
-		if (pg_strcasecmp(tok, "snapshot") == 0)
-			mode |= MAINTENANCE_MODE_SNAPSHOT;
-		else if (pg_strcasecmp(tok, "log") == 0)
-			mode |= MAINTENANCE_MODE_LOG;
-		else if (pg_strcasecmp(tok, "repolog") == 0)
-			mode |= MAINTENANCE_MODE_REPOLOG;
-		else
+		if (pg_strcasecmp(tok, "snapshot") != 0 &&
+			pg_strcasecmp(tok, "log") != 0 &&
+			pg_strcasecmp(tok, "repolog") != 0)
 		{
 			GUC_check_errdetail(GUC_PREFIX ".enable_maintenance unrecognized keyword: \"%s\"", tok);
 			goto error;
@@ -3102,9 +3086,6 @@ check_enable_maintenance(char **newval, void **extra, GucSource source)
 
 	pfree(rawstring);
 	list_free(elemlist);
-
-	snprintf(mode_string, sizeof(mode_string), "%d", mode);
-	*newval = strdup(mode_string);
 	return true;
 
 error:
@@ -3164,20 +3145,9 @@ assign_enable_maintenance(const char *newval, bool doit, GucSource source)
 	List		*elemlist;
 	ListCell	*cell;
 	bool		 bool_val;
-	int			 mode = 0x00;
-	char		 mode_string[32];
 
 	if (parse_bool(newval, &bool_val))
-	{
-		if (bool_val)
-		{
-			mode |= MAINTENANCE_MODE_SNAPSHOT;
-			mode |= MAINTENANCE_MODE_LOG;
-			mode |= MAINTENANCE_MODE_REPOLOG;
-		}
-		snprintf(mode_string, sizeof(mode_string), "%d", mode);
-		return strdup(mode_string);
-	}
+		return newval;
 
 	/* Need a modifiable copy of string */
 	rawstring = pstrdup(newval);
@@ -3196,13 +3166,9 @@ assign_enable_maintenance(const char *newval, bool doit, GucSource source)
 	{
 		char *tok = (char *) lfirst(cell);
 
-		if (pg_strcasecmp(tok, "snapshot") == 0)
-			mode |= MAINTENANCE_MODE_SNAPSHOT;
-		else if (pg_strcasecmp(tok, "log") == 0)
-			mode |= MAINTENANCE_MODE_LOG;
-		else if (pg_strcasecmp(tok, "repolog") == 0)
-			mode |= MAINTENANCE_MODE_REPOLOG;
-		else
+		if (pg_strcasecmp(tok, "snapshot") != 0 &&
+			pg_strcasecmp(tok, "log") != 0 &&
+			pg_strcasecmp(tok, "repolog") != 0)
 		{
 			pfree(rawstring);
 			list_free(elemlist);
@@ -3215,9 +3181,7 @@ assign_enable_maintenance(const char *newval, bool doit, GucSource source)
 
 	pfree(rawstring);
 	list_free(elemlist);
-
-	snprintf(mode_string, sizeof(mode_string), "%d", mode);
-	return strdup(mode_string);
+	return newval;
 }
 
 /* forbid empty and invalid time format */

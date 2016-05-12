@@ -114,6 +114,7 @@ static bool assign_syslog(const char *value, void *var);
 static bool assign_string(const char *value, void *var);
 static bool assign_bool(const char *value, void *var);
 static bool assign_time(const char *value, void *var);
+static bool assign_enable_maintenance(const char *value, void *var);
 static bool connect_test(const char *conninfo);
 static void readopt(void);
 static bool decode_time(const char *field, int *hour, int *min, int *sec);
@@ -169,7 +170,7 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".adjust_log_fatal", assign_string, &adjust_log_fatal},
 	{GUC_PREFIX ".textlog_nologging_users", assign_string, &textlog_nologging_users},
 	{GUC_PREFIX ".repolog_nologging_users", assign_string, &repolog_nologging_users},
-	{GUC_PREFIX ".enable_maintenance", assign_int, &enable_maintenance},
+	{GUC_PREFIX ".enable_maintenance", assign_enable_maintenance, &enable_maintenance},
 	{GUC_PREFIX ".maintenance_time", assign_time, &maintenance_time},
 	{GUC_PREFIX ".repository_keepday", assign_int, &repository_keepday},
 	{GUC_PREFIX ".repolog_keepday", assign_int, &repolog_keepday},
@@ -569,6 +570,49 @@ assign_syslog(const char *value, void *var)
 	sscanf(value, "local%d", (int *) var);
 	if (*(int *) var < 0 || 7 < *(int *) var)
 		*(int *) var = 0;
+	return true;
+}
+
+static bool
+assign_enable_maintenance(const char *value, void *var)
+{
+	char	*rawstring;
+	char	*tok;
+	bool	 bool_val;
+	int		 mode = 0x00;
+
+	if (parse_bool(value, &bool_val))
+	{
+		if (bool_val)
+		{
+			mode |= MAINTENANCE_MODE_SNAPSHOT;
+			mode |= MAINTENANCE_MODE_LOG;
+			mode |= MAINTENANCE_MODE_REPOLOG;
+		}
+		*(int *) var = mode;
+		return true;
+	}
+
+	rawstring = pgut_strdup(value);
+	tok = strtok(rawstring, ",");
+	while (tok)
+	{
+		if (pg_strcasecmp(tok, "snapshot") == 0)
+			mode |= MAINTENANCE_MODE_SNAPSHOT;
+		else if (pg_strcasecmp(tok, "log") == 0)
+			mode |= MAINTENANCE_MODE_LOG;
+		else if (pg_strcasecmp(tok, "repolog") == 0)
+			mode |= MAINTENANCE_MODE_REPOLOG;
+		else
+		{
+			free(rawstring);
+			return false;
+		}
+		tok = strtok(NULL, ",");
+	}
+
+	free(rawstring);
+	*(int *) var = mode;
 	return true;
 }
 
