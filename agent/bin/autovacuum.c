@@ -143,14 +143,23 @@ parse_autovacuum(const char *message, const char *timestamp)
 bool
 is_autovacuum_cancel(int elevel, const char *message)
 {
-	/* autovacuum cancel request log */
-	if (elevel == LOG &&
-		match(message, MSG_AUTOVACUUM_CANCEL_REQUEST))
-		return true;
-
 	/* autovacuum cancel log */
 	if (elevel == ERROR &&
 		match(message, MSG_AUTOVACUUM_CANCEL))
+		return true;
+
+	return false;
+}
+
+/*
+ * is_autovacuum_cancel_request
+ */
+bool
+is_autovacuum_cancel_request(int elevel, const char *message)
+{
+	/* autovacuum cancel request log */
+	if ((elevel == LOG || elevel == DEBUG) &&
+		match(message, MSG_AUTOVACUUM_CANCEL_REQUEST))
 		return true;
 
 	return false;
@@ -162,57 +171,65 @@ is_autovacuum_cancel(int elevel, const char *message)
 bool
 parse_autovacuum_cancel(const Log *log)
 {
-	List	*params;
+	AutovacuumLog	*av;
+	AVCancelRequest	*entry;
+	List			*params;
 
-	if (match(log->message, MSG_AUTOVACUUM_CANCEL_REQUEST))
+	if ((params = capture(log->context,
+		"automatic %s of table \"%s.%s.%s\"", 4)) == NIL)
+		return false;	/* should not happen */
+
+	/* get the query that caused cancel */
+	entry = get_avc_request(log->pid);
+
+	av = pgut_new(AutovacuumLog);
+	av->base.type = QUEUE_AUTOVACUUM;
+	av->base.free = (QueueItemFree) Autovacuum_free;
+	av->base.exec = (QueueItemExec) AutovacuumCancel_exec;
+	strlcpy(av->finish, log->timestamp, lengthof(av->finish));
+	av->params = params;
+	if (entry)
 	{
-		AVCancelRequest	*new_entry;
-
-		/* remove old entries */
-		refresh_avc_request();
-
-		/* add a new entry of the cancel request */
-		if ((params = capture(log->message, MSG_AUTOVACUUM_CANCEL_REQUEST, 1)) == NIL)
-			return false;	/* should not happen */
-
-		new_entry = pgut_malloc(sizeof(AVCancelRequest));
-		new_entry->time = time(NULL);
-		new_entry->w_pid = pgut_strdup((char *) list_nth(params, 0));
-		new_entry->query = pgut_strdup(log->user_query);
-		list_free_deep(params);
-
-		put_avc_request(new_entry);
-	}
-	else if (match(log->message, MSG_AUTOVACUUM_CANCEL))
-	{
-		AutovacuumLog	*av;
-		AVCancelRequest	*entry;
-
-		if ((params = capture(log->context,
-			"automatic %s of table \"%s.%s.%s\"", 4)) == NIL)
-			return false;	/* should not happen */
-
-		/* get the query that caused cancel */
-		entry = get_avc_request(log->pid);
-
-		av = pgut_new(AutovacuumLog);
-		av->base.type = QUEUE_AUTOVACUUM;
-		av->base.free = (QueueItemFree) Autovacuum_free;
-		av->base.exec = (QueueItemExec) AutovacuumCancel_exec;
-		strlcpy(av->finish, log->timestamp, lengthof(av->finish));
-		av->params = params;
-		if (entry)
-		{
-			av->params = lappend(av->params, pgut_strdup(entry->query));
-			remove_avc_request(entry);
-		}
-		else
-			av->params = lappend(av->params, NULL);
-
-		writer_send((QueueItem *) av);
+		av->params = lappend(av->params, pgut_strdup(entry->query));
+		remove_avc_request(entry);
 	}
 	else
-		return false;
+		av->params = lappend(av->params, NULL);
+
+	writer_send((QueueItem *) av);
+
+	return true;
+}
+
+/*
+ * parse_autovacuum_cancel_request
+ */
+bool
+parse_autovacuum_cancel_request(const Log *log)
+{
+	AVCancelRequest	*new_entry;
+	List			*params;
+
+	/* remove old entries */
+	refresh_avc_request();
+
+	/* add a new entry of the cancel request */
+#if PG_VERSION_NUM >= 90200
+	if ((params = capture(log->hint,
+		MSG_AUTOVACUUM_CANCEL_REQUEST, 1)) == NIL)
+#else
+	if ((params = capture(log->message,
+		MSG_AUTOVACUUM_CANCEL_REQUEST, 1)) == NIL)
+#endif
+		return false;	/* should not happen */
+
+	new_entry = pgut_malloc(sizeof(AVCancelRequest));
+	new_entry->time = time(NULL);
+	new_entry->w_pid = pgut_strdup((char *) list_nth(params, 0));
+	new_entry->query = pgut_strdup(log->user_query);
+	list_free_deep(params);
+
+	put_avc_request(new_entry);
 
 	return true;
 }

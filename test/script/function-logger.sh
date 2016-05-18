@@ -296,6 +296,7 @@ EOF
 fi
 
 echo "/**--- Collect the cancelled AUTOVACUUM information ---**/"
+update_pgconfig ${PGDATA} "log_min_messages" "debug1"
 update_pgconfig ${PGDATA} "autovacuum_analyze_threshold" "2147483647"
 update_pgconfig ${PGDATA} "autovacuum_vacuum_threshold" "10000"
 update_pgconfig ${PGDATA} "autovacuum_vacuum_cost_delay" "100ms"
@@ -315,11 +316,7 @@ SELECT
 	t1.schema,
 	t1.table,
 	CASE WHEN
-		(t2.major_version = '901' AND t2.minor_version >= '19') OR
-		(t2.major_version = '902' AND t2.minor_version >= '14') OR
-		(t2.major_version = '903' AND t2.minor_version >= '10') OR
-		(t2.major_version = '904' AND t2.minor_version >= '05') OR
-		 t2.major_version >= '905'
+		t2.major_version = '901' AND t2.minor_version >= '19'
 	THEN
 		'(N/A)'
 	ELSE

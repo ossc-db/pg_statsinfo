@@ -346,7 +346,7 @@ str_to_elevel(const char *value)
 	if (msg_debug)
 	{
 		if (pg_strcasecmp(value, msg_debug) == 0)
-			return DEBUG2;
+			return DEBUG;
 		else if (pg_strcasecmp(value, msg_info) == 0)
 			return INFO;
 		else if (pg_strcasecmp(value, msg_notice) == 0)

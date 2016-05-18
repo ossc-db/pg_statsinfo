@@ -246,7 +246,8 @@ logger_parse(Logger *logger, const char *csv_name, long csv_offset)
 		{
 			/* operation request log */
 			if (strcmp(log.message, LOGMSG_SNAPSHOT) == 0 ||
-				strcmp(log.message, LOGMSG_MAINTENANCE) == 0)
+				strcmp(log.message, LOGMSG_MAINTENANCE) == 0 ||
+				strcmp(log.message, LOGMSG_AUTOVACUUM_CANCEL_REQUEST) == 0)
 				continue;
 		}
 

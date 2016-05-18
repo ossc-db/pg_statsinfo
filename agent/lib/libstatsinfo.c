@@ -70,6 +70,13 @@
 #define PROGRAM_NAME		"pg_statsinfo.exe"
 #endif
 
+#define TAKE_HOOK(func, replace) \
+	prev_##func##_hook = func##_hook; \
+	func##_hook = replace;
+
+#define RESTORE_HOOK(func) \
+	func##_hook = prev_##func##_hook;
+
 /*
  * known message formats
  */
@@ -441,9 +448,17 @@ static const char *assign_enable_maintenance(const char *newval, bool doit, GucS
 static const char *assign_maintenance_time(const char *newval, bool doit, GucSource source);
 #endif
 
+#if PG_VERSION_NUM >= 90200
+static void pg_statsinfo_emit_log_hook(ErrorData *edata);
+static bool is_log_level_output(int elevel, int log_min_level);
+#endif
+
 static Activity		 activity = { 0, 0, 0, 0, 0, 0 };
 static HTAB			*long_xacts = NULL;
 static HTAB			*diskstats = NULL;
+#if PG_VERSION_NUM >= 90200
+static emit_log_hook_type	prev_emit_log_hook = NULL;
+#endif
 
 /* variables for pg_statsinfo launcher */
 static volatile bool	got_SIGCHLD = false;
@@ -1469,6 +1484,10 @@ _PG_init(void)
 
 	/* Install xact_last_activity */
 	init_last_xact_activity();
+#if PG_VERSION_NUM >= 90200
+	/* Install emit_log_hook */
+	TAKE_HOOK(emit_log, pg_statsinfo_emit_log_hook);
+#endif
 
 	/*
 	 * spawn pg_statsinfo launcher process if the first call
@@ -1485,6 +1504,10 @@ _PG_fini(void)
 {
 	/* Uninstall xact_last_activity */
 	fini_last_xact_activity();
+#if PG_VERSION_NUM >= 90200
+	/* Uninstall emit_log_hook */
+	RESTORE_HOOK(emit_log);
+#endif
 }
 
 /*
@@ -3780,3 +3803,78 @@ ds_match_fn(const void *key1, const void *key2, Size keysize)
 	else
 		return 1;
 }
+
+#if PG_VERSION_NUM >= 90200
+#if PG_VERSION_NUM >= 90600
+#define EDATA_MSGID(e) ((e)->message_id)
+#else
+#define EDATA_MSGID(e) ((e)->message)
+#endif
+/*
+ * pg_statsinfo_emit_log_hook - filtering by message level
+ */
+static void
+pg_statsinfo_emit_log_hook(ErrorData *edata)
+{
+	static char	*m = "sending cancel to blocking autovacuum PID";
+	static int	 recurse_level = 0;
+
+	if (recurse_level > 0)
+		return;
+
+	if (prev_emit_log_hook)
+		(*prev_emit_log_hook) (edata);
+
+	/* Dedicated message for the autovacuum cancel request */
+	recurse_level++;
+	if ((edata->elevel == DEBUG1 || edata->elevel == LOG) &&
+		strncmp(EDATA_MSGID(edata), m, strlen(m)) == 0)
+	{
+		int old_log_min_error_statement = log_min_error_statement;
+		log_min_error_statement = LOG;
+		ereport(LOG,
+			(errmsg(LOGMSG_AUTOVACUUM_CANCEL_REQUEST),
+			 errhint("%s", edata->message)));
+		log_min_error_statement = old_log_min_error_statement;
+	}
+
+	/*
+	 * Logging to csvlog higher than textlog_min_messages and
+	 * syslog_min_messages and repolog_min_messages.
+	 */
+	if (!is_log_level_output(edata->elevel, textlog_min_messages) &&
+		!is_log_level_output(edata->elevel, syslog_min_messages) &&
+		!is_log_level_output(edata->elevel, repolog_min_messages))
+		edata->output_to_server = false;
+	recurse_level--;
+}
+
+/*
+ * is_log_level_output - is elevel logically >= log_min_level?
+ *
+ * We use this for tests that should consider LOG to sort out-of-order,
+ * between ERROR and FATAL.  Generally this is the right thing for testing
+ * whether a message should go to the postmaster log, whereas a simple >=
+ * test is correct for testing whether the message should go to the client.
+ */
+static bool
+is_log_level_output(int elevel, int log_min_level)
+{
+	if (elevel == LOG || elevel == COMMERROR)
+	{
+		if (log_min_level == LOG || log_min_level <= ERROR)
+			return true;
+	}
+	else if (log_min_level == LOG)
+	{
+		/* elevel != LOG */
+		if (elevel >= FATAL)
+			return true;
+	}
+	/* Neither is LOG */
+	else if (elevel >= log_min_level)
+		return true;
+
+	return false;
+}
+#endif

@@ -266,7 +266,7 @@ writer_connect(bool superuser)
 	int		retry = 0;
 
 	if (superuser)
-#ifdef DEBUG
+#ifdef DEBUG_MODE
 		snprintf(info, lengthof(info), "%s", my_repository_server);
 #else
 		snprintf(info, lengthof(info),

@@ -353,7 +353,7 @@ collector_connect(const char *db)
 		}
 	}
 
-#ifdef DEBUG
+#ifdef DEBUG_MODE
 	snprintf(info, lengthof(info),
 		"dbname=%s port=%s", db, postmaster_port);
 #else

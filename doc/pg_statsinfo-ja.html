@@ -55,7 +55,7 @@
   <li><a href="#seealso">関連項目</a></li>
 </ol>
 </div>
-<h1 id="pg_statsinfo">pg_statsinfo 3.2</h1>
+<h1 id="pg_statsinfo">pg_statsinfo 3.3</h1>
 <h2 id="name">pg_statsinfoとは？</h2>
 <p>
 PostgreSQL サーバの利用統計情報を定期的に収集・蓄積することで、DB設計やPostgreSQLの運用(日々の処理傾向の把握、
@@ -128,7 +128,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </p>
 
 <h4>リポジトリDBのテーブル構成</h4>
-<p>リポジトリDBのテーブル構成に関しては、「<a href="files/pg_statsinfo_v3.2_repository_infomation.xls">pg_statsinfo v3.2 リポジトリDB構成</a>」を参照してください。</p>
+<p>リポジトリDBのテーブル構成に関しては、「<a href="files/pg_statsinfo_v3.3_repository_infomation.xls">pg_statsinfo v3.3 リポジトリDB構成</a>」を参照してください。</p>
 
 <h3 id="features-log-route">サーバログ分配機能</h3>
 <p>PostgreSQL が出力するサーバログをCSVログ、テキストログ、syslog に分配して出力します。</p>
@@ -201,7 +201,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </ul>
 
 <p>
-簡易レポート機能が出力するレポートの項目については「<a href="files/pg_statsinfo_v3.2_report_infomation.xls">pg_statsinfo v3.2 レポート項目一覧</a>」をご覧ください。<br>
+簡易レポート機能が出力するレポートの項目については「<a href="files/pg_statsinfo_v3.3_report_infomation.xls">pg_statsinfo v3.3 レポート項目一覧</a>」をご覧ください。<br>
 なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.sourceforge.net/pg_stats_reporter-ja.html">pg_stats_reporter</a> と同等です。<br>
 グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.sourceforge.net/pg_stats_reporter-ja.html">pg_stats_reporter</a> を使用してください。
 </p>
@@ -254,10 +254,10 @@ pg_statsinfo の運用管理向けの操作を行うコマンドを提供しま�
 <h3 id="procedure">インストール手順</h3>
 
 <h4>RPM</h4>
-以下はPostgreSQL9.4のRHEL6のx86_64用のrpmをインストールする例です。
+以下はPostgreSQL9.4のRHEL7のx86_64用のrpmをインストールする例です。
 <pre>
 $ su
-# rpm -ivh pg_statsinfo-3.2.0-1.pg94.rhel6.x86_64.rpm
+# rpm -ivh pg_statsinfo-3.3.0-1.pg94.rhel7.x86_64.rpm
 </pre>
 
 <h4>source</h4>
@@ -265,8 +265,8 @@ $ su
 なお、pg_statsinfo の登録スクリプト (sql) を手動でインストールする必要はありません。
 監視対象インスタンス、リポジトリDB共に、初回起動時に必要に応じて エージェントがスキーマを自動的にインストールします。</p>
 <pre>
-$ tar xzvf pg_statsinfo-3.2.0.tar.gz
-$ cd pg_statsinfo-3.2.0
+$ tar xzvf pg_statsinfo-3.3.0.tar.gz
+$ cd pg_statsinfo-3.3.0
 $ make USE_PGXS=1
 $ su
 # make USE_PGXS=1 install
@@ -791,7 +791,7 @@ $ pg_statsinfo  -r All -h localhost -d postgres -p 5432 -U postgres
   <dt>-r, --report=REPORTID</dt>
   <dd>レポート種別IDを指定します。</dd>
   <dd>レポート種別IDに指定できる値は以下のとおりです。</dd>
-  <dd>レポート種別IDとレポートの内容についての対応は「<a href="files/pg_statsinfo_v3.2_report_infomation.xls">pg_statsinfo v3.2 レポート項目一覧</a>」をご覧ください。</dd>
+  <dd>レポート種別IDとレポートの内容についての対応は「<a href="files/pg_statsinfo_v3.3_report_infomation.xls">pg_statsinfo v3.3 レポート項目一覧</a>」をご覧ください。</dd>
   <dd>
     <ul>
       <li>Summary</li>
@@ -1131,7 +1131,7 @@ pg_statsinfo を利用するために必須のパラメータは以下です。
     <td>log_min_messages</td>
     <td>debug5 ~ log</td>
     <td>ログへ出力するメッセージレベル。
-        'log', pg_statsinfo.syslog_min_messages, pg_statsinfo.textlog_min_messages のいずれの設定よりも、より多くを出力するレベルを設定する必要があります。</td>
+        'log', pg_statsinfo.syslog_min_messages, pg_statsinfo.textlog_min_messages, pg_statsinfo.repolog_min_messages のいずれの設定よりも、より多くを出力するレベルを設定する必要があります。</td>
   </tr>
   <tr>
     <td>log_destination</td>
@@ -1567,14 +1567,11 @@ repository=$ SET TIME ZONE '<u>PRC</u>'; select '2014/1/1 0:0:0 <u>CST</u>'::tim
 </pre>
 
 <dt>AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリの収集に関する制限</dt>
-<dd>監視対象DBのPostgreSQLが以下のバージョン以降のマイナーリリースの場合、AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリは収集されません。
-<ul>
-  <li>PostgreSQL 9.1.19</li>
-  <li>PostgreSQL 9.2.14</li>
-  <li>PostgreSQL 9.3.10</li>
-  <li>PostgreSQL 9.4.5</li>
-  <li>PostgreSQL 9.5.0</li>
-</ul>
+<dd>
+  <ul>
+    <li>監視対象DBのPostgreSQLが9.2.14, 9.3.10, 9.4.5以降のマイナーリリースおよび9.5.0以降の全てのリリースの場合、AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリはlog_min_messagesをdebug1～debug5に設定した場合のみ収集されます。</li>
+    <li>監視対象DBのPostgreSQLが9.1.19以降のマイナーリリースの場合、AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリは収集されません。</li>
+  </ul>
 </dd>
 </dl>
 <br>
