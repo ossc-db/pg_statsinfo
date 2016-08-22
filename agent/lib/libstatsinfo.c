@@ -282,6 +282,7 @@ static int		stat_statements_max = DEFAULT_STAT_STATEMENTS_MAX;
 static char	   *stat_statements_exclude_users = NULL;
 static int		long_transaction_max = DEFAULT_LONG_TRANSACTION_MAX;
 static int		controlfile_fsync_interval = DEFAULT_CONTROLFILE_FSYNC_INTERVAL;
+static bool		enable_alert = true;
 
 /*---- Function declarations ----*/
 
@@ -1419,7 +1420,7 @@ _PG_init(void)
 							NULL,
 							NULL);
 
-		DefineCustomIntVariable(GUC_PREFIX ".long_transaction_max",
+	DefineCustomIntVariable(GUC_PREFIX ".long_transaction_max",
 							"Sets the max collection size of long transaction.",
 							NULL,
 							&long_transaction_max,
@@ -1431,6 +1432,17 @@ _PG_init(void)
 #if PG_VERSION_NUM >= 90100
 							NULL,
 #endif
+							NULL,
+							NULL);
+
+	DefineCustomBoolVariable(GUC_PREFIX ".enable_alert",
+							"Enable the alert function.",
+							NULL,
+							&enable_alert,
+							true,
+							PGC_SIGHUP,
+							GUC_SUPERUSER_ONLY,
+							NULL,
 							NULL,
 							NULL);
 

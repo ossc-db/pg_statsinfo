@@ -32,7 +32,7 @@
       <li><a href="#snapshot">スナップショットの取得・削除</a></li>
       <li><a href="#log-route">サーバログの分配</a></li>
       <li><a href="#log-store">サーバログの蓄積</a></li>
-      <li><a href="#usage-alert">アラート機能の使い方</a></li>
+      <li><a href="#usage-alert">アラート機能の設定方法</a></li>
       <li><a href="#usage-cmdline">コマンドライン機能の使い方</a></li>
       <li><a href="#usage-maintenance">自動メンテナンス機能の使い方</a></li>
       <li><a href="#configuration">設定ファイル</a></li>
@@ -599,43 +599,13 @@ pg_statsinfo.adjust_log_info = '42P01'</pre>
 自動メンテナンスの蓄積ログの削除はデフォルトが ON となっています。</p>
 <p>自動メンテナンス機能の使い方は<a href="#usage-maintenance">こちら</a>をご覧ください。</p>
 
-<h3 id="usage-alert">アラート機能の使い方</h3>
+<h3 id="usage-alert">アラート機能の設定方法</h3>
 <p>
-アラート機能は初回スナップショットが完了した監視対象インスタンスに対して自動的に有効になります。<br>
-初期状態のアラート条件(閾値)は、アラート設定テーブルのデフォルト値が適用されます。
+アラート条件(閾値)は、アラート設定テーブル(リポジトリDBの「statsrepo.alert」テーブル)で管理します。<br>
+各設定カラムの値を -1 に設定することで項目単位でアラートを無効にできます。
+</p>
 <p>
-
-<h4>アラート設定の変更</h4>
-<p>監視対象インスタンス毎に、アラート機能の有効／無効およびアラート条件(閾値)を変更することができます。<br>
-また、アラート条件(閾値)を「-1」に設定することで一部のアラート項目のみ無効とすることができます。<br><p>
-
-<p>アラート設定を変更するには、アラート設定テーブルから変更したいアラート項目のカラムの値を変更してください。<br>
-なお、アラート設定の変更を行うには、アラート設定を変更する監視対象インスタンスの初回スナップショットが完了している必要があることに注意してください。</p>
-
-<p>アラート設定を変更する際、監視対象インスタンスを選択するためにカラム「instid」を使用します。<br>
-当該カラムには監視対象インスタンス毎に割り当てられた識別子 (監視対象インスタンスID) を指定します。<br>
-監視対象インスタンスIDは、簡易レポート機能でスナップショットサイズ表示を実行することで確認できます。</p>
-
-設定例: 秒間ロールバック数の閾値を「3000」に変更する場合
-<pre>
-# UPDATE statsrepo.alert SET rollback_tps = 3000 WHERE instid = <変更対象の監視対象インスタンスID>
-</pre>
-
-設定例: 秒間ロールバック数のアラートを無効にする場合
-<pre>
-# UPDATE statsrepo.alert SET rollback_tps = -1 WHERE instid = <変更対象の監視対象インスタンスID>
-</pre>
-
-設定例: アラート機能を無効にする場合
-<pre>
-# UPDATE statsrepo.alert SET enable_alert = false WHERE instid = <変更対象の監視対象インスタンスID>
-</pre>
-
-<h4>アラート設定テーブル</h4>
-<p>
-アラート設定テーブルとはアラート機能の有効／無効および各種アラート条件(閾値)の設定を保存するテーブルです。<br>
-アラート設定テーブルは、リポジトリDBの「statsrepo.alert」テーブルです。<br>
-アラート設定テーブルのスキーマ構成は以下のとおりです。<br>
+アラート設定テーブルのスキーマ構成を以下に示します。
 </p>
 
 <table>
@@ -754,16 +724,27 @@ pg_statsinfo.adjust_log_info = '42P01'</pre>
     <td>enable_alert</td>
     <td>boolean</td>
     <td>true</td>
-    <td>アラート対象判定フラグ(TRUE: 有効、FALSE: 無効)
+    <td>アラート機能の有効/無効(TRUE: 有効、FALSE: 無効)
 </td>
   </tr>
 </tbody>
 </table>
 
+<p>設定変更の例: 秒間ロールバック数の閾値を「3000」に変更する場合</p>
+<pre>
+# UPDATE statsrepo.alert SET rollback_tps = 3000 WHERE instid = <変更対象の監視対象インスタンスID>
+</pre>
+
 <p>
 アラート設定テーブルのタプルを削除しないでください。<br>
-タプルを削除した場合、削除したタプルに該当する監視対象インスタンスの設定ができなくなります。
+タプルを削除した場合、削除したタプルに該当する監視対象インスタンスのアラート機能が無効になります。
 </p>
+
+<h4>アラート機能全体の有効/無効の切り替え</h4>
+<p>
+アラート機能全体の有効/無効は<a href="#configuration">設定ファイル</a>のpg_statsinfo.enable_alertおよびアラート設定テーブルの
+enable_alertカラムで設定します。
+両方が true の場合にのみアラート機能は動作します。デフォルト値はどちらもtrueです。
 
 <h3 id="usage-cmdline">コマンドライン機能の使い方</h3>
 
@@ -1395,6 +1376,11 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
     <td>pg_statsinfo.controlfile_fsync_interval</td>
     <td>1min</td>
     <td>pg_statsinfoの制御ファイルの更新をストレージデバイスに同期書き出し(fsync)する間隔を設定します。</td>
+  </tr>
+  <tr>
+    <td>pg_statsinfo.enable_alert</td>
+    <td>on</td>
+    <td>アラート機能の有効／無効を設定します。</td>
   </tr>
 </tbody>
 </table>

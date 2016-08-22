@@ -72,7 +72,8 @@ FROM \
 		('" GUC_PREFIX ".repository_keepday'), \
 		('" GUC_PREFIX ".repolog_keepday'), \
 		('" GUC_PREFIX ".log_maintenance_command'), \
-		('" GUC_PREFIX ".controlfile_fsync_interval')) AS t(name) \
+		('" GUC_PREFIX ".controlfile_fsync_interval'), \
+		('" GUC_PREFIX ".enable_alert')) AS t(name) \
 	LEFT JOIN pg_settings s \
 	ON t.name = s.name"
 
@@ -155,6 +156,7 @@ extern time_t		maintenance_time;
 extern int			repository_keepday;
 extern int			repolog_keepday;
 extern char		   *log_maintenance_command;
+extern bool			enable_alert;
 /*---- GUC variables (logger) ----------*/
 extern char		   *log_directory;
 extern char		   *log_error_verbosity;

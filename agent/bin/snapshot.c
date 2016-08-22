@@ -435,7 +435,7 @@ Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 	/*
 	 * call statsrepo.alert(snapid) if exists
 	 */
-	if (has_statsrepo_alert(conn))
+	if (enable_alert && has_statsrepo_alert(conn))
 	{
 		elog(DEBUG2, "run alert(snapid=%s)", snapid);
 		alerts = pgut_execute(conn,

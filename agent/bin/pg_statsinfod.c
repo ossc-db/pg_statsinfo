@@ -47,6 +47,7 @@ time_t			maintenance_time;
 int				repository_keepday;
 int				repolog_keepday;
 char		   *log_maintenance_command;
+bool			enable_alert;
 /*---- GUC variables (logger) ----------*/
 char		   *log_directory;
 char		   *log_error_verbosity;
@@ -176,6 +177,7 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".repolog_keepday", assign_int, &repolog_keepday},
 	{GUC_PREFIX ".log_maintenance_command", assign_string, &log_maintenance_command},
 	{GUC_PREFIX ".controlfile_fsync_interval", assign_int, &controlfile_fsync_interval},
+	{GUC_PREFIX ".enable_alert", assign_bool, &enable_alert},
 	{":debug", assign_string, &msg_debug},
 	{":info", assign_string, &msg_info},
 	{":notice", assign_string, &msg_notice},
