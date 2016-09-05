@@ -619,14 +619,14 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 					parse_autovacuum(log.message, log.timestamp);
 					continue;
 				}
-
+#if PG_VERSION_NUM < 90300
 				/* setting parameters reloaded ? */
 				if (strcmp(log.message, msg_sighup) == 0)
 				{
-					server_reload_time = time(NULL) + RELOAD_DELAY;
+					kill(sil_pid, SIGHUP);
 					continue;
 				}
-
+#endif
 				/* shutdown ? */
 				if (strcmp(log.message, msg_shutdown) == 0)
 				{

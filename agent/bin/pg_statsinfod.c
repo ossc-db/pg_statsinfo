@@ -34,6 +34,7 @@ int				xlog_seg_size;			/* size of each WAL segment */
 int				page_header_size;		/* page header size */
 int				htup_header_size;		/* tuple header size */
 int				item_id_size;			/* itemid size */
+pid_t			sil_pid;				/* pg_statsinfo launcher's pid */
 /*---- GUC variables (collector) -------*/
 char		   *data_directory;
 char		   *excluded_dbnames;
@@ -48,6 +49,7 @@ int				repository_keepday;
 int				repolog_keepday;
 char		   *log_maintenance_command;
 bool			enable_alert;
+char		   *target_server;
 /*---- GUC variables (logger) ----------*/
 char		   *log_directory;
 char		   *log_error_verbosity;
@@ -108,6 +110,9 @@ pthread_t	th_writer;
 pthread_t	th_logger;
 pthread_t	th_logger_send;
 
+/* signal flag  */
+volatile bool	got_SIGHUP = false;
+
 static int help(void);
 static bool assign_int(const char *value, void *var);
 static bool assign_elevel(const char *value, void *var);
@@ -116,7 +121,6 @@ static bool assign_string(const char *value, void *var);
 static bool assign_bool(const char *value, void *var);
 static bool assign_time(const char *value, void *var);
 static bool assign_enable_maintenance(const char *value, void *var);
-static bool connect_test(const char *conninfo);
 static void readopt(void);
 static bool decode_time(const char *field, int *hour, int *min, int *sec);
 static int strtoi(const char *nptr, char **endptr, int base);
@@ -124,6 +128,7 @@ static bool execute_script(PGconn *conn, const char *script_file);
 static void create_lock_file(void);
 static void unlink_lock_file(void);
 static void load_control_file(ControlFile *ctrl);
+static void sighup_handler(SIGNAL_ARGS);
 
 /* parameters */
 static struct ParamMap PARAM_MAP[] =
@@ -146,6 +151,7 @@ static struct ParamMap PARAM_MAP[] =
 	{"page_header_size", assign_int, &page_header_size},
 	{"htup_header_size", assign_int, &htup_header_size},
 	{"item_id_size", assign_int, &item_id_size},
+	{"sil_pid", assign_int, &sil_pid},
 	{GUC_PREFIX ".excluded_dbnames", assign_string, &excluded_dbnames},
 	{GUC_PREFIX ".excluded_schemas", assign_string, &excluded_schemas},
 	{GUC_PREFIX ".stat_statements_max", assign_string, &stat_statements_max},
@@ -178,6 +184,7 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".log_maintenance_command", assign_string, &log_maintenance_command},
 	{GUC_PREFIX ".controlfile_fsync_interval", assign_int, &controlfile_fsync_interval},
 	{GUC_PREFIX ".enable_alert", assign_bool, &enable_alert},
+	{GUC_PREFIX ".target_server", assign_string, &target_server},
 	{":debug", assign_string, &msg_debug},
 	{":info", assign_string, &msg_info},
 	{":notice", assign_string, &msg_notice},
@@ -221,6 +228,13 @@ main(int argc, char *argv[])
 	/* stdin must be pipe from server */
 	if (isTTY(fileno(stdin)))
 		return help();
+
+	/* setup signal handler */
+	pqsignal(SIGHUP, sighup_handler);
+#if PG_VERSION_NUM >= 90300
+	pqsignal(SIGTERM, SIG_IGN);	/* for background worker */
+	pqsignal(SIGQUIT, SIG_IGN);	/* for background worker */
+#endif
 
 	/* read required parameters */
 	readopt();
@@ -647,57 +661,20 @@ assign_param(const char *name, const char *value)
 	return true;
 }
 
-static bool
-connect_test(const char *conninfo)
-{
-#if PG_VERSION_NUM >= 90100
-	return PQping(conninfo) == PQPING_OK;
-#else
-	PGconn			*conn;
-	ConnStatusType	 status;
-
-	conn = PQconnectdb(conninfo);
-	status = PQstatus(conn);
-	PQfinish(conn);
-	return status == CONNECTION_OK;
-#endif
-}
-
 /*
  * read required parameters.
  */
 static void
 readopt(void)
 {
-	PGconn		*conn;
-	PGresult	*res;
-	char		 conninfo[1024];
-
 	/* read required parameters from stdin */
 	readopt_from_file(stdin);
-	fclose(stdin);
 
 	Assert(postmaster_port);
 
-	snprintf(conninfo, lengthof(conninfo),
-		"dbname=%s port=%s options='-c log_statement=none'",
-		"postgres", postmaster_port);
-
-	/* wait until postmaster is ready to accept connection */
-	while (postmaster_is_alive())
-	{
-		if (connect_test(conninfo))
-			break;
-		sleep(1);	/* 1s */
-	}
-
-	/* read required parameters from db */
-	conn = pgut_connect(conninfo, NO, ERROR);
-	res = pgut_execute(conn, SQL_SELECT_CUSTOM_SETTINGS, 0, NULL);
-	readopt_from_db(res);
-
-	PQclear(res);
-	pgut_disconnect(conn);
+	if (!(enable_maintenance & MAINTENANCE_MODE_SNAPSHOT))
+		elog(NOTICE,
+			"automatic maintenance is disable. Please note the data size of the repository");
 }
 
 /*
@@ -1106,4 +1083,10 @@ load_control_file(ControlFile *ctrl)
 		if (!ReadControlFile(ctrl))
 			InitControlFile(ctrl);
 	}
+}
+
+static void
+sighup_handler(SIGNAL_ARGS)
+{
+	got_SIGHUP = true;
 }

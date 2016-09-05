@@ -114,9 +114,9 @@ delete_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_warning"
 update_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_error" "'00000'"
 update_pgconfig ${PGDATA} "log_statement" "'all'"
 pg_ctl reload && sleep ${RELOAD_DELAY}
-psql -c "SELECT 1" > /dev/null
+pid=$(psql -Atc "SELECT pg_backend_pid()")
 sleep ${STORE_DELAY}
-send_query -c "SELECT elevel, sqlstate, message FROM statsrepo.log WHERE sqlstate = '00000' AND elevel = 'ERROR'"
+send_query -c "SELECT elevel, sqlstate, message FROM statsrepo.log WHERE pid = ${pid}"
 
 echo "/**--- Adjust log level (adjust_log_log = '42P01') ---**/"
 delete_pgconfig ${PGDATA} "log_statement"

@@ -1199,7 +1199,7 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
     <td>(空文字)</td>
     <td>独自変数クラス名の設定。<br>
         PostgreSQL 9.1以前で利用する場合には 'pg_statsinfo' を指定してください。<br>
-        PostgreSQL 9.2以降で利用する場合は当パラメータの設定は不要です。<br>
+        PostgreSQL 9.2以降で利用する場合は当パラメータの設定は不要です。<br></td>
   </tr>
   <tr>
     <td>pg_statsinfo.textlog_min_messages</td>
@@ -1382,6 +1382,13 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
     <td>on</td>
     <td>アラート機能の有効／無効を設定します。</td>
   </tr>
+  <tr>
+    <td>pg_statsinfo.target_server</td>
+    <td>-</td>
+    <td>監視対象DBへの接続文字列 <a href="#configuration-a4">(*4)</a>。pg_statsinfoは統計情報収集などのために監視対象DBへ接続します。
+        デフォルトではこの接続にDBクラスタ作成時の初期ユーザおよび初期データベース(postgres)が使用されます。
+        この接続設定を変更する必要がある場合には当該パラメータを設定します。なお、ユーザを指定する場合はスーパユーザを指定する必要があることに注意してください。</td>
+  </tr>
 </tbody>
 </table>
 
@@ -1408,9 +1415,9 @@ log_line_prefix の値そのものは無視されることに注意して下さ�
 この他、libpq が使用する環境変数の影響を受けますので、「<a href="http://www.postgresql.jp/document/current/html/libpq-envars.html">環境変数</a>」も参照して下さい。
 </dd>
 <dd>
-リポジトリDBに接続する際にパスワードの入力待ちにならないようにする必要があります。
+パスワードの入力待ちにならないようにする必要があります。
 パスワード認証が必要な場合には、PostgreSQL インスタンス起動ユーザに <a href="http://www.postgresql.jp/document/current/html/libpq-pgpass.html">.pgpass</a> を設定し、パスワードの入力を自動化してください。
-なお、.pgpassを用いる場合、リポジトリDBへの接続文字列のホスト指定にhostaddrは使用しないで下さい。
+なお、.pgpassを用いる場合、ホスト指定にhostaddrは使用しないで下さい。
 </dd>
 
 <dt id="configuration-a5">*5 : SQLSTATE 指定</dt>
