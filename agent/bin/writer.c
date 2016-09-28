@@ -488,7 +488,6 @@ validate_repository(void)
 
 /*
  * check the condition of repository server.
- *  - supported XML feature
  *  - statsrepo schema version
  * Note:
  * Not use pgut_execute() in this function, because don't want to write
@@ -500,26 +499,6 @@ check_repository(PGconn *conn)
 	PGresult	*res;
 	char		*query;
 	uint32		 version;
-
-	/* check supported XML feature */
-	query = "SELECT xmlcomment('')";
-	res = PQexec(conn, query);
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-	{
-		char *sqlstate;
-
-		sqlstate = PQresultErrorField(res, PG_DIAG_SQLSTATE);
-		if (sqlstate && strcmp(sqlstate, "0A000") == 0)	/* feature not supported */
-		{
-			ereport(ERROR,
-				(errmsg("repository server must support XML feature. "
-						"you need to rebuild PostgreSQL using "
-						"\"./configure --with-libxml\"")));
-			goto bad;
-		}
-		goto error;	/* query failed */
-	}
-	PQclear(res);
 
 	/* check statsrepo schema exists */
 	query = "SELECT nspname FROM pg_namespace WHERE nspname = 'statsrepo'";

@@ -249,7 +249,6 @@ pg_statsinfo の運用管理向けの操作を行うコマンドを提供しま�
   <dt>動作検証済みOS</dt>
   <dd>RHEL 6.x (x86_64), CentOS 6.x (x86_64), RHEL 7.x (x86_64), CentOS 7.x (x86_64)</dd>
 </dl>
-<p><b>(注1) リポジトリDBの PostgreSQL は、configureオプションに --with-libxml が指定されたビルドである必要があります。 (RPM版の PostgreSQL には --with-libxml が指定されています)</b></p>
 
 <h3 id="procedure">インストール手順</h3>
 
@@ -1756,7 +1755,6 @@ pg_statsinfo は「インスタンスID」でインスタンスを識別しま�
 <ul>
   <li>リポジトリDBに接続できるか</li>
   <li>リポジトリDBに登録されている statsrepo スキーマのバージョンが正しいか</li>
-  <li>リポジトリDBの PostgreSQL が XML をサポートしているか (configure オプションに --with-libxml が指定されたビルドであるか)</li>
 </ul>
 
 <h4>フォールバックモードで無効化される機能</h4>
@@ -1788,10 +1786,6 @@ LOG:  pg_statsinfo: pg_statsinfo is starting in fallback mode
 # statsrepo スキーマのバージョンが合わない
 ERROR:  pg_statsinfo: incompatible statsrepo schema: version mismatch
 LOG:  pg_statsinfo: pg_statsinfo is starting in fallback mode
-
-# リポジトリDBの PostgreSQL が XML をサポートしていない
-ERROR:  pg_statsinfo: repository server must support XML feature. you need to rebuild PostgreSQL using "./configure --with-libxml"
-LOG:  pg_statsinfo: pg_statsinfo is starting in fallback mode
 </pre>
 
 <p>リポジトリDBの復旧に関する点検事項と対処方法を以下に示します。</p>
@@ -1806,10 +1800,6 @@ LOG:  pg_statsinfo: pg_statsinfo is starting in fallback mode
     <li>statsrepo スキーマを削除するか、リポジトリDBのデータベースを別に作成してください。</li>
   </ul>
   <dd>(正しいバージョンの statsrepo スキーマは設定リロード時に自動的に登録されます)</dd>
-  <dt>PostgreSQL が XML をサポートしていない場合</dt>
-  <ul>
-    <li>configure オプションに --with-libxml が指定されたビルドの PostgreSQL をインストールした後、リポジトリDBを再起動してください。</li>
-  </ul>
 </dl>
 
 <h3 id="systemtap">SystemTap 連携</h3>
