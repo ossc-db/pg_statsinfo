@@ -596,6 +596,7 @@ assign_enable_maintenance(const char *value, void *var)
 	char	*tok;
 	bool	 bool_val;
 	int		 mode = 0x00;
+	int		 tok_len;
 
 	if (parse_bool(value, &bool_val))
 	{
@@ -613,6 +614,14 @@ assign_enable_maintenance(const char *value, void *var)
 	tok = strtok(rawstring, ",");
 	while (tok)
 	{
+		/* trim leading and trailing whitespace */
+		while (*tok && isspace((unsigned char) *tok))
+			tok++;
+		tok_len = strlen(tok);
+		while (tok_len > 0 && isspace((unsigned char) tok[tok_len - 1]))
+			tok_len--;
+		tok[tok_len] = '\0';
+
 		if (pg_strcasecmp(tok, "snapshot") == 0)
 			mode |= MAINTENANCE_MODE_SNAPSHOT;
 		else if (pg_strcasecmp(tok, "log") == 0)
