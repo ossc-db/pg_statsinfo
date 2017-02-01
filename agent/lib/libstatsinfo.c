@@ -102,7 +102,15 @@
 	"received SIGHUP, reloading configuration files"
 
 /* log_autovacuum_min_duration: vacuum */
-#if PG_VERSION_NUM >= 90500
+#if PG_VERSION_NUM >= 90600
+#define MSG_AUTOVACUUM \
+	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
+	"pages: %d removed, %d remain, %d skipped due to pins, %u skipped frozen\n" \
+	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable\n" \
+	"buffer usage: %d hits, %d misses, %d dirtied\n" \
+	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
+	"system usage: %s"
+#elif PG_VERSION_NUM >= 90500
 #define MSG_AUTOVACUUM \
 	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
 	"pages: %d removed, %d remain, %d skipped due to pins\n" \
@@ -587,36 +595,50 @@ sample_activity(void)
 		PGPROC			   *proc;
 		LongXactHashKey		key;
 		LongXactEntry	   *entry;
+		int					procpid;
 
 		be = pgstat_fetch_stat_beentry(i);
 		if (!be)
 			continue;
 
+		procpid = be->st_procpid;
+		if (procpid == 0)
+			continue;
+
 		/*
 		 * sample idle transactions
 		 */
-		if (be->st_procpid == MyProcPid)
-			;	/* exclude myself */
-		else if (be->st_waiting)
-			waiting++;
-#if PG_VERSION_NUM >= 90200
-		else if (be->st_state == STATE_IDLE)
-			idle++;
-		else if (be->st_state == STATE_IDLEINTRANSACTION)
-			idle_in_xact++;
-		else if (be->st_state == STATE_RUNNING)
-			running++;
-#else
-		else if (be->st_activity[0] != '\0')
+		if (procpid != MyProcPid)
 		{
-			if (strcmp(be->st_activity, "<IDLE>") == 0)
-				idle++;
-			else if (strcmp(be->st_activity, "<IDLE> in transaction") == 0)
-				idle_in_xact++;
-			else
-				running++;
-		}
+#if PG_VERSION_NUM >= 90600
+			proc = BackendPidGetProc(procpid);
+			if (proc == NULL)
+				 continue;	/* This backend is dead */
+
+			if (proc->wait_event_info != 0)
+#else
+			if (be->st_waiting)
 #endif
+					waiting++;
+#if PG_VERSION_NUM >= 90200
+			else if (be->st_state == STATE_IDLE)
+				idle++;
+			else if (be->st_state == STATE_IDLEINTRANSACTION)
+				idle_in_xact++;
+			else if (be->st_state == STATE_RUNNING)
+				running++;
+#else
+			else if (be->st_activity[0] != '\0')
+			{
+				if (strcmp(be->st_activity, "<IDLE>") == 0)
+					idle++;
+				else if (strcmp(be->st_activity, "<IDLE> in transaction") == 0)
+					idle_in_xact++;
+				else
+					running++;
+			}
+#endif
+		}
 
 		/*
 		 * sample long transactions, but exclude vacuuming processes.
@@ -1582,7 +1604,11 @@ _PG_init(void)
 #if PG_VERSION_NUM >= 90300
 	/* Request additional shared resources */
 	RequestAddinShmemSpace(silShmemSize());
+#if PG_VERSION_NUM >= 90600
+	RequestNamedLWLockTranche("pg_statsinfo", 1);
+#else
 	RequestAddinLWLocks(1);
+#endif
 	/* Install shmem_startup_hook */
 	TAKE_HOOK(shmem_startup, pg_statsinfo_shmem_startup_hook);
 #endif
@@ -4135,7 +4161,11 @@ silShmemInit(void)
 	if (!found)
 	{
 		/* First time through ... */
+#if PG_VERSION_NUM >= 90600
+		sil_state->lockid = &(GetNamedLWLockTranche("pg_statsinfo"))->lock;
+#else
 		sil_state->lockid = LWLockAssign();
+#endif
 		sil_state->pid = INVALID_PID;
 	}
 	else
