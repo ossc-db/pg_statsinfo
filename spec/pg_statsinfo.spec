@@ -72,6 +72,9 @@ rm -rf %{buildroot}
 %{_datadir}/contrib/uninstall_pg_statsrepo.sql
 %{_datadir}/contrib/pg_statsinfo.sql
 %{_datadir}/contrib/uninstall_pg_statsinfo.sql
+%doc doc/pg_statsinfo-ja.html
+%doc doc/pg_statsinfo.html
+%doc doc/image/
 
 ## Script to run just before installing the package
 %pre
