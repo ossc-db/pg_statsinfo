@@ -2862,48 +2862,6 @@ $$
 $$
 LANGUAGE sql;
 
--- generate information that corresponds to 'Replication Activity'
-CREATE FUNCTION statsrepo.get_replication_activity(
-	IN snapid_begin			bigint,
-	IN snapid_end			bigint,
-	OUT usename				name,
-	OUT application_name	text,
-	OUT client_addr			inet,
-	OUT client_hostname		text,
-	OUT client_port			integer,
-	OUT backend_start		timestamp,
-	OUT state				text,
-	OUT current_location	text,
-	OUT sent_location		text,
-	OUT write_location		text,
-	OUT flush_location		text,
-	OUT replay_location		text,
-	OUT sync_priority		integer,
-	OUT sync_state			text
-) RETURNS SETOF record AS
-$$
-	SELECT
-		usename,
-		application_name,
-		client_addr,
-		client_hostname,
-		client_port,
-		backend_start::timestamp(0),
-		state,
-		current_location,
-		sent_location,
-		write_location,
-		flush_location,
-		replay_location,
-		sync_priority,
-		sync_state
-	FROM
-		statsrepo.replication
-	WHERE
-		snapid = $2
-$$
-LANGUAGE sql;
-
 -- generate information that corresponds to 'Replication Delays'
 CREATE FUNCTION statsrepo.get_replication_delays(
 	IN snapid_begin			bigint,
@@ -2941,6 +2899,61 @@ $$
 		AND r.replay_location IS NOT NULL
 	ORDER BY
 		s.snapid, client;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Replication Activity'
+CREATE FUNCTION statsrepo.get_replication_activity(
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT usename				name,
+	OUT application_name	text,
+	OUT client_addr			inet,
+	OUT client_hostname		text,
+	OUT client_port			integer,
+	OUT backend_start		timestamp,
+	OUT state				text,
+	OUT current_location	text,
+	OUT sent_location		text,
+	OUT write_location		text,
+	OUT flush_location		text,
+	OUT replay_location		text,
+	OUT sync_priority		integer,
+	OUT sync_state			text,
+	OUT replay_delay_avg	numeric,
+	OUT replay_delay_peak	numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		r.usename,
+		r.application_name,
+		r.client_addr,
+		r.client_hostname,
+		r.client_port,
+		r.backend_start::timestamp(0),
+		r.state,
+		r.current_location,
+		r.sent_location,
+		r.write_location,
+		r.flush_location,
+		r.replay_location,
+		r.sync_priority,
+		r.sync_state,
+		d.replay_delay_avg,
+		d.replay_delay_peak
+	FROM
+		statsrepo.replication r,
+		(SELECT
+			client,
+			avg(replay_delay_size) AS replay_delay_avg,
+			max(replay_delay_size) AS replay_delay_peak
+		 FROM
+		 	statsrepo.get_replication_delays($1, $2)
+		 GROUP BY
+			client) d
+	WHERE
+		d.client = (host(r.client_addr) || ':' || r.client_port)
+		AND r.snapid = $2;
 $$
 LANGUAGE sql;
 

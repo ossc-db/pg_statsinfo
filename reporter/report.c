@@ -95,48 +95,26 @@ FROM \
 #define SQL_SELECT_QUERY_ACTIVITY_STATEMENTS	"SELECT * FROM statsrepo.get_query_activity_statements($1, $2) LIMIT 20"
 #define SQL_SELECT_QUERY_ACTIVITY_PLANS			"SELECT * FROM statsrepo.get_query_activity_plans($1, $2) LIMIT 20"
 #define SQL_SELECT_LOCK_CONFLICTS				"SELECT * FROM statsrepo.get_lock_activity($1, $2) LIMIT 20"
-#define SQL_SELECT_REPLICATION_STATUS			"SELECT * FROM statsrepo.get_replication_activity($1, $2)"
-#define SQL_SELECT_REPLICATION_DELAYS_SYNC "\
+#define SQL_SELECT_REPLICATION_STATUS "\
 SELECT \
-	timestamp, \
-	client, \
-	flush_delay_size, \
-	replay_delay_size \
+	usename, \
+	application_name, \
+	client_addr, \
+	client_hostname, \
+	client_port, \
+	backend_start, \
+	state, \
+	current_location, \
+	sent_location, \
+	write_location, \
+	flush_location, \
+	replay_location, \
+	sync_priority, \
+	sync_state, \
+	statsrepo.pg_size_pretty(replay_delay_avg::bigint), \
+	statsrepo.pg_size_pretty(replay_delay_peak::bigint) \
 FROM \
-	statsrepo.get_replication_delays($1, $2) \
-WHERE \
-	sync_state = 'sync'"
-#define SQL_SELECT_REPLICATION_DELAYS_ASYNC "\
-SELECT \
-	timestamp, \
-	client, \
-	flush_delay_size, \
-	replay_delay_size \
-FROM \
-	statsrepo.get_replication_delays($1, $2) \
-WHERE \
-	client = \
-	( \
-		SELECT \
-			host(r.client_addr) || ':' || r.client_port \
-		FROM \
-			statsrepo.replication r, \
-			statsrepo.snapshot s, \
-			statsrepo.instance i \
-		WHERE \
-			r.snapid = s.snapid \
-			AND s.instid = i.instid \
-			AND r.snapid = $2 \
-			AND r.sync_state != 'sync' \
-			AND r.flush_location IS NOT NULL \
-			AND r.replay_location IS NOT NULL \
-		ORDER BY \
-			statsrepo.xlog_location_diff( \
-				split_part(r.current_location, ' ', 1), \
-				split_part(r.flush_location, ' ', 1), \
-				i.xlog_file_size) DESC, client_addr, client_port \
-		LIMIT 1 \
-	)"
+	statsrepo.get_replication_activity($1, $2)"
 #define SQL_SELECT_SETTING_PARAMETERS			"SELECT * FROM statsrepo.get_setting_parameters($1, $2)"
 #define SQL_SELECT_SCHEMA_INFORMATION_TABLES	"SELECT * FROM statsrepo.get_schema_info_tables($1, $2)"
 #define SQL_SELECT_SCHEMA_INFORMATION_INDEXES	"SELECT * FROM statsrepo.get_schema_info_indexes($1, $2)"
@@ -1111,34 +1089,12 @@ report_replication_activity(PGconn *conn, ReportScope *scope, FILE *out)
 		fprintf(out, "Flush WAL Location    : %s\n", PQgetvalue(res, i, 10));
 		fprintf(out, "Replay WAL Location   : %s\n", PQgetvalue(res, i, 11));
 		fprintf(out, "Sync Priority         : %s\n", PQgetvalue(res, i, 12));
-		fprintf(out, "Sync State            : %s\n\n", PQgetvalue(res, i, 13));
+		fprintf(out, "Sync State            : %s\n", PQgetvalue(res, i, 13));
+		fprintf(out, "Replay Delay Average  : %s\n", PQgetvalue(res, i, 14));
+		fprintf(out, "Replay Delay Peak     : %s\n\n", PQgetvalue(res, i, 15));
 	}
 	if (PQntuples(res) == 0)
 		fprintf(out, "\n");
-	PQclear(res);
-
-	fprintf(out, "/** Replication Delays **/\n");
-	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-18s  %17s  %17s \n",
-		"DateTime", "Client", "Flush Delay Size", "Replay Delay Size");
-	fprintf(out, "-----------------------------------------------------------------------------\n");
-
-	res = pgut_execute(conn, SQL_SELECT_REPLICATION_DELAYS_SYNC, lengthof(params), params);
-	if (PQntuples(res) == 0)
-	{
-		PQclear(res);
-		res = pgut_execute(conn, SQL_SELECT_REPLICATION_DELAYS_ASYNC, lengthof(params), params);
-	}
-
-	for (i = 0; i < PQntuples(res); i++)
-	{
-		fprintf(out, "%-16s  %-18s  %12s byte  %12s byte\n",
-			PQgetvalue(res, i, 0),
-			PQgetvalue(res, i, 1),
-			PQgetvalue(res, i, 2),
-			PQgetvalue(res, i, 3));
-	}
-	fprintf(out, "\n");
 	PQclear(res);
 }
 

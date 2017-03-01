@@ -1579,15 +1579,8 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
-
-/** Replication Delays **/
------------------------------------
-DateTime          Client               Flush Delay Size  Replay Delay Size 
------------------------------------------------------------------------------
-2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
-2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
-2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
-2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
+Replay Delay Average  : 35 KiB
+Replay Delay Peak     : 130 KiB
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
@@ -1613,15 +1606,8 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
-
-/** Replication Delays **/
------------------------------------
-DateTime          Client               Flush Delay Size  Replay Delay Size 
------------------------------------------------------------------------------
-2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
-2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
-2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
-2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
+Replay Delay Average  : 35 KiB
+Replay Delay Peak     : 130 KiB
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -1647,15 +1633,8 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
-
-/** Replication Delays **/
------------------------------------
-DateTime          Client               Flush Delay Size  Replay Delay Size 
------------------------------------------------------------------------------
-2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
-2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
-2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
-2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
+Replay Delay Average  : 35 KiB
+Replay Delay Peak     : 130 KiB
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
@@ -1681,15 +1660,8 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
-
-/** Replication Delays **/
------------------------------------
-DateTime          Client               Flush Delay Size  Replay Delay Size 
------------------------------------------------------------------------------
-2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
-2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
-2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
-2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
+Replay Delay Average  : 35 KiB
+Replay Delay Peak     : 130 KiB
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
@@ -1715,15 +1687,8 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
-
-/** Replication Delays **/
------------------------------------
-DateTime          Client               Flush Delay Size  Replay Delay Size 
------------------------------------------------------------------------------
-2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
-2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
-2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
-2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
+Replay Delay Average  : 35 KiB
+Replay Delay Peak     : 130 KiB
 
 exit: 0
 
@@ -2327,15 +2292,8 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
-
-/** Replication Delays **/
------------------------------------
-DateTime          Client               Flush Delay Size  Replay Delay Size 
------------------------------------------------------------------------------
-2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
-2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
-2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
-2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
+Replay Delay Average  : 35 KiB
+Replay Delay Peak     : 130 KiB
 
 ----------------------------------------
 /* Setting Parameters */
@@ -2663,15 +2621,8 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
-
-/** Replication Delays **/
------------------------------------
-DateTime          Client               Flush Delay Size  Replay Delay Size 
------------------------------------------------------------------------------
-2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
-2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
-2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
-2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
+Replay Delay Average  : 35 KiB
+Replay Delay Peak     : 130 KiB
 
 ----------------------------------------
 /* Setting Parameters */
@@ -2999,15 +2950,8 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
-
-/** Replication Delays **/
------------------------------------
-DateTime          Client               Flush Delay Size  Replay Delay Size 
------------------------------------------------------------------------------
-2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
-2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
-2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
-2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
+Replay Delay Average  : 35 KiB
+Replay Delay Peak     : 130 KiB
 
 ----------------------------------------
 /* Setting Parameters */
@@ -3335,15 +3279,8 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
-
-/** Replication Delays **/
------------------------------------
-DateTime          Client               Flush Delay Size  Replay Delay Size 
------------------------------------------------------------------------------
-2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
-2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
-2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
-2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
+Replay Delay Average  : 35 KiB
+Replay Delay Peak     : 130 KiB
 
 ----------------------------------------
 /* Setting Parameters */
@@ -3671,15 +3608,8 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
-
-/** Replication Delays **/
------------------------------------
-DateTime          Client               Flush Delay Size  Replay Delay Size 
------------------------------------------------------------------------------
-2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
-2012-11-01 00:01  127.0.0.1:58145                0 byte           736 byte
-2012-11-01 00:02  127.0.0.1:58145             8568 byte          8568 byte
-2012-11-01 00:03  127.0.0.1:58145              672 byte           672 byte
+Replay Delay Average  : 35 KiB
+Replay Delay Peak     : 130 KiB
 
 ----------------------------------------
 /* Setting Parameters */
@@ -4204,15 +4134,8 @@ Flush WAL Location    : 0/685E578 (000000010000000000000006)
 Replay WAL Location   : 0/685E578 (000000010000000000000006)
 Sync Priority         : 0
 Sync State            : async
-
-/** Replication Delays **/
------------------------------------
-DateTime          Client               Flush Delay Size  Replay Delay Size 
------------------------------------------------------------------------------
-2012-11-01 00:00  127.0.0.1:58145           132824 byte        132824 byte
-2012-11-01 00:00  127.0.0.1:58145                0 byte           736 byte
-2012-11-01 00:00  127.0.0.1:58145             8568 byte          8568 byte
-2012-11-01 00:00  127.0.0.1:58145              672 byte           672 byte
+Replay Delay Average  : 35 KiB
+Replay Delay Peak     : 130 KiB
 
 ----------------------------------------
 /* Setting Parameters */
