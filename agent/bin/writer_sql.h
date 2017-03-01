@@ -44,7 +44,7 @@ INSERT INTO statsrepo.plan \
    WHERE d.snapid = $1 AND d.dbid = $2"
 
 #define SQL_INSERT_LOCK "\
-INSERT INTO statsrepo.lock VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)"
+INSERT INTO statsrepo.lock VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)"
 
 #define SQL_INSERT_REPLICATION "\
 INSERT INTO statsrepo.replication VALUES \

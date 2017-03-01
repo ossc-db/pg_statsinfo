@@ -67,7 +67,7 @@ function do_test()
 
 		( eval "${script}" > "${result}" 2>&1 )
 
-		for expect in $(find "${EXPECTED_DIR}" -type f -regex ".*${regress}\(_[0-9]+\)?\.out\$" | sort)
+		for expect in $(find "${EXPECTED_DIR}" -type f -regex ".*${regress}\(_[0-9.-]+\)?\.out\$" | sort)
 		do
 			diff "${result}" "${expect}" > ${diff}
 

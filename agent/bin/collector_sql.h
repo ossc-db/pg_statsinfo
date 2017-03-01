@@ -363,6 +363,8 @@ SELECT \
 	t.blockee_pid, \
 	t.blocker_pid, \
 	px.gid AS blocker_gid, \
+	sa.wait_event_type, \
+	sa.wait_event, \
 	(statement_timestamp() - sa.query_start)::interval(0), \
 	sa.query, \
 	CASE \
@@ -402,6 +404,8 @@ SELECT \
 	lb.pid AS blockee_pid, \
 	la.pid AS blocker_pid, \
 	la.gid AS blocker_gid, \
+	'(N/A)', \
+	'(N/A)', \
 	(statement_timestamp() - sb.query_start)::interval(0), \
 	sb." PG_STAT_ACTIVITY_ATTNAME_QUERY ", \
 	CASE \

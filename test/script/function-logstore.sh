@@ -17,8 +17,6 @@ setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG} "" "" ""
 sleep 3
 createuser -SDRl user01
 createuser -SDRl user02
-[ $(server_version) -lt 90000 ] &&
-	createlang plpgsql
 psql << EOF
 CREATE TABLE tbl01 (id bigint);
 CREATE FUNCTION statsinfo.elog(text, text) RETURNS void AS

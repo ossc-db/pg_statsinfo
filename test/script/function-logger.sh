@@ -17,8 +17,6 @@ setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG} "" "" ""
 sleep 3
 createuser -SDRl user01
 createuser -SDRl user02
-[ $(server_version) -lt 90000 ] &&
-	createlang plpgsql
 psql << EOF
 CREATE TABLE tbl01 (id bigint);
 CREATE FUNCTION statsinfo.elog(text, text) RETURNS void AS
@@ -219,57 +217,11 @@ EOF
 
 echo "/**--- Collect the AUTOVACUUM information ---**/"
 if [ $(server_version) -ge 90400 ] ; then
-	send_query << EOF
-SELECT
-	instid,
-	database,
-	schema,
-	"table",
-	CASE WHEN start IS NOT NULL THEN 'xxx' END AS start,
-	CASE WHEN index_scans IS NOT NULL THEN 'xxx' END AS index_scans,
-	CASE WHEN page_removed IS NOT NULL THEN 'xxx' END AS page_removed,
-	CASE WHEN page_remain IS NOT NULL THEN 'xxx' END AS page_remain,
-	CASE WHEN tup_removed IS NOT NULL THEN 'xxx' END AS tup_removed,
-	CASE WHEN tup_remain IS NOT NULL THEN 'xxx' END AS tup_remain,
-	CASE WHEN tup_dead IS NOT NULL THEN 'xxx' END AS tup_dead,
-	CASE WHEN page_hit IS NOT NULL THEN 'xxx' END AS page_hit,
-	CASE WHEN page_miss IS NOT NULL THEN 'xxx' END AS page_miss,
-	CASE WHEN page_dirty IS NOT NULL THEN 'xxx' END AS page_dirty,
-	CASE WHEN read_rate IS NOT NULL THEN 'xxx' END AS read_rate,
-	CASE WHEN write_rate IS NOT NULL THEN 'xxx' END AS write_rate,
-	CASE WHEN duration IS NOT NULL THEN 'xxx' END AS duration
-FROM
-	statsrepo.autovacuum
-ORDER BY
-	database, schema, "table";
-EOF
-elif [ $(server_version) -ge 90200 ] ; then
-	send_query << EOF
-SELECT
-	instid,
-	database,
-	schema,
-	"table",
-	CASE WHEN start IS NOT NULL THEN 'xxx' END AS start,
-	CASE WHEN index_scans IS NOT NULL THEN 'xxx' END AS index_scans,
-	CASE WHEN page_removed IS NOT NULL THEN 'xxx' END AS page_removed,
-	CASE WHEN page_remain IS NOT NULL THEN 'xxx' END AS page_remain,
-	CASE WHEN tup_removed IS NOT NULL THEN 'xxx' END AS tup_removed,
-	CASE WHEN tup_remain IS NOT NULL THEN 'xxx' END AS tup_remain,
-	CASE WHEN tup_dead IS NULL THEN '(N/A)' END AS tup_dead,
-	CASE WHEN page_hit IS NOT NULL THEN 'xxx' END AS page_hit,
-	CASE WHEN page_miss IS NOT NULL THEN 'xxx' END AS page_miss,
-	CASE WHEN page_dirty IS NOT NULL THEN 'xxx' END AS page_dirty,
-	CASE WHEN read_rate IS NOT NULL THEN 'xxx' END AS read_rate,
-	CASE WHEN write_rate IS NOT NULL THEN 'xxx' END AS write_rate,
-	CASE WHEN duration IS NOT NULL THEN 'xxx' END AS duration
-FROM
-	statsrepo.autovacuum
-ORDER BY
-	database, schema, "table";
-EOF
+	SELECT_TUP_DEAD="CASE WHEN tup_dead IS NOT NULL THEN 'xxx' END"
 else
-	send_query << EOF
+	SELECT_TUP_DEAD="CASE WHEN tup_dead IS NULL THEN '(N/A)' END"
+fi
+send_query << EOF
 SELECT
 	instid,
 	database,
@@ -281,19 +233,18 @@ SELECT
 	CASE WHEN page_remain IS NOT NULL THEN 'xxx' END AS page_remain,
 	CASE WHEN tup_removed IS NOT NULL THEN 'xxx' END AS tup_removed,
 	CASE WHEN tup_remain IS NOT NULL THEN 'xxx' END AS tup_remain,
-	CASE WHEN tup_dead IS NULL THEN '(N/A)' END AS tup_dead,
-	CASE WHEN page_hit IS NULL THEN '(N/A)' END AS page_hit,
-	CASE WHEN page_miss IS NULL THEN '(N/A)' END AS page_miss,
-	CASE WHEN page_dirty IS NULL THEN '(N/A)' END AS page_dirty,
-	CASE WHEN read_rate IS NULL THEN '(N/A)' END AS read_rate,
-	CASE WHEN write_rate IS NULL THEN '(N/A)' END AS write_rate,
+	${SELECT_TUP_DEAD} AS tup_dead,
+	CASE WHEN page_hit IS NOT NULL THEN 'xxx' END AS page_hit,
+	CASE WHEN page_miss IS NOT NULL THEN 'xxx' END AS page_miss,
+	CASE WHEN page_dirty IS NOT NULL THEN 'xxx' END AS page_dirty,
+	CASE WHEN read_rate IS NOT NULL THEN 'xxx' END AS read_rate,
+	CASE WHEN write_rate IS NOT NULL THEN 'xxx' END AS write_rate,
 	CASE WHEN duration IS NOT NULL THEN 'xxx' END AS duration
 FROM
 	statsrepo.autovacuum
 ORDER BY
 	database, schema, "table";
 EOF
-fi
 
 echo "/**--- Collect the cancelled AUTOVACUUM information ---**/"
 update_pgconfig ${PGDATA} "log_min_messages" "debug1"

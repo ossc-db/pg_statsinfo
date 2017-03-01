@@ -9,7 +9,7 @@
 #define SQL_INSERT_AUTOVACUUM "\
 INSERT INTO statsrepo.autovacuum VALUES \
 ($1, $2::timestamptz - interval '1sec' * $17, \
- $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)"
+ $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)"
 
 #define SQL_INSERT_AUTOANALYZE "\
 INSERT INTO statsrepo.autoanalyze VALUES \
@@ -249,7 +249,7 @@ Autovacuum_free(AutovacuumLog *av)
 static bool
 Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 {
-	const char	   *params[17];
+	const char	   *params[18];
 
 	elog(DEBUG2, "write (autovacuum)");
 	Assert(list_length(av->params) == NUM_AUTOVACUUM + NUM_RUSAGE);
@@ -266,47 +266,47 @@ Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 	params[7] = list_nth(av->params, 5);	/* page_remain */
 #if PG_VERSION_NUM >= 90600
 //	params[8] = list_nth(av->params, 6);	/* pinned_pages */
-//	params[9] = list_nth(av->params, 7);	/* frozenskipped_pages */
-	params[8] = list_nth(av->params, 8);	/* tup_removed */
-	params[9] = list_nth(av->params, 9);	/* tup_remain */
-	params[10] = list_nth(av->params, 10);	/* tup_dead */
-	params[11] = list_nth(av->params, 11);	/* page_hit */
-	params[12] = list_nth(av->params, 12);	/* page_miss */
-	params[13] = list_nth(av->params, 13);	/* page_dirty */
-	params[14] = list_nth(av->params, 14);	/* read_rate */
-	params[15] = list_nth(av->params, 16);	/* write_rate */
+	params[8] = list_nth(av->params, 7);	/* frozen_skipped_pages */
+	params[9] = list_nth(av->params, 8);	/* tup_removed */
+	params[10] = list_nth(av->params, 9);	/* tup_remain */
+	params[11] = list_nth(av->params, 10);	/* tup_dead */
+	params[12] = list_nth(av->params, 11);	/* page_hit */
+	params[13] = list_nth(av->params, 12);	/* page_miss */
+	params[14] = list_nth(av->params, 13);	/* page_dirty */
+	params[15] = list_nth(av->params, 14);	/* read_rate */
+	params[16] = list_nth(av->params, 16);	/* write_rate */
 #elif PG_VERSION_NUM >= 90500
 //	params[8] = list_nth(av->params, 6);	/* pinned_pages */
-	params[8] = list_nth(av->params, 7);	/* tup_removed */
-	params[9] = list_nth(av->params, 8);	/* tup_remain */
-	params[10] = list_nth(av->params, 9);	/* tup_dead */
-	params[11] = list_nth(av->params, 10);	/* page_hit */
-	params[12] = list_nth(av->params, 11);	/* page_miss */
-	params[13] = list_nth(av->params, 12);	/* page_dirty */
-	params[14] = list_nth(av->params, 13);	/* read_rate */
-	params[15] = list_nth(av->params, 15);	/* write_rate */
+	params[9] = list_nth(av->params, 7);	/* tup_removed */
+	params[10] = list_nth(av->params, 8);	/* tup_remain */
+	params[11] = list_nth(av->params, 9);	/* tup_dead */
+	params[12] = list_nth(av->params, 10);	/* page_hit */
+	params[13] = list_nth(av->params, 11);	/* page_miss */
+	params[14] = list_nth(av->params, 12);	/* page_dirty */
+	params[15] = list_nth(av->params, 13);	/* read_rate */
+	params[16] = list_nth(av->params, 15);	/* write_rate */
 #elif PG_VERSION_NUM >= 90400
-	params[8] = list_nth(av->params, 6);	/* tup_removed */
-	params[9] = list_nth(av->params, 7);	/* tup_remain */
-	params[10] = list_nth(av->params, 8);	/* tup_dead */
-	params[11] = list_nth(av->params, 9);	/* page_hit */
-	params[12] = list_nth(av->params, 10);	/* page_miss */
-	params[13] = list_nth(av->params, 11);	/* page_dirty */
-	params[14] = list_nth(av->params, 12);	/* read_rate */
-	params[15] = list_nth(av->params, 14);	/* write_rate */
+	params[9] = list_nth(av->params, 6);	/* tup_removed */
+	params[10] = list_nth(av->params, 7);	/* tup_remain */
+	params[11] = list_nth(av->params, 8);	/* tup_dead */
+	params[12] = list_nth(av->params, 9);	/* page_hit */
+	params[13] = list_nth(av->params, 10);	/* page_miss */
+	params[14] = list_nth(av->params, 11);	/* page_dirty */
+	params[15] = list_nth(av->params, 12);	/* read_rate */
+	params[16] = list_nth(av->params, 14);	/* write_rate */
 #elif PG_VERSION_NUM >= 90200
-	params[8] = list_nth(av->params, 6);	/* tup_removed */
-	params[9] = list_nth(av->params, 7);	/* tup_remain */
-	params[11] = list_nth(av->params, 8);	/* page_hit */
-	params[12] = list_nth(av->params, 9);	/* page_miss */
-	params[13] = list_nth(av->params, 10);	/* page_dirty */
-	params[14] = list_nth(av->params, 11);	/* read_rate */
-	params[15] = list_nth(av->params, 13);	/* write_rate */
+	params[9] = list_nth(av->params, 6);	/* tup_removed */
+	params[10] = list_nth(av->params, 7);	/* tup_remain */
+	params[12] = list_nth(av->params, 8);	/* page_hit */
+	params[13] = list_nth(av->params, 9);	/* page_miss */
+	params[14] = list_nth(av->params, 10);	/* page_dirty */
+	params[15] = list_nth(av->params, 11);	/* read_rate */
+	params[16] = list_nth(av->params, 13);	/* write_rate */
 #else
-	params[8] = list_nth(av->params, 6);	/* tup_removed */
-	params[9] = list_nth(av->params, 7);	/* tup_remain */
+	params[9] = list_nth(av->params, 6);	/* tup_removed */
+	params[10] = list_nth(av->params, 7);	/* tup_remain */
 #endif
-	params[16] = list_nth(av->params, NUM_AUTOVACUUM + 2);	/* duration */
+	params[17] = list_nth(av->params, NUM_AUTOVACUUM + 2);	/* duration */
 
 	return pgut_command(conn, SQL_INSERT_AUTOVACUUM,
 						lengthof(params), params) == PGRES_COMMAND_OK;

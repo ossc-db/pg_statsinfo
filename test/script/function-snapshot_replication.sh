@@ -2,11 +2,6 @@
 
 . ./script/common.sh
 
-if [ $(server_version) -lt 90100 ] ; then
-	echo "PostgreSQL older than 9.1 does not collect statistics about replication"
-	exit 0
-fi
-
 PGDATA_ACT=${DBCLUSTER_DIR}/pgdata-act
 PGCONFIG_ACT=${CONFIG_DIR}/postgresql-replication-act.conf
 PGPORT_ACT=57401

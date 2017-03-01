@@ -650,7 +650,7 @@ div.index li:before {
   <li><a href="#uninstall">アンインストール</a></li>
   <li><a href="#restrictions">使用上の注意と制約</a></li>
   <li><a href="#QA">よくあるQ&A</a></li>
-  <li><a href="#change">pg_statsinfo 3.1 からの変更点</a></li>
+  <li><a href="#change">pg_statsinfo 3.2 からの変更点</a></li>
   <li><a href="#details">詳細情報</a>
     <ol>
       <li><a href="#many-instances">複数の監視対象インスタンス</a></li>
@@ -670,7 +670,7 @@ PostgreSQL サーバの利用統計情報を定期的に収集・蓄積するこ
 性能劣化などの兆候や問題発生時の原因の把握等)に役立つツールです。<br>
 起動や終了、パラメータの設定は PostgreSQL と密に連携しており、手間をかけずに導入可能です。
 </p>
-<p>pg_statsinfo 3.1 からの変更点は<a href="#change">こちら</a>をご覧ください。</p>
+<p>pg_statsinfo 3.2 からの変更点は<a href="#change">こちら</a>をご覧ください。</p>
 
 <h2 id="description">機能概要</h2>
 <p>pg_statsinfo は、PostgreSQL サーバの統計情報や活動状況を一定の時間間隔毎に定期的に収集し蓄積する機能と、
@@ -853,7 +853,7 @@ pg_statsinfo の運用管理向けの操作を行うコマンドを提供しま�
 <h3 id="requirement">動作環境</h3>
 <dl>
   <dt>PostgreSQL</dt>
-  <dd>バージョン 9.1, 9.2, 9.3, 9.4, 9.5</dd>
+  <dd>バージョン 9.2, 9.3, 9.4, 9.5, 9.6</dd>
   <dt>動作検証済みOS</dt>
   <dd>RHEL 6.x (x86_64), CentOS 6.x (x86_64), RHEL 7.x (x86_64), CentOS 7.x (x86_64)</dd>
 </dl>
@@ -899,7 +899,6 @@ log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log' # ログファイル名を指定
 <pre>
 #推奨設定
 shared_preload_libraries = 'pg_statsinfo'       # 事前ロードを行う
-custom_variable_classes = 'pg_statsinfo'        # 独自変数クラス名を使用するための設定 (PostgreSQL 9.2以降では不要です)
 
 pg_statsinfo.snapshot_interval = 30min          # スナップショットの取得間隔
 pg_statsinfo.enable_maintenance = 'on'          # 自動メンテナンス設定
@@ -1762,8 +1761,7 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
     <td>off</td>
     <td>ブロックの読み込みと書き込み時間に関する統計情報の収集設定。 
         ブロックの読み書きに関する統計情報を収集する場合は on を設定します。<br>
-        本パラメータを on に設定した場合、現時点の時刻をオペレーティングシステムに繰り返し問い合わせるので、プラットフォームによっては深刻な負荷の原因になる可能性がある点を留意してください。<br>
-        (本パラメータはPostgreSQL 9.2以降から指定可能です)</td>
+        本パラメータを on に設定した場合、現時点の時刻をオペレーティングシステムに繰り返し問い合わせるので、プラットフォームによっては深刻な負荷の原因になる可能性がある点を留意してください。</td>
   </tr>
   <tr>
     <td>log_checkpoints</td>
@@ -1800,13 +1798,6 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
     <td>syslog_ident</td>
     <td>'postgres'</td>
     <td>syslog の indent文字列指定。</td>
-  </tr>
-  <tr>
-    <td>custom_variable_classes</td>
-    <td>(空文字)</td>
-    <td>独自変数クラス名の設定。<br>
-        PostgreSQL 9.1以前で利用する場合には 'pg_statsinfo' を指定してください。<br>
-        PostgreSQL 9.2以降で利用する場合は当パラメータの設定は不要です。<br></td>
   </tr>
   <tr>
     <td>pg_statsinfo.textlog_min_messages</td>
@@ -2167,12 +2158,7 @@ repository=$ SET TIME ZONE '<u>PRC</u>'; select '2014/1/1 0:0:0 <u>CST</u>'::tim
 </pre>
 
 <dt>AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリの収集に関する制限</dt>
-<dd>
-  <ul>
-    <li>監視対象DBのPostgreSQLが9.2.14, 9.3.10, 9.4.5以降のマイナーリリースおよび9.5.0以降の全てのリリースの場合、AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリはlog_min_messagesをdebug1～debug5に設定した場合のみ収集されます。</li>
-    <li>監視対象DBのPostgreSQLが9.1.19以降のマイナーリリースの場合、AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリは収集されません。</li>
-  </ul>
-</dd>
+<dd>監視対象DBのPostgreSQLが9.2.14, 9.3.10, 9.4.5以降のマイナーリリースおよび9.5.0以降の全てのリリースの場合、AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリはlog_min_messagesをdebug1～debug5に設定した場合のみ収集されます。</dd>
 </dl>
 <br>
 
@@ -2309,11 +2295,28 @@ pg_statsinfo は「インスタンスID」でインスタンスを識別しま�
 </p>
 <br>
 
-<h2 id="change">pg_statsinfo 3.1 からの変更点</h2>
-<p>pg_statsinfo 3.1 からの変更点は以下の通りです。</p>
+<h2 id="change">pg_statsinfo 3.2 からの変更点</h2>
+<p>pg_statsinfo 3.2 からの変更点は以下の通りです。</p>
 <ul>
-  <li>PostgreSQL 9.5に対応</li>
-  <li>PostgreSQL 9.0がサポート対象外になりました</li>
+  <li>スナップショット情報に以下の項目を追加</li>
+  <ul>
+    <li>ページサイズ、ページヘッダサイズ、タプルヘッダサイズ、アイテムIDサイズ</li>
+    <li>ロック待ちのイベント種別、ロック待ちのイベント名</li>
+    <li>AUTOVACUUMでの凍結済みのためスキップしたページ数</li>
+  </ul>
+    <li>アラート機能の有効／無効を設定するパラメータ「pg_statsinfo.enable_alert」を追加</li>
+    <li>監視対象DBへの接続文字列を設定するパラメータ「pg_statsinfo.target_server」を追加</li>
+    <li>簡易レポート機能のレポートから「Replication Delays」の項目を削除</li>
+    <li>簡易レポート機能のレポートの「Current Replication Status」に、レプリケーション遅延の平均値およびピーク値を追加</li>
+    <li>CSVログの出力量を削減。下記のパラメータの内の最小値を上回るメッセージレベルのCSVログの出力を抑止しました</li>
+  <ul>
+    <li>pg_statsinfo.textlog_min_messages</li>
+    <li>pg_statsinfo.syslog_min_messages</li>
+    <li>pg_statsinfo.repolog_min_messages</li>
+  </ul>
+  <li>PostgreSQL 9.1がサポート対象外になりました</li>
+  <li>RPMパッケージにマニュアルが同梱されるようになりました</li>
+  <li>内部設計を変更。ランチャ部分をバックグラウンドワーカに移行しました</li>
 </ul>
 <br>
 

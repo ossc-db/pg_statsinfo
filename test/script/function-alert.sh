@@ -22,11 +22,7 @@ setup_repository ${REPOSITORY_DATA} ${REPOSITORY_USER} ${REPOSITORY_PORT} ${REPO
 echo "/*---- Initialize monitored instance ----*/"
 setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG} "" "" ""
 sleep 3
-if [ $(server_version) -ge 90100 ] ; then
-	psql -c "CREATE EXTENSION pg_stat_statements" > /dev/null
-else
-	psql -f $(pg_config --sharedir)/contrib/pg_stat_statements.sql > /dev/null
-fi
+psql -c "CREATE EXTENSION pg_stat_statements" > /dev/null
 
 get_snapshot
 send_query << EOF > /dev/null
