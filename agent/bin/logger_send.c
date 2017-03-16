@@ -519,8 +519,10 @@ LogStore_exec(LogStore *log_store, PGconn *conn, const char *instid)
 		}
 	}
 
-	if (pgut_command(conn, "BEGIN", 0, NULL) != PGRES_COMMAND_OK ||
-		pgut_command(conn,
+	if (pgut_command(conn, "BEGIN", 0, NULL) != PGRES_COMMAND_OK)
+		goto error;
+
+	if (pgut_command(conn,
 			"SET synchronous_commit = off", 0, NULL) != PGRES_COMMAND_OK)
 		goto error;
 
@@ -570,6 +572,7 @@ LogStore_exec(LogStore *log_store, PGconn *conn, const char *instid)
 
 error:
 	log_store->state = LOG_STORE_RETRY;
+	pgut_rollback(conn);
 	return false;
 }
 
