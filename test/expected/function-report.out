@@ -355,6 +355,15 @@ DateTime                  Idle  Idle In Xact       Waiting       Running
 2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
 Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
+/** BGWriter Statistics **/
+-----------------------------------
+Written Buffers By BGWriter (Average) : 20.000 buffers/s
+Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
+Written Buffers By Backend (Average)  : 200.000 buffers/s
+Written Buffers By Backend (Maximum)  : 300.000 buffers/s
+Backend Executed fsync (Average)      : 2.000 sync/s
+Backend Executed fsync (Maximum)      : 3.000 sync/s
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
 ---------------------------------------------
@@ -386,6 +395,15 @@ DateTime                  Idle  Idle In Xact       Waiting       Running
 2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
 2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
 Average                  3.0 %        13.9 %        55.3 %        27.8 %
+
+/** BGWriter Statistics **/
+-----------------------------------
+Written Buffers By BGWriter (Average) : 20.000 buffers/s
+Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
+Written Buffers By Backend (Average)  : 200.000 buffers/s
+Written Buffers By Backend (Maximum)  : 300.000 buffers/s
+Backend Executed fsync (Average)      : 2.000 sync/s
+Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -419,6 +437,15 @@ DateTime                  Idle  Idle In Xact       Waiting       Running
 2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
 Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
+/** BGWriter Statistics **/
+-----------------------------------
+Written Buffers By BGWriter (Average) : 20.000 buffers/s
+Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
+Written Buffers By Backend (Average)  : 200.000 buffers/s
+Written Buffers By Backend (Maximum)  : 300.000 buffers/s
+Backend Executed fsync (Average)      : 2.000 sync/s
+Backend Executed fsync (Maximum)      : 3.000 sync/s
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
 ---------------------------------------------
@@ -451,6 +478,15 @@ DateTime                  Idle  Idle In Xact       Waiting       Running
 2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
 Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
+/** BGWriter Statistics **/
+-----------------------------------
+Written Buffers By BGWriter (Average) : 20.000 buffers/s
+Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
+Written Buffers By Backend (Average)  : 200.000 buffers/s
+Written Buffers By Backend (Maximum)  : 300.000 buffers/s
+Backend Executed fsync (Average)      : 2.000 sync/s
+Backend Executed fsync (Maximum)      : 3.000 sync/s
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
 ---------------------------------------------
@@ -482,6 +518,15 @@ DateTime                  Idle  Idle In Xact       Waiting       Running
 2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
 2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
 Average                  3.0 %        13.9 %        55.3 %        27.8 %
+
+/** BGWriter Statistics **/
+-----------------------------------
+Written Buffers By BGWriter (Average) : 20.000 buffers/s
+Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
+Written Buffers By Backend (Average)  : 200.000 buffers/s
+Written Buffers By Backend (Maximum)  : 300.000 buffers/s
+Backend Executed fsync (Average)      : 2.000 sync/s
+Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 exit: 0
 
@@ -2095,6 +2140,15 @@ DateTime                  Idle  Idle In Xact       Waiting       Running
 2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
 Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
+/** BGWriter Statistics **/
+-----------------------------------
+Written Buffers By BGWriter (Average) : 20.000 buffers/s
+Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
+Written Buffers By Backend (Average)  : 200.000 buffers/s
+Written Buffers By Backend (Maximum)  : 300.000 buffers/s
+Backend Executed fsync (Average)      : 2.000 sync/s
+Backend Executed fsync (Maximum)      : 3.000 sync/s
+
 ----------------------------------------
 /* OS Resource Usage */
 ----------------------------------------
@@ -2423,6 +2477,15 @@ DateTime                  Idle  Idle In Xact       Waiting       Running
 2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
 2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
 Average                  3.0 %        13.9 %        55.3 %        27.8 %
+
+/** BGWriter Statistics **/
+-----------------------------------
+Written Buffers By BGWriter (Average) : 20.000 buffers/s
+Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
+Written Buffers By Backend (Average)  : 200.000 buffers/s
+Written Buffers By Backend (Maximum)  : 300.000 buffers/s
+Backend Executed fsync (Average)      : 2.000 sync/s
+Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -2753,6 +2816,15 @@ DateTime                  Idle  Idle In Xact       Waiting       Running
 2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
 Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
+/** BGWriter Statistics **/
+-----------------------------------
+Written Buffers By BGWriter (Average) : 20.000 buffers/s
+Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
+Written Buffers By Backend (Average)  : 200.000 buffers/s
+Written Buffers By Backend (Maximum)  : 300.000 buffers/s
+Backend Executed fsync (Average)      : 2.000 sync/s
+Backend Executed fsync (Maximum)      : 3.000 sync/s
+
 ----------------------------------------
 /* OS Resource Usage */
 ----------------------------------------
@@ -3082,6 +3154,15 @@ DateTime                  Idle  Idle In Xact       Waiting       Running
 2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
 Average                  3.0 %        13.9 %        55.3 %        27.8 %
 
+/** BGWriter Statistics **/
+-----------------------------------
+Written Buffers By BGWriter (Average) : 20.000 buffers/s
+Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
+Written Buffers By Backend (Average)  : 200.000 buffers/s
+Written Buffers By Backend (Maximum)  : 300.000 buffers/s
+Backend Executed fsync (Average)      : 2.000 sync/s
+Backend Executed fsync (Maximum)      : 3.000 sync/s
+
 ----------------------------------------
 /* OS Resource Usage */
 ----------------------------------------
@@ -3410,6 +3491,15 @@ DateTime                  Idle  Idle In Xact       Waiting       Running
 2012-11-01 00:02         0.0 %        14.6 %        56.3 %        29.2 %
 2012-11-01 00:03         2.1 %        16.7 %        52.1 %        29.2 %
 Average                  3.0 %        13.9 %        55.3 %        27.8 %
+
+/** BGWriter Statistics **/
+-----------------------------------
+Written Buffers By BGWriter (Average) : 20.000 buffers/s
+Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
+Written Buffers By Backend (Average)  : 200.000 buffers/s
+Written Buffers By Backend (Maximum)  : 300.000 buffers/s
+Backend Executed fsync (Average)      : 2.000 sync/s
+Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -3936,6 +4026,15 @@ DateTime                  Idle  Idle In Xact       Waiting       Running
 2012-11-01 00:00         0.0 %        14.6 %        56.3 %        29.2 %
 2012-11-01 00:00         2.1 %        16.7 %        52.1 %        29.2 %
 Average                  3.0 %        13.9 %        55.3 %        27.8 %
+
+/** BGWriter Statistics **/
+-----------------------------------
+Written Buffers By BGWriter (Average) : 0.000 buffers/s
+Written Buffers By BGWriter (Maximum) : 0.000 buffers/s
+Written Buffers By Backend (Average)  : 0.000 buffers/s
+Written Buffers By Backend (Maximum)  : 0.000 buffers/s
+Backend Executed fsync (Average)      : 0.000 sync/s
+Backend Executed fsync (Maximum)      : 0.000 sync/s
 
 ----------------------------------------
 /* OS Resource Usage */

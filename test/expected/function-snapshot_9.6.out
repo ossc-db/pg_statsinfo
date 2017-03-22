@@ -191,6 +191,12 @@ CREATE EXTENSION
       8 | db01     | user01 | SELECT schema01.func01(?, ?); |     2 | xxx        | xxx  | xxx             | xxx              | xxx                 | xxx                 | xxx            | xxx             | xxx                | xxx                | xxx            | xxx               | xxx           | xxx
 (1 row)
 
+/**--- Statistics of BGWriter ---**/
+ snapid | buffers_clean | maxwritten_clean | buffers_backend | buffers_backend_fsync | buffers_alloc 
+--------+---------------+------------------+-----------------+-----------------------+---------------
+      8 | xxx           | xxx              | xxx             | xxx                   | xxx
+(1 row)
+
 /**--- Collect statistics after database crash recovery ---**/
 INSERT 0 1
 INSERT 0 1

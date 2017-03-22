@@ -29,6 +29,7 @@ SELECT \
 	avg(running)::numeric(5,1) \
 FROM \
 	statsrepo.get_proc_tendency_report($1, $2)"
+#define SQL_SELECT_BGWRITER_STATS				"SELECT * FROM statsrepo.get_bgwriter_stats($1, $2)"
 #define SQL_SELECT_WALSTATS						"SELECT * FROM statsrepo.get_xlog_stats($1, $2)"
 #define SQL_SELECT_WALSTATS_TENDENCY			"SELECT * FROM statsrepo.get_xlog_tendency($1, $2)"
 #define SQL_SELECT_CPU_LOADAVG_TENDENCY "\
@@ -515,6 +516,18 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 			PQgetvalue(res, i, 4));
 	}
 	fprintf(out, "\n");
+	PQclear(res);
+
+	fprintf(out, "/** BGWriter Statistics **/\n");
+	fprintf(out, "-----------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_BGWRITER_STATS, lengthof(params), params);
+	fprintf(out, "Written Buffers By BGWriter (Average) : %s buffers/s\n", PQgetvalue(res, 0, 0));
+	fprintf(out, "Written Buffers By BGWriter (Maximum) : %s buffers/s\n", PQgetvalue(res, 0, 1));
+	fprintf(out, "Written Buffers By Backend (Average)  : %s buffers/s\n", PQgetvalue(res, 0, 2));
+	fprintf(out, "Written Buffers By Backend (Maximum)  : %s buffers/s\n", PQgetvalue(res, 0, 3));
+	fprintf(out, "Backend Executed fsync (Average)      : %s sync/s\n", PQgetvalue(res, 0, 4));
+	fprintf(out, "Backend Executed fsync (Maximum)      : %s sync/s\n\n", PQgetvalue(res, 0, 5));
 	PQclear(res);
 }
 

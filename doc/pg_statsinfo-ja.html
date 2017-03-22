@@ -2303,11 +2303,17 @@ pg_statsinfo は「インスタンスID」でインスタンスを識別しま�
     <li>ページサイズ、ページヘッダサイズ、タプルヘッダサイズ、アイテムIDサイズ</li>
     <li>ロック待ちのイベント種別、ロック待ちのイベント名</li>
     <li>AUTOVACUUMでの凍結済みのためスキップしたページ数</li>
+    <li>バックグラウンドライタにより書き出されたバッファ数</li>
+    <li>バックグラウンドライタが整理用スキャンを停止した回数</li>
+    <li>バックエンドにより直接書き出されたバッファ数</li>
+    <li>バックエンドが独自にfsync呼び出しを実行した回数</li>
+    <li>割当られたバッファ数</li>
   </ul>
     <li>アラート機能の有効／無効を設定するパラメータ「pg_statsinfo.enable_alert」を追加</li>
     <li>監視対象DBへの接続文字列を設定するパラメータ「pg_statsinfo.target_server」を追加</li>
     <li>簡易レポート機能のレポートから「Replication Delays」の項目を削除</li>
     <li>簡易レポート機能のレポートの「Current Replication Status」に、レプリケーション遅延の平均値およびピーク値を追加</li>
+    <li>簡易レポート機能のレポートに「BGWriter Statistics」の項目を追加</li>
     <li>CSVログの出力量を削減。下記のパラメータの内の最小値を上回るメッセージレベルのCSVログの出力を抑止しました</li>
   <ul>
     <li>pg_statsinfo.textlog_min_messages</li>

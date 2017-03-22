@@ -76,6 +76,14 @@ $$
 	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_tellers', 0, 0, 6, 6, 114, 16, 40, 35, 0, 0, 0, 0, 0);
 
 	--
+	-- Data for Name: bgwriter; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
+	--
+	INSERT INTO statsrepo.bgwriter VALUES ($6, 0, 0, 0, 0, 0);
+	INSERT INTO statsrepo.bgwriter VALUES ($6 + 1, 600, 6, 6000, 60, 60000);
+	INSERT INTO statsrepo.bgwriter VALUES ($6 + 2, 2400, 24, 24000, 240, 240000);
+	INSERT INTO statsrepo.bgwriter VALUES ($6 + 3, 3600, 36, 36000, 360, 360000);
+
+	--
 	-- Data for Name: autovacuum_cancel; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
 	INSERT INTO statsrepo.autovacuum_cancel VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_branches', 'ANALYZE-01');

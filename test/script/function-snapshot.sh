@@ -606,6 +606,21 @@ ORDER BY
 	database, role, query;
 EOF
 
+echo "/**--- Statistics of BGWriter ---**/"
+send_query << EOF
+SELECT
+	snapid,
+	CASE WHEN buffers_clean IS NOT NULL THEN 'xxx' END AS buffers_clean,
+	CASE WHEN maxwritten_clean IS NOT NULL THEN 'xxx' END AS maxwritten_clean,
+	CASE WHEN buffers_backend IS NOT NULL THEN 'xxx' END AS buffers_backend,
+	CASE WHEN buffers_backend_fsync IS NOT NULL THEN 'xxx' END AS buffers_backend_fsync,
+	CASE WHEN buffers_alloc IS NOT NULL THEN 'xxx' END AS buffers_alloc
+FROM
+	statsrepo.bgwriter
+WHERE
+	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
+EOF
+
 echo "/**--- Collect statistics after database crash recovery ---**/"
 psql -U user01 -d db01 -At << EOF
 INSERT INTO schema01.tbl01 (name, age) VALUES ('xxx', 30);

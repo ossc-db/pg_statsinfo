@@ -437,6 +437,17 @@ WHERE \
 	sb.query_start < statement_timestamp() - current_setting('" GUC_PREFIX ".long_lock_threshold')::interval"
 #endif
 
+/* bgwriter */
+#define SQL_SELECT_BGWRITER "\
+SELECT \
+	buffers_clean, \
+	maxwritten_clean, \
+	buffers_backend, \
+	buffers_backend_fsync, \
+	buffers_alloc \
+FROM \
+	pg_stat_bgwriter"
+
 /* replication */
 #if PG_VERSION_NUM >= 90400
 #define SQL_SELECT_REPLICATION_BACKEND_XMIN		"backend_xmin"

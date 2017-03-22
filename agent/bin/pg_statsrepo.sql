@@ -504,6 +504,17 @@ CREATE TABLE statsrepo.lock
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
+CREATE TABLE statsrepo.bgwriter
+(
+	snapid					bigint,
+	buffers_clean			bigint,
+	maxwritten_clean		bigint,
+	buffers_backend			bigint,
+	buffers_backend_fsync	bigint,
+	buffers_alloc			bigint,
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
 CREATE TABLE statsrepo.replication
 (
 	snapid				bigint,
@@ -2859,6 +2870,80 @@ $$
 			AND t3.tbl = CAST(t1.relname AS oid)
 	ORDER BY
 		t2.duration DESC;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'BGWriter Statistics'
+CREATE FUNCTION statsrepo.get_bgwriter_tendency(
+	IN snapid_begin				bigint,
+	IN snapid_end				bigint,
+	OUT "timestamp"				text,
+	OUT bgwriter_write_tps		numeric,
+	OUT backend_write_tps		numeric,
+	OUT backend_fsync_tps		numeric,
+	OUT bgwriter_stopscan_tps	numeric,
+	OUT buffer_alloc_tps		numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		t.timestamp,
+		statsrepo.tps(t.bgwriter_write, t.duration),
+		statsrepo.tps(t.backend_write, t.duration),
+		statsrepo.tps(t.backend_fsync, t.duration),
+		statsrepo.tps(t.bgwriter_stopscan, t.duration),
+		statsrepo.tps(t.buffer_alloc, t.duration)
+	FROM
+	(
+		SELECT
+			s.snapid,
+			to_char(s.time, 'YYYY-MM-DD HH24:MI') AS timestamp,
+			b.buffers_clean - lag(b.buffers_clean) OVER w AS bgwriter_write,
+			b.buffers_backend - lag(b.buffers_backend) OVER w AS backend_write,
+			b.buffers_backend_fsync - lag(b.buffers_backend_fsync) OVER w AS backend_fsync,
+			b.maxwritten_clean - lag(b.maxwritten_clean) OVER w AS bgwriter_stopscan,
+			b.buffers_alloc - lag(b.buffers_alloc) OVER w AS buffer_alloc,
+			s.time - lag(s.time) OVER w AS duration
+		FROM
+			statsrepo.bgwriter b,
+			statsrepo.snapshot s
+		WHERE
+			b.snapid BETWEEN $1 AND $2
+			AND b.snapid = s.snapid
+			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+		WINDOW w AS (ORDER BY s.snapid)
+		ORDER BY
+			s.snapid
+	) t
+	WHERE
+		t.snapid > $1;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'BGWriter Statistics'
+CREATE OR REPLACE FUNCTION statsrepo.get_bgwriter_stats(
+	IN snapid_begin				bigint,
+	IN snapid_end				bigint,
+	OUT bgwriter_write_avg		numeric,
+	OUT bgwriter_write_max		numeric,
+	OUT backend_write_avg		numeric,
+	OUT backend_write_max		numeric,
+	OUT backend_fsync_avg		numeric,
+	OUT backend_fsync_max		numeric,
+	OUT bgwriter_stopscan_avg	numeric,
+	OUT buffer_alloc_avg		numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		round(avg(bgwriter_write_tps), 3),
+		round(max(bgwriter_write_tps), 3),
+		round(avg(backend_write_tps), 3),
+		round(max(backend_write_tps), 3),
+		round(avg(backend_fsync_tps), 3),
+		round(max(backend_fsync_tps), 3),
+		round(avg(bgwriter_stopscan_tps), 3),
+		round(avg(buffer_alloc_tps), 3)
+	FROM
+		statsrepo.get_bgwriter_tendency($1, $2);
 $$
 LANGUAGE sql;
 
