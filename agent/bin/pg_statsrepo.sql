@@ -2969,8 +2969,7 @@ $$
 			split_part(r.current_location, ' ', 1),
 			split_part(r.replay_location, ' ', 1),
 			i.xlog_file_size),
-		(SELECT sync_state FROM statsrepo.replication WHERE snapid = $2
-			AND client_addr = r.client_addr AND client_port = r.client_port)
+		r.sync_state
 	FROM
 		statsrepo.replication r,
 		statsrepo.snapshot s,
