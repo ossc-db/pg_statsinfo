@@ -1,0 +1,30 @@
+[3.3.0 <YYYY/MM/DD>]
+
+ * statsrepo.lock has new columns for wait event type and name as a
+   part of lock conflict information. They are collected from pg_stat_activity.
+ * Number of skipped frozen pages during autovacuum is now collected
+   from autovacuum logs and stored in stasrepo.autovacuum.
+ * New report item "BGWriter Statistics" is added. It shows the data
+   in the new repository table statsrepo.bgwriter, which stores the
+   data related to background writer activity in pg_stat_bgwriter.
+ * Alert function now can be turned off with a new GUC parameter
+   "pg_statsinfo.enable_alert".
+ * Connections to observed instances are now configurable using a new
+   GUC parameter "pg_statsinfo.target_server" in the form of
+   connection string. They were forcibly made using default user and
+   fixed database name.
+ * Removed "Replication Delays" from brief report. It is still available
+   by using pg_stats_reporter.
+ * Average and peak values of replication delay are added to the brief
+   report section "Current Replication Status".
+ * Reduced CSV logs by supressing lines not required by the settings of
+   textlog_min_messages, syslog_min_messages nor repolog_min_messages.
+ * Fixed the failure to collect causal queries of autovacuum cancellation.
+   It occurred for observed instances with PostgreSQL 9.2.14, 9.3.10, 9.4.5
+   and all corresponding later minor versions, and 9.5 and later.
+ * Data size is now calcuated considering page size other than the default
+   value of 8192.
+ * No longer rejects PostgreSQL builds without --with-libxml.
+ * RPM packages now contain the manual (only the HTML main part).
+ * Launcher process is now a background worker in the builds for
+   PostgreSQL 9.3 and later.
