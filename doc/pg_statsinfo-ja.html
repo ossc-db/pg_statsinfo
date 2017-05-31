@@ -679,7 +679,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </p>
 
 <p>
-また、pg_statsinfo で収集した情報は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.2/html/pg_stats_reporter-ja.html">pg_stats_reporter</a>
+また、pg_statsinfo で収集した情報は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.3/html/pg_stats_reporter-ja.html">pg_stats_reporter</a>
 を用いることでグラフィカルな形で解析・出力することがきます。
 </p>
 
@@ -736,7 +736,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </p>
 
 <h4>リポジトリDBのテーブル構成</h4>
-<p>リポジトリDBのテーブル構成に関しては、「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo3.2/files/pg_statsinfo_v3.3_repository_infomation.xls">pg_statsinfo v3.3 リポジトリDB構成</a>」を参照してください。</p>
+<p>リポジトリDBのテーブル構成に関しては、「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo3.3/files/pg_statsinfo_v3.3_repository_infomation.xls">pg_statsinfo v3.3 リポジトリDB構成</a>」を参照してください。</p>
 
 <h3 id="features-log-route">サーバログ分配機能</h3>
 <p>PostgreSQL が出力するサーバログをCSVログ、テキストログ、syslog に分配して出力します。</p>
@@ -809,9 +809,9 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </ul>
 
 <p>
-簡易レポート機能が出力するレポートの項目については「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo3.2/files/pg_statsinfo_v3.3_report_infomation.xls">pg_statsinfo v3.3 レポート項目一覧</a>」をご覧ください。<br>
-なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.2/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> と同等です。<br>
-グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.2/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> を使用してください。
+簡易レポート機能が出力するレポートの項目については「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo3.3/files/pg_statsinfo_v3.3_report_infomation.xls">pg_statsinfo v3.3 レポート項目一覧</a>」をご覧ください。<br>
+なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.3/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> と同等です。<br>
+グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.3/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> を使用してください。
 </p>
 
 <h4>運用管理機能</h4>
@@ -1330,7 +1330,7 @@ pg_statsinfo.adjust_log_info = '42P01'</pre>
     <td>enable_alert</td>
     <td>boolean</td>
     <td>true</td>
-    <td>アラート機能の有効/無効(TRUE: 有効、FALSE: 無効)
+    <td>false に設定するとこのインスタンスについてのアラートが無効になります。
 </td>
   </tr>
 </tbody>
@@ -1342,15 +1342,15 @@ pg_statsinfo.adjust_log_info = '42P01'</pre>
 </pre>
 
 <p>
-アラート設定テーブルのタプルを削除しないでください。<br>
-タプルを削除した場合、削除したタプルに該当する監視対象インスタンスのアラート機能が無効になります。
+このテーブルの行を削除すると、該当する監視対象インスタンスのアラート機能が無効になります。このアラートを有効にするためには新たな行を挿入する必要があります。
+
 </p>
 
-<h4>アラート機能全体の有効/無効の切り替え</h4>
+<h4>アラート機能の無効化</h4>
 <p>
-アラート機能全体の有効/無効は<a href="#configuration">設定ファイル</a>のpg_statsinfo.enable_alertおよびアラート設定テーブルの
-enable_alertカラムで設定します。
-両方が true の場合にのみアラート機能は動作します。デフォルト値はどちらもtrueです。
+<a href="#configuration">GUC 設定ファイル</a>の pg_statsinfo.enable_alert を
+false にすることでアラート機能全体を無効にできます。監視対象インスタンス単位での無効化はアラート設定テーブルの enable_alert カラムで行います。デフォルト値はどちらも true です。
+</p>
 
 <h3 id="usage-cmdline">コマンドライン機能の使い方</h3>
 
@@ -1378,7 +1378,7 @@ $ pg_statsinfo  -r All -h localhost -d postgres -p 5432 -U postgres
   <dt>-r, --report=REPORTID</dt>
   <dd>レポート種別IDを指定します。</dd>
   <dd>レポート種別IDに指定できる値は以下のとおりです。</dd>
-  <dd>レポート種別IDとレポートの内容についての対応は「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo3.2/files/pg_statsinfo_v3.3_report_infomation.xls">pg_statsinfo v3.3 レポート項目一覧</a>」をご覧ください。</dd>
+  <dd>レポート種別IDとレポートの内容についての対応は「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo3.3/files/pg_statsinfo_v3.3_report_infomation.xls">pg_statsinfo v3.3 レポート項目一覧</a>」をご覧ください。</dd>
   <dd>
     <ul>
       <li>Summary</li>
@@ -1890,32 +1890,32 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
   <tr>
     <td>pg_statsinfo.adjust_log_info</td>
     <td>-</td>
-    <td>メッセージレベルを INFO に変更したい SQLSTATE 指定 <a href="#configuration-a5">(*5)</a></td>
+    <td>メッセージレベルを INFO に変更したい SQLSTATE をカンマ区切りで指定 <a href="#configuration-a5">(*5)</a></td>
   </tr>
   <tr>
     <td>pg_statsinfo.adjust_log_notice</td>
     <td>-</td>
-    <td>メッセージレベルを NOTICE に変更したい SQLSTATE を指定 <a href="#configuration-a5">(*5)</a></td>
+    <td>adjust_log_info と同様でメッセージレベルを NOTICE に変更</td>
   </tr>
   <tr>
     <td>pg_statsinfo.adjust_log_warning</td>
     <td>-</td>
-    <td>メッセージレベルを WARNING に変更したい SQLSTATE を指定 <a href="#configuration-a5">(*5)</a></td>
+    <td>adjust_log_info と同様でメッセージレベルを WARNING に変更</td>
   </tr>
   <tr>
     <td>pg_statsinfo.adjust_log_error</td>
     <td>-</td>
-    <td>メッセージレベルを ERROR に変更したい SQLSTATE を指定 <a href="#configuration-a5">(*5)</a></td>
+    <td>adjust_log_info と同様でメッセージレベルを ERROR に変更</td>
   </tr>
   <tr>
     <td>pg_statsinfo.adjust_log_log</td>
     <td>-</td>
-    <td>メッセージレベルを LOG に変更したい SQLSTATE を指定 <a href="#configuration-a5">(*5)</a></td>
+    <td>adjust_log_info と同様でメッセージレベルを LOG に変更</td>
   </tr>
   <tr>
     <td>pg_statsinfo.adjust_log_fatal</td>
     <td>-</td>
-    <td>メッセージレベルを FATAL に変更したい SQLSTATE を指定 <a href="#configuration-a5">(*5)</a></td>
+    <td>adjust_log_info と同様でメッセージレベルを FATAL に変更</td>
   </tr>
   <tr>
     <td>pg_statsinfo.enable_maintenance</td>
@@ -2015,15 +2015,11 @@ log_line_prefix の値そのものは無視されることに注意して下さ�
 <dd>
 パスワードの入力待ちにならないようにする必要があります。
 パスワード認証が必要な場合には、PostgreSQL インスタンス起動ユーザに <a href="http://www.postgresql.jp/document/current/html/libpq-pgpass.html">.pgpass</a> を設定し、パスワードの入力を自動化してください。
-なお、.pgpassを用いる場合、ホスト指定にhostaddrは使用しないで下さい。
+この際には、host を指定しない場合は hostaddr がホスト名として参照されます。詳細は「<a href="https://www.postgresql.jp/document/9.6/html/libpq-connect.html#libpq-paramkeywords">パラメータキーワード</a>」を参照してください。
 </dd>
 
 <dt id="configuration-a5">*5 : SQLSTATE 指定</dt>
-<dd>
-複数のログのメッセージレベルを変更したい場合には、SQLSTATE をカンマ区切りで指定します。
-</dd>
-<dd>
-例えば、SQLSTATE が '42P01' と '42P02' のメッセージレベルを INFO に変更したい場合、pg_statsinfo.adjust_log_info = '42P01,42P02' と指定します。
+<dd>SQLSTATE はSQL標準で規定される5文字の記号で、"42P01" のような形式の文字列です。複数のSQLSTATEを指定したい場合には、カンマ区切りで指定します。
 </dd>
 </dl>
 
@@ -2158,7 +2154,7 @@ repository=$ SET TIME ZONE '<u>PRC</u>'; select '2014/1/1 0:0:0 <u>CST</u>'::tim
 </pre>
 
 <dt>AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリの収集に関する制限</dt>
-<dd>監視対象DBのPostgreSQLが9.2.14, 9.3.10, 9.4.5以降のマイナーリリースおよび9.5.0以降の全てのリリースの場合、AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリはlog_min_messagesをdebug1～debug5に設定した場合のみ収集されます。</dd>
+<dd>監視対象DBのPostgreSQLが9.2.14, 9.3.10, 9.4.5以降のマイナーリリースおよび9.5.0以降の全てのリリースの場合、AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリはlog_min_messagesをdebug1~debug5に設定した場合のみ収集されます。</dd>
 </dl>
 <br>
 
@@ -2175,7 +2171,7 @@ $psql -d postgres -c "SELECT * FROM statsrepo.snapshot WHERE COMMENT = 'test'"
 <h4>Q2. 取得したスナップショットはどのように使えばいいの？</h4>
 <p>
 pg_statsinfo の統計情報の取得機能は、その時点の統計情報をスナップショットとして定期的に取得する機能のみになります。
-取得した統計情報から、有益な情報を見たい場合は <a href="#features-cmdline">簡易レポート機能</a> を利用するか、<a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.2/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> をお使いください。
+取得した統計情報から、有益な情報を見たい場合は <a href="#features-cmdline">簡易レポート機能</a> を利用するか、<a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.3/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> をお使いください。
 </p>
 
 <h4>Q3. 自動メンテナンス機能のスナップショット削除が動作しません。</h4>
@@ -2304,9 +2300,9 @@ pg_statsinfo は「インスタンスID」でインスタンスを識別しま�
     <li>ロック待ちのイベント種別、ロック待ちのイベント名</li>
     <li>AUTOVACUUMでの凍結済みのためスキップしたページ数</li>
     <li>バックグラウンドライタにより書き出されたバッファ数</li>
-    <li>バックグラウンドライタが整理用スキャンを停止した回数</li>
+    <li>バックグラウンドライタが bgwriter_lru_maxpages の制限によってスキャンを停止した回数</li>
     <li>バックエンドにより直接書き出されたバッファ数</li>
-    <li>バックエンドが独自にfsync呼び出しを実行した回数</li>
+    <li>バックエンドが独自にfsyncを呼び出さざるを得なかった回数</li>
     <li>割当られたバッファ数</li>
   </ul>
     <li>アラート機能の有効／無効を設定するパラメータ「pg_statsinfo.enable_alert」を追加</li>
@@ -2476,24 +2472,13 @@ pg_statsinfo は、この SystemTap が収集するプロファイリング情�
 <a href="http://www.postgresql.jp/document/current/html/monitoring-stats.html">統計情報コレクタ</a>,
 <a href="http://www.postgresql.jp/document/current/html/catalogs.html">システムカタログ</a>,
 <a href="http://www.postgresql.jp/document/current/html/pgstatstatements.html">pg_stat_statements</a>,
-<a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.2/html/pg_stats_reporter-ja.html">pg_stats_reporter</a>
+<a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.3/html/pg_stats_reporter-ja.html">pg_stats_reporter</a>
 <hr>
 <div class="navigation">
   <a href="http://pgstatsinfo.sourceforge.net/index_ja.html">Top</a> &gt;
-  <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo3.2/pg_statsinfo-ja.html">pg_statsinfo</a>
+  <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo3.3/pg_statsinfo-ja.html">pg_statsinfo</a>
 <div>
 <p class="footer">Copyright (c) 2009-2017, NIPPON TELEGRAPH AND TELEPHONE CORPORATION</p>
-
-<script type="text/javascript">
-var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-</script><script src="pg_statsinfo-ja_files/ga.js" type="text/javascript"></script>
-<script type="text/javascript">
-try{
-var pageTracker = _gat._getTracker("UA-10244036-6");
-pageTracker._trackPageview();
-} catch(err) {}
-</script>
 </div></div></div></div></body></html>
 
 <style type="text/css">
