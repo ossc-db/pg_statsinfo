@@ -1,4 +1,4 @@
-[3.3.0 <YYYY/MM/DD>]
+[3.3.0 <2017/06/07>]
 
  * statsrepo.lock has new columns for wait event type and name as a
    part of lock conflict information. They are collected from pg_stat_activity.

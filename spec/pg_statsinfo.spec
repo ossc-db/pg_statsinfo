@@ -10,7 +10,7 @@
 
 ## Set general information for pg_statsinfo.
 Name:       pg_statsinfo
-Version:    3.2.0
+Version:    3.3.0
 Release:    1%{?dist}
 Summary:    Performance monitoring tool for PostgreSQL
 Group:      Applications/Databases
@@ -118,7 +118,7 @@ EOF
 	fi
 fi
 
-# History of pg_statsinfo-v3.2 RPM.
+# History of pg_statsinfo-v3.3 RPM.
 %changelog
-* Wed Nov  18 2015 - NTT OSS Center 3.2.0-1
-- pg_statsinfo 3.2.0 released
+* Wed Jun   7 2017 - NTT OSS Center 3.3.0-1
+- pg_statsinfo 3.3.0 released
