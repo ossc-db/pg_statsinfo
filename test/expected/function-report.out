@@ -859,7 +859,7 @@ STATSINFO Report (host: statsinfo, port: 5432)
 ----------------------------------------
 /* Long Transactions */
 ----------------------------------------
-PID       Client Address          When To Start    Duration  Query                           
+PID       Client Address             Xact Start    Duration  Query                           
 -----------------------------------------------------------------------------------------
 10593     127.0.0.1         2012-11-01 00:02:30     4.000 s  SELECT 4                        
 10592     127.0.0.1         2012-11-01 00:01:30     3.000 s  SELECT 3                        
@@ -873,7 +873,7 @@ STATSINFO Report (host: statsinfo, port: 5433)
 ----------------------------------------
 /* Long Transactions */
 ----------------------------------------
-PID       Client Address          When To Start    Duration  Query                           
+PID       Client Address             Xact Start    Duration  Query                           
 -----------------------------------------------------------------------------------------
 10593     127.0.0.1         2012-11-01 00:02:30     4.000 s  SELECT 4                        
 10592     127.0.0.1         2012-11-01 00:01:30     3.000 s  SELECT 3                        
@@ -887,7 +887,7 @@ STATSINFO Report (host: statsinfo, port: 5434)
 ----------------------------------------
 /* Long Transactions */
 ----------------------------------------
-PID       Client Address          When To Start    Duration  Query                           
+PID       Client Address             Xact Start    Duration  Query                           
 -----------------------------------------------------------------------------------------
 10593     127.0.0.1         2012-11-01 00:02:30     4.000 s  SELECT 4                        
 10592     127.0.0.1         2012-11-01 00:01:30     3.000 s  SELECT 3                        
@@ -901,7 +901,7 @@ STATSINFO Report (host: statsinfo, port: 5435)
 ----------------------------------------
 /* Long Transactions */
 ----------------------------------------
-PID       Client Address          When To Start    Duration  Query                           
+PID       Client Address             Xact Start    Duration  Query                           
 -----------------------------------------------------------------------------------------
 10593     127.0.0.1         2012-11-01 00:02:30     4.000 s  SELECT 4                        
 10592     127.0.0.1         2012-11-01 00:01:30     3.000 s  SELECT 3                        
@@ -915,7 +915,7 @@ STATSINFO Report (host: statsinfo, port: 5436)
 ----------------------------------------
 /* Long Transactions */
 ----------------------------------------
-PID       Client Address          When To Start    Duration  Query                           
+PID       Client Address             Xact Start    Duration  Query                           
 -----------------------------------------------------------------------------------------
 10593     127.0.0.1         2012-11-01 00:02:30     4.000 s  SELECT 4                        
 10592     127.0.0.1         2012-11-01 00:01:30     3.000 s  SELECT 3                        
@@ -2207,7 +2207,7 @@ postgres          public            pgbench_tellers          0 MiB             0
 ----------------------------------------
 /* Long Transactions */
 ----------------------------------------
-PID       Client Address          When To Start    Duration  Query                           
+PID       Client Address             Xact Start    Duration  Query                           
 -----------------------------------------------------------------------------------------
 10593     127.0.0.1         2012-11-01 00:02:30     4.000 s  SELECT 4                        
 10592     127.0.0.1         2012-11-01 00:01:30     3.000 s  SELECT 3                        
@@ -2545,7 +2545,7 @@ postgres          public            pgbench_tellers          0 MiB             0
 ----------------------------------------
 /* Long Transactions */
 ----------------------------------------
-PID       Client Address          When To Start    Duration  Query                           
+PID       Client Address             Xact Start    Duration  Query                           
 -----------------------------------------------------------------------------------------
 10593     127.0.0.1         2012-11-01 00:02:30     4.000 s  SELECT 4                        
 10592     127.0.0.1         2012-11-01 00:01:30     3.000 s  SELECT 3                        
@@ -2883,7 +2883,7 @@ postgres          public            pgbench_tellers          0 MiB             0
 ----------------------------------------
 /* Long Transactions */
 ----------------------------------------
-PID       Client Address          When To Start    Duration  Query                           
+PID       Client Address             Xact Start    Duration  Query                           
 -----------------------------------------------------------------------------------------
 10593     127.0.0.1         2012-11-01 00:02:30     4.000 s  SELECT 4                        
 10592     127.0.0.1         2012-11-01 00:01:30     3.000 s  SELECT 3                        
@@ -3221,7 +3221,7 @@ postgres          public            pgbench_tellers          0 MiB             0
 ----------------------------------------
 /* Long Transactions */
 ----------------------------------------
-PID       Client Address          When To Start    Duration  Query                           
+PID       Client Address             Xact Start    Duration  Query                           
 -----------------------------------------------------------------------------------------
 10593     127.0.0.1         2012-11-01 00:02:30     4.000 s  SELECT 4                        
 10592     127.0.0.1         2012-11-01 00:01:30     3.000 s  SELECT 3                        
@@ -3559,7 +3559,7 @@ postgres          public            pgbench_tellers          0 MiB             0
 ----------------------------------------
 /* Long Transactions */
 ----------------------------------------
-PID       Client Address          When To Start    Duration  Query                           
+PID       Client Address             Xact Start    Duration  Query                           
 -----------------------------------------------------------------------------------------
 10593     127.0.0.1         2012-11-01 00:02:30     4.000 s  SELECT 4                        
 10592     127.0.0.1         2012-11-01 00:01:30     3.000 s  SELECT 3                        
@@ -4094,7 +4094,7 @@ postgres          public            pgbench_tellers          0 MiB             0
 ----------------------------------------
 /* Long Transactions */
 ----------------------------------------
-PID       Client Address          When To Start    Duration  Query                           
+PID       Client Address             Xact Start    Duration  Query                           
 -----------------------------------------------------------------------------------------
 10593     127.0.0.1         2012-11-01 00:02:30     4.000 s  SELECT 4                        
 10592     127.0.0.1         2012-11-01 00:01:30     3.000 s  SELECT 3                        

@@ -713,7 +713,7 @@ report_long_transactions(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "/* Long Transactions */\n");
 	fprintf(out, "----------------------------------------\n");
 	fprintf(out, "%-8s  %-15s  %20s  %10s  %-32s\n",
-		"PID", "Client Address", "When To Start", "Duration", "Query");
+		"PID", "Client Address", "Xact Start", "Duration", "Query");
 	fprintf(out, "-----------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_LONG_TRANSACTIONS, lengthof(params), params);
