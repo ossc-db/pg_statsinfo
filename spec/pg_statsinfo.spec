@@ -120,5 +120,5 @@ fi
 
 # History of pg_statsinfo-v3.3 RPM.
 %changelog
-* Thr Jun  22 2017 - NTT OSS Center 3.3.0-1
+* Thu Jun  22 2017 - NTT OSS Center 3.3.0-1
 - pg_statsinfo 3.3.0 released
