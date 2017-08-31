@@ -129,6 +129,7 @@ static void create_lock_file(void);
 static void unlink_lock_file(void);
 static void load_control_file(ControlFile *ctrl);
 static void sighup_handler(SIGNAL_ARGS);
+static void check_agent_process(const char *lockfile);
 
 /* parameters */
 static struct ParamMap PARAM_MAP[] =
@@ -950,68 +951,34 @@ create_lock_file(void)
 
 	join_path_components(lockfile, data_directory, STATSINFO_LOCK_FILE);
 
-	/* create the lockfile */
+	/* create the lock file */
 	fd = open(lockfile, O_WRONLY | O_CREAT | O_EXCL, 0600);
 	if (fd < 0)
 	{
-		FILE	*fp;
-		pid_t	 lock_si_pid;
-		pid_t	 lock_pg_pid;
-
 		if (errno != EEXIST && errno != EACCES)
 			ereport(FATAL,
 				(errcode_errno(),
 				 errmsg("could not create lock file \"%s\": %m", lockfile)));
 
 		/*
-		 * if lockfile already exists, do the check to avoid multiple boot.
-		 * and if another process still exists, terminate it.
+		 * if lock file already exists, do the check to avoid multiple boot.
+		 * and if previous process still alive, terminate it.
+		 * Note:
+		 * lock file is removed when the previous agent terminate.
+		 * so, create the lock file when after confirming
+		 * the previous agent terminate.
 		 */
-		fd = open(lockfile, O_RDWR, 0600);
+		check_agent_process(lockfile);
+
+		/* create the lock file */
+		fd = open(lockfile, O_WRONLY | O_CREAT, 0600);
 		if (fd < 0)
-		{
 			ereport(FATAL,
 				(errcode_errno(),
-				 errmsg("could not open lock file \"%s\": %m", lockfile)));
-		}
-
-		fp = fdopen(fd, "r+");
-		if (fp == NULL)
-			ereport(FATAL,
-				(errcode_errno(),
-				 errmsg("could not open lock file \"%s\": %m", lockfile)));
-
-		errno = 0;
-		if (fscanf(fp, "%d\n%d\n", &lock_si_pid, &lock_pg_pid) != 2)
-		{
-			if (errno == 0)
-				elog(FATAL, "bogus data in lock file \"%s\"", lockfile);
-			else
-				ereport(FATAL,
-					(errcode_errno(),
-					 errmsg("could not read lock file \"%s\": %m", lockfile)));
-		}
-
-		if (kill(lock_si_pid, 0) == 0)	/* process is alive */
-		{
-			/* check the postmaster PID */
-			if (lock_pg_pid == postmaster_pid)
-				elog(FATAL, "is another pg_statsinfod (PID %d) running",
-					lock_si_pid);
-
-			/* terminate the another process still exists */
-			elog(NOTICE, "terminate the another process still exists (PID %d)",
-				lock_si_pid);
-			if (kill(lock_si_pid, SIGKILL) != 0)
-				elog(ERROR, "could not send kill signal (PID %d): %m",
-					lock_si_pid);
-		}
-
-		/* reset the seek position in order to write the lock file */
-		lseek(fd, (off_t) 0, SEEK_SET);
+				 errmsg("could not create lock file \"%s\": %m", lockfile)));
 	}
 
-	/* write content to the lockfile */
+	/* write content to the lock file */
 	snprintf(buffer, sizeof(buffer), "%d\n%d\n", my_pid, postmaster_pid);
 
 	errno = 0;
@@ -1098,4 +1065,62 @@ static void
 sighup_handler(SIGNAL_ARGS)
 {
 	got_SIGHUP = true;
+}
+
+/*
+ * check the existence of the previous agent process
+ * and terminate it if still alive.
+ */
+static void
+check_agent_process(const char *lockfile)
+{
+	FILE	*fp;
+	pid_t	 lock_si_pid;
+	pid_t	 lock_pg_pid;
+	int		 retry;
+
+	/* read lock file */
+	fp = fopen(lockfile, "r");
+	if (fp == NULL)
+		ereport(FATAL,
+			(errcode_errno(),
+			 errmsg("could not open lock file \"%s\": %m", lockfile)));
+
+	errno = 0;
+	if (fscanf(fp, "%d\n%d\n", &lock_si_pid, &lock_pg_pid) != 2)
+	{
+		if (errno == 0)
+			elog(FATAL, "bogus data in lock file \"%s\"", lockfile);
+		else
+			ereport(FATAL,
+				(errcode_errno(),
+				 errmsg("could not read lock file \"%s\": %m", lockfile)));
+	}
+
+	fclose(fp);
+
+	if (kill(lock_si_pid, 0) != 0)	/* process is not alive */
+		return;
+
+	/* check the postmaster PID */
+	if (lock_pg_pid == postmaster_pid)
+		elog(FATAL, "is another pg_statsinfod (PID %d) running",
+			lock_si_pid);
+
+	/* terminate the another process still exists */
+	for (retry = 0; retry < 5; retry++)
+	{
+		usleep(200 * 1000);	/* 200ms */
+
+		if (kill(lock_si_pid, 0) != 0)	/* process is end */
+			return;
+	}
+
+	elog(NOTICE, "terminate the another process still exists (PID %d)",
+		lock_si_pid);
+	if (kill(lock_si_pid, SIGKILL) != 0)
+		elog(ERROR, "could not send kill signal (PID %d): %m",
+			lock_si_pid);
+
+	return;
 }

@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <time.h>
+#include <float.h>
 
 #include "access/hash.h"
 #include "access/heapam.h"
@@ -19,7 +20,6 @@
 #include "catalog/pg_control.h"
 #include "catalog/pg_tablespace.h"
 #include "funcapi.h"
-#include "libpq/ip.h"
 #include "libpq/pqsignal.h"
 #include "mb/pg_wchar.h"
 #include "regex/regex.h"
@@ -54,6 +54,13 @@
 
 #if PG_VERSION_NUM >= 90400
 #include "postmaster/bgworker_internals.h"
+#endif
+
+#if PG_VERSION_NUM >= 100000
+#include "common/ip.h"
+#include "utils/varlena.h"
+#else
+#include "libpq/ip.h"
 #endif
 
 #include "pgut/pgut-be.h"
@@ -102,7 +109,15 @@
 	"received SIGHUP, reloading configuration files"
 
 /* log_autovacuum_min_duration: vacuum */
-#if PG_VERSION_NUM >= 90600
+#if PG_VERSION_NUM >= 100000
+#define MSG_AUTOVACUUM \
+	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
+	"pages: %d removed, %d remain, %d skipped due to pins, %u skipped frozen\n" \
+	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable, oldest xmin: %u\n" \
+	"buffer usage: %d hits, %d misses, %d dirtied\n" \
+	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
+	"system usage: %s"
+#elif PG_VERSION_NUM >= 90600
 #define MSG_AUTOVACUUM \
 	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
 	"pages: %d removed, %d remain, %d skipped due to pins, %u skipped frozen\n" \
@@ -151,7 +166,14 @@
 	"%s starting: %s"
 
 /* log_checkpoint: complete */
-#if PG_VERSION_NUM >= 90500
+#if PG_VERSION_NUM >= 100000
+#define MSG_CHECKPOINT_COMPLETE \
+	"checkpoint complete: wrote %d buffers (%.1f%%); " \
+	"%d WAL file(s) added, %d removed, %d recycled; " \
+	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
+	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s; " \
+	"distance=%d kB, estimate=%d kB"
+#elif PG_VERSION_NUM >= 90500
 #define MSG_CHECKPOINT_COMPLETE \
 	"checkpoint complete: wrote %d buffers (%.1f%%); " \
 	"%d transaction log file(s) added, %d removed, %d recycled; " \
@@ -172,7 +194,14 @@
 #endif
 
 /* log_restartpoint: complete */
-#if PG_VERSION_NUM >= 90500
+#if PG_VERSION_NUM >= 100000
+#define MSG_RESTARTPOINT_COMPLETE \
+	"restartpoint complete: wrote %d buffers (%.1f%%); " \
+	"%d WAL file(s) added, %d removed, %d recycled; " \
+	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
+	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s; " \
+	"distance=%d kB, estimate=%d kB"
+#elif PG_VERSION_NUM >= 90500
 #define MSG_RESTARTPOINT_COMPLETE \
 	"restartpoint complete: wrote %d buffers (%.1f%%); " \
 	"%d transaction log file(s) added, %d removed, %d recycled; " \
@@ -463,7 +492,7 @@ typedef struct silSharedState
 
 static void StartStatsinfoLauncher(void);
 #if PG_VERSION_NUM >= 90300
-static void StatsinfoLauncherMain(Datum main_arg);
+void StatsinfoLauncherMain(Datum main_arg);
 #else
 static void StatsinfoLauncherMain(void);
 #endif
@@ -560,11 +589,11 @@ static void
 sample_activity(void)
 {
 	TimestampTz	now;
-	int			backends;
-	int			idle;
-	int			idle_in_xact;
-	int			waiting;
-	int			running;
+	int			backends = 0;
+	int			idle = 0;
+	int			idle_in_xact = 0;
+	int			waiting = 0;
+	int			running = 0;
 	int			i;
 
 	if (!long_xacts)
@@ -583,10 +612,8 @@ sample_activity(void)
 	}
 
 	now = GetCurrentTimestamp();
-	backends = pgstat_fetch_stat_numbackends();
-	idle = idle_in_xact = waiting = running = 0;
 
-	for (i = 1; i <= backends; i++)
+	for (i = pgstat_fetch_stat_numbackends(); i > 0; i--)
 	{
 		PgBackendStatus    *be;
 		long				secs;
@@ -604,40 +631,42 @@ sample_activity(void)
 		procpid = be->st_procpid;
 		if (procpid == 0)
 			continue;
-
+#if PG_VERSION_NUM >= 100000
+		/* ignore if not client backend */
+		if (be->st_backendType != B_BACKEND)
+			continue;
+#endif
 		/*
 		 * sample idle transactions
 		 */
 		if (procpid != MyProcPid)
 		{
+#if PG_VERSION_NUM >= 100000
+			uint32	classId;
+#endif
 #if PG_VERSION_NUM >= 90600
 			proc = BackendPidGetProc(procpid);
 			if (proc == NULL)
 				 continue;	/* This backend is dead */
-
+#if PG_VERSION_NUM >= 100000
+			classId = proc->wait_event_info & 0xFF000000;
+			if (classId == PG_WAIT_LWLOCK ||
+				classId == PG_WAIT_LOCK)
+#else
 			if (proc->wait_event_info != 0)
+#endif
 #else
 			if (be->st_waiting)
 #endif
-					waiting++;
-#if PG_VERSION_NUM >= 90200
+				waiting++;
 			else if (be->st_state == STATE_IDLE)
 				idle++;
 			else if (be->st_state == STATE_IDLEINTRANSACTION)
 				idle_in_xact++;
 			else if (be->st_state == STATE_RUNNING)
 				running++;
-#else
-			else if (be->st_activity[0] != '\0')
-			{
-				if (strcmp(be->st_activity, "<IDLE>") == 0)
-					idle++;
-				else if (strcmp(be->st_activity, "<IDLE> in transaction") == 0)
-					idle_in_xact++;
-				else
-					running++;
-			}
-#endif
+
+			backends++;
 		}
 
 		/*
@@ -692,8 +721,8 @@ sample_activity(void)
 	activity.waiting += waiting;
 	activity.running += running;
 
-	if (activity.max_backends < (backends - 1))
-		activity.max_backends = backends - 1;
+	if (activity.max_backends < backends)
+		activity.max_backends = backends;
 
 	activity.samples++;
 
@@ -2555,9 +2584,17 @@ StartStatsinfoLauncher(void)
 	 */
 	snprintf(worker.bgw_name, BGW_MAXLEN, "pg_statsinfo launcher");
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS;
-	worker.bgw_start_time = BgWorkerStart_PostmasterStart;
+	worker.bgw_start_time = BgWorkerStart_ConsistentState;
 	worker.bgw_restart_time = BGW_NEVER_RESTART;
+#if PG_VERSION_NUM < 90400
 	worker.bgw_main = StatsinfoLauncherMain;
+#else
+#if PG_VERSION_NUM < 100000
+	worker.bgw_main = NULL;
+#endif
+	snprintf(worker.bgw_library_name, BGW_MAXLEN, "pg_statsinfo");
+	snprintf(worker.bgw_function_name, BGW_MAXLEN, "StatsinfoLauncherMain");
+#endif
 	worker.bgw_main_arg = (Datum) NULL;
 #if PG_VERSION_NUM >= 90400
 	worker.bgw_notify_pid = 0;
@@ -2601,7 +2638,7 @@ StartStatsinfoLauncher(void)
  * StatsinfoLauncherMain - Main entry point for pg_statsinfo launcher process.
  */
 #if PG_VERSION_NUM >= 90300
-static void
+void
 StatsinfoLauncherMain(Datum main_arg)
 {
 	bool	found;
@@ -3072,7 +3109,11 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 	heap_close(relation, AccessShareLock);
 
 	/* append pg_xlog if symlink */
+#if PG_VERSION_NUM >= 100000
+	join_path_components(pg_xlog, DataDir, "pg_wal");
+#else
 	join_path_components(pg_xlog, DataDir, "pg_xlog");
+#endif
 	if ((len = readlink(pg_xlog, location, lengthof(location))) > 0)
 	{
 		location[len] = '\0';

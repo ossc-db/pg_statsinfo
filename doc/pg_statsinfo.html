@@ -710,7 +710,7 @@ manually.
 <ul>
   <li>All of the information collected by <a href="http://www.postgresql.org/docs/current/static/monitoring-stats.html">the statistics collector</a>.
       For example, numbers of INSERT/UPDATE/DELETEs and buffer access counters.</li>
-  <li>Disk usage per tablespace, pg_xlog, and archive log directory.</li>
+  <li>Disk usage per tablespace, WAL, and archive log directory.</li>
   <li>Long transactions and their query strings.</li>
   <li>Session state statistics.</li>
   <li>WAL write rate.</li>
@@ -736,7 +736,7 @@ You can see the structure of the tables in pg_statsinfo's repository database in
 <p> pg_statsinfo distributes server log entries according to message levels.
   CSV log, plain text log, and syslog can have their own threshold levels.</p>
 <ul>
-  <li>The file for text plain logs that pg_statsinfo writes have its unique and static name defaulted to  $PGDATA/pg_log/pg_statsinfo.log.
+  <li>The file for text plain logs that pg_statsinfo writes have its unique and static name defaulted to pg_statsinfo.log.
       Fixed file name let log monitoring tools read the latest log file with easy setup.</li>
   <li>The text plain log file can have permissions other than 0600, it might allow more flexible operations.</li>
   <li>Log levels of each log entry can be altered in the plain the text log file. Changing ERROR messages which have no harm to operations into INFO would silence monitoring system.</li>
@@ -841,7 +841,7 @@ Setup reference of this feature is <a href="#usage-maintenance">here</a>.
 <h3 id="requirement">Requirement</h3>
 <dl>
 <dt>PostgreSQL versions</dt>
-<dd>PostgreSQL 9.2, 9.3, 9.4, 9.5, 9.6</dd>
+<dd>PostgreSQL 9.2, 9.3, 9.4, 9.5, 9.6, 10</dd>
 <dt>OS</dt>
 <dd>RHEL 7.x (x86_64), CentOS 7.x (x86_64)</dd>
 </dl>
@@ -1049,7 +1049,7 @@ The types of log files that pg_statsinfo handles and methods of filtering is des
 <br/>
 Following is an example how the rotation looks like.<br/>
 <pre>
-$ ls -l $PGDATA/pg_log
+$ ls -l $PGDATA/pg_log (PostgreSQL 10 or later $PGDATA/log)
 -rw------- 1 postgres postgres 433644 Oct  1 23:59 postgresql-2013-10-01_000000.csv
 -rw------- 1 postgres postgres 322167 Oct  1 23:59 postgresql-2013-10-01_000000.log
 -rw------- 1 postgres postgres 425449 Oct  2 23:59 postgresql-2013-10-02_000000.csv
@@ -1672,7 +1672,7 @@ postgresql.conf for the monitored instance. Reloading configuration file of Post
   </tr>
   <tr>
     <td>log_directory</td>
-    <td>'pg_log'</td>
+    <td>'pg_log'<br>(PostgreSQL 10 or later 'log')</td>
     <td>Directory location for csvlog and textlog files. pg_statsinfo
     reads this to know the location of log files.</td>
   </tr>
@@ -2172,6 +2172,7 @@ Currently there is no available means of preventing this occurring.
     <li>pg_statsinfo.syslog_min_messages</li>
     <li>pg_statsinfo.repolog_min_messages</li>
   </ul>
+  <li>Supports PostgreSQL 10. No functional changes have been made (pg_statsinfo higher than 3.3.1)</li>
   <li>Dropped support for PostgreSQL 9.1</li>
   <li>RPM packages now contain this manual</li>
   <li>Launcher process is now a background worker in the builds for PostgreSQL 9.3 and later</li>

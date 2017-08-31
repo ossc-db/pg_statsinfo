@@ -2458,18 +2458,22 @@ CREATE FUNCTION statsrepo.get_query_activity_statements(
 $$
 DECLARE
 	pg_version_num	integer;
+	vmaj			integer;
+	vmin			integer;
+	vrev			integer;
 BEGIN
 	SELECT
-		CASE WHEN split_part(pg_version, '.', 3) != '' THEN
-			(split_part(pg_version, '.', 1)::integer * 100 +
-			 split_part(pg_version, '.', 2)::integer) * 100 +
-			 split_part(pg_version, '.', 3)::integer
-		ELSE
-			(split_part(pg_version, '.', 1)::integer * 100 +
-			 substring(split_part(pg_version, '.', 2) from '^\d+')::integer) * 100
-		END
-	INTO pg_version_num FROM statsrepo.instance
+		coalesce(substring(split_part(pg_version, '.', 1) from '^\d+')::integer, 0),
+		coalesce(substring(split_part(pg_version, '.', 2) from '^\d+')::integer, 0),
+		coalesce(substring(split_part(pg_version, '.', 3) from '^\d+')::integer, 0)
+	INTO vmaj, vmin, vrev FROM statsrepo.instance
 	WHERE instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $1);
+
+	IF vmaj >= 10 THEN
+		pg_version_num := 100 * 100 * vmaj + vmin;
+	ELSE
+		pg_version_num := (100 * vmaj + vmin) * 100 + vrev;
+	END IF;
 
 	IF pg_version_num >= 90400 THEN
 		RETURN QUERY SELECT * FROM statsrepo.get_query_activity_statemets_body($1, $2);

@@ -57,7 +57,7 @@ echo "/***-- Statistics of archive (MASTER) --***/"
 if [ $(server_version) -ge 90400 ] ; then
 	psql -p ${PGPORT_ACT} << EOF > /dev/null
 SELECT pg_stat_reset_shared('archiver');
-SELECT pg_switch_xlog();
+SELECT ${FUNCTION_PG_SWITCH_WAL};
 SELECT pg_sleep(1);
 EOF
 	get_snapshot ${PGPORT_ACT}

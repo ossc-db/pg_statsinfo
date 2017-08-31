@@ -455,6 +455,41 @@ FROM \
 #define SQL_SELECT_REPLICATION_BACKEND_XMIN		"NULL"
 #endif
 
+#if PG_VERSION_NUM >= 100000
+#define SQL_SELECT_REPLICATION "\
+SELECT \
+	pid, \
+	usesysid, \
+	usename, \
+	application_name, \
+	client_addr, \
+	client_hostname, \
+	client_port, \
+	backend_start, \
+	backend_xmin, \
+	state, \
+	CASE WHEN pg_is_in_recovery() THEN \
+		pg_last_wal_receive_lsn() || ' (N/A)' ELSE \
+		pg_current_wal_lsn() || ' (' || pg_walfile_name(pg_current_wal_lsn()) || ')' END, \
+	CASE WHEN pg_is_in_recovery() THEN \
+		sent_lsn || ' (N/A)' ELSE \
+		sent_lsn || ' (' || pg_walfile_name(sent_lsn) || ')' END, \
+	CASE WHEN pg_is_in_recovery() THEN \
+		write_lsn || ' (N/A)' ELSE \
+		write_lsn || ' (' || pg_walfile_name(write_lsn) || ')' END, \
+	CASE WHEN pg_is_in_recovery() THEN \
+		flush_lsn || ' (N/A)' ELSE \
+		flush_lsn || ' (' || pg_walfile_name(flush_lsn) || ')' END, \
+	CASE WHEN pg_is_in_recovery() THEN \
+		replay_lsn || ' (N/A)' ELSE \
+		replay_lsn || ' (' || pg_walfile_name(replay_lsn) || ')' END, \
+	sync_priority, \
+	sync_state \
+FROM \
+	pg_stat_replication \
+WHERE \
+	pid NOT IN (SELECT active_pid FROM pg_replication_slots WHERE slot_type = 'logical')"
+#else
 #define SQL_SELECT_REPLICATION "\
 SELECT \
 	" PG_STAT_REPLICATION_ATTNAME_PID ", \
@@ -486,9 +521,17 @@ SELECT \
 	sync_state \
 FROM \
 	pg_stat_replication"
+#endif
 
 /* xlog */
-#if PG_VERSION_NUM >= 90000
+#if PG_VERSION_NUM >= 100000
+#define SQL_SELECT_XLOG "\
+SELECT \
+	pg_current_wal_lsn(), \
+	pg_walfile_name(pg_current_wal_lsn()) \
+WHERE \
+	NOT pg_is_in_recovery()"
+#elif PG_VERSION_NUM >= 90000
 #define SQL_SELECT_XLOG "\
 SELECT \
 	pg_current_xlog_location(), \

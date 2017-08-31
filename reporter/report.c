@@ -1487,8 +1487,15 @@ parse_version(const char *versionString)
 
 	cnt = sscanf(versionString, "%d.%d.%d", &vmaj, &vmin, &vrev);
 
-	if (cnt < 2)
+	if (cnt == 0)
 		return -1;
+
+	if (vmaj >= 10)
+	{
+		if (cnt == 1)
+			vmin = 0;
+		return 100 * 100 * vmaj + vmin;
+	}
 
 	if (cnt == 2)
 		vrev = 0;

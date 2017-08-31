@@ -55,27 +55,27 @@ update_pgconfig ${PGDATA} "<guc_prefix>.textlog_filename" "'postgresql-statsinfo
 update_pgconfig ${PGDATA} "<guc_prefix>.textlog_permission" "0644"
 pg_ctl restart -w -D ${PGDATA} -o "-p ${PGPORT}" > /dev/null
 sleep 3
-stat -c "postgresql-statsinfo.log %A(%a)" ${PGDATA}/pg_log/postgresql-statsinfo.log
+stat -c "postgresql-statsinfo.log %A(%a)" ${PGLOG_DIR}/postgresql-statsinfo.log
 update_pgconfig ${PGDATA} "<guc_prefix>.textlog_filename" "'pg_statsinfo.log'"
 update_pgconfig ${PGDATA} "<guc_prefix>.textlog_permission" "0666"
 pg_ctl reload && sleep ${RELOAD_DELAY}
 psql -c "SELECT pg_rotate_logfile()" > /dev/null
 sleep ${WRITE_DELAY}
-stat -c "pg_statsinfo.log %A(%a)" ${PGDATA}/pg_log/pg_statsinfo.log
+stat -c "pg_statsinfo.log %A(%a)" ${PGLOG_DIR}/pg_statsinfo.log
 
 echo "/**--- Textlog routing (textlog_min_messages = disable) ---**/"
 update_pgconfig ${PGDATA} "<guc_prefix>.textlog_min_messages" "disable"
 pg_ctl reload && sleep ${RELOAD_DELAY}
 psql -c "SELECT statsinfo.elog('ALL', 'textlog routing test (disable)')" 2> /dev/null
 sleep ${WRITE_DELAY}
-grep "textlog routing test (disable)" ${PGDATA}/pg_log/pg_statsinfo.log
+grep "textlog routing test (disable)" ${PGLOG_DIR}/pg_statsinfo.log
 
 echo "/**--- Textlog routing (textlog_min_messages = error) ---**/"
 update_pgconfig ${PGDATA} "<guc_prefix>.textlog_min_messages" "error"
 pg_ctl reload && sleep ${RELOAD_DELAY}
 psql -c "SELECT statsinfo.elog('ALL', 'textlog routing test (error)')" 2> /dev/null
 sleep ${WRITE_DELAY}
-grep "textlog routing test (error)" ${PGDATA}/pg_log/pg_statsinfo.log
+grep "textlog routing test (error)" ${PGLOG_DIR}/pg_statsinfo.log
 
 echo "/**--- Textlog routing (adjust_log_level = off) ---**/"
 set_pgconfig ${PGCONFIG} ${PGDATA}
@@ -84,7 +84,7 @@ update_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_info" "'42P01'"
 pg_ctl reload && sleep ${RELOAD_DELAY}
 psql -c "SELECT * FROM xxx" > /dev/null 2>&1
 sleep ${WRITE_DELAY}
-tail -n 2 ${PGDATA}/pg_log/pg_statsinfo.log
+tail -n 2 ${PGLOG_DIR}/pg_statsinfo.log
 
 echo "/**--- Adjust log level (adjust_log_info = '42P01') ---**/"
 update_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_level" "on"
@@ -92,7 +92,7 @@ update_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_info" "'42P01'"
 pg_ctl reload && sleep ${RELOAD_DELAY}
 psql -c "SELECT * FROM xxx" > /dev/null 2>&1
 sleep ${WRITE_DELAY}
-tail -n 2 ${PGDATA}/pg_log/pg_statsinfo.log
+tail -n 2 ${PGLOG_DIR}/pg_statsinfo.log
 
 echo "/**--- Adjust log level (adjust_log_notice = '42P01') ---**/"
 delete_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_info"
@@ -100,7 +100,7 @@ update_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_notice" "'42P01'"
 pg_ctl reload && sleep ${RELOAD_DELAY}
 psql -c "SELECT * FROM xxx" > /dev/null 2>&1
 sleep ${WRITE_DELAY}
-tail -n 2 ${PGDATA}/pg_log/pg_statsinfo.log
+tail -n 2 ${PGLOG_DIR}/pg_statsinfo.log
 
 echo "/**--- Adjust log level (adjust_log_warning = '42P01') ---**/"
 delete_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_notice"
@@ -108,7 +108,7 @@ update_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_warning" "'42P01'"
 pg_ctl reload && sleep ${RELOAD_DELAY}
 psql -c "SELECT * FROM xxx" > /dev/null 2>&1
 sleep ${WRITE_DELAY}
-tail -n 2 ${PGDATA}/pg_log/pg_statsinfo.log
+tail -n 2 ${PGLOG_DIR}/pg_statsinfo.log
 
 echo "/**--- Adjust log level (adjust_log_error = '00000') ---**/"
 delete_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_warning"
@@ -117,7 +117,7 @@ update_pgconfig ${PGDATA} "log_statement" "'all'"
 pg_ctl reload && sleep ${RELOAD_DELAY}
 psql -c "SELECT 1" > /dev/null
 sleep ${WRITE_DELAY}
-tail -n 1 ${PGDATA}/pg_log/pg_statsinfo.log
+tail -n 1 ${PGLOG_DIR}/pg_statsinfo.log
 
 echo "/**--- Adjust log level (adjust_log_log = '42P01') ---**/"
 delete_pgconfig ${PGDATA} "log_statement"
@@ -126,7 +126,7 @@ update_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_log" "'42P01'"
 pg_ctl reload && sleep ${RELOAD_DELAY}
 psql -c "SELECT * FROM xxx" > /dev/null 2>&1
 sleep ${WRITE_DELAY}
-tail -n 2 ${PGDATA}/pg_log/pg_statsinfo.log
+tail -n 2 ${PGLOG_DIR}/pg_statsinfo.log
 
 echo "/**--- Adjust log level (adjust_log_fatal = '42P01') ---**/"
 delete_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_log"
@@ -134,7 +134,7 @@ update_pgconfig ${PGDATA} "<guc_prefix>.adjust_log_fatal" "'42P01'"
 pg_ctl reload && sleep ${RELOAD_DELAY}
 psql -c "SELECT * FROM xxx" > /dev/null 2>&1
 sleep ${WRITE_DELAY}
-tail -n 2 ${PGDATA}/pg_log/pg_statsinfo.log
+tail -n 2 ${PGLOG_DIR}/pg_statsinfo.log
 
 echo "/**--- Sets the nologging filter (textlog_nologging_users = 'user01') ---**/"
 set_pgconfig ${PGCONFIG} ${PGDATA}
@@ -144,7 +144,7 @@ pg_ctl reload && sleep ${RELOAD_DELAY}
 psql -U ${PGUSER} -c "SELECT 1" > /dev/null
 psql -U user01 -c "SELECT 2" > /dev/null
 sleep ${WRITE_DELAY}
-tail -n 1 ${PGDATA}/pg_log/pg_statsinfo.log
+tail -n 1 ${PGLOG_DIR}/pg_statsinfo.log
 
 echo "/**--- Sets the nologging filter (textlog_nologging_users = 'user01, user02') ---**/"
 update_pgconfig ${PGDATA} "<guc_prefix>.textlog_nologging_users" "'user01, user02'"
@@ -153,7 +153,7 @@ psql -U ${PGUSER} -c "SELECT 1" > /dev/null
 psql -U user01 -c "SELECT 2" > /dev/null
 psql -U user02 -c "SELECT 3" > /dev/null
 sleep ${WRITE_DELAY}
-tail -n 1 ${PGDATA}/pg_log/pg_statsinfo.log
+tail -n 1 ${PGLOG_DIR}/pg_statsinfo.log
 
 echo "/**--- Collect the CHECKPOINT information ---**/"
 set_pgconfig ${PGCONFIG} ${PGDATA}
@@ -167,9 +167,10 @@ fi
 pg_ctl restart -w -D ${PGDATA} -o "-p ${PGPORT}" > /dev/null
 sleep 3
 psql -c "CHECKPOINT"
-psql -c "SELECT pg_switch_xlog()" > /dev/null
+psql -c "SELECT ${FUNCTION_PG_SWITCH_WAL}" > /dev/null
+sleep 5
 psql -c "INSERT INTO tbl01 VALUES (0)"
-sleep 35
+sleep 30
 send_query << EOF
 SELECT
 	instid,

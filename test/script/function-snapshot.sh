@@ -526,7 +526,7 @@ echo "/***-- Monitored instance is a stand-alone configuration --***/"
 if [ $(server_version) -ge 90400 ] ; then
 	psql << EOF > /dev/null
 SELECT pg_stat_reset_shared('archiver');
-SELECT pg_switch_xlog();
+SELECT ${FUNCTION_PG_SWITCH_WAL};
 SELECT pg_sleep(1);
 EOF
 	get_snapshot
