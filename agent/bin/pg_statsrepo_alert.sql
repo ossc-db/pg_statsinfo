@@ -19,7 +19,7 @@ CREATE TABLE statsrepo.alert
 	instid					bigint,
 	rollback_tps			bigint	NOT NULL DEFAULT 100     CHECK (rollback_tps >= -1),
 	commit_tps				bigint	NOT NULL DEFAULT 1000    CHECK (commit_tps >= -1),
-	garbage_size			bigint	NOT NULL DEFAULT 20000   CHECK (garbage_size >= -1),
+	garbage_size			bigint	NOT NULL DEFAULT -1      CHECK (garbage_size >= -1),
 	garbage_percent			integer	NOT NULL DEFAULT 30      CHECK (garbage_percent >= -1 AND garbage_percent <= 100),
 	garbage_percent_table	integer	NOT NULL DEFAULT 30      CHECK (garbage_percent_table >= -1 AND garbage_percent_table <= 100),
 	response_avg			bigint	NOT NULL DEFAULT 10      CHECK (response_avg >= -1),
@@ -112,16 +112,24 @@ DECLARE
 	val_gb_pct    float8;
 	val_gb_table  text;
 BEGIN
-	-- calculate the garbage size and garbage ratio.
+	-- calculate the garbage size.
 	SELECT
-		statsrepo.div(sum(c.garbage_size), 1024 * 1024),
+		statsrepo.div(sum(c.garbage_size), 1024 * 1024)
+	INTO val_gb_size
+	FROM
+		(SELECT
+			size * statsrepo.div(n_dead_tup, (n_live_tup + n_dead_tup)) AS garbage_size
+		 FROM statsrepo.tables WHERE snapid = $1.snapid) AS c;
+
+	-- calculate the garbage ratio.
+	SELECT
 		statsrepo.div((100 * sum(c.garbage_size)), sum(c.size))
-	INTO val_gb_size, val_gb_pct
+	INTO val_gb_pct
 	FROM
 		(SELECT
 			size * statsrepo.div(n_dead_tup, (n_live_tup + n_dead_tup)) AS garbage_size,
 		 	size
-		 FROM statsrepo.tables WHERE snapid = $1.snapid) AS c;
+		 FROM statsrepo.tables WHERE relpages > 1000 AND snapid = $1.snapid) AS c;
 
 	-- alert if garbage size is higher than threshold.
 	IF $2.garbage_size >= 0 AND val_gb_size > $2.garbage_size THEN
