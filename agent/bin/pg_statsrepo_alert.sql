@@ -189,7 +189,7 @@ BEGIN
 
 	-- alert if average of the query-response-time is higher than threshold.
 	IF $3.response_avg >= 0 AND val_res_avg > $3.response_avg THEN
-		RETURN NEXT 'Query average response exceeds threshold in snapshots between ''' ||
+		RETURN NEXT 'Query average response time exceeds threshold in snapshots between ''' ||
 			$2.time::timestamp(0) || ''' and ''' || $1.time::timestamp(0) ||
 			''' --- ' || val_res_avg::numeric(10,2) || ' sec (threshold = ' ||
 			$3.response_avg || ' sec)';
@@ -197,7 +197,7 @@ BEGIN
 
 	-- alert if maximum of the query-response-time is higher than threshold.
 	IF $3.response_worst >= 0 AND val_res_max > $3.response_worst THEN
-		RETURN NEXT 'Query worst response exceeds threshold in snapshots between ''' ||
+		RETURN NEXT 'Query worst response time exceeds threshold in snapshots between ''' ||
 			$2.time::timestamp(0) || ''' and ''' || $1.time::timestamp(0) ||
 			''' --- ' || val_res_max::numeric(10,2) || ' sec (threshold = ' ||
 			$3.response_worst || ' sec)';
