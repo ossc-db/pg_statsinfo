@@ -9,7 +9,7 @@
 #include <fcntl.h>
 #include <sys/stat.h> 
 
-const char *PROGRAM_VERSION	= "3.3.0";
+const char *PROGRAM_VERSION	= "10.0";
 const char *PROGRAM_URL		= "http://pgstatsinfo.sourceforge.net/";
 const char *PROGRAM_EMAIL   = NULL;
 
