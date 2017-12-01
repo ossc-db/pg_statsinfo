@@ -2955,7 +2955,10 @@ LANGUAGE sql;
 CREATE FUNCTION statsrepo.get_replication_delays(
 	IN snapid_begin			bigint,
 	IN snapid_end			bigint,
+	OUT snapid				bigint,
 	OUT "timestamp"			text,
+	OUT client_addr			inet,
+	OUT application_name	text,
 	OUT client				text,
 	OUT flush_delay_size	numeric,
 	OUT replay_delay_size	numeric,
@@ -2963,8 +2966,11 @@ CREATE FUNCTION statsrepo.get_replication_delays(
 ) RETURNS SETOF record AS
 $$
 	SELECT
+		s.snapid,
 		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
-		host(r.client_addr) || ':' || r.client_port AS client,
+		r.client_addr,
+		r.application_name,
+		COALESCE(host(r.client_addr), 'local') || ':' || COALESCE(NULLIF(r.application_name, ''), '(none)') AS client,
 		statsrepo.xlog_location_diff(
 			split_part(r.current_location, ' ', 1),
 			split_part(r.flush_location, ' ', 1),
@@ -3009,7 +3015,8 @@ CREATE FUNCTION statsrepo.get_replication_activity(
 	OUT sync_priority		integer,
 	OUT sync_state			text,
 	OUT replay_delay_avg	numeric,
-	OUT replay_delay_peak	numeric
+	OUT replay_delay_peak	numeric,
+	OUT priority_sortkey	integer
 ) RETURNS SETOF record AS
 $$
 	SELECT
@@ -3028,20 +3035,25 @@ $$
 		r.sync_priority,
 		r.sync_state,
 		d.replay_delay_avg,
-		d.replay_delay_peak
+		d.replay_delay_peak,
+		NULLIF(r.sync_priority, 0) AS priority_sortkey
 	FROM
-		statsrepo.replication r,
 		(SELECT
-			client,
+			client_addr,
+			application_name,
+			max(snapid) AS snapid,
 			avg(replay_delay_size) AS replay_delay_avg,
 			max(replay_delay_size) AS replay_delay_peak
 		 FROM
-		 	statsrepo.get_replication_delays($1, $2)
+			statsrepo.get_replication_delays($1, $2)
 		 GROUP BY
-			client) d
-	WHERE
-		d.client = (host(r.client_addr) || ':' || r.client_port)
-		AND r.snapid = $2;
+			client_addr, application_name) d
+		LEFT JOIN statsrepo.replication r
+			ON r.snapid = d.snapid
+			AND d.client_addr = r.client_addr
+			AND d.application_name = r.application_name
+		LEFT JOIN statsrepo.snapshot s ON s.snapid = d.snapid
+	ORDER BY d.snapid DESC, priority_sortkey ASC NULLS LAST;
 $$
 LANGUAGE sql;
 
