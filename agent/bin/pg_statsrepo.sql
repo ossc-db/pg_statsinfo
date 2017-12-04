@@ -3000,6 +3000,7 @@ LANGUAGE sql;
 CREATE FUNCTION statsrepo.get_replication_activity(
 	IN snapid_begin			bigint,
 	IN snapid_end			bigint,
+	OUT snapshot_time		timestamp,
 	OUT usename				name,
 	OUT application_name	text,
 	OUT client_addr			inet,
@@ -3020,6 +3021,7 @@ CREATE FUNCTION statsrepo.get_replication_activity(
 ) RETURNS SETOF record AS
 $$
 	SELECT
+		s.time::timestamp(0),
 		r.usename,
 		r.application_name,
 		r.client_addr,
