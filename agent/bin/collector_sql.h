@@ -483,6 +483,9 @@ SELECT \
 	CASE WHEN pg_is_in_recovery() THEN \
 		replay_lsn || ' (N/A)' ELSE \
 		replay_lsn || ' (' || pg_walfile_name(replay_lsn) || ')' END, \
+	coalesce(write_lag, '00:00:00'), \
+	coalesce(flush_lag, '00:00:00'), \
+	coalesce(replay_lag, '00:00:00'), \
 	sync_priority, \
 	sync_state \
 FROM \
@@ -517,6 +520,9 @@ SELECT \
 	CASE WHEN pg_is_in_recovery() THEN \
 		replay_location || ' (N/A)' ELSE \
 		replay_location || ' (' || pg_xlogfile_name(replay_location) || ')' END, \
+	NULL, \
+	NULL, \
+	NULL, \
 	sync_priority, \
 	sync_state \
 FROM \

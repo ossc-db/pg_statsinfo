@@ -105,6 +105,9 @@ SELECT
 	CASE WHEN write_location IS NOT NULL THEN 'xxx' END AS write_location,
 	CASE WHEN flush_location IS NOT NULL THEN 'xxx' END AS flush_location,
 	CASE WHEN replay_location IS NOT NULL THEN 'xxx' END AS replay_location,
+	CASE WHEN write_lag IS NOT NULL THEN 'xxx' END AS write_lag,
+	CASE WHEN flush_lag IS NOT NULL THEN 'xxx' END AS flush_lag,
+	CASE WHEN replay_lag IS NOT NULL THEN 'xxx' END AS replay_lag,
 	sync_priority,
 	sync_state
 FROM

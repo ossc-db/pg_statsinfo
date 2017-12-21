@@ -533,6 +533,9 @@ CREATE TABLE statsrepo.replication
 	write_location		text,
 	flush_location		text,
 	replay_location		text,
+	write_lag			interval,
+	flush_lag			interval,
+	replay_lag			interval,
 	sync_priority		integer,
 	sync_state			text,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
@@ -3017,6 +3020,9 @@ CREATE FUNCTION statsrepo.get_replication_activity(
 	OUT sync_state			text,
 	OUT replay_delay_avg	numeric,
 	OUT replay_delay_peak	numeric,
+	OUT write_lag_time		interval,
+	OUT flush_lag_time		interval,
+	OUT replay_lag_time		interval,
 	OUT priority_sortkey	integer
 ) RETURNS SETOF record AS
 $$
@@ -3038,6 +3044,9 @@ $$
 		r.sync_state,
 		d.replay_delay_avg,
 		d.replay_delay_peak,
+		r.write_lag,
+		r.flush_lag,
+		r.replay_lag,
 		NULLIF(r.sync_priority, 0) AS priority_sortkey
 	FROM
 		(SELECT

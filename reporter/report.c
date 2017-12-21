@@ -113,7 +113,10 @@ SELECT \
 	sync_priority, \
 	sync_state, \
 	statsrepo.pg_size_pretty(replay_delay_avg::bigint), \
-	statsrepo.pg_size_pretty(replay_delay_peak::bigint) \
+	statsrepo.pg_size_pretty(replay_delay_peak::bigint), \
+	to_char(write_lag_time, 'HH24:MI:SS.US'), \
+	to_char(flush_lag_time, 'HH24:MI:SS.US'), \
+	to_char(replay_lag_time, 'HH24:MI:SS.US') \
 FROM \
 	statsrepo.get_replication_activity($1, $2)"
 #define SQL_SELECT_SETTING_PARAMETERS			"SELECT * FROM statsrepo.get_setting_parameters($1, $2)"
@@ -1104,7 +1107,10 @@ report_replication_activity(PGconn *conn, ReportScope *scope, FILE *out)
 		fprintf(out, "Sync Priority         : %s\n", PQgetvalue(res, i, 12));
 		fprintf(out, "Sync State            : %s\n", PQgetvalue(res, i, 13));
 		fprintf(out, "Replay Delay Average  : %s\n", PQgetvalue(res, i, 14));
-		fprintf(out, "Replay Delay Peak     : %s\n\n", PQgetvalue(res, i, 15));
+		fprintf(out, "Replay Delay Peak     : %s\n", PQgetvalue(res, i, 15));
+		fprintf(out, "Write Lag Time        : %s\n", PQgetvalue(res, i, 16));
+		fprintf(out, "Flush Lag Time        : %s\n", PQgetvalue(res, i, 17));
+		fprintf(out, "Replay Lag Time       : %s\n\n", PQgetvalue(res, i, 18));
 	}
 	if (PQntuples(res) == 0)
 		fprintf(out, "\n");

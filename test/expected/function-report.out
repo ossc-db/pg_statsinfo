@@ -1626,6 +1626,9 @@ Sync Priority         : 0
 Sync State            : async
 Replay Delay Average  : 35 KiB
 Replay Delay Peak     : 130 KiB
+Write Lag Time        : 00:00:10.000000
+Flush Lag Time        : 00:00:11.000000
+Replay Lag Time       : 00:00:12.000000
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
@@ -1653,6 +1656,9 @@ Sync Priority         : 0
 Sync State            : async
 Replay Delay Average  : 35 KiB
 Replay Delay Peak     : 130 KiB
+Write Lag Time        : 00:00:10.000000
+Flush Lag Time        : 00:00:11.000000
+Replay Lag Time       : 00:00:12.000000
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -1680,6 +1686,9 @@ Sync Priority         : 0
 Sync State            : async
 Replay Delay Average  : 35 KiB
 Replay Delay Peak     : 130 KiB
+Write Lag Time        : 00:00:10.000000
+Flush Lag Time        : 00:00:11.000000
+Replay Lag Time       : 00:00:12.000000
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
@@ -1707,6 +1716,9 @@ Sync Priority         : 0
 Sync State            : async
 Replay Delay Average  : 35 KiB
 Replay Delay Peak     : 130 KiB
+Write Lag Time        : 00:00:10.000000
+Flush Lag Time        : 00:00:11.000000
+Replay Lag Time       : 00:00:12.000000
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
@@ -1734,6 +1746,9 @@ Sync Priority         : 0
 Sync State            : async
 Replay Delay Average  : 35 KiB
 Replay Delay Peak     : 130 KiB
+Write Lag Time        : 00:00:10.000000
+Flush Lag Time        : 00:00:11.000000
+Replay Lag Time       : 00:00:12.000000
 
 exit: 0
 
@@ -2348,6 +2363,9 @@ Sync Priority         : 0
 Sync State            : async
 Replay Delay Average  : 35 KiB
 Replay Delay Peak     : 130 KiB
+Write Lag Time        : 00:00:10.000000
+Flush Lag Time        : 00:00:11.000000
+Replay Lag Time       : 00:00:12.000000
 
 ----------------------------------------
 /* Setting Parameters */
@@ -2686,6 +2704,9 @@ Sync Priority         : 0
 Sync State            : async
 Replay Delay Average  : 35 KiB
 Replay Delay Peak     : 130 KiB
+Write Lag Time        : 00:00:10.000000
+Flush Lag Time        : 00:00:11.000000
+Replay Lag Time       : 00:00:12.000000
 
 ----------------------------------------
 /* Setting Parameters */
@@ -3024,6 +3045,9 @@ Sync Priority         : 0
 Sync State            : async
 Replay Delay Average  : 35 KiB
 Replay Delay Peak     : 130 KiB
+Write Lag Time        : 00:00:10.000000
+Flush Lag Time        : 00:00:11.000000
+Replay Lag Time       : 00:00:12.000000
 
 ----------------------------------------
 /* Setting Parameters */
@@ -3362,6 +3386,9 @@ Sync Priority         : 0
 Sync State            : async
 Replay Delay Average  : 35 KiB
 Replay Delay Peak     : 130 KiB
+Write Lag Time        : 00:00:10.000000
+Flush Lag Time        : 00:00:11.000000
+Replay Lag Time       : 00:00:12.000000
 
 ----------------------------------------
 /* Setting Parameters */
@@ -3700,6 +3727,9 @@ Sync Priority         : 0
 Sync State            : async
 Replay Delay Average  : 35 KiB
 Replay Delay Peak     : 130 KiB
+Write Lag Time        : 00:00:10.000000
+Flush Lag Time        : 00:00:11.000000
+Replay Lag Time       : 00:00:12.000000
 
 ----------------------------------------
 /* Setting Parameters */
@@ -4235,6 +4265,9 @@ Sync Priority         : 0
 Sync State            : async
 Replay Delay Average  : 35 KiB
 Replay Delay Peak     : 130 KiB
+Write Lag Time        : 00:00:10.000000
+Flush Lag Time        : 00:00:11.000000
+Replay Lag Time       : 00:00:12.000000
 
 ----------------------------------------
 /* Setting Parameters */
