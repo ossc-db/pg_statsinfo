@@ -129,7 +129,7 @@ BEGIN
 		(SELECT
 			size * statsrepo.div(n_dead_tup, (n_live_tup + n_dead_tup)) AS garbage_size,
 		 	size
-		 FROM statsrepo.tables WHERE relpages > 1000 AND snapid = $1.snapid) AS c;
+		 FROM statsrepo.tables WHERE relpages >= 1000 AND snapid = $1.snapid) AS c;
 
 	-- alert if garbage size is higher than threshold.
 	IF $2.garbage_size >= 0 AND val_gb_size > $2.garbage_size THEN
@@ -150,7 +150,7 @@ BEGIN
 		SELECT
 			database || '.' || schema || '.' || "table",
 			100 * statsrepo.div(n_dead_tup, (n_live_tup + n_dead_tup))
-		FROM statsrepo.tables WHERE relpages > 1000 AND snapid = $1.snapid
+		FROM statsrepo.tables WHERE relpages >= 1000 AND snapid = $1.snapid
 	LOOP
 		IF $2.garbage_percent_table >= 0 AND val_gb_pct > $2.garbage_percent_table THEN
 			RETURN NEXT 'dead tuple ratio in ''' || val_gb_table ||
