@@ -650,7 +650,7 @@ div.index li:before {
   <li><a href="#uninstall">アンインストール</a></li>
   <li><a href="#restrictions">使用上の注意と制約</a></li>
   <li><a href="#QA">よくあるQ&A</a></li>
-  <li><a href="#change">pg_statsinfo 3.2 からの変更点</a></li>
+  <li><a href="#change">pg_statsinfo 3.3 からの変更点</a></li>
   <li><a href="#details">詳細情報</a>
     <ol>
       <li><a href="#many-instances">複数の監視対象インスタンス</a></li>
@@ -670,7 +670,7 @@ PostgreSQL サーバの利用統計情報を定期的に収集・蓄積するこ
 性能劣化などの兆候や問題発生時の原因の把握等)に役立つツールです。<br>
 起動や終了、パラメータの設定は PostgreSQL と密に連携しており、手間をかけずに導入可能です。
 </p>
-<p>pg_statsinfo 3.2 からの変更点は<a href="#change">こちら</a>をご覧ください。</p>
+<p>pg_statsinfo 3.3 からの変更点は<a href="#change">こちら</a>をご覧ください。</p>
 
 <h2 id="description">機能概要</h2>
 <p>pg_statsinfo は、PostgreSQL サーバの統計情報や活動状況を一定の時間間隔毎に定期的に収集し蓄積する機能と、
@@ -679,7 +679,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </p>
 
 <p>
-また、pg_statsinfo で収集した情報は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.3/html/pg_stats_reporter-ja.html">pg_stats_reporter</a>
+また、pg_statsinfo で収集した情報は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter10/html/pg_stats_reporter-ja.html">pg_stats_reporter</a>
 を用いることでグラフィカルな形で解析・出力することがきます。
 </p>
 
@@ -736,7 +736,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </p>
 
 <h4>リポジトリDBのテーブル構成</h4>
-<p>リポジトリDBのテーブル構成に関しては、「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo3.3/files/pg_statsinfo_v3.3_repository_infomation.xls">pg_statsinfo v3.3 リポジトリDB構成</a>」を参照してください。</p>
+<p>リポジトリDBのテーブル構成に関しては、「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo10/files/pg_statsinfo_v10_repository_infomation.xls">pg_statsinfo v10 リポジトリDB構成</a>」を参照してください。</p>
 
 <h3 id="features-log-route">サーバログ分配機能</h3>
 <p>PostgreSQL が出力するサーバログをCSVログ、テキストログ、syslog に分配して出力します。</p>
@@ -788,7 +788,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </p>
 
 <p>
-各アラート項目のアラートメッセージの内容については「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo3.3/files/pg_statsinfo_v3.3_report_infomation.xls">pg_statsinfo v3.3 レポート項目一覧</a>」をご覧ください。
+各アラート項目のアラートメッセージの内容については「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo10/files/pg_statsinfo_v10_report_infomation.xls">pg_statsinfo v10 レポート項目一覧</a>」をご覧ください。
 </p>
 
 <p>
@@ -813,9 +813,9 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </ul>
 
 <p>
-簡易レポート機能が出力するレポートの項目については「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo3.3/files/pg_statsinfo_v3.3_report_infomation.xls">pg_statsinfo v3.3 レポート項目一覧</a>」をご覧ください。<br>
-なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.3/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> と同等です。<br>
-グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.3/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> を使用してください。
+簡易レポート機能が出力するレポートの項目については「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo10/files/pg_statsinfo_v10_report_infomation.xls">pg_statsinfo v10 レポート項目一覧</a>」をご覧ください。<br>
+なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter10/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> と同等です。<br>
+グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter10/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> を使用してください。
 </p>
 
 <h4>運用管理機能</h4>
@@ -857,18 +857,18 @@ pg_statsinfo の運用管理向けの操作を行うコマンドを提供しま�
 <h3 id="requirement">動作環境</h3>
 <dl>
   <dt>PostgreSQL</dt>
-  <dd>バージョン 9.2, 9.3, 9.4, 9.5, 9.6, 10</dd>
+  <dd>バージョン 10</dd>
   <dt>動作検証済みOS</dt>
-  <dd>RHEL 6.x (x86_64), CentOS 6.x (x86_64), RHEL 7.x (x86_64), CentOS 7.x (x86_64)</dd>
+  <dd>RHEL 7.x (x86_64), CentOS 7.x (x86_64)</dd>
 </dl>
 
 <h3 id="procedure">インストール手順</h3>
 
 <h4>RPM</h4>
-以下はPostgreSQL9.4のRHEL7のx86_64用のrpmをインストールする例です。
+以下はPostgreSQL10のRHEL7のx86_64用のrpmをインストールする例です。
 <pre>
 $ su
-# rpm -ivh pg_statsinfo-3.3.0-1.pg94.rhel7.x86_64.rpm
+# rpm -ivh pg_statsinfo-10.0-1.pg10.rhel7.x86_64.rpm
 </pre>
 
 <h4>source</h4>
@@ -876,8 +876,8 @@ $ su
 なお、pg_statsinfo の登録スクリプト (sql) を手動でインストールする必要はありません。
 監視対象インスタンス、リポジトリDB共に、初回起動時に必要に応じて エージェントがスキーマを自動的にインストールします。</p>
 <pre>
-$ tar xzvf pg_statsinfo-3.3.0.tar.gz
-$ cd pg_statsinfo-3.3.0
+$ tar xzvf pg_statsinfo-10.0.tar.gz
+$ cd pg_statsinfo-10.0
 $ make USE_PGXS=1
 $ su
 # make USE_PGXS=1 install
@@ -966,7 +966,7 @@ $ psql -d postgres -c "CREATE EXTENSION pg_stat_statements"
 
 <h4 id="pg_store_plans">クエリの実行計画の取得設定</h4>
 <p>
-PostgreSQL のバージョン 9.3 以上を使っている場合、監視対象インスタンスの postgres データベースに pg_store_plans をインストールすることで、クエリの実行計画もスナップショットとして収集できるようになります。<br>
+監視対象インスタンスの postgres データベースに pg_store_plans をインストールすることで、クエリの実行計画もスナップショットとして収集できるようになります。<br>
 利用する場合には、postgresql.conf の shared_preload_libraries に pg_store_plans を追加し、初回起動時に以下の手順で登録してください。 
 </p>
 <pre>
@@ -998,8 +998,7 @@ PostgreSQL の起動と連動して エージェントが自動的に起動し�
 <pre>$ pg_ctl start [OPTIONS]</pre>
 
 <p>終了も同様に、PostgresSQL サーバの終了に連動します。
-smart 以外の終了モード (fast, immediate) ではサーバログにエラーが出力される場合がありますが、正常な動作です。
-なお、PostgreSQL 9.5以降では終了モードのデフォルトが "fast" であることに注意してください。</p>
+smart 以外の終了モード (fast, immediate) ではサーバログにエラーが出力される場合がありますが、正常な動作です。</p>
 <pre>$ pg_ctl stop -m smart [OPTIONS]</pre>
 
 <p>また、PostgreSQL サーバを終了せずに エージェントのみを停止するには以下のコマンドを実行します。</p>
@@ -1077,7 +1076,7 @@ pg_statsinfo には PostgreSQL のサーバログをフィルタリングによ�
 
 <p>ログファイルの出力例を以下に示します。</p>
 <pre>
-$ ls -l $PGDATA/pg_log (PostgreSQL10以降では$PGDATA/log)
+$ ls -l $PGDATA/log
 -rw------- 1 postgres postgres 433644 Oct  1 23:59 postgresql-2013-10-01_000000.csv
 -rw------- 1 postgres postgres 322167 Oct  1 23:59 postgresql-2013-10-01_000000.log
 -rw------- 1 postgres postgres 425449 Oct  2 23:59 postgresql-2013-10-02_000000.csv
@@ -1382,7 +1381,7 @@ $ pg_statsinfo  -r All -h localhost -d postgres -p 5432 -U postgres
   <dt>-r, --report=REPORTID</dt>
   <dd>レポート種別IDを指定します。</dd>
   <dd>レポート種別IDに指定できる値は以下のとおりです。</dd>
-  <dd>レポート種別IDとレポートの内容についての対応は「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo3.3/files/pg_statsinfo_v3.3_report_infomation.xls">pg_statsinfo v3.3 レポート項目一覧</a>」をご覧ください。</dd>
+  <dd>レポート種別IDとレポートの内容についての対応は「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo10/files/pg_statsinfo_v10_report_infomation.xls">pg_statsinfo v10 レポート項目一覧</a>」をご覧ください。</dd>
   <dd>
     <ul>
       <li>Summary</li>
@@ -1779,7 +1778,7 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
   </tr>
   <tr>
     <td>log_directory</td>
-    <td>'pg_log'<br>(PostgreSQL10以降では'log')</td>
+    <td>'log'</td>
     <td>CSVログおよびテキストログの出力先ディレクトリ。</td>
   </tr>
   <tr>
@@ -2019,7 +2018,7 @@ log_line_prefix の値そのものは無視されることに注意して下さ�
 <dd>
 パスワードの入力待ちにならないようにする必要があります。
 パスワード認証が必要な場合には、PostgreSQL インスタンス起動ユーザに <a href="http://www.postgresql.jp/document/current/html/libpq-pgpass.html">.pgpass</a> を設定し、パスワードの入力を自動化してください。
-この際には、host を指定しない場合は hostaddr がホスト名として参照されます。詳細は「<a href="https://www.postgresql.jp/document/9.6/html/libpq-connect.html#libpq-paramkeywords">パラメータキーワード</a>」を参照してください。
+この際には、host を指定しない場合は hostaddr がホスト名として参照されます。詳細は「<a href="https://www.postgresql.jp/document/current/html/libpq-connect.html#libpq-paramkeywords">パラメータキーワード</a>」を参照してください。
 </dd>
 
 <dt id="configuration-a5">*5 : SQLSTATE 指定</dt>
@@ -2158,7 +2157,7 @@ repository=$ SET TIME ZONE '<u>PRC</u>'; select '2014/1/1 0:0:0 <u>CST</u>'::tim
 </pre>
 
 <dt>AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリの収集に関する制限</dt>
-<dd>監視対象DBのPostgreSQLが9.2.14, 9.3.10, 9.4.5以降のマイナーリリースおよび9.5.0以降の全てのリリースの場合、AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリはlog_min_messagesをdebug1~debug5に設定した場合のみ収集されます。</dd>
+<dd>AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリはlog_min_messagesをdebug1~debug5に設定した場合のみ収集されます。</dd>
 </dl>
 <br>
 
@@ -2175,7 +2174,7 @@ $psql -d postgres -c "SELECT * FROM statsrepo.snapshot WHERE COMMENT = 'test'"
 <h4>Q2. 取得したスナップショットはどのように使えばいいの？</h4>
 <p>
 pg_statsinfo の統計情報の取得機能は、その時点の統計情報をスナップショットとして定期的に取得する機能のみになります。
-取得した統計情報から、有益な情報を見たい場合は <a href="#features-cmdline">簡易レポート機能</a> を利用するか、<a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.3/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> をお使いください。
+取得した統計情報から、有益な情報を見たい場合は <a href="#features-cmdline">簡易レポート機能</a> を利用するか、<a href="http://pgstatsinfo.sourceforge.net/documents/reporter10/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> をお使いください。
 </p>
 
 <h4>Q3. 自動メンテナンス機能のスナップショット削除が動作しません。</h4>
@@ -2295,35 +2294,25 @@ pg_statsinfo は「インスタンスID」でインスタンスを識別しま�
 </p>
 <br>
 
-<h2 id="change">pg_statsinfo 3.2 からの変更点</h2>
-<p>pg_statsinfo 3.2 からの変更点は以下の通りです。</p>
+<h2 id="change">pg_statsinfo 3.3 からの変更点</h2>
+<p>pg_statsinfo 3.3 からの変更点は以下の通りです。</p>
 <ul>
-  <li>スナップショット情報に以下の項目を追加</li>
+  <li>スナップショット情報に以下の項目を追加しました</li>
   <ul>
-    <li>ページサイズ、ページヘッダサイズ、タプルヘッダサイズ、アイテムIDサイズ</li>
-    <li>ロック待ちのイベント種別、ロック待ちのイベント名</li>
-    <li>AUTOVACUUMでの凍結済みのためスキップしたページ数</li>
-    <li>バックグラウンドライタにより書き出されたバッファ数</li>
-    <li>バックグラウンドライタが bgwriter_lru_maxpages の制限によってスキャンを停止した回数</li>
-    <li>バックエンドにより直接書き出されたバッファ数</li>
-    <li>バックエンドが独自にfsyncを呼び出さざるを得なかった回数</li>
-    <li>割当られたバッファ数</li>
+    <li>レプリケーション遅延時間</li>
   </ul>
-    <li>アラート機能の有効／無効を設定するパラメータ「pg_statsinfo.enable_alert」を追加</li>
-    <li>監視対象DBへの接続文字列を設定するパラメータ「pg_statsinfo.target_server」を追加</li>
-    <li>簡易レポート機能のレポートから「Replication Delays」の項目を削除</li>
-    <li>簡易レポート機能のレポートの「Current Replication Status」に、レプリケーション遅延の平均値およびピーク値を追加</li>
-    <li>簡易レポート機能のレポートに「BGWriter Statistics」の項目を追加</li>
-    <li>CSVログの出力量を削減。下記のパラメータの内の最小値を上回るメッセージレベルのCSVログの出力を抑止しました</li>
+  <li>テーブルの不要領域サイズのアラートをデフォルトで無効にしました</li>
+  <li>テーブル不要領域についてのアラートに関して、インスタンス全体の不要領域の割合の計算において、1000ページ未満の小さなテーブルを無視するようにしました</li>
+  <p>いままでもテーブル個別の不要領域のサイズ・割合では不要なアラートを抑止するため小さなテーブルを無視していました。ただしインスタンス全体の不要領域の絶対量においては引き続き全てのテーブルでの合計を使用します。これによりサイズが小さいインスタンスで性能への影響が小さい状況でのアラートが抑止されます。</p>
+  <li>アラート機能が出力するメッセージの一覧をマニュアルに追加しました</li>
+  <li>アラート機能が出力する下記のアラート項目のメッセージを変更しました</li>
   <ul>
-    <li>pg_statsinfo.textlog_min_messages</li>
-    <li>pg_statsinfo.syslog_min_messages</li>
-    <li>pg_statsinfo.repolog_min_messages</li>
+    <li>クエリの平均レスポンス時間</li>
+    <li>クエリの最長レスポンス時間</li>
   </ul>
-  <li>PostgreSQL 10に対応 (pg_statsinfo 3.3.1以降)</li>
-  <li>PostgreSQL 9.1がサポート対象外になりました</li>
-  <li>RPMパッケージにマニュアルが同梱されるようになりました</li>
-  <li>内部設計を変更。ランチャ部分をバックグラウンドワーカに移行しました</li>
+  <li>簡易レポートの「Current Replication Status」に、レポート期間の途中で切断したスタンバイの情報も表示されるように変更しました</li>
+  <li>簡易レポートの「Current Replication Status」に、レプリケーション遅延時間を追加しました</li>
+  <li>本バージョンより pg_statsinfo は PostgreSQL の複数メジャーバージョンのサポートを廃止します。pg_statsinfo 10 は PostgreSQL 10 のみをサポートします</li>
 </ul>
 <br>
 
@@ -2477,11 +2466,11 @@ pg_statsinfo は、この SystemTap が収集するプロファイリング情�
 <a href="http://www.postgresql.jp/document/current/html/monitoring-stats.html">統計情報コレクタ</a>,
 <a href="http://www.postgresql.jp/document/current/html/catalogs.html">システムカタログ</a>,
 <a href="http://www.postgresql.jp/document/current/html/pgstatstatements.html">pg_stat_statements</a>,
-<a href="http://pgstatsinfo.sourceforge.net/documents/reporter3.3/html/pg_stats_reporter-ja.html">pg_stats_reporter</a>
+<a href="http://pgstatsinfo.sourceforge.net/documents/reporter10/html/pg_stats_reporter-ja.html">pg_stats_reporter</a>
 <hr>
 <div class="navigation">
   <a href="http://pgstatsinfo.sourceforge.net/index_ja.html">Top</a> &gt;
-  <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo3.3/pg_statsinfo-ja.html">pg_statsinfo</a>
+  <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo10/pg_statsinfo-ja.html">pg_statsinfo</a>
 <div>
 <p class="footer">Copyright (c) 2009-2017, NIPPON TELEGRAPH AND TELEPHONE CORPORATION</p>
 </div></div></div></div></body></html>
