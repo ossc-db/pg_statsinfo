@@ -2154,9 +2154,9 @@ Currently there is no available means of preventing this occurring.
 <p>Following changes have been made after pg_statsinfo 3.3.</p>
 <ul>
   <li>Replication delay time is added to snapshots.</li>
-  <li>Alert for table dead space is now defaulted to off.</li>
-  <li>Tables smaller than 1000 pages are now ignored in alert for instance-total dead space ratio. <br>Such small tables are already ignored in calculation of per-table dead space size and ratio to suppress meaningless alerts. All tables including such small tables are still counted in instance-total dead space size. This change suppresses unnecessary alert for small instances on which dead space doesn't impact on performance so much.</li>
-  <li>Added alert message list to the documentation. (only in Japanese)</li>
+  <li>Alert for table dead space is now turned off by default.</li>
+  <li>Tables smaller than 1000 pages are now ignored in alert for instance-total dead space ratio. <br>Such small tables are already ignored in calculation of per-table dead space size and ratio to suppress meaningless alerts. On the other hand, all tables are took into account for instance-total dead space size, including such small tables. This change suppresses unnecessary alert for small instances on which dead space doesn't impact on performance so much.</li>
+  <li>A comprehensive list of the alert messages is added to the user documents. (only in Japanese)</li>
   <li>Fixed the following two alert messages.</li>
   <ul>
     <li>Query average reponse time</li>
