@@ -3,14 +3,14 @@
 
 # Original declaration for pg_statsinfo rpmbuild #
 
-%define _pgdir   /usr/pgsql-9.4
+%define _pgdir   /usr/pgsql-10
 %define _bindir  %{_pgdir}/bin
 %define _libdir  %{_pgdir}/lib
 %define _datadir %{_pgdir}/share
 
 ## Set general information for pg_statsinfo.
 Name:       pg_statsinfo
-Version:    3.3.0
+Version:    10.0
 Release:    1%{?dist}
 Summary:    Performance monitoring tool for PostgreSQL
 Group:      Applications/Databases
@@ -20,7 +20,7 @@ Source0:    %{name}-%{version}.tar.gz
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 
 ## We use postgresql-devel package
-BuildRequires:  postgresql94-devel
+BuildRequires:  postgresql10-devel
 
 %description
 pg_statsinfo monitors an instance of PostgreSQL server and gather
@@ -85,8 +85,8 @@ if [ ${?} -eq 0 -a -n "${installed}" ] ; then
 	old_version=$(rpm -q --queryformat='%{VERSION}' "${installed}" 2>&1)
 	new_version='%{version}'
 
-	old_family=$(echo ${old_version} | sed 's/^\([0-9]\+\.[0-9]\+\)\.[0-9]\+$/\1/')
-	new_family=$(echo ${new_version} | sed 's/^\([0-9]\+\.[0-9]\+\)\.[0-9]\+$/\1/')
+	new_family=$(echo ${new_version} | cut -d '.' -f 1)
+	old_family=$(echo ${old_version} | cut -d '.' -f 1)
 
 	[ -z "${old_family}" ] && old_family="<unrecognized version ${old_version}>"
 	[ -z "${new_family}" ] && new_family="<bad package specification: version ${new_version}>"
@@ -118,7 +118,7 @@ EOF
 	fi
 fi
 
-# History of pg_statsinfo-v3.3 RPM.
+# History of pg_statsinfo-v10 RPM.
 %changelog
-* Thu Jun  22 2017 - NTT OSS Center 3.3.0-1
-- pg_statsinfo 3.3.0 released
+* Thu Jan  25 2018 - NTT OSS Center 10.0-1
+- pg_statsinfo 10.0 released
