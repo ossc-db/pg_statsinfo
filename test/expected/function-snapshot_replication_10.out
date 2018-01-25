@@ -1,6 +1,7 @@
 /*---- Initialize repository DB ----*/
 /*---- Initialize monitored instance (replication configuration) ----*/
-NOTICE:  pg_stop_backup complete, all required WAL segments have been archived
+/*---- Initialize logical standby instance ----*/
+NOTICE:  created replication slot "sub" on publisher
 /***-- Statistics of WAL (MASTER) --***/
  snapid | location | xlogfile 
 --------+----------+----------
@@ -16,7 +17,14 @@ NOTICE:  pg_stop_backup complete, all required WAL segments have been archived
 /***-- Statistics of replication (MASTER) --***/
  snapid | procpid | usesysid | usename  | application_name | client_addr | client_hostname | client_port | backend_start | backend_xmin |   state   | current_location | sent_location | write_location | flush_location | replay_location | write_lag | flush_lag | replay_lag | sync_priority | sync_state 
 --------+---------+----------+----------+------------------+-------------+-----------------+-------------+---------------+--------------+-----------+------------------+---------------+----------------+----------------+-----------------+-----------+-----------+------------+---------------+------------
+      2 | xxx     | xxx      | postgres | xxx              | xxx         | xxx             | xxx         | xxx           |              | streaming | xxx              | xxx           | xxx            | xxx            | xxx             | xxx       | xxx       | xxx        |             0 | async
       2 | xxx     | xxx      | postgres | xxx              | xxx         | xxx             | xxx         | xxx           | xxx          | streaming | xxx              | xxx           | xxx            | xxx            | xxx             | xxx       | xxx       | xxx        |             0 | async
+(2 rows)
+
+/***-- Statistics of replication slot (MASTER) --***/
+ snapid | slot_name |  plugin  | slot_type | datoid | temporary | active | active_pid | xact_xmin | catalog_xmin | restart_lsn | confirmed_flush_lsn 
+--------+-----------+----------+-----------+--------+-----------+--------+------------+-----------+--------------+-------------+---------------------
+      2 | sub       | pgoutput | logical   | xxx    | f         | t      | xxx        |           | xxx          | xxx         | xxx
 (1 row)
 
 /***-- Statistics of WAL (STANDBY) --***/

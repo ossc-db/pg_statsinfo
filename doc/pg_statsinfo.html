@@ -2154,6 +2154,8 @@ Currently there is no available means of preventing this occurring.
 <p>Following changes have been made after pg_statsinfo 3.3.</p>
 <ul>
   <li>Replication delay time is added to snapshots.</li>
+  <li>Replication slots are now recorded in snapshots.</li>
+  <li>Logical recplication are now recorded as a part of replication connection information in snapshots. Only physical ones were recorded in previous versions.</li>
   <li>Alert for table dead space is now turned off by default.</li>
   <li>Tables smaller than 1000 pages are now ignored in alert for instance-total dead space ratio. <br>Such small tables are already ignored in calculation of per-table dead space size and ratio to suppress meaningless alerts. On the other hand, all tables are took into account for instance-total dead space size, including such small tables. This change suppresses unnecessary alert for small instances on which dead space doesn't impact on performance so much.</li>
   <li>A comprehensive list of the alert messages is added to the user documents. (only in Japanese)</li>
@@ -2162,9 +2164,9 @@ Currently there is no available means of preventing this occurring.
     <li>Query average reponse time</li>
     <li>Query worst response time</li>
   </ul>
-  <li>Show information of standbys that had a disconnection during report period in Current Replication Status.</li>
+  <li>Show information of all standbys that had a connection during a report period in Current Replication Status.</li>
   <li>Added replication delay time in Current Replication Status.</li>
-  <li>pg_statsinfo no longer supports multiple major versions of PostgreSQL. pg_statsinfo 10 supports only PostgreSQL 10.</li>
+  <li>pg_statsinfo supports only one version of PostgreSQL from this version. pg_statsinfo 10 supports only PostgreSQL 10.</li>
 </ul>
 <br>
 

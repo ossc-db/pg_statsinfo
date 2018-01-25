@@ -489,9 +489,7 @@ SELECT \
 	sync_priority, \
 	sync_state \
 FROM \
-	pg_stat_replication \
-WHERE \
-	pid NOT IN (SELECT active_pid FROM pg_replication_slots WHERE slot_type = 'logical')"
+	pg_stat_replication"
 #else
 #define SQL_SELECT_REPLICATION "\
 SELECT \
@@ -528,6 +526,23 @@ SELECT \
 FROM \
 	pg_stat_replication"
 #endif
+
+/* replication slot */
+#define SQL_SELECT_REPLICATION_SLOTS "\
+SELECT \
+	slot_name, \
+	plugin, \
+	slot_type, \
+	datoid, \
+	temporary, \
+	active, \
+	active_pid, \
+	xmin, \
+	catalog_xmin, \
+	restart_lsn, \
+	confirmed_flush_lsn \
+FROM \
+	pg_replication_slots"
 
 /* xlog */
 #if PG_VERSION_NUM >= 100000

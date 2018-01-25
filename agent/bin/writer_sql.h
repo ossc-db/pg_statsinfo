@@ -53,6 +53,10 @@ INSERT INTO statsrepo.bgwriter VALUES ($1, $2, $3, $4, $5, $6)"
 INSERT INTO statsrepo.replication VALUES \
 ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)"
 
+#define SQL_INSERT_REPLICATION_SLOTS "\
+INSERT INTO statsrepo.replication_slots VALUES \
+($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)"
+
 #define SQL_INSERT_XLOG "\
 INSERT INTO statsrepo.xlog VALUES ($1, $2, $3)"
 

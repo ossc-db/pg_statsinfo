@@ -541,6 +541,79 @@ CREATE TABLE statsrepo.replication
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
+CREATE TABLE statsrepo.replication_slots
+(
+	snapid					bigint,
+	slot_name				name,
+	plugin					name,
+	slot_type				text,
+	datoid					oid,
+	temporary				boolean,
+	active					boolean,
+	active_pid				integer,
+	xact_xmin				xid,
+	catalog_xmin			xid,
+	restart_lsn				pg_lsn,
+	confirmed_flush_lsn		pg_lsn,
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
+CREATE TABLE statsrepo.publication
+(
+	snapid			bigint,
+	dbid			oid,
+	pubid			oid,
+	pubname			name,
+	pubowner		oid,
+	puballtables	boolean,
+	pubinsert		boolean,
+	pubupdate		boolean,
+	pubdelete		boolean,
+	PRIMARY KEY (snapid, dbid, pubid),
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
+CREATE TABLE statsrepo.publication_tables
+(
+	snapid			bigint,
+	dbid			oid,
+	pubname			name,
+	schemaname		name,
+	tablename		name,
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
+CREATE TABLE statsrepo.subscription
+(
+	snapid					bigint,
+	subid					oid,
+	subdbid					oid,
+	subname					name,
+	subowner				oid,
+	subenabled				boolean,
+	subconninfo				text,
+	subslotname				name,
+	subsynccommit			text,
+	subpublications			text[],
+	PRIMARY KEY (snapid, subid),
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
+CREATE TABLE statsrepo.stat_subscription
+(
+	snapid					bigint,
+	subid					oid,
+	subname					name,
+	pid						integer,
+	relid					oid,
+	received_lsn			pg_lsn,
+	last_msg_send_time		timestamptz,
+	last_msg_receipt_time	timestamptz,
+	latest_end_lsn			pg_lsn,
+	latest_end_time			timestamptz,
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
 CREATE TABLE statsrepo.xlog
 (
 	snapid		bigint,
@@ -2984,7 +3057,8 @@ $$
 			i.xlog_file_size),
 		r.sync_state
 	FROM
-		statsrepo.replication r,
+		statsrepo.replication r LEFT JOIN statsrepo.replication_slots rs
+			ON rs.snapid = r.snapid AND rs.active_pid = r.procpid,
 		statsrepo.snapshot s,
 		statsrepo.instance i
 	WHERE
@@ -2994,6 +3068,7 @@ $$
 		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 		AND r.flush_location IS NOT NULL
 		AND r.replay_location IS NOT NULL
+		AND (rs.slot_name IS NULL OR rs.slot_type = 'physical')
 	ORDER BY
 		s.snapid, client;
 $$

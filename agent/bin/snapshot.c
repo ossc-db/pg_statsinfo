@@ -69,6 +69,7 @@ static const char *instance_gets[] =
 #if PG_VERSION_NUM >= 90400
 	SQL_SELECT_ARCHIVE,
 #endif
+	SQL_SELECT_REPLICATION_SLOTS,
 /*	SQL_SELECT_STATEMENT,	*/
 /*	SQL_SELECT_PLAN,		*/
 	NULL
@@ -95,6 +96,7 @@ static const char *instance_puts[] =
 #if PG_VERSION_NUM >= 90400
 	SQL_INSERT_ARCHIVE,
 #endif
+	SQL_INSERT_REPLICATION_SLOTS,
 	SQL_INSERT_STATEMENT,
 	SQL_INSERT_PLAN,
 	NULL
