@@ -325,6 +325,7 @@ get_instid(PGconn *conn)
 		instid = pgut_strdup(PQgetvalue(res, 0, 0));
 		modified = (strcmp(server_version_string, PQgetvalue(res, 0, 1)) != 0);
 		PQclear(res);
+		res = NULL;
 
 		if (modified)
 		{

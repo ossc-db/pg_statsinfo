@@ -326,7 +326,10 @@ report_summary(PGconn *conn, ReportScope *scope, FILE *out)
 
 	res = pgut_execute(conn, SQL_SELECT_SUMMARY, lengthof(params), params);
 	if (PQntuples(res) == 0)
+	{
+		PQclear(res);
 		return;
+	}
 	fprintf(out, "Database System ID   : %s\n", PQgetvalue(res, 0, 0));
 	fprintf(out, "Host                 : %s\n", PQgetvalue(res, 0, 1));
 	fprintf(out, "Port                 : %s\n", PQgetvalue(res, 0, 2));
@@ -464,7 +467,10 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	res = pgut_execute(conn, SQL_SELECT_WALSTATS, lengthof(params), params);
 	if (PQntuples(res) == 0)
+	{
+		PQclear(res);
 		return;
+	}
 	if (PQgetisnull(res, 0, 0))
 		fprintf(out, "WAL Write Total    : (N/A)\n");
 	else
@@ -849,7 +855,10 @@ report_checkpoint_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	res = pgut_execute(conn, SQL_SELECT_CHECKPOINT_ACTIVITY, lengthof(params), params);
 	if (PQntuples(res) == 0)
+	{
+		PQclear(res);
 		return;
+	}
 	fprintf(out, "Total Checkpoints        : %s\n", PQgetvalue(res, 0, 0));
 	fprintf(out, "Checkpoints By Time      : %s\n", PQgetvalue(res, 0, 1));
 	fprintf(out, "Checkpoints By XLOG      : %s\n", PQgetvalue(res, 0, 2));
