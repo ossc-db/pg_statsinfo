@@ -682,11 +682,11 @@ LANGUAGE sql;
 CREATE FUNCTION statsrepo.del_snapshot(timestamptz) RETURNS void AS
 $$
 	DELETE FROM statsrepo.snapshot WHERE time < $1;
-	DELETE FROM statsrepo.autovacuum WHERE start < (SELECT min(time) FROM statsrepo.snapshot);
-	DELETE FROM statsrepo.autoanalyze WHERE start < (SELECT min(time) FROM statsrepo.snapshot);
-	DELETE FROM statsrepo.checkpoint WHERE start < (SELECT min(time) FROM statsrepo.snapshot);
-	DELETE FROM statsrepo.autovacuum_cancel WHERE timestamp < (SELECT min(time) FROM statsrepo.snapshot);
-	DELETE FROM statsrepo.autoanalyze_cancel WHERE timestamp < (SELECT min(time) FROM statsrepo.snapshot);
+	DELETE FROM statsrepo.autovacuum WHERE start < (SELECT pg_catalog.min(time) FROM statsrepo.snapshot);
+	DELETE FROM statsrepo.autoanalyze WHERE start < (SELECT pg_catalog.min(time) FROM statsrepo.snapshot);
+	DELETE FROM statsrepo.checkpoint WHERE start < (SELECT pg_catalog.min(time) FROM statsrepo.snapshot);
+	DELETE FROM statsrepo.autovacuum_cancel WHERE timestamp < (SELECT pg_catalog.min(time) FROM statsrepo.snapshot);
+	DELETE FROM statsrepo.autoanalyze_cancel WHERE timestamp < (SELECT pg_catalog.min(time) FROM statsrepo.snapshot);
 $$
 LANGUAGE sql;
 
@@ -726,10 +726,10 @@ CREATE FUNCTION statsrepo.convert_hex(text)
 RETURNS bigint AS
 $$
 	SELECT
-		(sum((16::numeric ^ (length($1) - i)) *
-			position(upper(substring($1 from i for 1)) in '123456789ABCDEF')))::bigint
+		(pg_catalog.sum((16::numeric ^ (pg_catalog.length($1) - i)) *
+			pg_catalog.strpos('123456789ABCDEF', pg_catalog.upper(pg_catalog.substr($1, i, 1)))))::bigint
 	FROM
-		generate_series(1, length($1)) AS t(i);
+		pg_catalog.generate_series(1, pg_catalog.length($1)) AS t(i);
 $$
 LANGUAGE sql IMMUTABLE STRICT;
 
@@ -748,8 +748,8 @@ $$
 			statsrepo.convert_hex(lsn2[1]) AS xlogid2,
 			statsrepo.convert_hex(lsn2[2]) AS xrecoff2
 		 FROM
-			regexp_matches($1, '^([0-F]{1,8})/([0-F]{1,8})$') AS lsn1,
-			regexp_matches($2, '^([0-F]{1,8})/([0-F]{1,8})$') AS lsn2
+			pg_catalog.regexp_matches($1, '^([0-F]{1,8})/([0-F]{1,8})$') AS lsn1,
+			pg_catalog.regexp_matches($2, '^([0-F]{1,8})/([0-F]{1,8})$') AS lsn2
 	) t;
 $$
 LANGUAGE sql IMMUTABLE STRICT;
@@ -793,7 +793,7 @@ LANGUAGE plpgsql IMMUTABLE STRICT;
 
 -- array_unique() - eliminate duplicate array values
 CREATE FUNCTION statsrepo.array_unique(anyarray) RETURNS anyarray AS
-'SELECT array_agg(DISTINCT i ORDER BY i) FROM unnest($1) AS t(i)'
+'SELECT pg_catalog.array_agg(DISTINCT i ORDER BY i) FROM pg_catalog.unnest($1) AS t(i)'
 LANGUAGE sql;
 
 -- array_accum - array concatenation aggregate function
@@ -895,7 +895,7 @@ CREATE VIEW statsrepo.indexes AS
 CREATE FUNCTION statsrepo.pg_fillfactor(reloptions text[], relam OID)
 RETURNS integer AS
 $$
-SELECT (regexp_matches(array_to_string($1, '/'),
+SELECT (pg_catalog.regexp_matches(pg_catalog.array_to_string($1, '/'),
         'fillfactor=([0-9]+)'))[1]::integer AS fillfactor
 UNION ALL
 SELECT CASE $2
@@ -927,15 +927,15 @@ $$
 		$1,
 		$2,
 		datname,
-		pg_encoding_to_char(encoding),
+		pg_catalog.pg_encoding_to_char(encoding),
 		datcollate,
-		pg_postmaster_start_time()::timestamp(0),
-		pg_conf_load_time()::timestamp(0),
-		version()
+		pg_catalog.pg_postmaster_start_time()::timestamp(0),
+		pg_catalog.pg_conf_load_time()::timestamp(0),
+		pg_catalog.version()
 	FROM
 		pg_catalog.pg_database
 	WHERE
-		datname = current_database();
+		datname = pg_catalog.current_database();
 $$
 LANGUAGE sql;
 
@@ -957,7 +957,7 @@ $$
 	WHERE
 		source NOT IN ('default', 'session', 'override')
 		AND setting <> boot_val
-	ORDER BY lower(name);
+	ORDER BY pg_catalog.lower(name);
 $$
 LANGUAGE sql;
 
@@ -987,7 +987,7 @@ CREATE FUNCTION statsrepo.get_min_snapid(
 ) RETURNS bigint AS
 $$
 	SELECT
-		min(snapid)
+		pg_catalog.min(snapid)
 	FROM statsrepo.snapshot s
 		LEFT JOIN  statsrepo.instance i ON i.instid = s.instid
 	WHERE i.hostname = $1 AND i.port = $2::integer
@@ -1005,7 +1005,7 @@ CREATE FUNCTION statsrepo.get_max_snapid(
 ) RETURNS bigint AS
 $$
 	SELECT
-		max(snapid)
+		pg_catalog.max(snapid)
 	FROM statsrepo.snapshot s
 		LEFT JOIN  statsrepo.instance i ON i.instid = s.instid
 	WHERE i.hostname = $1 AND i.port = $2::integer
@@ -1022,7 +1022,7 @@ CREATE FUNCTION statsrepo.get_min_snapid2(
 ) RETURNS bigint AS
 $$
 	SELECT
-		min(snapid)
+		pg_catalog.min(snapid)
 	FROM statsrepo.snapshot s
 		LEFT JOIN  statsrepo.instance i ON i.instid = s.instid
 	WHERE i.instid = $1::integer
@@ -1039,7 +1039,7 @@ CREATE FUNCTION statsrepo.get_max_snapid2(
 ) RETURNS bigint AS
 $$
 	SELECT
-		max(snapid)
+		pg_catalog.max(snapid)
 	FROM statsrepo.snapshot s
 		LEFT JOIN  statsrepo.instance i ON i.instid = s.instid
 	WHERE i.instid = $1::integer
@@ -1077,9 +1077,9 @@ $$
 		statsrepo.snapshot b,
 		statsrepo.snapshot e,
 		(SELECT
-			statsrepo.pg_size_pretty(sum(ed.size)::int8),
-			sum(ed.xact_commit) - sum(sd.xact_commit),
-			sum(ed.xact_rollback) - sum(sd.xact_rollback)
+			statsrepo.pg_size_pretty(pg_catalog.sum(ed.size)::int8),
+			pg_catalog.sum(ed.xact_commit) - pg_catalog.sum(sd.xact_commit),
+			pg_catalog.sum(ed.xact_rollback) - pg_catalog.sum(sd.xact_rollback)
 		 FROM
 		 	statsrepo.database sd,
 			statsrepo.database ed
@@ -1176,16 +1176,16 @@ $$
 		SELECT
 			snapid,
 			name,
-			xact_commit - lag(xact_commit) OVER w AS xact_commit,
-			xact_rollback - lag(xact_rollback) OVER w AS xact_rollback,
-			time - lag(time) OVER w AS duration
+			xact_commit - pg_catalog.lag(xact_commit) OVER w AS xact_commit,
+			xact_rollback - pg_catalog.lag(xact_rollback) OVER w AS xact_rollback,
+			time - pg_catalog.lag(time) OVER w AS duration
 		FROM
 			(SELECT
 				s.snapid,
 				s.time,
 				d.name,
-				sum(xact_commit) AS xact_commit,
-				sum(xact_rollback) AS xact_rollback
+				pg_catalog.sum(xact_commit) AS xact_commit,
+				pg_catalog.sum(xact_rollback) AS xact_rollback
 			 FROM
 				statsrepo.database d,
 				statsrepo.snapshot s
@@ -1215,7 +1215,7 @@ CREATE FUNCTION statsrepo.get_xact_tendency_report(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		to_char(time, 'YYYY-MM-DD HH24:MI'),
+		pg_catalog.to_char(time, 'YYYY-MM-DD HH24:MI'),
 		name,
 		coalesce(statsrepo.tps(xact_commit, duration), 0)::numeric(1000,3),
 		coalesce(statsrepo.tps(xact_rollback, duration), 0)::numeric(1000,3)
@@ -1232,16 +1232,16 @@ $$
 				snapid,
 				time,
 				name,
-				xact_commit - lag(xact_commit) OVER w AS xact_commit,
-				xact_rollback - lag(xact_rollback) OVER w AS xact_rollback,
-				time - lag(time) OVER w AS duration
+				xact_commit - pg_catalog.lag(xact_commit) OVER w AS xact_commit,
+				xact_rollback - pg_catalog.lag(xact_rollback) OVER w AS xact_rollback,
+				time - pg_catalog.lag(time) OVER w AS duration
 			FROM
 				(SELECT
 					s.snapid,
 					s.time,
 					d.name,
-					sum(xact_commit) AS xact_commit,
-					sum(xact_rollback) AS xact_rollback
+					pg_catalog.sum(xact_commit) AS xact_commit,
+					pg_catalog.sum(xact_rollback) AS xact_rollback
 				 FROM
 					statsrepo.database d,
 					statsrepo.snapshot s
@@ -1273,7 +1273,7 @@ $$
 	SELECT
 		d.snapid,
 		d.name,
-		(sum(size) / 1024 / 1024)::numeric(1000, 3)
+		(pg_catalog.sum(size) / 1024 / 1024)::numeric(1000, 3)
 	FROM
 		statsrepo.database d,
 		statsrepo.snapshot s
@@ -1298,9 +1298,9 @@ CREATE FUNCTION statsrepo.get_dbsize_tendency_report(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
 		d.name,
-		(sum(size) / 1024 / 1024)::numeric(1000, 3)
+		(pg_catalog.sum(size) / 1024 / 1024)::numeric(1000, 3)
 	FROM
 		statsrepo.database d,
 		statsrepo.snapshot s
@@ -1359,14 +1359,14 @@ CREATE FUNCTION statsrepo.get_proc_ratio(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		CASE WHEN sum(total)::float4 = 0 THEN 0
-			ELSE (100 * sum(idle)::float / sum(total)::float4)::numeric(5,1) END,
-		CASE WHEN sum(total)::float4 = 0 THEN 0
-			ELSE (100 * sum(idle_in_xact)::float / sum(total)::float4)::numeric(5,1) END,
-		CASE WHEN sum(total)::float4 = 0 THEN 0
-			ELSE (100 * sum(waiting)::float / sum(total)::float4)::numeric(5,1) END,
-		CASE WHEN sum(total)::float4 = 0 THEN 0
-			ELSE (100 * sum(running)::float / sum(total)::float4)::numeric(5,1) END
+		CASE WHEN pg_catalog.sum(total)::float4 = 0 THEN 0
+			ELSE (100 * pg_catalog.sum(idle)::float / pg_catalog.sum(total)::float4)::numeric(5,1) END,
+		CASE WHEN pg_catalog.sum(total)::float4 = 0 THEN 0
+			ELSE (100 * pg_catalog.sum(idle_in_xact)::float / pg_catalog.sum(total)::float4)::numeric(5,1) END,
+		CASE WHEN pg_catalog.sum(total)::float4 = 0 THEN 0
+			ELSE (100 * pg_catalog.sum(waiting)::float / pg_catalog.sum(total)::float4)::numeric(5,1) END,
+		CASE WHEN pg_catalog.sum(total)::float4 = 0 THEN 0
+			ELSE (100 * pg_catalog.sum(running)::float / pg_catalog.sum(total)::float4)::numeric(5,1) END
 	FROM 
 		(SELECT
 			snapid,
@@ -1430,7 +1430,7 @@ CREATE FUNCTION statsrepo.get_proc_tendency_report(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
 			ELSE (100 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
@@ -1467,7 +1467,7 @@ CREATE FUNCTION statsrepo.get_xlog_tendency(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		to_char(time, 'YYYY-MM-DD HH24:MI'),
+		pg_catalog.to_char(time, 'YYYY-MM-DD HH24:MI'),
 		location,
 		xlogfile,
 		(write_size / 1024 / 1024)::numeric(1000, 3),
@@ -1483,11 +1483,11 @@ $$
 			x.location,
 			x.xlogfile,
 			statsrepo.xlog_location_diff(
-				x.location, lag(x.location) OVER w, i.xlog_file_size) AS write_size,
-			s.time - lag(s.time) OVER w AS duration,
+				x.location, pg_catalog.lag(x.location) OVER w, i.xlog_file_size) AS write_size,
+			s.time - pg_catalog.lag(s.time) OVER w AS duration,
 			a.last_archived_wal,
-			a.archived_count - lag(a.archived_count) OVER w AS archive_count,
-			a.failed_count - lag(a.failed_count) OVER w AS archive_failed
+			a.archived_count - pg_catalog.lag(a.archived_count) OVER w AS archive_count,
+			a.failed_count - pg_catalog.lag(a.failed_count) OVER w AS archive_failed
 		 FROM
 			statsrepo.xlog x LEFT JOIN statsrepo.archive a
 				ON x.snapid = a.snapid,
@@ -1520,12 +1520,12 @@ CREATE FUNCTION statsrepo.get_xlog_stats(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		sum(write_size)::numeric(1000, 3),
-		avg(write_size_per_sec)::numeric(1000, 3),
-		sum(archive_count),
-		sum(archive_failed),
-		max(xlogfile),
-		max(last_archived_wal)
+		pg_catalog.sum(write_size)::numeric(1000, 3),
+		pg_catalog.avg(write_size_per_sec)::numeric(1000, 3),
+		pg_catalog.sum(archive_count),
+		pg_catalog.sum(archive_failed),
+		pg_catalog.max(xlogfile),
+		pg_catalog.max(last_archived_wal)
 	FROM
 		statsrepo.get_xlog_tendency($1, $2);
 $$
@@ -1570,11 +1570,11 @@ $$
 		 WHERE
 		 	snapid = $2) a,
 		(SELECT
-			(sum(overflow_user) * 4294967296)::bigint AS cpu_user_add,
-			(sum(overflow_system) * 4294967296)::bigint AS cpu_system_add,
-			(sum(overflow_idle) * 4294967296)::bigint AS cpu_idle_add,
-			(sum(overflow_iowait) * 4294967296)::bigint AS cpu_iowait_add,
-			((sum(overflow_user) + sum(overflow_system) + sum(overflow_idle) + sum(overflow_iowait)) * 4294967296)::bigint AS total_add
+			(pg_catalog.sum(overflow_user) * 4294967296)::bigint AS cpu_user_add,
+			(pg_catalog.sum(overflow_system) * 4294967296)::bigint AS cpu_system_add,
+			(pg_catalog.sum(overflow_idle) * 4294967296)::bigint AS cpu_idle_add,
+			(pg_catalog.sum(overflow_iowait) * 4294967296)::bigint AS cpu_iowait_add,
+			((pg_catalog.sum(overflow_user) + pg_catalog.sum(overflow_system) + pg_catalog.sum(overflow_idle) + pg_catalog.sum(overflow_iowait)) * 4294967296)::bigint AS total_add
 		 FROM
 			statsrepo.cpu c
 			LEFT JOIN statsrepo.snapshot s ON s.snapid = c.snapid
@@ -1609,15 +1609,15 @@ $$
 	(
 		SELECT
 			c.snapid,
-			(CASE WHEN overflow_user = 1 THEN cpu_user + 4294967296 ELSE cpu_user END - lag(cpu_user) OVER w) AS user,
-			(CASE WHEN overflow_system = 1 THEN cpu_system + 4294967296 ELSE cpu_system END - lag(cpu_system) OVER w) AS system,
-			(CASE WHEN overflow_idle = 1 THEN cpu_idle + 4294967296 ELSE cpu_idle END - lag(cpu_idle) OVER w) AS idle,
-			(CASE WHEN overflow_iowait = 1 THEN cpu_iowait + 4294967296 ELSE cpu_iowait END - lag(cpu_iowait) OVER w) AS iowait,
+			(CASE WHEN overflow_user = 1 THEN cpu_user + 4294967296 ELSE cpu_user END - pg_catalog.lag(cpu_user) OVER w) AS user,
+			(CASE WHEN overflow_system = 1 THEN cpu_system + 4294967296 ELSE cpu_system END - pg_catalog.lag(cpu_system) OVER w) AS system,
+			(CASE WHEN overflow_idle = 1 THEN cpu_idle + 4294967296 ELSE cpu_idle END - pg_catalog.lag(cpu_idle) OVER w) AS idle,
+			(CASE WHEN overflow_iowait = 1 THEN cpu_iowait + 4294967296 ELSE cpu_iowait END - pg_catalog.lag(cpu_iowait) OVER w) AS iowait,
 			(CASE WHEN overflow_user = 1 THEN cpu_user + 4294967296 ELSE cpu_user END +
 			 CASE WHEN overflow_system = 1 THEN cpu_system + 4294967296 ELSE cpu_system END +
 			 CASE WHEN overflow_idle = 1 THEN cpu_idle + 4294967296 ELSE cpu_idle END +
 			 CASE WHEN overflow_iowait = 1 THEN cpu_iowait + 4294967296 ELSE cpu_iowait END) -
-			(lag(cpu_user) OVER w + lag(cpu_system) OVER w + lag(cpu_idle) OVER w + lag(cpu_iowait) OVER w) AS total
+			(pg_catalog.lag(cpu_user) OVER w + pg_catalog.lag(cpu_system) OVER w + pg_catalog.lag(cpu_idle) OVER w + pg_catalog.lag(cpu_iowait) OVER w) AS total
 		FROM
 			statsrepo.cpu c,
 			statsrepo.snapshot s
@@ -1646,7 +1646,7 @@ CREATE FUNCTION statsrepo.get_cpu_usage_tendency_report(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		to_char(t.time, 'YYYY-MM-DD HH24:MI'),
+		pg_catalog.to_char(t.time, 'YYYY-MM-DD HH24:MI'),
 		(100 * statsrepo.div(t.user, t.total))::numeric(5,1),
 		(100 * statsrepo.div(t.system, t.total))::numeric(5,1),
 		(100 * statsrepo.div(t.idle, t.total))::numeric(5,1),
@@ -1656,15 +1656,15 @@ $$
 		SELECT
 			c.snapid,
 			s.time,
-			(CASE WHEN overflow_user = 1 THEN cpu_user + 4294967296 ELSE cpu_user END - lag(cpu_user) OVER w) AS user,
-			(CASE WHEN overflow_system = 1 THEN cpu_system + 4294967296 ELSE cpu_system END - lag(cpu_system) OVER w) AS system,
-			(CASE WHEN overflow_idle = 1 THEN cpu_idle + 4294967296 ELSE cpu_idle END - lag(cpu_idle) OVER w) AS idle,
-			(CASE WHEN overflow_iowait = 1 THEN cpu_iowait + 4294967296 ELSE cpu_iowait END - lag(cpu_iowait) OVER w) AS iowait,
+			(CASE WHEN overflow_user = 1 THEN cpu_user + 4294967296 ELSE cpu_user END - pg_catalog.lag(cpu_user) OVER w) AS user,
+			(CASE WHEN overflow_system = 1 THEN cpu_system + 4294967296 ELSE cpu_system END - pg_catalog.lag(cpu_system) OVER w) AS system,
+			(CASE WHEN overflow_idle = 1 THEN cpu_idle + 4294967296 ELSE cpu_idle END - pg_catalog.lag(cpu_idle) OVER w) AS idle,
+			(CASE WHEN overflow_iowait = 1 THEN cpu_iowait + 4294967296 ELSE cpu_iowait END - pg_catalog.lag(cpu_iowait) OVER w) AS iowait,
 			(CASE WHEN overflow_user = 1 THEN cpu_user + 4294967296 ELSE cpu_user END +
 			 CASE WHEN overflow_system = 1 THEN cpu_system + 4294967296 ELSE cpu_system END +
 			 CASE WHEN overflow_idle = 1 THEN cpu_idle + 4294967296 ELSE cpu_idle END +
 			 CASE WHEN overflow_iowait = 1 THEN cpu_iowait + 4294967296 ELSE cpu_iowait END) -
-			(lag(cpu_user) OVER w + lag(cpu_system) OVER w + lag(cpu_idle) OVER w + lag(cpu_iowait) OVER w) AS total
+			(pg_catalog.lag(cpu_user) OVER w + pg_catalog.lag(cpu_system) OVER w + pg_catalog.lag(cpu_idle) OVER w + pg_catalog.lag(cpu_iowait) OVER w) AS total
 		FROM
 			statsrepo.cpu c,
 			statsrepo.snapshot s
@@ -1696,7 +1696,7 @@ CREATE FUNCTION statsrepo.get_cpu_loadavg_tendency(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
 		c.user,
 		c.system,
 		c.idle,
@@ -1735,25 +1735,25 @@ $$
 	SELECT
 		device_name,
 		statsrepo.array_unique(statsrepo.array_accum(device_tblspaces)),
-		coalesce(sum(read_sector) / 2 / 1024, 0)::bigint,
-		coalesce(sum(write_sector) / 2 / 1024, 0)::bigint,
-		coalesce(sum(read_time), 0)::bigint,
-		coalesce(sum(write_time), 0)::bigint,
-		avg(device_ioqueue)::numeric(1000,3),
-		coalesce(sum(io_time), 0)::bigint,
-		(max(device_rsps_max) / 2)::numeric(1000,2),
-		(max(device_wsps_max) / 2)::numeric(1000,2)
+		coalesce(pg_catalog.sum(read_sector) / 2 / 1024, 0)::bigint,
+		coalesce(pg_catalog.sum(write_sector) / 2 / 1024, 0)::bigint,
+		coalesce(pg_catalog.sum(read_time), 0)::bigint,
+		coalesce(pg_catalog.sum(write_time), 0)::bigint,
+		pg_catalog.avg(device_ioqueue)::numeric(1000,3),
+		coalesce(pg_catalog.sum(io_time), 0)::bigint,
+		(pg_catalog.max(device_rsps_max) / 2)::numeric(1000,2),
+		(pg_catalog.max(device_wsps_max) / 2)::numeric(1000,2)
 	FROM
 	(
 		SELECT
 			s.snapid,
 			d.device_name,
 			d.device_tblspaces,
-			(d.device_readsector + (d.overflow_drs * 4294967296)) - lag(d.device_readsector) OVER w AS read_sector,
-			(d.device_writesector + (d.overflow_dws * 4294967296)) - lag(d.device_writesector) OVER w AS write_sector,
-			(d.device_readtime + (d.overflow_drt * 4294967296)) - lag(d.device_readtime) OVER w AS read_time,
-			(d.device_writetime + (d.overflow_dwt * 4294967296)) - lag(d.device_writetime) OVER w AS write_time,
-			(d.device_iototaltime + (d.overflow_dit * 4294967296)) - lag(d.device_iototaltime) OVER w AS io_time,
+			(d.device_readsector + (d.overflow_drs * 4294967296)) - pg_catalog.lag(d.device_readsector) OVER w AS read_sector,
+			(d.device_writesector + (d.overflow_dws * 4294967296)) - pg_catalog.lag(d.device_writesector) OVER w AS write_sector,
+			(d.device_readtime + (d.overflow_drt * 4294967296)) - pg_catalog.lag(d.device_readtime) OVER w AS read_time,
+			(d.device_writetime + (d.overflow_dwt * 4294967296)) - pg_catalog.lag(d.device_writetime) OVER w AS write_time,
+			(d.device_iototaltime + (d.overflow_dit * 4294967296)) - pg_catalog.lag(d.device_iototaltime) OVER w AS io_time,
 			d.device_ioqueue,
 			d.device_rsps_max,
 			d.device_wsps_max
@@ -1793,7 +1793,7 @@ CREATE FUNCTION statsrepo.get_io_usage_tendency_report(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		to_char(time, 'YYYY-MM-DD HH24:MI'),
+		pg_catalog.to_char(time, 'YYYY-MM-DD HH24:MI'),
 		device_name,
 		coalesce(statsrepo.tps(read_size, duration) / 2, 0)::numeric(1000,2),
 		coalesce(statsrepo.tps(write_size, duration) / 2, 0)::numeric(1000,2),
@@ -1807,11 +1807,11 @@ $$
 			snapid,
 			time,
 			device_name,
-			(rs + (overflow_drs * 4294967296)) - lag(rs) OVER w AS read_size,
-			(ws + (overflow_dws * 4294967296)) - lag(ws) OVER w AS write_size,
-			(rt + (overflow_drt * 4294967296)) - lag(rt) OVER w AS read_time,
-			(wt + (overflow_dwt * 4294967296)) - lag(wt) OVER w AS write_time,
-			time - lag(time) OVER w AS duration,
+			(rs + (overflow_drs * 4294967296)) - pg_catalog.lag(rs) OVER w AS read_size,
+			(ws + (overflow_dws * 4294967296)) - pg_catalog.lag(ws) OVER w AS write_size,
+			(rt + (overflow_drt * 4294967296)) - pg_catalog.lag(rt) OVER w AS read_time,
+			(wt + (overflow_dwt * 4294967296)) - pg_catalog.lag(wt) OVER w AS write_time,
+			time - pg_catalog.lag(time) OVER w AS duration,
 			rsps_peak,
 			wsps_peak
 		FROM
@@ -1819,16 +1819,16 @@ $$
 				s.snapid,
 				s.time,
 				d.device_name,
-				sum(device_readsector) AS rs,
-				sum(device_writesector) AS ws,
-				sum(device_readtime) AS rt,
-				sum(device_writetime) AS wt,
-				sum(overflow_drs) AS overflow_drs,
-				sum(overflow_dws) AS overflow_dws,
-				sum(overflow_drt) AS overflow_drt,
-				sum(overflow_dwt) AS overflow_dwt,
-				sum(device_rsps_max) AS rsps_peak,
-				sum(device_wsps_max) AS wsps_peak
+				pg_catalog.sum(device_readsector) AS rs,
+				pg_catalog.sum(device_writesector) AS ws,
+				pg_catalog.sum(device_readtime) AS rt,
+				pg_catalog.sum(device_writetime) AS wt,
+				pg_catalog.sum(overflow_drs) AS overflow_drs,
+				pg_catalog.sum(overflow_dws) AS overflow_dws,
+				pg_catalog.sum(overflow_drt) AS overflow_drt,
+				pg_catalog.sum(overflow_dwt) AS overflow_dwt,
+				pg_catalog.sum(device_rsps_max) AS rsps_peak,
+				pg_catalog.sum(device_wsps_max) AS wsps_peak
 			 FROM
 				statsrepo.device d,
 				statsrepo.snapshot s
@@ -1859,7 +1859,7 @@ CREATE FUNCTION statsrepo.get_loadavg_tendency(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
 		l.loadavg1::numeric(6,3),
 		l.loadavg5::numeric(6,3),
 		l.loadavg15::numeric(6,3)
@@ -1888,7 +1888,7 @@ CREATE FUNCTION statsrepo.get_memory_tendency(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
 		(m.memfree::float / 1024)::numeric(1000, 2),
 		(m.buffers::float / 1024)::numeric(1000, 2),
 		(m.cached::float / 1024)::numeric(1000, 2),
@@ -1984,8 +1984,8 @@ $$
 		x.pid,
 		x.client,
 		x.start::timestamp(0),
-		max(x.duration)::numeric(1000, 3) AS duration,
-		(SELECT query FROM statsrepo.xact WHERE snapid = max(x.snapid) AND pid = x.pid AND start = x.start)
+		pg_catalog.max(x.duration)::numeric(1000, 3) AS duration,
+		(SELECT query FROM statsrepo.xact WHERE snapid = pg_catalog.max(x.snapid) AND pid = x.pid AND start = x.start)
 	FROM
 		statsrepo.xact x,
 		statsrepo.snapshot s
@@ -2119,7 +2119,7 @@ $$
 			t.schema, 
 	 		t.table, 
 			t.n_live_tup,
-			ceil(t.n_live_tup::real / ((i.page_size - i.page_header_size) * statsrepo.pg_fillfactor(t.reloptions, 0) / 100 /
+			pg_catalog.ceil(t.n_live_tup::real / ((i.page_size - i.page_header_size) * statsrepo.pg_fillfactor(t.reloptions, 0) / 100 /
 				(width + i.htup_header_size + i.item_id_size)))::bigint AS logical_pages,
 			(t.size + CASE t.toastrelid WHEN 0 THEN 0 ELSE tt.size END) / i.page_size AS physical_pages
 		 FROM
@@ -2128,7 +2128,7 @@ $$
 		 	LEFT JOIN statsrepo.instance i ON s.instid = i.instid
 		 	LEFT JOIN
 		 		(SELECT
-		 			snapid, dbid, tbl, (sum(avg_width)::integer + 7) & ~7 AS width
+		 			snapid, dbid, tbl, (pg_catalog.sum(avg_width)::integer + 7) & ~7 AS width
 				 FROM
 				 	statsrepo."column" 
 				 WHERE
@@ -2200,17 +2200,17 @@ CREATE FUNCTION statsrepo.get_checkpoint_activity(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		count(*),
-		count(nullif(position('time' IN flags), 0)),
-		count(nullif(position('xlog' IN flags), 0)),
-		round(avg(num_buffers)::numeric,3),
-		round(max(num_buffers)::numeric,3),
-		round(avg(total_duration)::numeric,3),
-		round(max(total_duration)::numeric,3)
+		pg_catalog.count(*),
+		pg_catalog.count(nullif(pg_catalog.strpos(flags, 'time'), 0)),
+		pg_catalog.count(nullif(pg_catalog.strpos(flags, 'xlog'), 0)),
+		pg_catalog.round(pg_catalog.avg(num_buffers)::numeric,3),
+		pg_catalog.round(pg_catalog.max(num_buffers)::numeric,3),
+		pg_catalog.round(pg_catalog.avg(total_duration)::numeric,3),
+		pg_catalog.round(pg_catalog.max(total_duration)::numeric,3)
 	FROM
 		statsrepo.checkpoint c,
-		(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
-		(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
+		(SELECT pg_catalog.min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+		(SELECT pg_catalog.max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
 	WHERE
 		c.start BETWEEN b.time AND e.time
 		AND c.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2);
@@ -2239,29 +2239,29 @@ $$
 		COALESCE(tv.schema, tc.schema),
 		COALESCE(tv.table, tc.table),
 		COALESCE(tv.count, 0),
-		round(COALESCE(tv.avg_tup_removed, 0)::numeric, 3),
-		round(COALESCE(tv.avg_tup_remain, 0)::numeric, 3),
-		round(COALESCE(tv.avg_tup_dead, 0)::numeric, 3),
-		round(COALESCE(tv.avg_index_scans, 0)::numeric, 3),
-		round(COALESCE(tv.avg_duration, 0)::numeric, 3),
-		round(COALESCE(tv.max_duration, 0)::numeric, 3),
+		pg_catalog.round(COALESCE(tv.avg_tup_removed, 0)::numeric, 3),
+		pg_catalog.round(COALESCE(tv.avg_tup_remain, 0)::numeric, 3),
+		pg_catalog.round(COALESCE(tv.avg_tup_dead, 0)::numeric, 3),
+		pg_catalog.round(COALESCE(tv.avg_index_scans, 0)::numeric, 3),
+		pg_catalog.round(COALESCE(tv.avg_duration, 0)::numeric, 3),
+		pg_catalog.round(COALESCE(tv.max_duration, 0)::numeric, 3),
 		COALESCE(tc.count, 0)
 	FROM
 		(SELECT
 			v.database,
 			v.schema,
 			v.table,
-			count(*),
-			avg(v.tup_removed) AS avg_tup_removed,
-			avg(v.tup_remain) AS avg_tup_remain,
-			avg(v.tup_dead) AS avg_tup_dead,
-			avg(v.index_scans) AS avg_index_scans,
-			avg(v.duration) AS avg_duration,
-			max(v.duration) AS max_duration
+			pg_catalog.count(*),
+			pg_catalog.avg(v.tup_removed) AS avg_tup_removed,
+			pg_catalog.avg(v.tup_remain) AS avg_tup_remain,
+			pg_catalog.avg(v.tup_dead) AS avg_tup_dead,
+			pg_catalog.avg(v.index_scans) AS avg_index_scans,
+			pg_catalog.avg(v.duration) AS avg_duration,
+			pg_catalog.max(v.duration) AS max_duration
 		 FROM
 			statsrepo.autovacuum v,
-			(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
-			(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e,
+			(SELECT pg_catalog.min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+			(SELECT pg_catalog.max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e,
 			(SELECT instid FROM statsrepo.snapshot WHERE snapid = $2) i
 		 WHERE
 			v.start BETWEEN b.time AND e.time
@@ -2273,11 +2273,11 @@ $$
 				c.database,
 				c.schema,
 				c.table,
-				count(*)
+				pg_catalog.count(*)
 			 FROM
 				statsrepo.autovacuum_cancel c,
-				(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
-				(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e,
+				(SELECT pg_catalog.min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+				(SELECT pg_catalog.max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e,
 				(SELECT instid FROM statsrepo.snapshot WHERE snapid = $2) i
 			 WHERE
 				c.timestamp BETWEEN b.time AND e.time
@@ -2308,15 +2308,15 @@ $$
 		database,
 		schema,
 		"table",
-		round(avg(page_hit)::numeric,3),
-		round(avg(page_miss)::numeric,3),
-		round(avg(page_dirty)::numeric,3),
-		round(avg(read_rate)::numeric,3),
-		round(avg(write_rate)::numeric,3)
+		pg_catalog.round(pg_catalog.avg(page_hit)::numeric,3),
+		pg_catalog.round(pg_catalog.avg(page_miss)::numeric,3),
+		pg_catalog.round(pg_catalog.avg(page_dirty)::numeric,3),
+		pg_catalog.round(pg_catalog.avg(read_rate)::numeric,3),
+		pg_catalog.round(pg_catalog.avg(write_rate)::numeric,3)
 	FROM
 		statsrepo.autovacuum v,
-		(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
-		(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
+		(SELECT pg_catalog.min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+		(SELECT pg_catalog.max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
 	WHERE
 		v.start BETWEEN b.time AND e.time
 		AND v.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
@@ -2359,9 +2359,9 @@ $$
 			COALESCE(ta.database, tc.database) AS database,
 			COALESCE(ta.schema, tc.schema) AS schema,
 			COALESCE(ta.table, tc.table) AS table,
-			round(COALESCE(ta.sum_duration, 0)::numeric, 3) AS sum_duration,
-			round(COALESCE(ta.avg_duration, 0)::numeric, 3) AS avg_duration,
-			round(COALESCE(ta.max_duration, 0)::numeric, 3) AS max_duration,
+			pg_catalog.round(COALESCE(ta.sum_duration, 0)::numeric, 3) AS sum_duration,
+			pg_catalog.round(COALESCE(ta.avg_duration, 0)::numeric, 3) AS avg_duration,
+			pg_catalog.round(COALESCE(ta.max_duration, 0)::numeric, 3) AS max_duration,
 			COALESCE(ta.count, 0) AS count,
 			ta.last_analyze::timestamp(0),
 			COALESCE(tc.count, 0) AS cancels
@@ -2370,15 +2370,15 @@ $$
 				a.database,
 				a.schema,
 				a.table,
-				sum(a.duration) AS sum_duration,
-				avg(a.duration) AS avg_duration,
-				max(a.duration) AS max_duration,
-				count(*),
-				max(a.start) AS last_analyze
+				pg_catalog.sum(a.duration) AS sum_duration,
+				pg_catalog.avg(a.duration) AS avg_duration,
+				pg_catalog.max(a.duration) AS max_duration,
+				pg_catalog.count(*),
+				pg_catalog.max(a.start) AS last_analyze
 			 FROM
 				statsrepo.autoanalyze a,
-				(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
-				(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
+				(SELECT pg_catalog.min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+				(SELECT pg_catalog.max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
 			 WHERE
 				a.start BETWEEN b.time AND e.time
 				AND a.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
@@ -2389,11 +2389,11 @@ $$
 					c.database,
 					c.schema,
 					c.table,
-					count(*)
+					pg_catalog.count(*)
 				 FROM
 					statsrepo.autoanalyze_cancel c,
-					(SELECT min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
-					(SELECT max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
+					(SELECT pg_catalog.min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+					(SELECT pg_catalog.max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
 				 WHERE
 					c.timestamp BETWEEN b.time AND e.time
 					AND c.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
@@ -2406,7 +2406,7 @@ $$
 				t.database,
 				t.schema,
 				t.table,
-				max(t.n_mod_since_analyze) AS mod_rows_max
+				pg_catalog.max(t.n_mod_since_analyze) AS mod_rows_max
 			 FROM
 				statsrepo.tables t,
 				statsrepo.snapshot s
@@ -2435,11 +2435,11 @@ CREATE FUNCTION statsrepo.get_modified_row_ratio(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		to_char(s.time, 'YYYY-MM-DD HH24:MI') AS timestamp,
+		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI') AS timestamp,
 		t.database,
 		t.schema,
 		t.table,
-		max(statsrepo.div(t.n_mod_since_analyze, t.reltuples::bigint) * 100) AS ratio
+		pg_catalog.max(statsrepo.div(t.n_mod_since_analyze, t.reltuples::bigint) * 100) AS ratio
 	FROM
 		statsrepo.tables t,
 		statsrepo.snapshot s,
@@ -2458,7 +2458,7 @@ $$
 			GROUP BY
 				t.dbid, t.nsp, t.tbl
 			ORDER BY
-				max(t.reltuples) DESC LIMIT $3
+				pg_catalog.max(t.reltuples) DESC LIMIT $3
 		) t1
 	WHERE
 		t.snapid = s.snapid
@@ -2539,9 +2539,9 @@ DECLARE
 	vrev			integer;
 BEGIN
 	SELECT
-		coalesce(substring(split_part(pg_version, '.', 1) from '^\d+')::integer, 0),
-		coalesce(substring(split_part(pg_version, '.', 2) from '^\d+')::integer, 0),
-		coalesce(substring(split_part(pg_version, '.', 3) from '^\d+')::integer, 0)
+		coalesce(pg_catalog.substring(pg_catalog.split_part(pg_version, '.', 1), '^\d+')::integer, 0),
+		coalesce(pg_catalog.substring(pg_catalog.split_part(pg_version, '.', 2), '^\d+')::integer, 0),
+		coalesce(pg_catalog.substring(pg_catalog.split_part(pg_version, '.', 3), '^\d+')::integer, 0)
 	INTO vmaj, vmin, vrev FROM statsrepo.instance
 	WHERE instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $1);
 
@@ -2596,9 +2596,9 @@ $$
 		 		s.dbid,
 		 		s.userid,
 		 		s.queryid,
-		 		max(s.query) AS query,
+		 		pg_catalog.max(s.query) AS query,
 				$1 AS first,
-				max(s.snapid) AS last
+				pg_catalog.max(s.snapid) AS last
 			 FROM
 			 	statsrepo.statement s
 				JOIN statsrepo.snapshot ss ON (ss.snapid = s.snapid)
@@ -2667,7 +2667,7 @@ $$
 		 		s.userid,
 		 		s.query,
 				$1 AS first,
-				max(s.snapid) AS last
+				pg_catalog.max(s.snapid) AS last
 			 FROM
 			 	statsrepo.statement s
 				JOIN statsrepo.snapshot ss ON (ss.snapid = s.snapid)
@@ -2740,7 +2740,7 @@ $$
 				p.dbid,
 				p.userid,
 				$1 AS first,
-				max(p.snapid) AS last
+				pg_catalog.max(p.snapid) AS last
 			 FROM
 			 	statsrepo.plan p
 				JOIN statsrepo.snapshot ss ON (ss.snapid = p.snapid)
@@ -2834,7 +2834,7 @@ $$
 				p.dbid,
 				p.userid,
 				$1 AS first,
-				max(p.snapid) AS last
+				pg_catalog.max(p.snapid) AS last
 			 FROM
 				statsrepo.plan p
 				JOIN statsrepo.snapshot ss ON (ss.snapid = p.snapid)
@@ -2863,7 +2863,7 @@ $$
 			(SELECT queryid,
 					dbid,
 					userid,
-					max(query) AS query
+					pg_catalog.max(query) AS query
 			 FROM
 			 	statsrepo.statement s
 				JOIN statsrepo.snapshot ss ON (ss.snapid = s.snapid)
@@ -2912,7 +2912,7 @@ $$
 		t2.blocker_query
 	FROM
 		(SELECT
-			max(l.snapid) AS snapid,
+			pg_catalog.max(l.snapid) AS snapid,
 			l.datname,
 			l.nspname,
 			l.relname,
@@ -2976,13 +2976,13 @@ $$
 	(
 		SELECT
 			s.snapid,
-			to_char(s.time, 'YYYY-MM-DD HH24:MI') AS timestamp,
-			b.buffers_clean - lag(b.buffers_clean) OVER w AS bgwriter_write,
-			b.buffers_backend - lag(b.buffers_backend) OVER w AS backend_write,
-			b.buffers_backend_fsync - lag(b.buffers_backend_fsync) OVER w AS backend_fsync,
-			b.maxwritten_clean - lag(b.maxwritten_clean) OVER w AS bgwriter_stopscan,
-			b.buffers_alloc - lag(b.buffers_alloc) OVER w AS buffer_alloc,
-			s.time - lag(s.time) OVER w AS duration
+			pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI') AS timestamp,
+			b.buffers_clean - pg_catalog.lag(b.buffers_clean) OVER w AS bgwriter_write,
+			b.buffers_backend - pg_catalog.lag(b.buffers_backend) OVER w AS backend_write,
+			b.buffers_backend_fsync - pg_catalog.lag(b.buffers_backend_fsync) OVER w AS backend_fsync,
+			b.maxwritten_clean - pg_catalog.lag(b.maxwritten_clean) OVER w AS bgwriter_stopscan,
+			b.buffers_alloc - pg_catalog.lag(b.buffers_alloc) OVER w AS buffer_alloc,
+			s.time - pg_catalog.lag(s.time) OVER w AS duration
 		FROM
 			statsrepo.bgwriter b,
 			statsrepo.snapshot s
@@ -3014,14 +3014,14 @@ CREATE OR REPLACE FUNCTION statsrepo.get_bgwriter_stats(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		round(avg(bgwriter_write_tps), 3),
-		round(max(bgwriter_write_tps), 3),
-		round(avg(backend_write_tps), 3),
-		round(max(backend_write_tps), 3),
-		round(avg(backend_fsync_tps), 3),
-		round(max(backend_fsync_tps), 3),
-		round(avg(bgwriter_stopscan_tps), 3),
-		round(avg(buffer_alloc_tps), 3)
+		pg_catalog.round(pg_catalog.avg(bgwriter_write_tps), 3),
+		pg_catalog.round(pg_catalog.max(bgwriter_write_tps), 3),
+		pg_catalog.round(pg_catalog.avg(backend_write_tps), 3),
+		pg_catalog.round(pg_catalog.max(backend_write_tps), 3),
+		pg_catalog.round(pg_catalog.avg(backend_fsync_tps), 3),
+		pg_catalog.round(pg_catalog.max(backend_fsync_tps), 3),
+		pg_catalog.round(pg_catalog.avg(bgwriter_stopscan_tps), 3),
+		pg_catalog.round(pg_catalog.avg(buffer_alloc_tps), 3)
 	FROM
 		statsrepo.get_bgwriter_tendency($1, $2);
 $$
@@ -3043,17 +3043,17 @@ CREATE FUNCTION statsrepo.get_replication_delays(
 $$
 	SELECT
 		s.snapid,
-		to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
 		r.client_addr,
 		r.application_name,
-		COALESCE(host(r.client_addr), 'local') || ':' || COALESCE(NULLIF(r.application_name, ''), '(none)') AS client,
+		COALESCE(pg_catalog.host(r.client_addr), 'local') || ':' || COALESCE(NULLIF(r.application_name, ''), '(none)') AS client,
 		statsrepo.xlog_location_diff(
-			split_part(r.current_location, ' ', 1),
-			split_part(r.flush_location, ' ', 1),
+			pg_catalog.split_part(r.current_location, ' ', 1),
+			pg_catalog.split_part(r.flush_location, ' ', 1),
 			i.xlog_file_size),
 		statsrepo.xlog_location_diff(
-			split_part(r.current_location, ' ', 1),
-			split_part(r.replay_location, ' ', 1),
+			pg_catalog.split_part(r.current_location, ' ', 1),
+			pg_catalog.split_part(r.replay_location, ' ', 1),
 			i.xlog_file_size),
 		r.sync_state
 	FROM
@@ -3127,9 +3127,9 @@ $$
 		(SELECT
 			client_addr,
 			application_name,
-			max(snapid) AS snapid,
-			avg(replay_delay_size) AS replay_delay_avg,
-			max(replay_delay_size) AS replay_delay_peak
+			pg_catalog.max(snapid) AS snapid,
+			pg_catalog.avg(replay_delay_size) AS replay_delay_avg,
+			pg_catalog.max(replay_delay_size) AS replay_delay_peak
 		 FROM
 			statsrepo.get_replication_delays($1, $2)
 		 GROUP BY
@@ -3203,8 +3203,8 @@ $$
 		(SELECT
 			dbid,
 			tbl,
-			count(*) AS "columns",
-			sum(avg_width) AS avg_width
+			pg_catalog.count(*) AS "columns",
+			pg_catalog.sum(avg_width) AS avg_width
 		 FROM
 		 	statsrepo.column
 		 WHERE
@@ -3253,7 +3253,7 @@ $$
 			statsrepo.sub(e.idx_scan, b.idx_scan)),
 		statsrepo.sub(e.idx_blks_read, b.idx_blks_read),
 		statsrepo.sub(e.idx_blks_hit, b.idx_blks_hit),
-		(regexp_matches(e.indexdef, E'.*USING[^\\(]+\\((.*)\\)'))[1]
+		(pg_catalog.regexp_matches(e.indexdef, E'.*USING[^\\(]+\\((.*)\\)'))[1]
 	FROM
 		statsrepo.indexes e LEFT JOIN statsrepo.index b
 			ON e.idx = b.idx AND e.tbl = b.tbl AND e.dbid = b.dbid AND b.snapid = $1
@@ -3299,7 +3299,7 @@ CREATE FUNCTION statsrepo.get_profiles(
 $$
 	SELECT
 		p.processing,
-		sum(p.execute) AS executes
+		pg_catalog.sum(p.execute) AS executes
 	FROM
 		statsrepo.profile p LEFT JOIN statsrepo.snapshot s
 			ON p.snapid = s.snapid
@@ -3344,7 +3344,7 @@ DECLARE
 	condef		text;
 BEGIN
 	parent_name := relname FROM pg_class WHERE oid = $1;
-	child_name := parent_name || to_char($2, '_YYYYMMDD');
+	child_name := parent_name || pg_catalog.to_char($2, '_YYYYMMDD');
 
 	/* child table already exists */
 	PERFORM 1 FROM pg_inherits i LEFT JOIN pg_class c ON c.oid = i.inhrelid
@@ -3358,8 +3358,8 @@ BEGIN
 		EXECUTE 'CREATE TABLE statsrepo.' || child_name
 			|| ' (LIKE statsrepo.' || parent_name
 			|| ' INCLUDING INDEXES INCLUDING DEFAULTS INCLUDING CONSTRAINTS,'
-			|| ' CHECK (' || $3 || ' >= DATE ''' || to_char($2, 'YYYY-MM-DD') || ''''
-			|| ' AND ' || $3 || ' < DATE ''' || to_char($2 + 1, 'YYYY-MM-DD') || ''')'
+			|| ' CHECK (' || $3 || ' >= DATE ''' || pg_catalog.to_char($2, 'YYYY-MM-DD') || ''''
+			|| ' AND ' || $3 || ' < DATE ''' || pg_catalog.to_char($2 + 1, 'YYYY-MM-DD') || ''')'
 			|| ' ) INHERITS (statsrepo.' || parent_name || ')';
 
 		/* add foreign key constraint */
@@ -3380,7 +3380,7 @@ DECLARE
 	tblname		name;
 BEGIN
 	parent_name := relname FROM pg_class WHERE oid = $2;
-	child_name := parent_name || to_char($1, '_YYYYMMDD');
+	child_name := parent_name || pg_catalog.to_char($1, '_YYYYMMDD');
 
 	FOR tblname IN
 		SELECT c.relname FROM pg_inherits i LEFT JOIN pg_class c ON c.oid = i.inhrelid
@@ -3426,7 +3426,7 @@ $$
 DECLARE
 BEGIN
 	EXECUTE 'INSERT INTO statsrepo.'
-		|| TG_TABLE_NAME || to_char(new.date, '_YYYYMMDD') || ' VALUES(($1).*)' USING new;
+		|| TG_TABLE_NAME || pg_catalog.to_char(new.date, '_YYYYMMDD') || ' VALUES(($1).*)' USING new;
 	RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
@@ -3437,7 +3437,7 @@ $$
 DECLARE
 BEGIN
 	EXECUTE 'INSERT INTO statsrepo.'
-		|| TG_TABLE_NAME || to_char(new.timestamp, '_YYYYMMDD') || ' VALUES(($1).*)' USING new;
+		|| TG_TABLE_NAME || pg_catalog.to_char(new.timestamp, '_YYYYMMDD') || ' VALUES(($1).*)' USING new;
 	RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;

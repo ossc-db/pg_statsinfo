@@ -77,9 +77,9 @@ BEGIN
 		statsrepo.div((c.rollbacks - p.rollbacks), duration_in_sec),
 		statsrepo.div((c.commits - p.commits), duration_in_sec)
 	INTO val_rollback, val_commit
-	FROM (SELECT sum(xact_rollback) AS rollbacks, sum(xact_commit) AS commits
+	FROM (SELECT pg_catalog.sum(xact_rollback) AS rollbacks, pg_catalog.sum(xact_commit) AS commits
 			FROM statsrepo.database WHERE snapid = $1.snapid) AS c,
-		 (SELECT sum(xact_rollback) AS rollbacks, sum(xact_commit) AS commits
+		 (SELECT pg_catalog.sum(xact_rollback) AS rollbacks, pg_catalog.sum(xact_commit) AS commits
 			FROM statsrepo.database WHERE snapid = $2.snapid) AS p;
 
 	-- alert if rollbacks/sec is higher than threshold.
@@ -114,7 +114,7 @@ DECLARE
 BEGIN
 	-- calculate the garbage size.
 	SELECT
-		statsrepo.div(sum(c.garbage_size), 1024 * 1024)
+		statsrepo.div(pg_catalog.sum(c.garbage_size), 1024 * 1024)
 	INTO val_gb_size
 	FROM
 		(SELECT
@@ -123,7 +123,7 @@ BEGIN
 
 	-- calculate the garbage ratio.
 	SELECT
-		statsrepo.div((100 * sum(c.garbage_size)), sum(c.size))
+		statsrepo.div((100 * pg_catalog.sum(c.garbage_size)), pg_catalog.sum(c.size))
 	INTO val_gb_pct
 	FROM
 		(SELECT
@@ -176,8 +176,8 @@ DECLARE
 BEGIN
 	-- calculate the average and maximum of the query-response-time.
 	SELECT
-		avg((c.total_time - coalesce(p.total_time, 0)) / (c.calls - coalesce(p.calls, 0))),
-		max((c.total_time - coalesce(p.total_time, 0)) / (c.calls - coalesce(p.calls, 0)))
+		pg_catalog.avg((c.total_time - coalesce(p.total_time, 0)) / (c.calls - coalesce(p.calls, 0))),
+		pg_catalog.max((c.total_time - coalesce(p.total_time, 0)) / (c.calls - coalesce(p.calls, 0)))
 	INTO val_res_avg, val_res_max
 	FROM (SELECT dbid, userid, total_time, calls, query
 			FROM statsrepo.statement WHERE snapid = $1.snapid) AS c
@@ -240,7 +240,7 @@ BEGIN
 	FOR val_fragment_table, val_fragment_pct IN
 		SELECT
 			i.database || '.' || i.schema || '.' || i.table,
-			(100 * abs(c.correlation))::numeric(5,2)
+			(100 * pg_catalog.abs(c.correlation))::numeric(5,2)
 		FROM
 			statsrepo.indexes i,
 			statsrepo.column c
@@ -330,19 +330,19 @@ BEGIN
 	-- alert if replication-delay(flush or replay) is higher than threshold.
 	FOR val_client, val_flush_delay, val_replay_delay IN
 		SELECT
-			host(r.client_addr) || ':' || r.client_port,
+			pg_catalog.host(r.client_addr) || ':' || r.client_port,
 			statsrepo.div(
 				statsrepo.xlog_location_diff(
-					split_part(r.current_location, ' ', 1),
-					split_part(r.flush_location, ' ', 1),
+					pg_catalog.split_part(r.current_location, ' ', 1),
+					pg_catalog.split_part(r.flush_location, ' ', 1),
 					i.xlog_file_size
 				),
 				1024 * 1024
 			),
 			statsrepo.div(
 				statsrepo.xlog_location_diff(
-					split_part(r.current_location, ' ', 1),
-					split_part(r.replay_location, ' ', 1),
+					pg_catalog.split_part(r.current_location, ' ', 1),
+					pg_catalog.split_part(r.replay_location, ' ', 1),
 					i.xlog_file_size
 				),
 				1024 * 1024

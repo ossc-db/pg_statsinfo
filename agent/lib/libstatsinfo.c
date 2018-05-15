@@ -2013,8 +2013,8 @@ get_cpustats(FunctionCallInfo fcinfo,
 #define SQL_SELECT_TABLESPACES "\
 SELECT \
 	device, \
-	split_part(device, ':', 1), \
-	split_part(device, ':', 2), \
+	pg_catalog.split_part(device, ':', 1), \
+	pg_catalog.split_part(device, ':', 2), \
 	statsinfo.array_agg(name) \
 FROM \
 	statsinfo.tablespaces \

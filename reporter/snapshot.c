@@ -26,10 +26,10 @@ SELECT \
 	i.name, \
 	i.hostname, \
 	i.port, \
-	count(*), \
-	sum(s.snapshot_increase_size)::numeric(1000), \
-	max(s.snapid), \
-	max(s.time)::timestamp(0) \
+	pg_catalog.count(*), \
+	pg_catalog.sum(s.snapshot_increase_size)::numeric(1000), \
+	pg_catalog.max(s.snapid), \
+	pg_catalog.max(s.time)::timestamp(0) \
 FROM \
 	statsrepo.snapshot s \
 	LEFT JOIN statsrepo.instance i ON s.instid = i.instid \

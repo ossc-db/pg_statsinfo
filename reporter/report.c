@@ -23,10 +23,10 @@ SELECT * FROM statsrepo.get_proc_tendency_report($1, $2) \
 UNION ALL \
 SELECT \
 	'Average', \
-	avg(idle)::numeric(5,1), \
-	avg(idle_in_xact)::numeric(5,1), \
-	avg(waiting)::numeric(5,1), \
-	avg(running)::numeric(5,1) \
+	pg_catalog.avg(idle)::numeric(5,1), \
+	pg_catalog.avg(idle_in_xact)::numeric(5,1), \
+	pg_catalog.avg(waiting)::numeric(5,1), \
+	pg_catalog.avg(running)::numeric(5,1) \
 FROM \
 	statsrepo.get_proc_tendency_report($1, $2)"
 #define SQL_SELECT_BGWRITER_STATS				"SELECT * FROM statsrepo.get_bgwriter_stats($1, $2)"
@@ -37,13 +37,13 @@ SELECT * FROM statsrepo.get_cpu_loadavg_tendency($1, $2) \
 UNION ALL \
 SELECT \
 	'Average', \
-	avg(\"user\")::numeric(5,1), \
-	avg(system)::numeric(5,1), \
-	avg(idle)::numeric(5,1), \
-	avg(iowait)::numeric(5,1), \
-	avg(loadavg1)::numeric(6,3), \
-	avg(loadavg5)::numeric(6,3), \
-	avg(loadavg15)::numeric(6,3) \
+	pg_catalog.avg(\"user\")::numeric(5,1), \
+	pg_catalog.avg(system)::numeric(5,1), \
+	pg_catalog.avg(idle)::numeric(5,1), \
+	pg_catalog.avg(iowait)::numeric(5,1), \
+	pg_catalog.avg(loadavg1)::numeric(6,3), \
+	pg_catalog.avg(loadavg5)::numeric(6,3), \
+	pg_catalog.avg(loadavg15)::numeric(6,3) \
 FROM \
 	statsrepo.get_cpu_loadavg_tendency($1, $2)"
 #define SQL_SELECT_MEMORY_TENDENCY				"SELECT * FROM statsrepo.get_memory_tendency($1, $2)"
@@ -114,9 +114,9 @@ SELECT \
 	sync_state, \
 	statsrepo.pg_size_pretty(replay_delay_avg::bigint), \
 	statsrepo.pg_size_pretty(replay_delay_peak::bigint), \
-	to_char(write_lag_time, 'HH24:MI:SS.US'), \
-	to_char(flush_lag_time, 'HH24:MI:SS.US'), \
-	to_char(replay_lag_time, 'HH24:MI:SS.US') \
+	pg_catalog.to_char(write_lag_time, 'HH24:MI:SS.US'), \
+	pg_catalog.to_char(flush_lag_time, 'HH24:MI:SS.US'), \
+	pg_catalog.to_char(replay_lag_time, 'HH24:MI:SS.US') \
 FROM \
 	statsrepo.get_replication_activity($1, $2)"
 #define SQL_SELECT_SETTING_PARAMETERS			"SELECT * FROM statsrepo.get_setting_parameters($1, $2)"
@@ -131,8 +131,8 @@ FROM \
 		i.hostname, \
 		i.port, \
 		i.pg_version, \
-		min(s.snapid), \
-		max(s.snapid) \
+		pg_catalog.min(s.snapid), \
+		pg_catalog.max(s.snapid) \
 	FROM \
 		statsrepo.snapshot s \
 		LEFT JOIN statsrepo.instance i ON s.instid = i.instid \
@@ -152,8 +152,8 @@ FROM \
 		i.hostname, \
 		i.port, \
 		i.pg_version, \
-		min(s.snapid), \
-		max(s.snapid) \
+		pg_catalog.min(s.snapid), \
+		pg_catalog.max(s.snapid) \
 	FROM \
 		statsrepo.snapshot s \
 		LEFT JOIN statsrepo.instance i ON s.instid = i.instid \
@@ -267,7 +267,7 @@ do_report(PGconn *conn,
 	{
 		PGresult *res;
 
-		res = pgut_execute(conn, "SELECT pg_is_in_recovery()", 0, NULL);
+		res = pgut_execute(conn, "SELECT pg_catalog.pg_is_in_recovery()", 0, NULL);
 
 		if (strcmp(PQgetvalue(res, 0, 0), "f") == 0)
 			pgut_command(conn, "LOCK TABLE statsrepo.instance IN SHARE MODE", 0, NULL);

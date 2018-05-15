@@ -28,27 +28,27 @@
 SELECT \
 	d.oid AS dbid, \
 	d.datname, \
-	pg_database_size(d.oid), \
-	CASE WHEN pg_is_in_recovery() THEN 0 ELSE age(d.datfrozenxid) END, \
-	pg_stat_get_db_xact_commit(d.oid) AS xact_commit, \
-	pg_stat_get_db_xact_rollback(d.oid) AS xact_rollback, \
-	pg_stat_get_db_blocks_fetched(d.oid) - pg_stat_get_db_blocks_hit(d.oid) AS blks_read, \
-	pg_stat_get_db_blocks_hit(d.oid) AS blks_hit, \
-	pg_stat_get_db_tuples_returned(d.oid) AS tup_returned, \
-	pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
-	pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
-	pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
-	pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
-	pg_stat_get_db_conflict_tablespace(d.oid) AS confl_tablespace, \
-	pg_stat_get_db_conflict_lock(d.oid) AS confl_lock, \
-	pg_stat_get_db_conflict_snapshot(d.oid) AS confl_snapshot, \
-	pg_stat_get_db_conflict_bufferpin(d.oid) AS confl_bufferpin, \
-	pg_stat_get_db_conflict_startup_deadlock(d.oid) AS confl_deadlock, \
-	pg_stat_get_db_temp_files(d.oid) AS temp_files, \
-	pg_stat_get_db_temp_bytes(d.oid) AS temp_bytes, \
-	pg_stat_get_db_deadlocks(d.oid) AS deadlocks, \
-	pg_stat_get_db_blk_read_time(d.oid) AS blk_read_time, \
-	pg_stat_get_db_blk_write_time(d.oid) AS blk_write_time \
+	pg_catalog.pg_database_size(d.oid), \
+	CASE WHEN pg_catalog.pg_is_in_recovery() THEN 0 ELSE pg_catalog.age(d.datfrozenxid) END, \
+	pg_catalog.pg_stat_get_db_xact_commit(d.oid) AS xact_commit, \
+	pg_catalog.pg_stat_get_db_xact_rollback(d.oid) AS xact_rollback, \
+	pg_catalog.pg_stat_get_db_blocks_fetched(d.oid) - pg_catalog.pg_stat_get_db_blocks_hit(d.oid) AS blks_read, \
+	pg_catalog.pg_stat_get_db_blocks_hit(d.oid) AS blks_hit, \
+	pg_catalog.pg_stat_get_db_tuples_returned(d.oid) AS tup_returned, \
+	pg_catalog.pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
+	pg_catalog.pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
+	pg_catalog.pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
+	pg_catalog.pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
+	pg_catalog.pg_stat_get_db_conflict_tablespace(d.oid) AS confl_tablespace, \
+	pg_catalog.pg_stat_get_db_conflict_lock(d.oid) AS confl_lock, \
+	pg_catalog.pg_stat_get_db_conflict_snapshot(d.oid) AS confl_snapshot, \
+	pg_catalog.pg_stat_get_db_conflict_bufferpin(d.oid) AS confl_bufferpin, \
+	pg_catalog.pg_stat_get_db_conflict_startup_deadlock(d.oid) AS confl_deadlock, \
+	pg_catalog.pg_stat_get_db_temp_files(d.oid) AS temp_files, \
+	pg_catalog.pg_stat_get_db_temp_bytes(d.oid) AS temp_bytes, \
+	pg_catalog.pg_stat_get_db_deadlocks(d.oid) AS deadlocks, \
+	pg_catalog.pg_stat_get_db_blk_read_time(d.oid) AS blk_read_time, \
+	pg_catalog.pg_stat_get_db_blk_write_time(d.oid) AS blk_write_time \
 FROM \
 	pg_database d \
 WHERE datallowconn \
@@ -59,22 +59,22 @@ ORDER BY dbid"
 SELECT \
 	d.oid AS dbid, \
 	d.datname, \
-	pg_database_size(d.oid), \
-	CASE WHEN pg_is_in_recovery() THEN 0 ELSE age(d.datfrozenxid) END, \
-	pg_stat_get_db_xact_commit(d.oid) AS xact_commit, \
-	pg_stat_get_db_xact_rollback(d.oid) AS xact_rollback, \
-	pg_stat_get_db_blocks_fetched(d.oid) - pg_stat_get_db_blocks_hit(d.oid) AS blks_read, \
-	pg_stat_get_db_blocks_hit(d.oid) AS blks_hit, \
-	pg_stat_get_db_tuples_returned(d.oid) AS tup_returned, \
-	pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
-	pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
-	pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
-	pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
-	pg_stat_get_db_conflict_tablespace(d.oid) AS confl_tablespace, \
-	pg_stat_get_db_conflict_lock(d.oid) AS confl_lock, \
-	pg_stat_get_db_conflict_snapshot(d.oid) AS confl_snapshot, \
-	pg_stat_get_db_conflict_bufferpin(d.oid) AS confl_bufferpin, \
-	pg_stat_get_db_conflict_startup_deadlock(d.oid) AS confl_deadlock, \
+	pg_catalog.pg_database_size(d.oid), \
+	CASE WHEN pg_catalog.pg_is_in_recovery() THEN 0 ELSE pg_catalog.age(d.datfrozenxid) END, \
+	pg_catalog.pg_stat_get_db_xact_commit(d.oid) AS xact_commit, \
+	pg_catalog.pg_stat_get_db_xact_rollback(d.oid) AS xact_rollback, \
+	pg_catalog.pg_stat_get_db_blocks_fetched(d.oid) - pg_catalog.pg_stat_get_db_blocks_hit(d.oid) AS blks_read, \
+	pg_catalog.pg_stat_get_db_blocks_hit(d.oid) AS blks_hit, \
+	pg_catalog.pg_stat_get_db_tuples_returned(d.oid) AS tup_returned, \
+	pg_catalog.pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
+	pg_catalog.pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
+	pg_catalog.pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
+	pg_catalog.pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
+	pg_catalog.pg_stat_get_db_conflict_tablespace(d.oid) AS confl_tablespace, \
+	pg_catalog.pg_stat_get_db_conflict_lock(d.oid) AS confl_lock, \
+	pg_catalog.pg_stat_get_db_conflict_snapshot(d.oid) AS confl_snapshot, \
+	pg_catalog.pg_stat_get_db_conflict_bufferpin(d.oid) AS confl_bufferpin, \
+	pg_catalog.pg_stat_get_db_conflict_startup_deadlock(d.oid) AS confl_deadlock, \
 	NULL AS temp_files, \
 	NULL AS temp_bytes, \
 	NULL AS deadlocks, \
@@ -90,17 +90,17 @@ ORDER BY dbid"
 SELECT \
 	d.oid AS dbid, \
 	d.datname, \
-	pg_database_size(d.oid), \
-	CASE WHEN pg_is_in_recovery() THEN 0 ELSE age(d.datfrozenxid) END, \
-	pg_stat_get_db_xact_commit(d.oid) AS xact_commit, \
-	pg_stat_get_db_xact_rollback(d.oid) AS xact_rollback, \
-	pg_stat_get_db_blocks_fetched(d.oid) - pg_stat_get_db_blocks_hit(d.oid) AS blks_read, \
-	pg_stat_get_db_blocks_hit(d.oid) AS blks_hit, \
-	pg_stat_get_db_tuples_returned(d.oid) AS tup_returned, \
-	pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
-	pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
-	pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
-	pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
+	pg_catalog.pg_database_size(d.oid), \
+	CASE WHEN pg_catalog.pg_is_in_recovery() THEN 0 ELSE pg_catalog.age(d.datfrozenxid) END, \
+	pg_catalog.pg_stat_get_db_xact_commit(d.oid) AS xact_commit, \
+	pg_catalog.pg_stat_get_db_xact_rollback(d.oid) AS xact_rollback, \
+	pg_catalog.pg_stat_get_db_blocks_fetched(d.oid) - pg_catalog.pg_stat_get_db_blocks_hit(d.oid) AS blks_read, \
+	pg_catalog.pg_stat_get_db_blocks_hit(d.oid) AS blks_hit, \
+	pg_catalog.pg_stat_get_db_tuples_returned(d.oid) AS tup_returned, \
+	pg_catalog.pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
+	pg_catalog.pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
+	pg_catalog.pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
+	pg_catalog.pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
 	NULL AS confl_tablespace, \
 	NULL AS confl_lock, \
 	NULL AS confl_snapshot, \
@@ -121,17 +121,17 @@ ORDER BY dbid"
 SELECT \
 	d.oid AS dbid, \
 	d.datname, \
-	pg_database_size(d.oid), \
-	age(d.datfrozenxid), \
-	pg_stat_get_db_xact_commit(d.oid) AS xact_commit, \
-	pg_stat_get_db_xact_rollback(d.oid) AS xact_rollback, \
-	pg_stat_get_db_blocks_fetched(d.oid) - pg_stat_get_db_blocks_hit(d.oid) AS blks_read, \
-	pg_stat_get_db_blocks_hit(d.oid) AS blks_hit, \
-	pg_stat_get_db_tuples_returned(d.oid) AS tup_returned, \
-	pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
-	pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
-	pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
-	pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
+	pg_catalog.pg_database_size(d.oid), \
+	pg_catalog.age(d.datfrozenxid), \
+	pg_catalog.pg_stat_get_db_xact_commit(d.oid) AS xact_commit, \
+	pg_catalog.pg_stat_get_db_xact_rollback(d.oid) AS xact_rollback, \
+	pg_catalog.pg_stat_get_db_blocks_fetched(d.oid) - pg_catalog.pg_stat_get_db_blocks_hit(d.oid) AS blks_read, \
+	pg_catalog.pg_stat_get_db_blocks_hit(d.oid) AS blks_hit, \
+	pg_catalog.pg_stat_get_db_tuples_returned(d.oid) AS tup_returned, \
+	pg_catalog.pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
+	pg_catalog.pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
+	pg_catalog.pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
+	pg_catalog.pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
 	NULL AS confl_tablespace, \
 	NULL AS confl_lock, \
 	NULL AS confl_snapshot, \
@@ -365,7 +365,7 @@ SELECT \
 	px.gid AS blocker_gid, \
 	sa.wait_event_type, \
 	sa.wait_event, \
-	(statement_timestamp() - sa.query_start)::interval(0), \
+	(pg_catalog.statement_timestamp() - sa.query_start)::interval(0), \
 	sa.query, \
 	CASE \
 		WHEN px.gid IS NOT NULL THEN '(xact is detached from session)' \
@@ -375,7 +375,7 @@ SELECT \
 FROM \
 	(SELECT DISTINCT \
 		pid AS blockee_pid, \
-		unnest(pg_blocking_pids(pid)) AS blocker_pid, \
+		pg_catalog.unnest(pg_catalog.pg_blocking_pids(pid)) AS blocker_pid, \
 		transactionid, \
 		relation \
 	 FROM \
@@ -390,7 +390,7 @@ FROM \
 	LEFT JOIN pg_class c ON c.oid = t.relation \
 	LEFT JOIN pg_namespace ns ON ns.oid = c.relnamespace \
 WHERE \
-	sa.query_start < statement_timestamp() - current_setting('" GUC_PREFIX ".long_lock_threshold')::interval"
+	sa.query_start < pg_catalog.statement_timestamp() - pg_catalog.current_setting('" GUC_PREFIX ".long_lock_threshold')::interval"
 #else
 #define SQL_SELECT_LOCK "\
 SELECT \
@@ -406,7 +406,7 @@ SELECT \
 	la.gid AS blocker_gid, \
 	'(N/A)', \
 	'(N/A)', \
-	(statement_timestamp() - sb.query_start)::interval(0), \
+	(pg_catalog.statement_timestamp() - sb.query_start)::interval(0), \
 	sb." PG_STAT_ACTIVITY_ATTNAME_QUERY ", \
 	CASE \
 		WHEN la.gid IS NOT NULL THEN '(xact is detached from session)' \
@@ -434,7 +434,7 @@ FROM \
 	 LEFT JOIN pg_namespace nb ON cb.relnamespace = nb.oid \
 WHERE \
 	(la.transactionid = lb.transactionid OR la.relation = lb.relation) AND \
-	sb.query_start < statement_timestamp() - current_setting('" GUC_PREFIX ".long_lock_threshold')::interval"
+	sb.query_start < pg_catalog.statement_timestamp() - pg_catalog.current_setting('" GUC_PREFIX ".long_lock_threshold')::interval"
 #endif
 
 /* bgwriter */
@@ -468,21 +468,21 @@ SELECT \
 	backend_start, \
 	backend_xmin, \
 	state, \
-	CASE WHEN pg_is_in_recovery() THEN \
-		pg_last_wal_receive_lsn() || ' (N/A)' ELSE \
-		pg_current_wal_lsn() || ' (' || pg_walfile_name(pg_current_wal_lsn()) || ')' END, \
-	CASE WHEN pg_is_in_recovery() THEN \
+	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
+		pg_catalog.pg_last_wal_receive_lsn() || ' (N/A)' ELSE \
+		pg_catalog.pg_current_wal_lsn() || ' (' || pg_catalog.pg_walfile_name(pg_catalog.pg_current_wal_lsn()) || ')' END, \
+	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
 		sent_lsn || ' (N/A)' ELSE \
-		sent_lsn || ' (' || pg_walfile_name(sent_lsn) || ')' END, \
-	CASE WHEN pg_is_in_recovery() THEN \
+		sent_lsn || ' (' || pg_catalog.pg_walfile_name(sent_lsn) || ')' END, \
+	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
 		write_lsn || ' (N/A)' ELSE \
-		write_lsn || ' (' || pg_walfile_name(write_lsn) || ')' END, \
-	CASE WHEN pg_is_in_recovery() THEN \
+		write_lsn || ' (' || pg_catalog.pg_walfile_name(write_lsn) || ')' END, \
+	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
 		flush_lsn || ' (N/A)' ELSE \
-		flush_lsn || ' (' || pg_walfile_name(flush_lsn) || ')' END, \
-	CASE WHEN pg_is_in_recovery() THEN \
+		flush_lsn || ' (' || pg_catalog.pg_walfile_name(flush_lsn) || ')' END, \
+	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
 		replay_lsn || ' (N/A)' ELSE \
-		replay_lsn || ' (' || pg_walfile_name(replay_lsn) || ')' END, \
+		replay_lsn || ' (' || pg_catalog.pg_walfile_name(replay_lsn) || ')' END, \
 	coalesce(write_lag, '00:00:00'), \
 	coalesce(flush_lag, '00:00:00'), \
 	coalesce(replay_lag, '00:00:00'), \
@@ -503,21 +503,21 @@ SELECT \
 	backend_start, \
 	" SQL_SELECT_REPLICATION_BACKEND_XMIN ", \
 	state, \
-	CASE WHEN pg_is_in_recovery() THEN \
-		pg_last_xlog_receive_location() || ' (N/A)' ELSE \
-		pg_current_xlog_location() || ' (' || pg_xlogfile_name(pg_current_xlog_location()) || ')' END, \
-	CASE WHEN pg_is_in_recovery() THEN \
+	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
+		pg_catalog.pg_last_xlog_receive_location() || ' (N/A)' ELSE \
+		pg_catalog.pg_current_xlog_location() || ' (' || pg_catalog.pg_xlogfile_name(pg_catalog.pg_current_xlog_location()) || ')' END, \
+	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
 		sent_location || ' (N/A)' ELSE \
-		sent_location || ' (' || pg_xlogfile_name(sent_location) || ')' END, \
-	CASE WHEN pg_is_in_recovery() THEN \
+		sent_location || ' (' || pg_catalog.pg_xlogfile_name(sent_location) || ')' END, \
+	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
 		write_location || ' (N/A)' ELSE \
-		write_location || ' (' || pg_xlogfile_name(write_location) || ')' END, \
-	CASE WHEN pg_is_in_recovery() THEN \
+		write_location || ' (' || pg_catalog.pg_xlogfile_name(write_location) || ')' END, \
+	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
 		flush_location || ' (N/A)' ELSE \
-		flush_location || ' (' || pg_xlogfile_name(flush_location) || ')' END, \
-	CASE WHEN pg_is_in_recovery() THEN \
+		flush_location || ' (' || pg_catalog.pg_xlogfile_name(flush_location) || ')' END, \
+	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
 		replay_location || ' (N/A)' ELSE \
-		replay_location || ' (' || pg_xlogfile_name(replay_location) || ')' END, \
+		replay_location || ' (' || pg_catalog.pg_xlogfile_name(replay_location) || ')' END, \
 	NULL, \
 	NULL, \
 	NULL, \
@@ -548,22 +548,22 @@ FROM \
 #if PG_VERSION_NUM >= 100000
 #define SQL_SELECT_XLOG "\
 SELECT \
-	pg_current_wal_lsn(), \
-	pg_walfile_name(pg_current_wal_lsn()) \
+	pg_catalog.pg_current_wal_lsn(), \
+	pg_catalog.pg_walfile_name(pg_catalog.pg_current_wal_lsn()) \
 WHERE \
-	NOT pg_is_in_recovery()"
+	NOT pg_catalog.pg_is_in_recovery()"
 #elif PG_VERSION_NUM >= 90000
 #define SQL_SELECT_XLOG "\
 SELECT \
-	pg_current_xlog_location(), \
-	pg_xlogfile_name(pg_current_xlog_location()) \
+	pg_catalog.pg_current_xlog_location(), \
+	pg_catalog.pg_xlogfile_name(pg_catalog.pg_current_xlog_location()) \
 WHERE \
-	NOT pg_is_in_recovery()"
+	NOT pg_catalog.pg_is_in_recovery()"
 #else
 #define SQL_SELECT_XLOG "\
 SELECT \
-	pg_current_xlog_location(), \
-	pg_xlogfile_name(pg_current_xlog_location())"
+	pg_catalog.pg_current_xlog_location(), \
+	pg_catalog.pg_xlogfile_name(pg_catalog.pg_current_xlog_location())"
 #endif
 
 /* archive */
@@ -592,7 +592,7 @@ SELECT * FROM statsinfo.memory()"
 /* repository size */
 #define SQL_SELECT_REPOSIZE "\
 SELECT \
-	sum(pg_relation_size(oid)) \
+	pg_catalog.sum(pg_catalog.pg_relation_size(oid)) \
 FROM \
 	pg_class \
 WHERE \
@@ -615,7 +615,7 @@ WHERE \
 
 /* table */
 #if PG_VERSION_NUM >= 90400
-#define SQL_SELECT_TABLE_N_MOD_SINCE_ANALYZE	"pg_stat_get_mod_since_analyze(c.oid)"
+#define SQL_SELECT_TABLE_N_MOD_SINCE_ANALYZE	"pg_catalog.pg_stat_get_mod_since_analyze(c.oid)"
 #else
 #define SQL_SELECT_TABLE_N_MOD_SINCE_ANALYZE	"NULL"
 #endif
@@ -632,35 +632,35 @@ SELECT \
 	c.relpages, \
 	c.reltuples, \
 	c.reloptions, \
-	pg_relation_size(c.oid), \
-	pg_stat_get_numscans(c.oid) AS seq_scan, \
-	pg_stat_get_tuples_returned(c.oid) AS seq_tup_read, \
-	sum(pg_stat_get_numscans(i.indexrelid))::bigint AS idx_scan, \
-	sum(pg_stat_get_tuples_fetched(i.indexrelid))::bigint + \
-		pg_stat_get_tuples_fetched(c.oid) AS idx_tup_fetch, \
-	pg_stat_get_tuples_inserted(c.oid) AS n_tup_ins, \
-	pg_stat_get_tuples_updated(c.oid) AS n_tup_upd, \
-	pg_stat_get_tuples_deleted(c.oid) AS n_tup_del, \
-	pg_stat_get_tuples_hot_updated(c.oid) AS n_tup_hot_upd, \
-	pg_stat_get_live_tuples(c.oid) AS n_live_tup, \
-	pg_stat_get_dead_tuples(c.oid) AS n_dead_tup, \
+	pg_catalog.pg_relation_size(c.oid), \
+	pg_catalog.pg_stat_get_numscans(c.oid) AS seq_scan, \
+	pg_catalog.pg_stat_get_tuples_returned(c.oid) AS seq_tup_read, \
+	pg_catalog.sum(pg_catalog.pg_stat_get_numscans(i.indexrelid))::bigint AS idx_scan, \
+	pg_catalog.sum(pg_catalog.pg_stat_get_tuples_fetched(i.indexrelid))::bigint + \
+		pg_catalog.pg_stat_get_tuples_fetched(c.oid) AS idx_tup_fetch, \
+	pg_catalog.pg_stat_get_tuples_inserted(c.oid) AS n_tup_ins, \
+	pg_catalog.pg_stat_get_tuples_updated(c.oid) AS n_tup_upd, \
+	pg_catalog.pg_stat_get_tuples_deleted(c.oid) AS n_tup_del, \
+	pg_catalog.pg_stat_get_tuples_hot_updated(c.oid) AS n_tup_hot_upd, \
+	pg_catalog.pg_stat_get_live_tuples(c.oid) AS n_live_tup, \
+	pg_catalog.pg_stat_get_dead_tuples(c.oid) AS n_dead_tup, \
 	" SQL_SELECT_TABLE_N_MOD_SINCE_ANALYZE " AS n_mod_since_analyze, \
-	pg_stat_get_blocks_fetched(c.oid) - \
-		pg_stat_get_blocks_hit(c.oid) AS heap_blks_read, \
-	pg_stat_get_blocks_hit(c.oid) AS heap_blks_hit, \
-	sum(pg_stat_get_blocks_fetched(i.indexrelid) - \
-		pg_stat_get_blocks_hit(i.indexrelid))::bigint AS idx_blks_read, \
-	sum(pg_stat_get_blocks_hit(i.indexrelid))::bigint AS idx_blks_hit, \
-	pg_stat_get_blocks_fetched(t.oid) - \
-		pg_stat_get_blocks_hit(t.oid) AS toast_blks_read, \
-	pg_stat_get_blocks_hit(t.oid) AS toast_blks_hit, \
-	pg_stat_get_blocks_fetched(x.indexrelid) - \
-		pg_stat_get_blocks_hit(x.indexrelid) AS tidx_blks_read, \
-	pg_stat_get_blocks_hit(x.indexrelid) AS tidx_blks_hit, \
-	pg_stat_get_last_vacuum_time(c.oid) as last_vacuum, \
-	pg_stat_get_last_autovacuum_time(c.oid) as last_autovacuum, \
-	pg_stat_get_last_analyze_time(c.oid) as last_analyze, \
-	pg_stat_get_last_autoanalyze_time(c.oid) as last_autoanalyze \
+	pg_catalog.pg_stat_get_blocks_fetched(c.oid) - \
+		pg_catalog.pg_stat_get_blocks_hit(c.oid) AS heap_blks_read, \
+	pg_catalog.pg_stat_get_blocks_hit(c.oid) AS heap_blks_hit, \
+	pg_catalog.sum(pg_catalog.pg_stat_get_blocks_fetched(i.indexrelid) - \
+		pg_catalog.pg_stat_get_blocks_hit(i.indexrelid))::bigint AS idx_blks_read, \
+	pg_catalog.sum(pg_catalog.pg_stat_get_blocks_hit(i.indexrelid))::bigint AS idx_blks_hit, \
+	pg_catalog.pg_stat_get_blocks_fetched(t.oid) - \
+		pg_catalog.pg_stat_get_blocks_hit(t.oid) AS toast_blks_read, \
+	pg_catalog.pg_stat_get_blocks_hit(t.oid) AS toast_blks_hit, \
+	pg_catalog.pg_stat_get_blocks_fetched(x.indexrelid) - \
+		pg_catalog.pg_stat_get_blocks_hit(x.indexrelid) AS tidx_blks_read, \
+	pg_catalog.pg_stat_get_blocks_hit(x.indexrelid) AS tidx_blks_hit, \
+	pg_catalog.pg_stat_get_last_vacuum_time(c.oid) as last_vacuum, \
+	pg_catalog.pg_stat_get_last_autovacuum_time(c.oid) as last_autovacuum, \
+	pg_catalog.pg_stat_get_last_analyze_time(c.oid) as last_analyze, \
+	pg_catalog.pg_stat_get_last_autoanalyze_time(c.oid) as last_autoanalyze \
 FROM \
 	pg_class c LEFT JOIN \
 	pg_index i ON c.oid = i.indrelid LEFT JOIN \
@@ -695,7 +695,7 @@ SELECT \
 	a.attrelid, \
 	a.attnum, \
 	a.attname, \
-	format_type(atttypid, atttypmod) AS type, \
+	pg_catalog.format_type(atttypid, atttypmod) AS type, \
 	a.attstattarget, \
 	a.attstorage, \
 	a.attnotnull, \
@@ -742,14 +742,14 @@ SELECT \
     x.indisclustered, \
     x.indisvalid, \
 	x.indkey, \
-    pg_get_indexdef(i.oid), \
-    pg_relation_size(i.oid), \
-    pg_stat_get_numscans(i.oid) AS idx_scan, \
-    pg_stat_get_tuples_returned(i.oid) AS idx_tup_read, \
-    pg_stat_get_tuples_fetched(i.oid) AS idx_tup_fetch, \
-    pg_stat_get_blocks_fetched(i.oid) - \
-        pg_stat_get_blocks_hit(i.oid) AS idx_blks_read, \
-    pg_stat_get_blocks_hit(i.oid) AS idx_blks_hit \
+    pg_catalog.pg_get_indexdef(i.oid), \
+    pg_catalog.pg_relation_size(i.oid), \
+    pg_catalog.pg_stat_get_numscans(i.oid) AS idx_scan, \
+    pg_catalog.pg_stat_get_tuples_returned(i.oid) AS idx_tup_read, \
+    pg_catalog.pg_stat_get_tuples_fetched(i.oid) AS idx_tup_fetch, \
+    pg_catalog.pg_stat_get_blocks_fetched(i.oid) - \
+        pg_catalog.pg_stat_get_blocks_hit(i.oid) AS idx_blks_read, \
+    pg_catalog.pg_stat_get_blocks_hit(i.oid) AS idx_blks_hit \
 FROM \
     pg_class c JOIN \
     pg_index x ON c.oid = x.indrelid JOIN \
@@ -778,7 +778,7 @@ SELECT \
 	s.funcid, \
 	n.oid AS nspid, \
 	s.funcname, \
-	pg_get_function_arguments(funcid) AS argtypes, \
+	pg_catalog.pg_get_function_arguments(funcid) AS argtypes, \
 	s.calls, \
 	s.total_time, \
 	s.self_time \

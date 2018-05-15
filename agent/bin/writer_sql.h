@@ -121,8 +121,8 @@ INSERT INTO statsrepo.log VALUES \
 UPDATE \
 	statsrepo.snapshot \
 SET \
-	exec_time = age($2, $3), \
-	snapshot_increase_size = ((SELECT sum(pg_relation_size(oid)) FROM pg_class \
+	exec_time = pg_catalog.age($2, $3), \
+	snapshot_increase_size = ((SELECT pg_catalog.sum(pg_catalog.pg_relation_size(oid)) FROM pg_class \
 								WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'statsrepo')) - $4) \
 WHERE \
 	snapid = $1"
