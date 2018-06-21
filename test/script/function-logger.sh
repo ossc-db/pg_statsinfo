@@ -160,7 +160,7 @@ set_pgconfig ${PGCONFIG} ${PGDATA}
 update_pgconfig ${PGDATA} "log_checkpoints" "on"
 update_pgconfig ${PGDATA} "checkpoint_timeout" "30"
 if [ $(server_version) -ge 90500 ] ; then
-	update_pgconfig ${PGDATA} "max_wal_size" "2"
+	update_pgconfig ${PGDATA} "max_wal_size" "32MB"
 else
 	update_pgconfig ${PGDATA} "checkpoint_segments" "1"
 fi

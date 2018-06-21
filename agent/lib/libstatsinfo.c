@@ -111,7 +111,7 @@
 /* log_autovacuum_min_duration: vacuum */
 #if PG_VERSION_NUM >= 100000
 #define MSG_AUTOVACUUM \
-	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
+	"automatic %s of table \"%s.%s.%s\": index scans: %d\n" \
 	"pages: %d removed, %d remain, %d skipped due to pins, %u skipped frozen\n" \
 	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable, oldest xmin: %u\n" \
 	"buffer usage: %d hits, %d misses, %d dirtied\n" \
@@ -708,7 +708,7 @@ sample_activity(void)
 				"<IDLE> in transaction", pgstat_track_activity_query_size);
 		else
 			strlcpy(entry->query,
-				be->st_activity, pgstat_track_activity_query_size);
+				be->st_activity_raw, pgstat_track_activity_query_size);
 #else
 		strlcpy(entry->query,
 			be->st_activity, pgstat_track_activity_query_size);
@@ -1018,10 +1018,15 @@ statsinfo_long_xact(PG_FUNCTION_ARGS)
 				nulls[i++] = true;
 			if (entry->pid != 0)
 			{
+				char	*clipped_activity;
+
 				values[i++] = Int32GetDatum(entry->pid);
 				values[i++] = TimestampTzGetDatum(entry->start);
 				values[i++] = Float8GetDatum(entry->duration);
-				values[i++] = CStringGetTextDatum(entry->query);
+
+				clipped_activity = pgstat_clip_activity(entry->query);
+				values[i++] = CStringGetTextDatum(clipped_activity);
+				pfree(clipped_activity);
 			}
 			else
 			{
@@ -2582,7 +2587,9 @@ StartStatsinfoLauncher(void)
 	/*
 	 * setup background worker
 	 */
+	memset(&worker, 0, sizeof(worker));
 	snprintf(worker.bgw_name, BGW_MAXLEN, "pg_statsinfo launcher");
+	snprintf(worker.bgw_type, BGW_MAXLEN, "pg_statsinfo launcher");
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS;
 	worker.bgw_start_time = BgWorkerStart_ConsistentState;
 	worker.bgw_restart_time = BGW_NEVER_RESTART;

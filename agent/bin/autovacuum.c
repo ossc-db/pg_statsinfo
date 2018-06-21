@@ -41,7 +41,7 @@ INSERT INTO statsrepo.autoanalyze_cancel VALUES \
 	"canceling autovacuum task"
 
 #if PG_VERSION_NUM >= 100000
-#define NUM_AUTOVACUUM			20
+#define NUM_AUTOVACUUM			21
 #elif PG_VERSION_NUM >= 90600
 #define NUM_AUTOVACUUM			19
 #elif PG_VERSION_NUM >= 90500
@@ -265,24 +265,24 @@ Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 
 	params[0] = instid;
 	params[1] = av->finish;					/* finish */
-	params[2] = list_nth(av->params, 0);	/* database */
-	params[3] = list_nth(av->params, 1);	/* schema */
-	params[4] = list_nth(av->params, 2);	/* table */
-	params[5] = list_nth(av->params, 3);	/* index_scans */
-	params[6] = list_nth(av->params, 4);	/* page_removed */
-	params[7] = list_nth(av->params, 5);	/* page_remain */
+	params[2] = list_nth(av->params, 1);	/* database */
+	params[3] = list_nth(av->params, 2);	/* schema */
+	params[4] = list_nth(av->params, 3);	/* table */
+	params[5] = list_nth(av->params, 4);	/* index_scans */
+	params[6] = list_nth(av->params, 5);	/* page_removed */
+	params[7] = list_nth(av->params, 6);	/* page_remain */
 #if PG_VERSION_NUM >= 100000
-//	params[8] = list_nth(av->params, 6);	/* pinned_pages */
-	params[8] = list_nth(av->params, 7);	/* frozen_skipped_pages */
-	params[9] = list_nth(av->params, 8);	/* tup_removed */
-	params[10] = list_nth(av->params, 9);	/* tup_remain */
-	params[11] = list_nth(av->params, 10);	/* tup_dead */
-//	params[12] = list_nth(av->params, 11);	/* oldest_xmin */
-	params[12] = list_nth(av->params, 12);	/* page_hit */
-	params[13] = list_nth(av->params, 13);	/* page_miss */
-	params[14] = list_nth(av->params, 14);	/* page_dirty */
-	params[15] = list_nth(av->params, 15);	/* read_rate */
-	params[16] = list_nth(av->params, 17);	/* write_rate */
+//	params[8] = list_nth(av->params, 7);	/* pinned_pages */
+	params[8] = list_nth(av->params, 8);	/* frozen_skipped_pages */
+	params[9] = list_nth(av->params, 9);	/* tup_removed */
+	params[10] = list_nth(av->params, 10);	/* tup_remain */
+	params[11] = list_nth(av->params, 11);	/* tup_dead */
+//	params[12] = list_nth(av->params, 12);	/* oldest_xmin */
+	params[12] = list_nth(av->params, 13);	/* page_hit */
+	params[13] = list_nth(av->params, 14);	/* page_miss */
+	params[14] = list_nth(av->params, 15);	/* page_dirty */
+	params[15] = list_nth(av->params, 16);	/* read_rate */
+	params[16] = list_nth(av->params, 18);	/* write_rate */
 #elif PG_VERSION_NUM >= 90600
 //	params[8] = list_nth(av->params, 6);	/* pinned_pages */
 	params[8] = list_nth(av->params, 7);	/* frozen_skipped_pages */

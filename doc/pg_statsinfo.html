@@ -649,7 +649,7 @@ div.index li:before {
   <li><a href="#uninstall">Uninstallation</a></li>
   <li><a href="#restrictions">Restrictions</a></li>
   <li><a href="#QA">Q&A</a></li>
-  <li><a href="#change">Changes From pg_statsinfo 3.3</a></li>
+  <li><a href="#change">Changes From pg_statsinfo 10</a></li>
   <li><a href="#details">Detailed Information</a>
     <ol>
       <li><a href="#many-instances">Sharing Repository Database</a></li>
@@ -661,13 +661,13 @@ div.index li:before {
   <li><a href="#seealso">See Also</a></li>
 </ol>
 </div>
-<h1 id="pg_statsinfo">pg_statsinfo 10</h1>
+<h1 id="pg_statsinfo">pg_statsinfo 11</h1>
 <h2 id="name">What is pg_statsinfo ?</h2>
 <p>pg_statsinfo is a monitoring tool to record activities and
 statistics of PostgreSQL server in the form of time series of
 snapshots. You can examine the snapshots on graphical representations
 by
-using <a href="http://pgstatsinfo.sourceforge.net/documents/reporter10/html/pg_stats_reporter.html">pg_stats_reporter</a>.
+using <a href="http://pgstatsinfo.sourceforge.net/documents/reporter11/html/pg_stats_reporter.html">pg_stats_reporter</a>.
 </p>
 
 
@@ -676,13 +676,13 @@ using <a href="http://pgstatsinfo.sourceforge.net/documents/reporter10/html/pg_s
 
 <p>Two or more PostgreSQL <i>instances</i> can share single repository database.
 
-<p>You can check for server health and activities in easy-to-grasp graphical representation by using  <a href="http://pgstatsinfo.sourceforge.net/documents/reporter10/html/pg_stats_reporter.html">pg_stats_reporter</a>. It shows various information as interactive tables and graphs.</p>
+<p>You can check for server health and activities in easy-to-grasp graphical representation by using  <a href="http://pgstatsinfo.sourceforge.net/documents/reporter11/html/pg_stats_reporter.html">pg_stats_reporter</a>. It shows various information as interactive tables and graphs.</p>
 
 <p>Components of pg_statsinfo are typically placed as the picture
 below. Each pg_statsinfo collects the information of the <i>Database
 Server</i> where it resides on and sends snapshots to
 the <i>Repository
-Server</i>. <a href="http://pgstatsinfo.sourceforge.net/documents/reporter10/html/pg_stats_reporter.html">pg_stats_reporter</a>
+Server</i>. <a href="http://pgstatsinfo.sourceforge.net/documents/reporter11/html/pg_stats_reporter.html">pg_stats_reporter</a>
 runs behind web server so that the Users can get graphical reports on
 web browser on the <i>Client</i>.</p>
 
@@ -729,7 +729,7 @@ manually.
 The required storage for every snapshot depends on the numbers of objects in the monitored database. It occupies about 600 - 800kB in typical cases. pg_statsinfo takes snapshots for every 10 minutes by default, so the required storage for all snapshots in a day from every monitored database is roughly estimated to be  90 - 120MB.
 </p>
 <p>
-You can see the structure of the tables in pg_statsinfo's repository database in <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo10/files/pg_statsinfo_v10_repository_infomation.xls">this</a> document. (MS Excel document in Japanese).
+You can see the structure of the tables in pg_statsinfo's repository database in <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo11/files/pg_statsinfo_v11_repository_infomation.xls">this</a> document. (MS Excel document in Japanese).
 </p>
 
 <h3 id="features-log-route">Server Log Filter</h3>
@@ -780,7 +780,7 @@ The default alert function checks for the following properties:
 </p>
 
 <p>
-The contents of alert message of each alert item is shown in <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo10/files/pg_statsinfo_v10_report_infomation.xls">"report item list of pg_statsinfo v10".</a> (.xls in Japanese).
+The contents of alert message of each alert item is shown in <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo11/files/pg_statsinfo_v11_report_infomation.xls">"report item list of pg_statsinfo v11".</a> (.xls in Japanese).
 </p>
 
 <p>
@@ -803,9 +803,9 @@ text format. Following kinds of information are available.<p>
 </ul>
 
 <p>
-The comprehensive list of report items is shown in <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo10/files/pg_statsinfo_v10_report_infomation.xls">"report item list of pg_statsinfo v10".</a> (.xls in Japanese)<br>
-Report items are equivalent with <a href="http://pgstatsinfo.sourceforge.net/documents/reporter10/html/pg_stats_reporter.html">pg_stats_reporter</a>.<br>
-If you would like to see graphical reports, please try <a href="http://pgstatsinfo.sourceforge.net/documents/reporter10/html/pg_stats_reporter.html">pg_stats_reporter</a>.
+The comprehensive list of report items is shown in <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo11/files/pg_statsinfo_v11_report_infomation.xls">"report item list of pg_statsinfo v11".</a> (.xls in Japanese)<br>
+Report items are equivalent with <a href="http://pgstatsinfo.sourceforge.net/documents/reporter11/html/pg_stats_reporter.html">pg_stats_reporter</a>.<br>
+If you would like to see graphical reports, please try <a href="http://pgstatsinfo.sourceforge.net/documents/reporter11/html/pg_stats_reporter.html">pg_stats_reporter</a>.
 </p>
 
 <h4>Administrative operations</h4>
@@ -845,7 +845,7 @@ Setup reference of this feature is <a href="#usage-maintenance">here</a>.
 <h3 id="requirement">Requirement</h3>
 <dl>
 <dt>PostgreSQL versions</dt>
-<dd>PostgreSQL 10</dd>
+<dd>PostgreSQL 11</dd>
 <dt>OS</dt>
 <dd>RHEL 7.x (x86_64), CentOS 7.x (x86_64)</dd>
 </dl>
@@ -856,7 +856,7 @@ Setup reference of this feature is <a href="#usage-maintenance">here</a>.
 Example steps to installing pg_statsinfo using rpm follow.
 <pre>
 $ su
-# rpm -ivh pg_statsinfo-10.0-1.pg10.rhel7.x86_64.rpm
+# rpm -ivh pg_statsinfo-11.0-1.pg11.rhel7.x86_64.rpm
 </pre>
 
 <h4>Installing from source</h4>
@@ -865,8 +865,8 @@ $ su
 
 <pre>
 $ cd pg_statsinfo
-$ tar xzvf pg_statsinfo-10.0.tar.gz 
-$ cd pg_statsinfo-10.0
+$ tar xzvf pg_statsinfo-11.0.tar.gz 
+$ cd pg_statsinfo-11.0
 $ make USE_PGXS=1
 $ su
 # make USE_PGXS=1 install
@@ -1337,7 +1337,7 @@ Available options are described below,
   <dt>-r, --report=REPORTID</dt>
   <dd>Generates a report of the type specified by REPORTID.</dd>
   <dd>The following REPORTID are available.</dd>
-  <dd>More details are shown in  <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo10/files/pg_statsinfo_v10_report_infomation.xls">Items of a report in pg_statsinfo v10</a>(Both filename and contents are only in Japanese).</dd>
+  <dd>More details are shown in  <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo11/files/pg_statsinfo_v11_report_infomation.xls">Items of a report in pg_statsinfo v11</a>(Both filename and contents are only in Japanese).</dd>
   <dd>
     <ul>
       <li>Summary</li>
@@ -2051,8 +2051,8 @@ $psql -d postgres -c "SELECT * FROM statsrepo.snapshot WHERE COMMENT = 'test'"
 </pre>
 <h4>Q2. How to utilize the snapshots in repository?</h4>
 <p>The snapshots in repository can be of course inspected using sql queries but it needs too much labor for most cases.
-You can use pg_statsinfo's command line reporting feature to see them as simple reports in text format. For those who wants to see them in graphical interface, <a href="http://pgstatsinfo.sourceforge.net/documents/reporter10/html/pg_stats_reporter.html">pg_stats_reporter</a> provides sortable tables with pager and manipulative graphs. 
-An operable sample is available <a href='http://pgstatsinfo.sourceforge.net/documents/reporter10/html/files/report_sample.html'>here</a>.
+You can use pg_statsinfo's command line reporting feature to see them as simple reports in text format. For those who wants to see them in graphical interface, <a href="http://pgstatsinfo.sourceforge.net/documents/reporter11/html/pg_stats_reporter.html">pg_stats_reporter</a> provides sortable tables with pager and manipulative graphs. 
+An operable sample is available <a href='http://pgstatsinfo.sourceforge.net/documents/reporter11/html/files/report_sample.html'>here</a>.
 </p>
 
 <h4>Q3. Auto maintenance seems not cleaning up snapshots. </h4>
@@ -2081,7 +2081,7 @@ Don't forget to restore the setting as before after the check.
 
 <h4>Q5. How can I upgrade pg_statsinfo from older versions in place?</h4>
 <p>
-Sorry but you can't. You should uninstall the older version first, then install new one. Furthermore, the repository database schema of 3.3 is not compatible with the older versions.
+Sorry but you can't. You should uninstall the older version first, then install new one. Furthermore, the repository database schema of 10 is not compatible with the older versions.
 Please <a href="#uninstall">uninstall</a> the old repository, and drop its schema before running new version. Then restart all the monitored instances.<br><br>
 </p>
 
@@ -2150,23 +2150,10 @@ Currently there is no available means of preventing this occurring.
 </p>
 <br>
 
-<h2 id="change">Changes from pg_statsinfo 3.3</h2>
-<p>Following changes have been made after pg_statsinfo 3.3.</p>
+<h2 id="change">Changes from pg_statsinfo 10</h2>
+<p>Following changes have been made after pg_statsinfo 10.</p>
 <ul>
-  <li>Replication delay time is added to snapshots.</li>
-  <li>Replication slots are now recorded in snapshots.</li>
-  <li>Logical recplication are now recorded as a part of replication connection information in snapshots. Only physical ones were recorded in previous versions.</li>
-  <li>Alert for table dead space is now turned off by default.</li>
-  <li>Tables smaller than 1000 pages are now ignored in alert for instance-total dead space ratio. <br>Such small tables are already ignored in calculation of per-table dead space size and ratio to suppress meaningless alerts. On the other hand, all tables are took into account for instance-total dead space size, including such small tables. This change suppresses unnecessary alert for small instances on which dead space doesn't impact on performance so much.</li>
-  <li>A comprehensive list of the alert messages is added to the user documents. (only in Japanese)</li>
-  <li>Fixed the following two alert messages.</li>
-  <ul>
-    <li>Query average reponse time</li>
-    <li>Query worst response time</li>
-  </ul>
-  <li>Show information of all standbys that had a connection during a report period in Current Replication Status.</li>
-  <li>Added replication delay time in Current Replication Status.</li>
-  <li>pg_statsinfo supports only one version of PostgreSQL from this version. pg_statsinfo 10 supports only PostgreSQL 10.</li>
+  <li>Supports PostgreSQL 11 (pg_statsinfo 11 supports only PostgreSQL 10).</li>
 </ul>
 <br>
 
@@ -2299,7 +2286,7 @@ prevents this from occurring for this case.
 <a href="http://www.postgresql.org/docs/current/static/monitoring-stats.html">The Statistics Collector</a>,
 <a href="http://www.postgresql.org/docs/current/static/catalogs.html">System Catalogs</a>,
 <a href="http://www.postgresql.org/docs/current/static/pgstatstatements.html">pg_stat_statements</a>,
-<a href="http://pgstatsinfo.sourceforge.net/documents/reporter10/html/pg_stats_reporter.html">pg_stats_reporter</a>
+<a href="http://pgstatsinfo.sourceforge.net/documents/reporter11/html/pg_stats_reporter.html">pg_stats_reporter</a>
 
 <hr />
 <div class="navigation">

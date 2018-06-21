@@ -671,9 +671,7 @@ make_status_snapshot(void)
 		pglxaContext =
 			AllocSetContextCreate(TopMemoryContext,
 								  "Last activity snapshot",
-								  ALLOCSET_SMALL_MINSIZE,
-								  ALLOCSET_SMALL_INITSIZE,
-								  ALLOCSET_SMALL_MAXSIZE);
+								  ALLOCSET_SMALL_SIZES);
 	tmp_stat_buffer =
 		(statBuffer*)MemoryContextAllocZero(pglxaContext,
 											buffer_size(stat_buffer->max_id));
