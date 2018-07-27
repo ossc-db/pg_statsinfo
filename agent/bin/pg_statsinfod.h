@@ -177,6 +177,7 @@ extern pthread_mutex_t	maintenance_lock;
 extern volatile time_t	collector_reload_time;
 extern volatile char   *snapshot_requested;
 extern volatile char   *maintenance_requested;
+extern volatile char   *postmaster_start_time;
 
 /* queue item for writer */
 typedef struct QueueItem	QueueItem;
@@ -245,6 +246,8 @@ extern void logger_init(void);
 extern void *logger_main(void *arg);
 /* logger_send.c */
 extern void *logger_send_main(void *arg);
+extern void set_logstore_state_ignore(QueueItem *item);
+
 /* logger_common.c */
 extern void init_log(Log *log, const char *buf, const size_t fields[]);
 extern void get_csvlog(char csvlog[], const char *prev, const char *pg_log);

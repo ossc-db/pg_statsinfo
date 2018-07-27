@@ -18,6 +18,7 @@ pthread_mutex_t	maintenance_lock;
 volatile time_t	collector_reload_time;
 volatile char  *snapshot_requested;
 volatile char  *maintenance_requested;
+volatile char  *postmaster_start_time;
 
 static PGconn  *collector_conn = NULL;
 
@@ -27,6 +28,7 @@ static void do_snapshot(char *comment);
 static void get_server_encoding(void);
 static void collector_disconnect(void);
 static bool extract_dbname(const char *conninfo, char *dbname, size_t size);
+static void get_postmaster_start_time(void);
 
 void
 collector_init(void)
@@ -55,6 +57,9 @@ collector_main(void *arg)
 
 	/* we set actual server encoding to libpq default params. */
 	get_server_encoding();
+
+	/* get postmaster start time */
+	get_postmaster_start_time();
 
 	/* if already passed maintenance time, set one day after */
 	if (now >= maintenance_time)
@@ -374,4 +379,30 @@ extract_dbname(const char *conninfo, char *dbname, size_t size)
 
 	PQconninfoFree(options);
 	return false;
+}
+
+static void
+get_postmaster_start_time(void)
+{
+	PGconn		*conn;
+	PGresult	*res;
+	int			 retry;
+
+	for (retry = 0;
+		 shutdown_state < SHUTDOWN_REQUESTED && retry < DB_MAX_RETRY;
+		 delay(), retry++)
+	{
+		/* connect postgres database */
+		if ((conn = collector_connect(NULL)) == NULL)
+			continue;
+
+		res =  pgut_execute(conn, "SELECT pg_postmaster_start_time()", 0, NULL);
+		if (PQresultStatus(res) == PGRES_TUPLES_OK)
+		{
+			postmaster_start_time = pgut_strdup(PQgetvalue(res, 0, 0));
+			PQclear(res);
+			break;	/* ok */
+		}
+		PQclear(res);
+	}
 }

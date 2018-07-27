@@ -2,7 +2,7 @@
 
 <html lang="en"><head>
 
-<title>pg_statsinfo 10</title>
+<title>pg_statsinfo 11</title>
 <link rel="home" title="pg_statsinfo" href="index.html">
 <style type="text/css">
 <!--
@@ -1133,15 +1133,6 @@ Click <a href="#usage-maintenance">here</a> for more of the automatic maintenanc
 <p>pg_statsinfo also can accumulate logs into repository database.<br>
 The same types of filtering to text log file can be used with partially different settings.
 </p>
-<p><b>Log accumulation is recommended to be disabled when the
-repository is located on the same instance as observed database.</b>
-Log accumulation inserts records into a repository database so with
-log_statements set to "all" or "dml", an insertion of an issued log
-message in turn issues another log message. This self-recursive log
-emitting will be prevented by setting the user-id for the repository
-connection to superusers or setting log_statements to other than "all"
-or "dml" in the configuration file.
-</p>
 
 <h4>Types of filtering</h4>
 <dl>
@@ -1171,6 +1162,16 @@ or "dml" in the configuration file.
 <p>Old log entries in the repository database is deleted by the automatic maintenance feature.<br>
 This feature is enabled by default.</p>
 <p>Click <a href="#usage-maintenance">here</a> to see how to set up the automatic maintenance.</p>
+
+<h4>Prevent accumulation of server log recursively</h4>
+<p>When all of the following conditions are matched, server log accumulation is recursively repeated.<br>
+Therefore the server log accumulation becomes to disable forcibly to prevent this.</p>
+<ul>
+  <li>The repository database is located on the same instance as observed database.</li>
+  <li>The database user that use to connect to the repository database is non-superuser.</li>
+  <li>log_statements of the repository DB connection is set to "all" or "mod".<br>
+      log_statements has role-specific settings apart from the configuration file (postgresql.conf).</li>
+</ul>
 
 <h3 id="usage-alert">Alert Function</h3>
 
@@ -2153,7 +2154,8 @@ Currently there is no available means of preventing this occurring.
 <h2 id="change">Changes from pg_statsinfo 10</h2>
 <p>Following changes have been made after pg_statsinfo 10.</p>
 <ul>
-  <li>Supports PostgreSQL 11 (pg_statsinfo 11 supports only PostgreSQL 10).</li>
+  <li>Supports PostgreSQL 11 (pg_statsinfo 11 supports only PostgreSQL 11).</li>
+  <li>Prevent accumulation of server log recursively.</li>
 </ul>
 <br>
 

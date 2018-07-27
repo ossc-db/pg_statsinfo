@@ -18,7 +18,8 @@ typedef enum LogStoreState
 	LOG_STORE_RUNNING,
 	LOG_STORE_RETRY,
 	LOG_STORE_FAILED,
-	LOG_STORE_COMPLETE
+	LOG_STORE_COMPLETE,
+	LOG_STORE_IGNORE
 } LogStoreState;
 
 typedef struct Logger
@@ -582,4 +583,10 @@ LogStore_free(LogStore *log_store)
 	/* decide final state of log store */
 	if (log_store->state < LOG_STORE_COMPLETE)
 		log_store->state = LOG_STORE_FAILED;
+}
+
+void
+set_logstore_state_ignore(QueueItem *item)
+{
+	((LogStore *) item)->state = LOG_STORE_IGNORE;
 }

@@ -29,6 +29,7 @@ static time_t			writer_reload_time = 0;
 static PGconn		   *writer_conn = NULL;
 static time_t			writer_conn_last_used;
 static bool				superuser_connect = false;
+static bool				ignore_logstore = false;
 
 /*---- GUC variables ----*/
 static char	   *my_repository_server = NULL;
@@ -47,6 +48,7 @@ static RepositoryState validate_repository(void);
 static bool check_repository(PGconn *conn);
 static void set_writer_state(WriterState state);
 static void writer_delay(void);
+static void validate_logstore(void);
 
 void
 writer_init(void)
@@ -79,6 +81,8 @@ writer_main(void *arg)
 			{
 				case REPOSITORY_OK:
 					set_writer_state(WRITER_NORMAL);
+					/* validate whether to accumulate server logs */
+					validate_logstore();
 					break;
 				case REPOSITORY_CONNECT_FAILURE:
 				case REPOSITORY_INVALID_DATABASE:
@@ -96,7 +100,11 @@ writer_main(void *arg)
 		{
 			rstate = validate_repository();
 			if (rstate == REPOSITORY_OK)
+			{
 				set_writer_state(WRITER_NORMAL);
+				/* validate whether to accumulate server logs */
+				validate_logstore();
+			}
 		}
 
 		/* send queued items into the repository server */
@@ -199,6 +207,27 @@ recv_writer_queue(void)
 
 	if (list_length(queue) == 0)
 		return 0;
+
+	/* if ignore the server log accumulation, discard the queue of LogStore */
+	if (ignore_logstore)
+	{
+		ListCell *cell, *next;
+
+		for (cell = list_head(queue); cell != NULL; cell = next)
+		{
+			QueueItem *item = (QueueItem *) lfirst(cell);
+
+			next = lnext(cell);
+			if (item->type == QUEUE_LOGSTORE)
+			{
+				set_logstore_state_ignore(item);
+				queue = list_delete_ptr(queue, item);
+			}
+		}
+
+		if (list_length(queue) == 0)
+			return 0;
+	}
 
 	if (writer_state == WRITER_FALLBACK ||
 		writer_connect(superuser_connect) == NULL)
@@ -578,4 +607,59 @@ writer_delay(void)
 {
 	if (shutdown_state < SHUTDOWN_REQUESTED)
 		sleep(WRITER_RECONNECT_DELAY);
+}
+
+/*
+ * validate whether server log accumulation is possible or not.
+ * all of the following conditions is match, ignore the queue of
+ * server log accumulation.
+ *  - server log accumulation is enabled
+ *  - dbuser to connect to the repository is not superuser
+ *  - log_statement is "all" or "mod"
+ *  - target DB and repository DB are the same instance
+ */
+static void
+validate_logstore(void)
+{
+	PGresult	*res;
+
+	ignore_logstore = false;
+
+	/* setting of the accumulation of server log */
+	if (repolog_min_messages == DISABLE)
+		return;
+
+	/* dbuser to connect to the repository */
+	if (superuser_connect)
+		return;
+
+	if (writer_connect(false) == NULL)
+		return;
+
+	res =  pgut_execute(writer_conn,
+		"SELECT current_setting('log_statement'), pg_postmaster_start_time()", 0, NULL);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		PQclear(res);
+		return;
+	}
+
+	/* setting of log_statement */
+	if (!(strcmp(PQgetvalue(res, 0, 0), "all") == 0 ||
+		  strcmp(PQgetvalue(res, 0, 0), "mod") == 0))
+	{
+		PQclear(res);
+		return;
+	}
+
+	/* target DB and repository DB are the same instance */
+	if(strcmp(PQgetvalue(res, 0, 1), (char *) postmaster_start_time) != 0)
+	{
+		PQclear(res);
+		return;
+	}
+
+	PQclear(res);
+	ignore_logstore = true;
+	elog(LOG, "server log accumulation is disabled");
 }
