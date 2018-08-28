@@ -87,7 +87,7 @@ SELECT
 	CASE WHEN procpid IS NOT NULL THEN 'xxx' END AS procpid,
 	CASE WHEN usesysid IS NOT NULL THEN 'xxx' END AS usesysid,
 	usename,
-	CASE WHEN application_name IS NOT NULL THEN 'xxx' END AS application_name,
+	application_name,
 	CASE WHEN client_addr IS NOT NULL THEN 'xxx' END AS client_addr,
 	CASE WHEN client_hostname IS NOT NULL THEN 'xxx' END AS client_hostname,
 	CASE WHEN client_port IS NOT NULL THEN 'xxx' END AS client_port,
@@ -108,6 +108,8 @@ FROM
 	statsrepo.replication
 WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot)
+ORDER BY
+	application_name;
 EOF
 
 echo "/***-- Statistics of replication slot (MASTER) --***/"

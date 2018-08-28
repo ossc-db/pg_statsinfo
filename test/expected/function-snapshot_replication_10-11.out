@@ -17,8 +17,8 @@ NOTICE:  created replication slot "sub" on publisher
 /***-- Statistics of replication (MASTER) --***/
  snapid | procpid | usesysid | usename  | application_name | client_addr | client_hostname | client_port | backend_start | backend_xmin |   state   | current_location | sent_location | write_location | flush_location | replay_location | write_lag | flush_lag | replay_lag | sync_priority | sync_state 
 --------+---------+----------+----------+------------------+-------------+-----------------+-------------+---------------+--------------+-----------+------------------+---------------+----------------+----------------+-----------------+-----------+-----------+------------+---------------+------------
-      2 | xxx     | xxx      | postgres | xxx              | xxx         | xxx             | xxx         | xxx           |              | streaming | xxx              | xxx           | xxx            | xxx            | xxx             | xxx       | xxx       | xxx        |             0 | async
-      2 | xxx     | xxx      | postgres | xxx              | xxx         | xxx             | xxx         | xxx           | xxx          | streaming | xxx              | xxx           | xxx            | xxx            | xxx             | xxx       | xxx       | xxx        |             0 | async
+      2 | xxx     | xxx      | postgres | sub              | xxx         | xxx             | xxx         | xxx           |              | streaming | xxx              | xxx           | xxx            | xxx            | xxx             | xxx       | xxx       | xxx        |             0 | async
+      2 | xxx     | xxx      | postgres | walreceiver      | xxx         | xxx             | xxx         | xxx           | xxx          | streaming | xxx              | xxx           | xxx            | xxx            | xxx             | xxx       | xxx       | xxx        |             0 | async
 (2 rows)
 
 /***-- Statistics of replication slot (MASTER) --***/
