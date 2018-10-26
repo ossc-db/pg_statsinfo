@@ -27,9 +27,9 @@
 #define SECS_PER_DAY		86400	/* seconds per day */
 
 #define STATSINFO_CONTROL_FILE		"pg_statsinfo.control"
-#define STATSINFO_CONTROL_VERSION	100000
+#define STATSINFO_CONTROL_VERSION	110000
 
-#define STATSREPO_SCHEMA_VERSION	100000
+#define STATSREPO_SCHEMA_VERSION	110000
 
 /* number of columns of csvlog */
 #if PG_VERSION_NUM < 90000

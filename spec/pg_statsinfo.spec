@@ -3,14 +3,14 @@
 
 # Original declaration for pg_statsinfo rpmbuild #
 
-%define _pgdir   /usr/pgsql-10
+%define _pgdir   /usr/pgsql-11
 %define _bindir  %{_pgdir}/bin
 %define _libdir  %{_pgdir}/lib
 %define _datadir %{_pgdir}/share
 
 ## Set general information for pg_statsinfo.
 Name:       pg_statsinfo
-Version:    10.0
+Version:    11.0dev
 Release:    1%{?dist}
 Summary:    Performance monitoring tool for PostgreSQL
 Group:      Applications/Databases
@@ -20,7 +20,7 @@ Source0:    %{name}-%{version}.tar.gz
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 
 ## We use postgresql-devel package
-BuildRequires:  postgresql10-devel
+BuildRequires:  postgresql11-devel llvm-toolset-7 llvm5.0
 
 %description
 pg_statsinfo monitors an instance of PostgreSQL server and gather
@@ -37,25 +37,7 @@ USE_PGXS=1 make %{?_smp_mflags}
 ## Set variables for install
 %install
 rm -rf %{buildroot}
-
-USE_PGXS=1 make DESTDIR=%{buildroot}
-
-## Install each modules
-#  Set install location path
-install -d %{buildroot}%{_libdir}
-install -d %{buildroot}%{_bindir}
-install -d %{buildroot}%{_datadir}/contrib
-
-# Install pg_statsinfo package files
-install -m 755 agent/bin/pg_statsinfod				%{buildroot}%{_bindir}/pg_statsinfod
-install -m 755 reporter/pg_statsinfo				%{buildroot}%{_bindir}/pg_statsinfo
-install -m 755 agent/bin/archive_pglog.sh			%{buildroot}%{_bindir}/archive_pglog.sh
-install -m 644 agent/bin/pg_statsrepo.sql			%{buildroot}%{_datadir}/contrib/pg_statsrepo.sql
-install -m 644 agent/bin/pg_statsrepo_alert.sql		%{buildroot}%{_datadir}/contrib/pg_statsrepo_alert.sql
-install -m 644 agent/bin/uninstall_pg_statsrepo.sql	%{buildroot}%{_datadir}/contrib/uninstall_pg_statsrepo.sql
-install -m 755 agent/lib/pg_statsinfo.so			%{buildroot}%{_libdir}/pg_statsinfo.so
-install -m 644 agent/lib/pg_statsinfo.sql			%{buildroot}%{_datadir}/contrib/pg_statsinfo.sql
-install -m 644 agent/lib/uninstall_pg_statsinfo.sql	%{buildroot}%{_datadir}/contrib/uninstall_pg_statsinfo.sql
+USE_PGXS=1 make DESTDIR=%{buildroot} install
 
 %clean
 rm -rf %{buildroot}
@@ -72,6 +54,13 @@ rm -rf %{buildroot}
 %{_datadir}/contrib/uninstall_pg_statsrepo.sql
 %{_datadir}/contrib/pg_statsinfo.sql
 %{_datadir}/contrib/uninstall_pg_statsinfo.sql
+%{_libdir}/bitcode/pg_statsinfo.index.bc
+%{_libdir}/bitcode/pg_statsinfo/libstatsinfo.bc
+%{_libdir}/bitcode/pg_statsinfo/last_xact_activity.bc
+%{_libdir}/bitcode/pg_statsinfo/pg_control.bc
+%{_libdir}/bitcode/pg_statsinfo/port.bc
+%{_libdir}/bitcode/pg_statsinfo/pgut/pgut-be.bc
+%{_libdir}/bitcode/pg_statsinfo/pgut/pgut-spi.bc
 %doc doc/pg_statsinfo-ja.html
 %doc doc/pg_statsinfo.html
 %doc doc/image/
@@ -118,7 +107,7 @@ EOF
 	fi
 fi
 
-# History of pg_statsinfo-v10 RPM.
+# History of pg_statsinfo-v11 RPM.
 %changelog
-* Thu Jan  25 2018 - NTT OSS Center 10.0-1
-- pg_statsinfo 10.0 released
+* Tue Oct  23 2018 - NTT OSS Center 11.0-1
+- pg_statsinfo 11.0 released
