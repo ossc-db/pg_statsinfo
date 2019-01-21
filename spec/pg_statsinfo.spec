@@ -10,7 +10,7 @@
 
 ## Set general information for pg_statsinfo.
 Name:       pg_statsinfo
-Version:    11.0dev
+Version:    11.0
 Release:    1%{?dist}
 Summary:    Performance monitoring tool for PostgreSQL
 Group:      Applications/Databases
@@ -25,6 +25,14 @@ BuildRequires:  postgresql11-devel llvm-toolset-7 llvm5.0
 %description
 pg_statsinfo monitors an instance of PostgreSQL server and gather
 the statistics and activities of the server as snapshots.
+
+%package llvmjit
+Requires: postgresql11-llvmjit
+Requires: pg_statsinfo = %{version}
+Summary:  Just-in-time compilation support for pg_statsinfo
+
+%description llvmjit
+Just-in-time compilation support for pg_statsinfo
 
 ## pre work for build pg_statsinfo
 %prep
@@ -54,6 +62,12 @@ rm -rf %{buildroot}
 %{_datadir}/contrib/uninstall_pg_statsrepo.sql
 %{_datadir}/contrib/pg_statsinfo.sql
 %{_datadir}/contrib/uninstall_pg_statsinfo.sql
+%doc doc/pg_statsinfo-ja.html
+%doc doc/pg_statsinfo.html
+%doc doc/image/
+
+%files llvmjit
+%defattr(-,root,root)
 %{_libdir}/bitcode/pg_statsinfo.index.bc
 %{_libdir}/bitcode/pg_statsinfo/libstatsinfo.bc
 %{_libdir}/bitcode/pg_statsinfo/last_xact_activity.bc
@@ -61,9 +75,6 @@ rm -rf %{buildroot}
 %{_libdir}/bitcode/pg_statsinfo/port.bc
 %{_libdir}/bitcode/pg_statsinfo/pgut/pgut-be.bc
 %{_libdir}/bitcode/pg_statsinfo/pgut/pgut-spi.bc
-%doc doc/pg_statsinfo-ja.html
-%doc doc/pg_statsinfo.html
-%doc doc/image/
 
 ## Script to run just before installing the package
 %pre
@@ -109,5 +120,5 @@ fi
 
 # History of pg_statsinfo-v11 RPM.
 %changelog
-* Tue Oct  23 2018 - NTT OSS Center 11.0-1
+* Tue Jan  22 2019 - NTT OSS Center 11.0-1
 - pg_statsinfo 11.0 released
