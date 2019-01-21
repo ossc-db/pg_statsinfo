@@ -154,15 +154,15 @@ DROP TABLE
 
 /**--- Lock conflicts ---**/
 /***-- There is no lock conflicts --***/
- snapid | datname | nspname | relname | blocker_appname | blocker_addr | blocker_hostname | blocker_port | blockee_pid | blocker_pid | blocker_gid | wait_event_type | wait_event | duration | blockee_query | blocker_query 
---------+---------+---------+---------+-----------------+--------------+------------------+--------------+-------------+-------------+-------------+-----------------+------------+----------+---------------+---------------
+ snapid | dbid | nspname | relname | blocker_appname | blocker_addr | blocker_hostname | blocker_port | blockee_pid | blocker_pid | blocker_gid | wait_event_type | wait_event | duration | blockee_query | blocker_query 
+--------+------+---------+---------+-----------------+--------------+------------------+--------------+-------------+-------------+-------------+-----------------+------------+----------+---------------+---------------
 (0 rows)
 
 /***-- There are lock conflicts --***/
- snapid | datname | nspname | relname | blocker_appname | blocker_addr | blocker_hostname | blocker_port | blockee_pid | blocker_pid | blocker_gid | wait_event_type | wait_event | duration |                       blockee_query                       |                    blocker_query                    
---------+---------+---------+---------+-----------------+--------------+------------------+--------------+-------------+-------------+-------------+-----------------+------------+----------+-----------------------------------------------------------+-----------------------------------------------------
-      6 | db01    |         | xxx     | xxx             |              |                  | xxx          | xxx         | xxx         |             | Lock            | relation   | xxx      | LOCK TABLE schema01.tbl01 IN ACCESS SHARE MODE;           | LOCK TABLE schema01.tbl01 IN ACCESS EXCLUSIVE MODE;
-      6 | db01    |         | xxx     | xxx             |              |                  | xxx          | xxx         | xxx         |             | Lock            | relation   | xxx      | LOCK TABLE schema01.tbl01 IN SHARE UPDATE EXCLUSIVE MODE; | LOCK TABLE schema01.tbl01 IN ACCESS EXCLUSIVE MODE;
+ snapid | dbid | nspname | relname | blocker_appname | blocker_addr | blocker_hostname | blocker_port | blockee_pid | blocker_pid | blocker_gid | wait_event_type | wait_event | duration |                       blockee_query                       |                    blocker_query                    
+--------+------+---------+---------+-----------------+--------------+------------------+--------------+-------------+-------------+-------------+-----------------+------------+----------+-----------------------------------------------------------+-----------------------------------------------------
+      6 | xxx  |         | xxx     | xxx             |              |                  | xxx          | xxx         | xxx         |             | Lock            | relation   | xxx      | LOCK TABLE schema01.tbl01 IN ACCESS SHARE MODE;           | LOCK TABLE schema01.tbl01 IN ACCESS EXCLUSIVE MODE;
+      6 | xxx  |         | xxx     | xxx             |              |                  | xxx          | xxx         | xxx         |             | Lock            | relation   | xxx      | LOCK TABLE schema01.tbl01 IN SHARE UPDATE EXCLUSIVE MODE; | LOCK TABLE schema01.tbl01 IN ACCESS EXCLUSIVE MODE;
 (2 rows)
 
 /**--- Statistics of WAL ---**/

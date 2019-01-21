@@ -485,7 +485,7 @@ wait
 send_query << EOF
 SELECT
 	snapid,
-	datname,
+	CASE WHEN dbid IS NOT NULL THEN 'xxx' END AS dbid,
 	nspname,
 	CASE WHEN relname IS NOT NULL THEN 'xxx' END AS relname,
 	CASE WHEN blocker_appname IS NOT NULL THEN 'xxx' END AS blocker_appname,
@@ -505,7 +505,7 @@ FROM
 WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot)
 ORDER BY
-	datname, nspname, relname, blockee_query;
+	dbid, nspname, relname, blockee_query;
 EOF
 
 echo "/**--- Statistics of WAL ---**/"

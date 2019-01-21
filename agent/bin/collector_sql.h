@@ -353,7 +353,7 @@ ORDER BY \
 #if PG_VERSION_NUM >= 90600
 #define SQL_SELECT_LOCK "\
 SELECT \
-	db.datname, \
+	sa.datid, \
 	ns.nspname, \
 	t.relation, \
 	sa.application_name, \

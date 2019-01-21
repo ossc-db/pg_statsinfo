@@ -486,7 +486,7 @@ CREATE TABLE statsrepo.profile
 CREATE TABLE statsrepo.lock
 (
 	snapid				bigint,
-	datname				name,
+	dbid				oid,
 	nspname				name,
 	relname				name,
 	blocker_appname		text,
@@ -908,36 +908,6 @@ SELECT CASE $2
 LIMIT 1;
 $$
 LANGUAGE sql STABLE;
-
--- repository database information
-CREATE FUNCTION statsrepo.get_information(
-	IN  host_in		text,
-	IN  port_in		text,
-	OUT host		text,
-	OUT port		text,
-	OUT "database"	name,
-	OUT encoding	name,
-	OUT collation	name,
-	OUT start		timestamp(0),
-	OUT reload		timestamp(0),
-	OUT version		text
-) RETURNS record AS
-$$
-	SELECT
-		$1,
-		$2,
-		datname,
-		pg_catalog.pg_encoding_to_char(encoding),
-		datcollate,
-		pg_catalog.pg_postmaster_start_time()::timestamp(0),
-		pg_catalog.pg_conf_load_time()::timestamp(0),
-		pg_catalog.version()
-	FROM
-		pg_catalog.pg_database
-	WHERE
-		datname = pg_catalog.current_database();
-$$
-LANGUAGE sql;
 
 -- repository database setting parameters
 CREATE FUNCTION statsrepo.get_repositorydb_setting(
@@ -2901,7 +2871,7 @@ CREATE FUNCTION statsrepo.get_lock_activity(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		t1.datname,
+		t3.database,
 		t3.schema,
 		CASE WHEN t3.table IS NOT NULL THEN t3.table ELSE CAST('OID:[' || t1.relname || ']' AS name) END,
 		t2.duration,
@@ -2913,7 +2883,7 @@ $$
 	FROM
 		(SELECT
 			pg_catalog.max(l.snapid) AS snapid,
-			l.datname,
+			l.dbid,
 			l.nspname,
 			l.relname,
 			l.blockee_pid,
@@ -2928,7 +2898,7 @@ $$
 			AND l.snapid = s.snapid
 			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 		 GROUP BY
-			l.datname,
+			l.dbid,
 			l.nspname,
 			l.relname,
 			l.blockee_pid,
@@ -2937,7 +2907,7 @@ $$
 			l.blockee_query) t1
 		LEFT JOIN statsrepo.lock t2 ON
 			t2.snapid = t1.snapid
-			AND coalesce(t2.datname, '') = coalesce(t1.datname, '')
+			AND coalesce(t2.dbid, 0) = coalesce(t1.dbid, 0)
 			AND coalesce(t2.nspname, '') = coalesce(t1.nspname, '')
 			AND coalesce(t2.relname, '') = coalesce(t1.relname, '')
 			AND t2.blockee_pid = t1.blockee_pid
@@ -2946,7 +2916,7 @@ $$
 			AND t2.blockee_query = t1.blockee_query
 		LEFT JOIN statsrepo.tables t3 ON
 			t3.snapid =t1.snapid
-			AND t3.database = t1.datname
+			AND t3.dbid = t1.dbid
 			AND t3.tbl = CAST(t1.relname AS oid)
 	ORDER BY
 		t2.duration DESC;
