@@ -1235,7 +1235,7 @@ silences the alert. <br>
     <td>Alert threshold: Query longest response in seconds for a snapshot interval</td>
   </tr>
   <tr>
-    <td>fragment_percent</td>
+    <td>correlation_percent</td>
     <td>integer</td>
     <td>70</td>
     <td>Alert threshold: The absolute value of pg_stats.correlation</td>
@@ -2157,6 +2157,7 @@ Currently there is no available means of preventing this occurring.
   <li>Supports PostgreSQL 11 (pg_statsinfo 11 supports only PostgreSQL 11).</li>
   <li>Prevent accumulation of server log recursively.</li>
   <li>Improve query of snapshot for collect the lock information.</li>
+  <li>Rename column "fragment_percent" to "correlation_percent" in statsrepo.alert.</li>
 </ul>
 <br>
 

@@ -25,7 +25,7 @@ CREATE TABLE statsrepo.alert
 	response_avg			bigint	NOT NULL DEFAULT 10      CHECK (response_avg >= -1),
 	response_worst			bigint	NOT NULL DEFAULT 60      CHECK (response_worst >= -1),
 	backend_max				integer	NOT NULL DEFAULT 100     CHECK (backend_max >= -1),
-	fragment_percent		integer	NOT NULL DEFAULT 70      CHECK (fragment_percent >= -1 AND fragment_percent <= 100),
+	correlation_percent		integer	NOT NULL DEFAULT 70      CHECK (correlation_percent >= -1 AND correlation_percent <= 100),
 	disk_remain_percent		integer	NOT NULL DEFAULT 20      CHECK (disk_remain_percent >= -1 AND disk_remain_percent <= 100),
 	loadavg_1min			real	NOT NULL DEFAULT 7.0     CHECK (loadavg_1min = -1 OR loadavg_1min >= 0),
 	loadavg_5min			real	NOT NULL DEFAULT 6.0     CHECK (loadavg_5min = -1 OR loadavg_5min >= 0),
@@ -226,18 +226,18 @@ END;
 $$
 LANGUAGE plpgsql;
 
--- alert function for check the fragmentation of table
-CREATE FUNCTION statsrepo.alert_fragment(
+-- alert function for check the correlation of table
+CREATE FUNCTION statsrepo.alert_correlation(
 	statsrepo.snapshot,
 	statsrepo.alert
 ) RETURNS SETOF text AS
 $$
 DECLARE
-	val_fragment_table  text;
-	val_fragment_pct    float8;
+	val_table            text;
+	val_correlation_pct  float8;
 BEGIN
-	-- alert if fragment ratio of the clustered index data table is higher than threshold.
-	FOR val_fragment_table, val_fragment_pct IN
+	-- alert if correlation ratio of the clustered index data table is higher than threshold.
+	FOR val_table, val_correlation_pct IN
 		SELECT
 			i.database || '.' || i.schema || '.' || i.table,
 			(100 * pg_catalog.abs(c.correlation))::numeric(5,2)
@@ -252,10 +252,10 @@ BEGIN
 			AND c.correlation IS NOT NULL
 			AND c.snapid = $1.snapid
 	LOOP
-		IF $2.fragment_percent >= 0 AND val_fragment_pct < $2.fragment_percent THEN
+		IF $2.correlation_percent >= 0 AND val_correlation_pct < $2.correlation_percent THEN
 			RETURN NEXT 'correlation of the clustered table fell below threshold in snapshot ''' ||
-				$1.time::timestamp(0) || ''' --- ''' || val_fragment_table || ''', ' ||
-				val_fragment_pct || ' % (threshold = ' || $2.fragment_percent || ' %)';
+				$1.time::timestamp(0) || ''' --- ''' || val_table || ''', ' ||
+				val_correlation_pct || ' % (threshold = ' || $2.correlation_percent || ' %)';
 		END IF;
 	END LOOP;
 END;
@@ -427,8 +427,8 @@ BEGIN
 		RETURN NEXT message;
 	END LOOP;
 
-	-- check the fragmentation of tables
-	FOR message IN SELECT * FROM statsrepo.alert_fragment(curr, setting)
+	-- check the correlation of tables
+	FOR message IN SELECT * FROM statsrepo.alert_correlation(curr, setting)
 	LOOP
 		RETURN NEXT message;
 	END LOOP;

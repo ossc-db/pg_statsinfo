@@ -955,7 +955,7 @@ Database          Schema            Table              Live Tuples   Logical Pag
 ----------------------------------------------------------------------------------------------------------------------------
 postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
-/** Fragmented Tables **/
+/** Correlation **/
 -----------------------------------
 Database          Schema            Table             Column             Correlation
 ---------------------------------------------------------------------------------------
@@ -992,7 +992,7 @@ Database          Schema            Table              Live Tuples   Logical Pag
 ----------------------------------------------------------------------------------------------------------------------------
 postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
-/** Fragmented Tables **/
+/** Correlation **/
 -----------------------------------
 Database          Schema            Table             Column             Correlation
 ---------------------------------------------------------------------------------------
@@ -1029,7 +1029,7 @@ Database          Schema            Table              Live Tuples   Logical Pag
 ----------------------------------------------------------------------------------------------------------------------------
 postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
-/** Fragmented Tables **/
+/** Correlation **/
 -----------------------------------
 Database          Schema            Table             Column             Correlation
 ---------------------------------------------------------------------------------------
@@ -1066,7 +1066,7 @@ Database          Schema            Table              Live Tuples   Logical Pag
 ----------------------------------------------------------------------------------------------------------------------------
 postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
-/** Fragmented Tables **/
+/** Correlation **/
 -----------------------------------
 Database          Schema            Table             Column             Correlation
 ---------------------------------------------------------------------------------------
@@ -1103,7 +1103,7 @@ Database          Schema            Table              Live Tuples   Logical Pag
 ----------------------------------------------------------------------------------------------------------------------------
 postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
-/** Fragmented Tables **/
+/** Correlation **/
 -----------------------------------
 Database          Schema            Table             Column             Correlation
 ---------------------------------------------------------------------------------------
@@ -2255,7 +2255,7 @@ Database          Schema            Table              Live Tuples   Logical Pag
 ----------------------------------------------------------------------------------------------------------------------------
 postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
-/** Fragmented Tables **/
+/** Correlation **/
 -----------------------------------
 Database          Schema            Table             Column             Correlation
 ---------------------------------------------------------------------------------------
@@ -2596,7 +2596,7 @@ Database          Schema            Table              Live Tuples   Logical Pag
 ----------------------------------------------------------------------------------------------------------------------------
 postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
-/** Fragmented Tables **/
+/** Correlation **/
 -----------------------------------
 Database          Schema            Table             Column             Correlation
 ---------------------------------------------------------------------------------------
@@ -2937,7 +2937,7 @@ Database          Schema            Table              Live Tuples   Logical Pag
 ----------------------------------------------------------------------------------------------------------------------------
 postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
-/** Fragmented Tables **/
+/** Correlation **/
 -----------------------------------
 Database          Schema            Table             Column             Correlation
 ---------------------------------------------------------------------------------------
@@ -3278,7 +3278,7 @@ Database          Schema            Table              Live Tuples   Logical Pag
 ----------------------------------------------------------------------------------------------------------------------------
 postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
-/** Fragmented Tables **/
+/** Correlation **/
 -----------------------------------
 Database          Schema            Table             Column             Correlation
 ---------------------------------------------------------------------------------------
@@ -3619,7 +3619,7 @@ Database          Schema            Table              Live Tuples   Logical Pag
 ----------------------------------------------------------------------------------------------------------------------------
 postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
-/** Fragmented Tables **/
+/** Correlation **/
 -----------------------------------
 Database          Schema            Table             Column             Correlation
 ---------------------------------------------------------------------------------------
@@ -4157,7 +4157,7 @@ Database          Schema            Table              Live Tuples   Logical Pag
 ----------------------------------------------------------------------------------------------------------------------------
 postgres          public            pgbench_accounts        100002            1640            1700                   96.5
 
-/** Fragmented Tables **/
+/** Correlation **/
 -----------------------------------
 Database          Schema            Table             Column             Correlation
 ---------------------------------------------------------------------------------------

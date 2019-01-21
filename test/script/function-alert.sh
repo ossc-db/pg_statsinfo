@@ -34,7 +34,7 @@ UPDATE statsrepo.alert SET garbage_percent_table = -1;
 UPDATE statsrepo.alert SET response_avg = -1;
 UPDATE statsrepo.alert SET response_worst = -1;
 UPDATE statsrepo.alert SET backend_max = -1;
-UPDATE statsrepo.alert SET fragment_percent = -1;
+UPDATE statsrepo.alert SET correlation_percent = -1;
 UPDATE statsrepo.alert SET disk_remain_percent = -1;
 UPDATE statsrepo.alert SET loadavg_1min = -1;
 UPDATE statsrepo.alert SET loadavg_5min = -1;
@@ -124,8 +124,8 @@ UPDATE statsrepo.alert SET garbage_percent = -1;
 UPDATE statsrepo.alert SET garbage_percent_table = -1;
 EOF
 
-echo "/**--- Alert the fragmentation table ---**/"
-send_query -c "UPDATE statsrepo.alert SET fragment_percent = 100"
+echo "/**--- Alert the correlation of table ---**/"
+send_query -c "UPDATE statsrepo.alert SET correlation_percent = 100"
 psql << EOF
 SET client_min_messages TO warning;
 CREATE TABLE tbl04 (id bigint PRIMARY KEY);
@@ -142,7 +142,7 @@ get_snapshot
 sleep ${WRITE_DELAY}
 tail -n 1 ${PGLOG_DIR}/pg_statsinfo.log |
 sed "s/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\s[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}/xxx/g"
-send_query -c "UPDATE statsrepo.alert SET fragment_percent = -1" > /dev/null
+send_query -c "UPDATE statsrepo.alert SET correlation_percent = -1" > /dev/null
 
 echo "/**--- Alert the number of backend processes ---**/"
 send_query -c "UPDATE statsrepo.alert SET backend_max = 0"

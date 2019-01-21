@@ -35,7 +35,7 @@ ANALYZE
 ALERT:  pg_statsinfo: dead tuple size exceeds threshold in snapshot 'xxx' --- xxx MiB (threshold = 0 MiB)
 ALERT:  pg_statsinfo: dead tuple ratio exceeds threshold in snapshot 'xxx' --- xxx % (threshold = 30 %)
 ALERT:  pg_statsinfo: dead tuple ratio in 'postgres.public.tbl02' exceeds threshold in snapshot 'xxx' --- xxx % (threshold = 60 %)
-/**--- Alert the fragmentation table ---**/
+/**--- Alert the correlation of table ---**/
 UPDATE 1
 SET
 CREATE TABLE

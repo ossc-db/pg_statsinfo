@@ -55,7 +55,7 @@ FROM \
 #define SQL_SELECT_HEAVILY_UPDATED_TABLES		"SELECT * FROM statsrepo.get_heavily_updated_tables($1, $2) LIMIT 20"
 #define SQL_SELECT_HEAVILY_ACCESSED_TABLES		"SELECT * FROM statsrepo.get_heavily_accessed_tables($1, $2) LIMIT 20"
 #define SQL_SELECT_LOW_DENSITY_TABLES			"SELECT * FROM statsrepo.get_low_density_tables($1, $2) LIMIT 10"
-#define SQL_SELECT_FRAGMENTED_TABLES			"SELECT * FROM statsrepo.get_flagmented_tables($1, $2)"
+#define SQL_SELECT_CORRELATION					"SELECT * FROM statsrepo.get_correlation($1, $2)"
 #define SQL_SELECT_CHECKPOINT_ACTIVITY			"SELECT * FROM statsrepo.get_checkpoint_activity($1, $2)"
 #define SQL_SELECT_AUTOVACUUM_ACTIVITY "\
 SELECT \
@@ -820,13 +820,13 @@ report_notable_tables(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-	fprintf(out, "/** Fragmented Tables **/\n");
+	fprintf(out, "/** Correlation **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %-16s  %-16s  %-16s  %12s\n",
 		"Database", "Schema", "Table", "Column", "Correlation");
 	fprintf(out, "---------------------------------------------------------------------------------------\n");
 
-	res = pgut_execute(conn, SQL_SELECT_FRAGMENTED_TABLES, lengthof(params), params);
+	res = pgut_execute(conn, SQL_SELECT_CORRELATION, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
 		fprintf(out, "%-16s  %-16s  %-16s  %-16s  %12s\n",

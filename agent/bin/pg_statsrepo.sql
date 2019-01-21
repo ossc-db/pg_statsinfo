@@ -2124,8 +2124,8 @@ $$
 $$
 LANGUAGE sql;
 
--- generate information that corresponds to 'Fragmented Tables'
-CREATE FUNCTION statsrepo.get_flagmented_tables(
+-- generate information that corresponds to 'Correlation'
+CREATE FUNCTION statsrepo.get_correlation(
 	IN snapid_begin	bigint,
 	IN snapid_end	bigint,
 	OUT datname		name,

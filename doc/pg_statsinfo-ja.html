@@ -1283,7 +1283,7 @@ pg_statsinfo.adjust_log_info = '42P01'</pre>
     <td>クエリの最長レスポンス時間(秒)</td>
   </tr>
   <tr>
-    <td>fragment_percent</td>
+    <td>correlation_percent</td>
     <td>integer</td>
     <td>70</td>
     <td>各テーブルの相関係数(correlation)(%)</td>
@@ -2307,6 +2307,7 @@ pg_statsinfo は「インスタンスID」でインスタンスを識別しま�
   <li>PostgreSQL 11に対応 (pg_statsinfo 11は PostgreSQL 11のみをサポートします)</li>
   <li>再帰的にサーバログ蓄積が行われるのを防止</li>
   <li>ロック情報収集クエリを改善</li>
+  <li>アラート設定テーブル「statsrepo.alert」の「fragment_percent」カラムの名前を「correlation_percent」に変更</li>
 </ul>
 <br>
 
