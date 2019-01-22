@@ -1,4 +1,6 @@
-[11.0 <2018/10/23>]
+[11.0 <2019/01/22>]
 
  * PostgreSQL 11に対応した。(pg_statsinfo 11は PostgreSQL 11のみをサポートする)
  * 再帰的にサーバログ蓄積が行われるのを防止した。
+ * ロック情報収集クエリを改善した。
+ * アラート設定テーブル「statsrepo.alert」の「fragment_percent」カラムの名前を「correlation_percent」に変更した。
