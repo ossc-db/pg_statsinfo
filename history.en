@@ -1,6 +1,8 @@
-[11.0 <2019/01/22>]
+[11.0 <2019/02/07>]
 
  * Supports PostgreSQL 11 (pg_statsinfo 11 supports only PostgreSQL 11).
  * Prevent accumulation of server log recursively.
  * Improve query of snapshot for collect the lock information.
  * Rename column "fragment_percent" to "correlation_percent" in statsrepo.alert.
+ * Fix for CVE-2018-1058.
+ * Fixed a bug of duplicate memory release by PQclear().
