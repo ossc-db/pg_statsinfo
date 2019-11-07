@@ -341,8 +341,9 @@ forkexec(const char *cmd, int *outStdin)
 			if (close(fd[1]) < 0 || dup2(fd[0], STDIN_FILENO) < 0 ||
 				execl("/bin/sh", "sh", "-c", cmd, NULL) < 0)
 			{
+				int save_errno = errno;
 				elog(LOG, "pg_statsinfo(): could not execute background process: %s",
-					 strerror(errno));
+					 strerror(save_errno));
 				exit(1);
 			}
 		}

@@ -34,7 +34,6 @@
 #include "storage/procarray.h"
 #include "utils/builtins.h"
 #include "utils/guc.h"
-#include "utils/tqual.h"
 #include "utils/lsyscache.h"
 #include "utils/ps_status.h"
 
@@ -1720,8 +1719,11 @@ statsinfo_start(PG_FUNCTION_ARGS)
 
 		/* remove PID file */
 		if (unlink(pid_file) != 0)
+		{
+			int save_errno = errno;
 			elog(ERROR, "could not remove file \"%s\": %s",
-				pid_file, strerror(errno));
+				pid_file, strerror(save_errno));
+		}
 	}
 
 #if PG_VERSION_NUM >= 90300
@@ -3014,7 +3016,7 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 	Tuplestorestate	   *tupstore;
 	MemoryContext		per_query_ctx;
 	MemoryContext		oldcontext;
-	HeapScanDesc		scan;
+	TableScanDesc		scan;
 	HeapTuple			tuple;
 	Relation			relation;
 	Datum				values[TABLESPACES_COLS];
@@ -3053,7 +3055,7 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 
 	relation = heap_open(TableSpaceRelationId, AccessShareLock);
 #if PG_VERSION_NUM >= 90400
-	scan = heap_beginscan_catalog(relation, 0, NULL);
+	scan = table_beginscan_catalog(relation, 0, NULL);
 #else
 	scan = heap_beginscan(relation, SnapshotNow, 0, NULL);
 #endif
@@ -3067,20 +3069,20 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 		i = 0;
 
 		/* oid */
-		values[i++] = ObjectIdGetDatum(HeapTupleGetOid(tuple));
+		values[i++] = ObjectIdGetDatum(form->oid);
 
 		/* name */
 		values[i++] = CStringGetTextDatum(NameStr(form->spcname));
 
 		/* location */
-		if (HeapTupleGetOid(tuple) == DEFAULTTABLESPACE_OID ||
-			HeapTupleGetOid(tuple) == GLOBALTABLESPACE_OID)
+		if (form->oid == DEFAULTTABLESPACE_OID ||
+			form->oid == GLOBALTABLESPACE_OID)
 			datum = CStringGetTextDatum(DataDir);
 		else
 		{
 #if PG_VERSION_NUM >= 90200
 			datum = DirectFunctionCall1(pg_tablespace_location,
-										ObjectIdGetDatum(HeapTupleGetOid(tuple)));
+										ObjectIdGetDatum(form->oid));
 #else
 			bool isnull;
 			datum = fastgetattr(tuple, Anum_pg_tablespace_spclocation,
@@ -3129,7 +3131,7 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 		i = 0;
 
 		nulls[i++] = true;
-		values[i++] = CStringGetTextDatum("<pg_xlog>");
+		values[i++] = CStringGetTextDatum("<WAL directory>");
 		values[i++] = CStringGetTextDatum(location);
 		i += get_devinfo(location, values + i, nulls + i);
 		nulls[i++] = true;
@@ -3146,7 +3148,7 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 		i = 0;
 
 		nulls[i++] = true;
-		values[i++] = CStringGetTextDatum("<pg_xlog_archive>");
+		values[i++] = CStringGetTextDatum("<WAL archive directory>");
 		values[i++] = CStringGetTextDatum(path);
 		i += get_devinfo(path, values + i, nulls + i);
 		nulls[i++] = true;
@@ -3930,11 +3932,13 @@ get_statsinfo_pid(const char *pid_file)
 
 	if ((fp = fopen(pid_file, "r")) == NULL)
 	{
+		int save_errno;
 		/* No pid file, not an error */
 		if (errno == ENOENT)
 			return 0;
+		save_errno = errno;
 		elog(ERROR,
-			"could not open PID file \"%s\": %s", pid_file, strerror(errno));
+			"could not open PID file \"%s\": %s", pid_file, strerror(save_errno));
 	}
 
 	if (fscanf(fp, "%d\n", &pid) != 1)

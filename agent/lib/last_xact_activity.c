@@ -527,7 +527,7 @@ statsinfo_last_xact_activity(PG_FUNCTION_ARGS)
 
 		oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
 
-		tupdesc = CreateTemplateTupleDesc(LAST_XACT_ACTIVITY_COLS, false);
+		tupdesc = CreateTemplateTupleDesc(LAST_XACT_ACTIVITY_COLS);
 		TupleDescInitEntry(tupdesc, (AttrNumber) 1, "pid",
 						   INT4OID, -1, 0);
 		TupleDescInitEntry(tupdesc, (AttrNumber) 2, "xid",

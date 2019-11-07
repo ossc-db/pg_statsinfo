@@ -332,19 +332,15 @@ BEGIN
 		SELECT
 			pg_catalog.host(r.client_addr) || ':' || r.client_port,
 			statsrepo.div(
-				statsrepo.xlog_location_diff(
-					pg_catalog.split_part(r.current_location, ' ', 1),
-					pg_catalog.split_part(r.flush_location, ' ', 1),
-					i.xlog_file_size
-				),
+				pg_wal_lsn_diff(
+					pg_catalog.split_part(r.current_location, ' ', 1)::pg_lsn,
+					pg_catalog.split_part(r.flush_location, ' ', 1)::pg_lsn),
 				1024 * 1024
 			),
 			statsrepo.div(
-				statsrepo.xlog_location_diff(
-					pg_catalog.split_part(r.current_location, ' ', 1),
-					pg_catalog.split_part(r.replay_location, ' ', 1),
-					i.xlog_file_size
-				),
+				pg_wal_lsn_diff(
+					pg_catalog.split_part(r.current_location, ' ', 1)::pg_lsn,
+					pg_catalog.split_part(r.replay_location, ' ', 1)::pg_lsn),
 				1024 * 1024
 			)
 		FROM

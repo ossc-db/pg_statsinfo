@@ -30,8 +30,8 @@ SELECT \
 FROM \
 	statsrepo.get_proc_tendency_report($1, $2)"
 #define SQL_SELECT_BGWRITER_STATS				"SELECT * FROM statsrepo.get_bgwriter_stats($1, $2)"
-#define SQL_SELECT_WALSTATS						"SELECT * FROM statsrepo.get_xlog_stats($1, $2)"
-#define SQL_SELECT_WALSTATS_TENDENCY			"SELECT * FROM statsrepo.get_xlog_tendency($1, $2)"
+#define SQL_SELECT_WALSTATS						"SELECT * FROM statsrepo.get_wal_stats($1, $2)"
+#define SQL_SELECT_WALSTATS_TENDENCY			"SELECT * FROM statsrepo.get_wal_tendency($1, $2)"
 #define SQL_SELECT_CPU_LOADAVG_TENDENCY "\
 SELECT * FROM statsrepo.get_cpu_loadavg_tendency($1, $2) \
 UNION ALL \
@@ -861,7 +861,7 @@ report_checkpoint_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	}
 	fprintf(out, "Total Checkpoints        : %s\n", PQgetvalue(res, 0, 0));
 	fprintf(out, "Checkpoints By Time      : %s\n", PQgetvalue(res, 0, 1));
-	fprintf(out, "Checkpoints By XLOG      : %s\n", PQgetvalue(res, 0, 2));
+	fprintf(out, "Checkpoints By WAL       : %s\n", PQgetvalue(res, 0, 2));
 	fprintf(out, "Written Buffers Average  : %s\n", PQgetvalue(res, 0, 3));
 	fprintf(out, "Written Buffers Maximum  : %s\n", PQgetvalue(res, 0, 4));
 	fprintf(out, "Write Duration Average   : %s sec\n", PQgetvalue(res, 0, 5));

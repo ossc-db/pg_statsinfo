@@ -93,7 +93,7 @@ $$
 	--
 	-- Data for Name: checkpoint; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
-	INSERT INTO statsrepo.checkpoint VALUES ($1, '2012-11-01 00:00:30+09', 'xlog', 2283, 0, 0, 0, 44.1259995, 0.191, 45.6969986);
+	INSERT INTO statsrepo.checkpoint VALUES ($1, '2012-11-01 00:00:30+09', 'wal', 2283, 0, 0, 0, 44.1259995, 0.191, 45.6969986);
 	INSERT INTO statsrepo.checkpoint VALUES ($1, '2012-11-01 00:01:30+09', 'time', 2404, 0, 0, 3, 48.7249985, 0.201000005, 49.1930008);
 
 	--

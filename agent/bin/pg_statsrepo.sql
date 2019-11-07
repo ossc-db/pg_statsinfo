@@ -617,7 +617,7 @@ CREATE TABLE statsrepo.stat_subscription
 CREATE TABLE statsrepo.xlog
 (
 	snapid		bigint,
-	location	text,
+	location	pg_lsn,
 	xlogfile	text,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
@@ -730,27 +730,6 @@ $$
 			pg_catalog.strpos('123456789ABCDEF', pg_catalog.upper(pg_catalog.substr($1, i, 1)))))::bigint
 	FROM
 		pg_catalog.generate_series(1, pg_catalog.length($1)) AS t(i);
-$$
-LANGUAGE sql IMMUTABLE STRICT;
-
--- xlog_location_diff() - compute the difference in bytes between two WAL locations
-CREATE FUNCTION statsrepo.xlog_location_diff(text, text, bigint)
-RETURNS numeric AS
-$$
-	/* XLogFileSize * (xlogid1 - xlogid2) + xrecoff1 - xrecoff2 */
-	SELECT
-		($3 * (t.xlogid1 - t.xlogid2)::numeric + t.xrecoff1 - t.xrecoff2)
-	FROM
-	(
-		SELECT
-			statsrepo.convert_hex(lsn1[1]) AS xlogid1,
-			statsrepo.convert_hex(lsn1[2]) AS xrecoff1,
-			statsrepo.convert_hex(lsn2[1]) AS xlogid2,
-			statsrepo.convert_hex(lsn2[2]) AS xrecoff2
-		 FROM
-			pg_catalog.regexp_matches($1, '^([0-F]{1,8})/([0-F]{1,8})$') AS lsn1,
-			pg_catalog.regexp_matches($2, '^([0-F]{1,8})/([0-F]{1,8})$') AS lsn2
-	) t;
 $$
 LANGUAGE sql IMMUTABLE STRICT;
 
@@ -1423,12 +1402,12 @@ $$
 LANGUAGE sql;
 
 -- generate information that corresponds to 'WAL Statistics'
-CREATE FUNCTION statsrepo.get_xlog_tendency(
+CREATE FUNCTION statsrepo.get_wal_tendency(
 	IN snapid_begin			bigint,
 	IN snapid_end			bigint,
 	OUT "timestamp"			text,
-	OUT location			text,
-	OUT xlogfile			text,
+	OUT location			pg_lsn,
+	OUT walfile			text,
 	OUT write_size			numeric,
 	OUT write_size_per_sec	numeric,
 	OUT last_archived_wal	text,
@@ -1452,8 +1431,7 @@ $$
 			s.time,
 			x.location,
 			x.xlogfile,
-			statsrepo.xlog_location_diff(
-				x.location, pg_catalog.lag(x.location) OVER w, i.xlog_file_size) AS write_size,
+			pg_wal_lsn_diff(x.location, pg_catalog.lag(x.location) OVER w) AS write_size,
 			s.time - pg_catalog.lag(s.time) OVER w AS duration,
 			a.last_archived_wal,
 			a.archived_count - pg_catalog.lag(a.archived_count) OVER w AS archive_count,
@@ -1478,7 +1456,7 @@ $$
 LANGUAGE sql;
 
 -- generate information that corresponds to 'WAL Statistics'
-CREATE FUNCTION statsrepo.get_xlog_stats(
+CREATE FUNCTION statsrepo.get_wal_stats(
 	IN snapid_begin			bigint,
 	IN snapid_end			bigint,
 	OUT write_total			numeric,
@@ -1494,10 +1472,10 @@ $$
 		pg_catalog.avg(write_size_per_sec)::numeric(1000, 3),
 		pg_catalog.sum(archive_count),
 		pg_catalog.sum(archive_failed),
-		pg_catalog.max(xlogfile),
+		pg_catalog.max(walfile),
 		pg_catalog.max(last_archived_wal)
 	FROM
-		statsrepo.get_xlog_tendency($1, $2);
+		statsrepo.get_wal_tendency($1, $2);
 $$
 LANGUAGE sql;
 
@@ -2162,7 +2140,7 @@ CREATE FUNCTION statsrepo.get_checkpoint_activity(
 	IN snapid_end		bigint,
 	OUT ckpt_total		bigint,
 	OUT ckpt_time		bigint,
-	OUT ckpt_xlog		bigint,
+	OUT ckpt_wal		bigint,
 	OUT avg_write_buff	numeric,
 	OUT max_write_buff	numeric,
 	OUT avg_duration	numeric,
@@ -2172,7 +2150,7 @@ $$
 	SELECT
 		pg_catalog.count(*),
 		pg_catalog.count(nullif(pg_catalog.strpos(flags, 'time'), 0)),
-		pg_catalog.count(nullif(pg_catalog.strpos(flags, 'xlog'), 0)),
+		pg_catalog.count(nullif(pg_catalog.strpos(flags, 'wal'), 0)),
 		pg_catalog.round(pg_catalog.avg(num_buffers)::numeric,3),
 		pg_catalog.round(pg_catalog.max(num_buffers)::numeric,3),
 		pg_catalog.round(pg_catalog.avg(total_duration)::numeric,3),
@@ -3017,14 +2995,12 @@ $$
 		r.client_addr,
 		r.application_name,
 		COALESCE(pg_catalog.host(r.client_addr), 'local') || ':' || COALESCE(NULLIF(r.application_name, ''), '(none)') AS client,
-		statsrepo.xlog_location_diff(
-			pg_catalog.split_part(r.current_location, ' ', 1),
-			pg_catalog.split_part(r.flush_location, ' ', 1),
-			i.xlog_file_size),
-		statsrepo.xlog_location_diff(
-			pg_catalog.split_part(r.current_location, ' ', 1),
-			pg_catalog.split_part(r.replay_location, ' ', 1),
-			i.xlog_file_size),
+		pg_wal_lsn_diff(
+			pg_catalog.split_part(r.current_location, ' ', 1)::pg_lsn,
+			pg_catalog.split_part(r.flush_location, ' ', 1)::pg_lsn),
+		pg_wal_lsn_diff(
+			pg_catalog.split_part(r.current_location, ' ', 1)::pg_lsn,
+			pg_catalog.split_part(r.replay_location, ' ', 1)::pg_lsn),
 		r.sync_state
 	FROM
 		statsrepo.replication r LEFT JOIN statsrepo.replication_slots rs
