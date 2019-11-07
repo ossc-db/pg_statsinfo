@@ -3,14 +3,14 @@
 
 # Original declaration for pg_statsinfo rpmbuild #
 
-%define _pgdir   /usr/pgsql-11
+%define _pgdir   /usr/pgsql-12
 %define _bindir  %{_pgdir}/bin
 %define _libdir  %{_pgdir}/lib
 %define _datadir %{_pgdir}/share
 
 ## Set general information for pg_statsinfo.
 Name:       pg_statsinfo
-Version:    11.0
+Version:    12.0
 Release:    1%{?dist}
 Summary:    Performance monitoring tool for PostgreSQL
 Group:      Applications/Databases
@@ -20,14 +20,14 @@ Source0:    %{name}-%{version}.tar.gz
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 
 ## We use postgresql-devel package
-BuildRequires:  postgresql11-devel llvm-toolset-7 llvm5.0
+BuildRequires:  postgresql12-devel llvm-toolset-7 llvm5.0
 
 %description
 pg_statsinfo monitors an instance of PostgreSQL server and gather
 the statistics and activities of the server as snapshots.
 
 %package llvmjit
-Requires: postgresql11-llvmjit
+Requires: postgresql12-llvmjit
 Requires: pg_statsinfo = %{version}
 Summary:  Just-in-time compilation support for pg_statsinfo
 
@@ -118,7 +118,7 @@ EOF
 	fi
 fi
 
-# History of pg_statsinfo-v11 RPM.
+# History of pg_statsinfo-v12 RPM.
 %changelog
-* Tue Jan  22 2019 - NTT OSS Center 11.0-1
-- pg_statsinfo 11.0 released
+* Thu Nov   7 2019 - NTT OSS Center 12.0-1
+- pg_statsinfo 12.0 released

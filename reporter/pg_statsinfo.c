@@ -6,7 +6,7 @@
 
 #include "pg_statsinfo.h"
 
-const char *PROGRAM_VERSION	= "11.0";
+const char *PROGRAM_VERSION	= "12.0";
 const char *PROGRAM_URL		= "http://pgstatsinfo.sourceforge.net/";
 const char *PROGRAM_EMAIL   = NULL;
 

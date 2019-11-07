@@ -1,8 +1,4 @@
-[11.0 <2019/02/07>]
+[12.0 <2019/11/07>]
 
- * PostgreSQL 11に対応した。(pg_statsinfo 11は PostgreSQL 11のみをサポートする)
- * 再帰的にサーバログ蓄積が行われるのを防止した。
- * ロック情報収集クエリを改善した。
- * アラート設定テーブル「statsrepo.alert」の「fragment_percent」カラムの名前を「correlation_percent」に変更した。
- * PostgreSQLの脆弱性(CVE-2018-1058)への対応をした。
- * PQclear()によるメモリの2重解放の不具合を修正した。
+ * PostgreSQL 12に対応した。(pg_statsinfo 12は PostgreSQL 12のみをサポートする)
+ * レポート項目やstatsrepoスキーマのユーザ定義関数などの名称を変更した。
