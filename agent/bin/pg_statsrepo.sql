@@ -3082,7 +3082,7 @@ $$
 			client_addr, application_name) d
 		LEFT JOIN statsrepo.replication r
 			ON r.snapid = d.snapid
-			AND d.client_addr = r.client_addr
+			AND coalesce(d.client_addr, '0.0.0.0') = coalesce(r.client_addr, '0.0.0.0')
 			AND d.application_name = r.application_name
 		LEFT JOIN statsrepo.snapshot s ON s.snapid = d.snapid
 	ORDER BY d.snapid DESC, priority_sortkey ASC NULLS LAST;
