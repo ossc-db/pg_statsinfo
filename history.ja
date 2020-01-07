@@ -1,5 +1,5 @@
 [12.0 <2019/11/07>]
 
  * PostgreSQL 12に対応した。(pg_statsinfo 12は PostgreSQL 12のみをサポートする)
- * レポート項目やstatsrepoスキーマのユーザ定義関数などの名称を変更した。
+ * 名称中の「xlog」を「wal」に変更。
  * UNIXドメインソケットでのReplication Activityレポートをサポートした。
