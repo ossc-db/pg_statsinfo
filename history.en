@@ -2,4 +2,3 @@
 
  * Supports PostgreSQL 12 (pg_statsinfo 12 supports only PostgreSQL 12).
  * Rename names that reference "xlog" to "wal".
- * Support Replication Activity report by UNIX domain socket.
