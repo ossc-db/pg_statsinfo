@@ -1,5 +1,5 @@
 [12.0 <2019/11/07>]
 
  * Supports PostgreSQL 12 (pg_statsinfo 12 supports only PostgreSQL 12).
- * Rename such as report item and User-defined Functions in statsrepo schema.
+ * Rename names that reference "xlog" to "wal".
  * Support Replication Activity report by UNIX domain socket.
