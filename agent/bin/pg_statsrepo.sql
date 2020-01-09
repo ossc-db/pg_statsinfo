@@ -3,7 +3,7 @@
  *
  * Create a repository schema.
  *
- * Copyright (c) 2009-2019, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2009-2020, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 -- Adjust this setting to control where the objects get created.
