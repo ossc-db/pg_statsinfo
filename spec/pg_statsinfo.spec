@@ -120,5 +120,5 @@ fi
 
 # History of pg_statsinfo-v12 RPM.
 %changelog
-* Thu Nov   7 2019 - NTT OSS Center 12.0-1
+* Fri Jan  24 2020 - NTT OSS Center 12.0-1
 - pg_statsinfo 12.0 released

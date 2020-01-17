@@ -1,4 +1,4 @@
-[12.0 <2019/11/07>]
+[12.0 <2020/01/24>]
 
  * Supports PostgreSQL 12 (pg_statsinfo 12 supports only PostgreSQL 12).
  * Rename names that reference "xlog" to "wal".
