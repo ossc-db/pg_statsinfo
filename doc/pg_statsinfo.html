@@ -848,15 +848,27 @@ Setup reference of this feature is <a href="#usage-maintenance">here</a>.
 <dd>PostgreSQL 12</dd>
 <dt>OS</dt>
 <dd>RHEL 7.x (x86_64), CentOS 7.x (x86_64)</dd>
+<dd>RHEL 8.x (x86_64), CentOS 8.x (x86_64)</dd>
 </dl>
 
 <h3 id="procedure">Installation</h3>
 
 <h4>Installing using RPM</h4>
-Example steps to installing pg_statsinfo using rpm follow.
+
+<h5>RHEL 7</h5>
+
+The following steps install pg_statsinfo using rpm.
 <pre>
 $ su
-# rpm -ivh pg_statsinfo-12.0-1.pg12.rhel7.x86_64.rpm
+# yum install pg_statsinfo-12.1-1.pg12.rhel7.x86_64.rpm
+</pre>
+
+<h5>RHEL 8</h5>
+
+The following steps install pg_statsinfo using rpm.
+<pre>
+$ su
+# dnf install pg_statsinfo-12.1-1.pg12.rhel8.x86_64.rpm
 </pre>
 
 <h4>Installing from source</h4>
@@ -865,8 +877,8 @@ $ su
 
 <pre>
 $ cd pg_statsinfo
-$ tar xzvf pg_statsinfo-12.0.tar.gz 
-$ cd pg_statsinfo-12.0
+$ tar xzvf pg_statsinfo-12.1.tar.gz 
+$ cd pg_statsinfo-12.1
 $ make USE_PGXS=1
 $ su
 # make USE_PGXS=1 install
@@ -2232,7 +2244,7 @@ LOG:  pg_statsinfo: pg_statsinfo is starting in fallback mode
 </dl>
 
 <h3 id="systemtaps">Monitoring with SystemTap (Experimental)</h3>
-<p>SystemTap is available to monitor PostgreSQL on RHEL6, Fedora13 and later.</p>
+<p>The feature has been checked only on RHEL6.</p>
 <h4>Prerequisites</h4>
 <ul>
 <li>RHEL6, Fedora13 and later.</li>

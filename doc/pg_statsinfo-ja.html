@@ -860,15 +860,27 @@ pg_statsinfo の運用管理向けの操作を行うコマンドを提供しま�
   <dd>バージョン 12</dd>
   <dt>動作検証済みOS</dt>
   <dd>RHEL 7.x (x86_64), CentOS 7.x (x86_64)</dd>
+  <dd>RHEL 8.x (x86_64), CentOS 8.x (x86_64)</dd>
 </dl>
 
 <h3 id="procedure">インストール手順</h3>
 
 <h4>RPM</h4>
+
+<h5>RHEL 7</h5>
+
 以下はPostgreSQL12のRHEL7のx86_64用のrpmをインストールする例です。
 <pre>
 $ su
-# rpm -ivh pg_statsinfo-12.0-1.pg12.rhel7.x86_64.rpm
+# yum install pg_statsinfo-12.1-1.pg12.rhel7.x86_64.rpm
+</pre>
+
+<h5>RHEL 8</h5>
+
+以下はPostgreSQL12のRHEL8のx86_64用のrpmをインストールする例です。
+<pre>
+$ su
+# dnf install pg_statsinfo-12.1-1.pg12.rhel8.x86_64.rpm
 </pre>
 
 <h4>source</h4>
@@ -876,8 +888,8 @@ $ su
 なお、pg_statsinfo の登録スクリプト (sql) を手動でインストールする必要はありません。
 監視対象インスタンス、リポジトリDB共に、初回起動時に必要に応じて エージェントがスキーマを自動的にインストールします。</p>
 <pre>
-$ tar xzvf pg_statsinfo-12.0.tar.gz
-$ cd pg_statsinfo-12.0
+$ tar xzvf pg_statsinfo-12.1.tar.gz
+$ cd pg_statsinfo-12.1
 $ make USE_PGXS=1
 $ su
 # make USE_PGXS=1 install
@@ -2402,7 +2414,7 @@ LOG:  pg_statsinfo: pg_statsinfo is starting in fallback mode
   <dd>(正しいバージョンの statsrepo スキーマは設定リロード時に自動的に登録されます)</dd>
 </dl>
 
-<h3 id="systemtap">SystemTap 連携</h3>
+<h3 id="systemtap">SystemTap 連携(非推奨かつ無保証)</h3>
 <p>Linux 系 OS には、様々なトレーシング／プロファイリングツールが備わっています。
 その内の1つである SystemTap は、Solaris や FreeBSD などで利用可能な Dtrace に類似したプロダクトであり、カーネル内部のトレーシングやプロファイリングのほかに、
 ユーザアプリケーションの情報取得 (プローブ定義) も可能なツールです。
@@ -2411,7 +2423,7 @@ pg_statsinfo は、この SystemTap が収集するプロファイリング情�
 </p>
 <h4>前提環境</h4>
 <ol>
-<li>OS は、RHEL6、Fedora13 以降が必要になります。<br>これらは、PostgreSQL のプロファイリングが実施可能な SystemTap のバージョンをデフォルトで持つディストリビューションです。</li>
+<li>動作確認は RHEL6 でのみ行っています。</li>
 <li>systemtap、systemtap-runtime、systemtap-sdt-devel パッケージ(RPM) がインストール済みである必要があります。</li>
 <li>PostgreSQL は、--enable-debug、--enable-dtrace の configure オプションを有効にしてビルドされている必要があります。</li>
 </ol>

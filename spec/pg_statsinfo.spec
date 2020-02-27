@@ -10,7 +10,7 @@
 
 ## Set general information for pg_statsinfo.
 Name:       pg_statsinfo
-Version:    12.0
+Version:    12.1
 Release:    1%{?dist}
 Summary:    Performance monitoring tool for PostgreSQL
 Group:      Applications/Databases
@@ -20,7 +20,13 @@ Source0:    %{name}-%{version}.tar.gz
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 
 ## We use postgresql-devel package
-BuildRequires:  postgresql12-devel llvm-toolset-7 llvm5.0
+BuildRequires:  postgresql12-devel
+%if %{rhel} == 7
+BuildRequires:  llvm-toolset-7 llvm5.0
+%endif
+%if %{rhel} == 8
+BuildRequires:  llvm >= 6
+%endif
 
 %description
 pg_statsinfo monitors an instance of PostgreSQL server and gather
@@ -120,5 +126,7 @@ fi
 
 # History of pg_statsinfo-v12 RPM.
 %changelog
+* Fri Feb  28 2020 - NTT OSS Center 12.1-1
+- pg_statsinfo 12.1 released
 * Fri Jan  24 2020 - NTT OSS Center 12.0-1
 - pg_statsinfo 12.0 released
