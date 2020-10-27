@@ -98,7 +98,12 @@ static statEntry *get_snapshot_entry(int beid);
 static Size buffer_size(int nbackends);
 #if PG_VERSION_NUM >= 90000
 static void myProcessUtility0(Node *parsetree, const char *queryString);
-#if PG_VERSION_NUM >= 100000
+#if PG_VERSION_NUM >= 130000
+static void myProcessUtility(PlannedStmt *pstmt, const char *queryString,
+			   ProcessUtilityContext context, ParamListInfo params,
+			   QueryEnvironment *queryEnv,
+			   DestReceiver *dest, QueryCompletion *qc);
+#elif PG_VERSION_NUM >= 100000
 static void myProcessUtility(PlannedStmt *pstmt, const char *queryString,
 			   ProcessUtilityContext context, ParamListInfo params,
 			   QueryEnvironment *queryEnv,
@@ -415,7 +420,37 @@ myProcessUtility0(Node *parsetree, const char *queryString)
  *
  * Processing transaction state change.
  */
-#if PG_VERSION_NUM >= 100000
+#if PG_VERSION_NUM >= 130000
+static void
+myProcessUtility(PlannedStmt *pstmt, const char *queryString,
+				 ProcessUtilityContext context, ParamListInfo params,
+				 QueryEnvironment *queryEnv,
+				 DestReceiver *dest, QueryCompletion *qc)
+{
+	/*
+	 * Do my process before other hook runs.
+	 */
+	myProcessUtility0(pstmt->utilityStmt, queryString);
+
+	PG_TRY();
+	{
+		if (prev_ProcessUtility_hook)
+			prev_ProcessUtility_hook(pstmt, queryString, context, params,
+									 queryEnv, dest, qc);
+		else
+			standard_ProcessUtility(pstmt, queryString, context, params,
+									queryEnv, dest, qc);
+	}
+	PG_CATCH();
+	{
+		exit_transaction_if_needed();
+		PG_RE_THROW();
+	}
+	PG_END_TRY();
+
+	exit_transaction_if_needed();
+}
+#elif PG_VERSION_NUM >= 100000
 static void
 myProcessUtility(PlannedStmt *pstmt, const char *queryString,
 				 ProcessUtilityContext context, ParamListInfo params,

@@ -63,6 +63,10 @@
 #include "libpq/ip.h"
 #endif
 
+#if PG_VERSION_NUM >= 130000
+#include "access/table.h"
+#endif
+
 #include "pgut/pgut-be.h"
 #include "pgut/pgut-spi.h"
 #include "../common.h"
@@ -3054,7 +3058,11 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 
 	MemoryContextSwitchTo(oldcontext);
 
+#if PG_VERSION_NUM >= 130000
+	relation = table_open(TableSpaceRelationId, AccessShareLock);
+#else
 	relation = heap_open(TableSpaceRelationId, AccessShareLock);
+#endif
 #if PG_VERSION_NUM >= 90400
 	scan = table_beginscan_catalog(relation, 0, NULL);
 #else
@@ -3116,7 +3124,11 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 	}
 	heap_endscan(scan);
 
+#if PG_VERSION_NUM >= 130000
+	table_close(relation, AccessShareLock);
+#else
 	heap_close(relation, AccessShareLock);
+#endif
 
 	/* append pg_xlog if symlink */
 #if PG_VERSION_NUM >= 100000
