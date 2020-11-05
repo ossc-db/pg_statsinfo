@@ -181,7 +181,38 @@ FROM \
 	pg_roles"
 
 /* statement */
-#if PG_VERSION_NUM >= 90400
+#if PG_VERSION_NUM >= 130000
+#define SQL_SELECT_STATEMENT "\
+SELECT \
+	s.dbid, \
+	s.userid, \
+	s.queryid, \
+	s.query, \
+	s.plans, \
+	s.total_plan_time / 1000, \
+	s.calls, \
+	s.total_exec_time / 1000, \
+	s.rows, \
+	s.shared_blks_hit, \
+	s.shared_blks_read, \
+	s.shared_blks_dirtied, \
+	s.shared_blks_written, \
+	s.local_blks_hit, \
+	s.local_blks_read, \
+	s.local_blks_dirtied, \
+	s.local_blks_written, \
+	s.temp_blks_read, \
+	s.temp_blks_written, \
+	s.blk_read_time, \
+	s.blk_write_time \
+FROM \
+	pg_stat_statements s \
+	LEFT JOIN pg_roles r ON r.oid = s.userid \
+WHERE \
+	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
+ORDER BY \
+	s.total_exec_time DESC LIMIT $2"
+#elif PG_VERSION_NUM >= 90400
 #define SQL_SELECT_STATEMENT "\
 SELECT \
 	s.dbid, \

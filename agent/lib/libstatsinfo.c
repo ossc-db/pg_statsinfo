@@ -113,7 +113,16 @@
 	"received SIGHUP, reloading configuration files"
 
 /* log_autovacuum_min_duration: vacuum */
-#if PG_VERSION_NUM >= 100000
+#if PG_VERSION_NUM >= 130000
+#define MSG_AUTOVACUUM \
+	"automatic %s of table \"%s.%s.%s\": index scans: %d\n" \
+	"pages: %d removed, %d remain, %d skipped due to pins, %u skipped frozen\n" \
+	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable, oldest xmin: %u\n" \
+	"buffer usage: %lld hits, %lld misses, %lld dirtied\n" \
+	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
+	"system usage: %s\n" \
+	"WAL usage: %ld records, %ld full page images, %llu bytes"
+#elif PG_VERSION_NUM >= 100000
 #define MSG_AUTOVACUUM \
 	"automatic %s of table \"%s.%s.%s\": index scans: %d\n" \
 	"pages: %d removed, %d remain, %d skipped due to pins, %u skipped frozen\n" \

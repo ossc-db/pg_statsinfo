@@ -321,18 +321,18 @@ $$
 	--
 	-- Data for Name: statement; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
-	INSERT INTO statsrepo.statement VALUES ($6, 12870, 10, 1067368138, 'UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;', 13959, 68.6447329999982969, 13959, 102552, 10, 10, 0, 0, 0, 0, 0, 0, 0, 0.0749999999999999972, 0);
-	INSERT INTO statsrepo.statement VALUES ($6, 12870, 10, 1899262118, 'UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;', 13961, 17.1652659999997006, 13961, 39461, 12, 11, 0, 0, 0, 0, 0, 0, 0, 0.0889999999999999958, 0);
-	INSERT INTO statsrepo.statement VALUES ($6, 12870, 10, 847103580, 'UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;', 13962, 1.42280999999985003, 13962, 63130, 1950, 1948, 0, 0, 0, 0, 0, 0, 0, 73.9310000000001963, 0);
-	INSERT INTO statsrepo.statement VALUES ($6 + 1, 12870, 10, 1067368138, 'UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;', 36061, 176.479407999995004, 36061, 349687, 11, 11, 0, 0, 0, 0, 0, 0, 0, 0.0749999999999999972, 0);
-	INSERT INTO statsrepo.statement VALUES ($6 + 1, 12870, 10, 1899262118, 'UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;', 36063, 45.5574849999972997, 36063, 210248, 12, 11, 0, 0, 0, 0, 0, 0, 0, 0.0889999999999999958, 0);
-	INSERT INTO statsrepo.statement VALUES ($6 + 1, 12870, 10, 847103580, 'UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;', 36064, 3.11938400000004012, 36064, 152482, 1956, 1954, 0, 0, 0, 0, 0, 0, 0, 73.9570000000002068, 0);
-	INSERT INTO statsrepo.statement VALUES ($6 + 2, 12870, 10, 1067368138, 'UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;', 58140, 286.760816999982978, 58140, 620495, 12, 14, 0, 0, 0, 0, 0, 0, 0, 0.0749999999999999972, 0);
-	INSERT INTO statsrepo.statement VALUES ($6 + 2, 12870, 10, 1899262118, 'UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;', 58143, 73.9565750000011946, 58143, 380498, 12, 13, 0, 0, 0, 0, 0, 0, 0, 0.0889999999999999958, 0);
-	INSERT INTO statsrepo.statement VALUES ($6 + 2, 12870, 10, 847103580, 'UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;', 58143, 5.1055540000000299, 58143, 242773, 1964, 2279, 0, 0, 0, 0, 0, 0, 0, 73.9570000000002068, 0);
-	INSERT INTO statsrepo.statement VALUES ($6 + 3, 12870, 10, 1067368138, 'UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;', 80422, 400.019771999942975, 80422, 896817, 12, 14, 0, 0, 0, 0, 0, 0, 0, 0.0749999999999999972, 0);
-	INSERT INTO statsrepo.statement VALUES ($6 + 3, 12870, 10, 1899262118, 'UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;', 80424, 102.535575000004997, 80424, 552512, 12, 13, 0, 0, 0, 0, 0, 0, 0, 0.0889999999999999958, 0);
-	INSERT INTO statsrepo.statement VALUES ($6 + 3, 12870, 10, 847103580, 'UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;', 80425, 6.97668499999906988, 80425, 336204, 1980, 2332, 0, 0, 0, 0, 0, 0, 0, 73.9570000000002068, 0);
+	INSERT INTO statsrepo.statement VALUES ($6, 12870, 10, 1067368138, 'UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;', 0,0, 13959, 68.6447329999982969, 13959, 102552, 10, 10, 0, 0, 0, 0, 0, 0, 0, 0.0749999999999999972, 0);
+	INSERT INTO statsrepo.statement VALUES ($6, 12870, 10, 1899262118, 'UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;', 0,0, 13961, 17.1652659999997006, 13961, 39461, 12, 11, 0, 0, 0, 0, 0, 0, 0, 0.0889999999999999958, 0);
+	INSERT INTO statsrepo.statement VALUES ($6, 12870, 10, 847103580, 'UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;', 0,0, 13962, 1.42280999999985003, 13962, 63130, 1950, 1948, 0, 0, 0, 0, 0, 0, 0, 73.9310000000001963, 0);
+	INSERT INTO statsrepo.statement VALUES ($6 + 1, 12870, 10, 1067368138, 'UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;', 0,0, 36061, 176.479407999995004, 36061, 349687, 11, 11, 0, 0, 0, 0, 0, 0, 0, 0.0749999999999999972, 0);
+	INSERT INTO statsrepo.statement VALUES ($6 + 1, 12870, 10, 1899262118, 'UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;', 0,0, 36063, 45.5574849999972997, 36063, 210248, 12, 11, 0, 0, 0, 0, 0, 0, 0, 0.0889999999999999958, 0);
+	INSERT INTO statsrepo.statement VALUES ($6 + 1, 12870, 10, 847103580, 'UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;', 0,0, 36064, 3.11938400000004012, 36064, 152482, 1956, 1954, 0, 0, 0, 0, 0, 0, 0, 73.9570000000002068, 0);
+	INSERT INTO statsrepo.statement VALUES ($6 + 2, 12870, 10, 1067368138, 'UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;', 0,0, 58140, 286.760816999982978, 58140, 620495, 12, 14, 0, 0, 0, 0, 0, 0, 0, 0.0749999999999999972, 0);
+	INSERT INTO statsrepo.statement VALUES ($6 + 2, 12870, 10, 1899262118, 'UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;', 0,0, 58143, 73.9565750000011946, 58143, 380498, 12, 13, 0, 0, 0, 0, 0, 0, 0, 0.0889999999999999958, 0);
+	INSERT INTO statsrepo.statement VALUES ($6 + 2, 12870, 10, 847103580, 'UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;', 0,0, 58143, 5.1055540000000299, 58143, 242773, 1964, 2279, 0, 0, 0, 0, 0, 0, 0, 73.9570000000002068, 0);
+	INSERT INTO statsrepo.statement VALUES ($6 + 3, 12870, 10, 1067368138, 'UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;', 0,0, 80422, 400.019771999942975, 80422, 896817, 12, 14, 0, 0, 0, 0, 0, 0, 0, 0.0749999999999999972, 0);
+	INSERT INTO statsrepo.statement VALUES ($6 + 3, 12870, 10, 1899262118, 'UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;', 0,0, 80424, 102.535575000004997, 80424, 552512, 12, 13, 0, 0, 0, 0, 0, 0, 0, 0.0889999999999999958, 0);
+	INSERT INTO statsrepo.statement VALUES ($6 + 3, 12870, 10, 847103580, 'UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;', 0,0, 80425, 6.97668499999906988, 80425, 336204, 1980, 2332, 0, 0, 0, 0, 0, 0, 0, 73.9570000000002068, 0);
 
 	--
 	-- Data for Name: tablespace; Type: TABLE DATA; Schema: statsrepo; Owner: postgres

@@ -176,13 +176,13 @@ DECLARE
 BEGIN
 	-- calculate the average and maximum of the query-response-time.
 	SELECT
-		pg_catalog.avg((c.total_time - coalesce(p.total_time, 0)) / (c.calls - coalesce(p.calls, 0))),
-		pg_catalog.max((c.total_time - coalesce(p.total_time, 0)) / (c.calls - coalesce(p.calls, 0)))
+		pg_catalog.avg((c.total_exec_time - coalesce(p.total_exec_time, 0)) / (c.calls - coalesce(p.calls, 0))),
+		pg_catalog.max((c.total_exec_time - coalesce(p.total_exec_time, 0)) / (c.calls - coalesce(p.calls, 0)))
 	INTO val_res_avg, val_res_max
-	FROM (SELECT dbid, userid, total_time, calls, query
+	FROM (SELECT dbid, userid, total_exec_time, calls, query
 			FROM statsrepo.statement WHERE snapid = $1.snapid) AS c
 		 LEFT OUTER JOIN
-		 (SELECT dbid, userid, total_time, calls, query
+		 (SELECT dbid, userid, total_exec_time, calls, query
 		 	FROM statsrepo.statement WHERE snapid = $2.snapid) AS p
 		 ON c.dbid = p.dbid AND c.userid = p.userid AND c.query = p.query
 	WHERE c.calls <> coalesce(p.calls, 0);

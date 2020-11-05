@@ -34,8 +34,10 @@
 /* number of columns of csvlog */
 #if PG_VERSION_NUM < 90000
 #define CSV_COLS			22
-#else
+#elif PG_VERSION_NUM < 130000
 #define CSV_COLS			23
+#else
+#define CSV_COLS			24
 #endif
 
 /* maintenance mode flag */
@@ -218,6 +220,7 @@ typedef struct Log
 	const char *user_query_pos;
 	const char *error_location;
 	const char *application_name;
+	const char *backend_type;
 } Log;
 
 /* Contents of pg_statsinfo.control */

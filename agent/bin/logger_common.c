@@ -57,6 +57,11 @@ init_log(Log *log, const char *buf, const size_t fields[])
 #else
 	log->application_name = "";
 #endif
+#if PG_VERSION_NUM >= 130000
+	log->backend_type = buf + fields[i++];
+#else
+	log->backend_type = "";
+#endif
 	Assert(i == CSV_COLS);
 }
 

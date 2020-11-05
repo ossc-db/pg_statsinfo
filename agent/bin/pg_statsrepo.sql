@@ -269,8 +269,10 @@ CREATE TABLE statsrepo.statement
 	userid				oid,
 	queryid				bigint,
 	query				text,
+	plans				bigint,
+	total_plan_time		double precision,
 	calls				bigint,
-	total_time			double precision,
+	total_exec_time		double precision,
 	rows				bigint,
 	shared_blks_hit		bigint,
 	shared_blks_read	bigint,
@@ -349,9 +351,9 @@ CREATE TABLE statsrepo.autovacuum
 	tup_removed				bigint,
 	tup_remain				bigint,
 	tup_dead				bigint,
-	page_hit				integer,
-	page_miss				integer,
-	page_dirty				integer,
+	page_hit				bigint,
+	page_miss				bigint,
+	page_dirty				bigint,
 	read_rate				double precision,
 	write_rate				double precision,
 	duration				real,
@@ -668,6 +670,7 @@ CREATE TABLE statsrepo.log
 	user_query_pos		integer,
 	location			text,
 	application_name	text,
+	backend_type		text,
 	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
 );
 
@@ -2536,7 +2539,7 @@ $$
 			db.name AS dbname,
 			reg.query,
 			statsrepo.sub(st2.calls, st1.calls) AS calls,
-			statsrepo.sub(st2.total_time, st1.total_time) AS total_time,
+			statsrepo.sub(st2.total_exec_time, st1.total_exec_time) AS total_time,
 			statsrepo.sub(st2.blk_read_time, st1.blk_read_time) AS blk_read_time,
 			statsrepo.sub(st2.blk_write_time, st1.blk_write_time) AS blk_write_time
 		 FROM
@@ -2606,7 +2609,7 @@ $$
 			db.name AS dbname,
 			reg.query,
 			statsrepo.sub(st2.calls, st1.calls) AS calls,
-			statsrepo.sub(st2.total_time, st1.total_time) AS total_time,
+			statsrepo.sub(st2.total_exec_time, st1.total_exec_time) AS total_time,
 			statsrepo.sub(st2.blk_read_time, st1.blk_read_time) AS blk_read_time,
 			statsrepo.sub(st2.blk_write_time, st1.blk_write_time) AS blk_write_time
 		 FROM

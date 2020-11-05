@@ -40,20 +40,30 @@ INSERT INTO statsrepo.autoanalyze_cancel VALUES \
 #define MSG_AUTOVACUUM_CANCEL \
 	"canceling autovacuum task"
 
-#if PG_VERSION_NUM >= 100000
+#if PG_VERSION_NUM >= 130000
+#define NUM_AUTOVACUUM			24
+#define IDX_AUTOVACUUM_RUSAGE	20
+#elif PG_VERSION_NUM >= 100000
 #define NUM_AUTOVACUUM			21
+#define IDX_AUTOVACUUM_RUSAGE	20
 #elif PG_VERSION_NUM >= 90600
 #define NUM_AUTOVACUUM			19
+#define IDX_AUTOVACUUM_RUSAGE	18
 #elif PG_VERSION_NUM >= 90500
 #define NUM_AUTOVACUUM			18
+#define IDX_AUTOVACUUM_RUSAGE	17
 #elif PG_VERSION_NUM >= 90400
 #define NUM_AUTOVACUUM			17
+#define IDX_AUTOVACUUM_RUSAGE	16
 #elif PG_VERSION_NUM >= 90200
 #define NUM_AUTOVACUUM			16
+#define IDX_AUTOVACUUM_RUSAGE	15
 #else
 #define NUM_AUTOVACUUM			9
+#define IDX_AUTOVACUUM_RUSAGE	8
 #endif
 #define NUM_AUTOANALYZE			4
+#define IDX_AUTOANALYZE_RUSAGE	3
 #define NUM_RUSAGE				3
 #define NUM_AUTOVACUUM_CANCEL	5
 
@@ -115,11 +125,18 @@ parse_autovacuum(const char *message, const char *timestamp)
 	List		   *usage;
 	const char	   *str_usage;
 	QueueItemExec	exec;
+	int				idx_rusage = 0;
 
 	if ((params = capture(message, msg_autovacuum, NUM_AUTOVACUUM)) != NIL)
+	{
 		exec = (QueueItemExec) Autovacuum_exec;
+		idx_rusage = IDX_AUTOVACUUM_RUSAGE;
+	}
 	else if ((params = capture(message, msg_autoanalyze, NUM_AUTOANALYZE)) != NIL)
+	{
 		exec = (QueueItemExec) Autoanalyze_exec;
+		idx_rusage = IDX_AUTOANALYZE_RUSAGE;
+	}
 	else
 		return false;
 
@@ -127,7 +144,7 @@ parse_autovacuum(const char *message, const char *timestamp)
 	 * Re-parse rusage output separatedly. Note that MSG_RUSAGE won't be
 	 * localized with any lc_messages.
 	 */
-	str_usage = llast(params);
+	str_usage = (char*)list_nth( params, idx_rusage);
 	if ((usage = capture(str_usage, MSG_RUSAGE, NUM_RUSAGE)) == NIL)
 	{
 		elog(WARNING, "cannot parse rusage: %s", str_usage);
