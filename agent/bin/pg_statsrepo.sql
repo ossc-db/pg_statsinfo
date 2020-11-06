@@ -2476,8 +2476,11 @@ CREATE FUNCTION statsrepo.get_query_activity_statements(
 	OUT rolname			text,
 	OUT datname			name,
 	OUT query			text,
+	OUT plans			bigint,
+	OUT total_plan_time	numeric,
+	OUT time_per_plan	numeric,
 	OUT calls			bigint,
-	OUT total_time		numeric,
+	OUT total_exec_time	numeric,
 	OUT time_per_call	numeric,
 	OUT blk_read_time	numeric,
 	OUT blk_write_time	numeric
@@ -2517,8 +2520,11 @@ CREATE FUNCTION statsrepo.get_query_activity_statemets_body(
 	OUT rolname			text,
 	OUT datname			name,
 	OUT query			text,
+	OUT plans			bigint,
+	OUT total_plan_time	numeric,
+	OUT time_per_plan	numeric,
 	OUT calls			bigint,
-	OUT total_time		numeric,
+	OUT total_exec_time	numeric,
 	OUT time_per_call	numeric,
 	OUT blk_read_time	numeric,
 	OUT blk_write_time	numeric
@@ -2528,9 +2534,14 @@ $$
 		t1.rolname::text,
 		t1.dbname::name,
 		t1.query,
+		t1.plans,
+		t1.total_plan_time::numeric(1000,3),
+		CASE t1.plans
+			WHEN 0 THEN 0 ELSE (t1.total_plan_time / t1.plans)::numeric(1000, 3) END,
 		t1.calls,
-		t1.total_time::numeric(1000, 3),
-		(t1.total_time / t1.calls)::numeric(1000, 3),
+		t1.total_exec_time::numeric(1000, 3),
+		CASE t1.calls
+			WHEN 0 THEN 0 ELSE (t1.total_exec_time / t1.calls)::numeric(1000, 3) END,
 		t1.blk_read_time::numeric(1000, 3),
 		t1.blk_write_time::numeric(1000, 3)
 	FROM
@@ -2538,8 +2549,10 @@ $$
 			rol.name AS rolname,
 			db.name AS dbname,
 			reg.query,
+			statsrepo.sub(st2.plans, st1.plans) AS plans,
+			statsrepo.sub(st2.total_plan_time, st1.total_plan_time) AS total_plan_time,
 			statsrepo.sub(st2.calls, st1.calls) AS calls,
-			statsrepo.sub(st2.total_exec_time, st1.total_exec_time) AS total_time,
+			statsrepo.sub(st2.total_exec_time, st1.total_exec_time) AS total_exec_time,
 			statsrepo.sub(st2.blk_read_time, st1.blk_read_time) AS blk_read_time,
 			statsrepo.sub(st2.blk_write_time, st1.blk_write_time) AS blk_write_time
 		 FROM
@@ -2573,10 +2586,10 @@ $$
 			(rol.snapid = reg.first AND rol.userid = reg.userid)
 	) AS t1
 	WHERE
-		t1.calls > 0 and t1.total_time > 0
+		t1.calls > 0 and t1.total_exec_time > 0
 	ORDER BY
-		5 DESC,
-		4 DESC;
+		8 DESC,
+		7 DESC;
 $$
 LANGUAGE sql;
 
@@ -2587,8 +2600,11 @@ CREATE FUNCTION statsrepo.get_query_activity_statemets_body_legacy(
 	OUT rolname			text,
 	OUT datname			name,
 	OUT query			text,
+	OUT plans			bigint,
+	OUT total_plan_time	numeric,
+	OUT time_per_plan	numeric,
 	OUT calls			bigint,
-	OUT total_time		numeric,
+	OUT total_exec_time	numeric,
 	OUT time_per_call	numeric,
 	OUT blk_read_time	numeric,
 	OUT blk_write_time	numeric
@@ -2598,6 +2614,9 @@ $$
 		t1.rolname::text,
 		t1.dbname::name,
 		t1.query,
+		0::bigint,
+		0::numeric(1000, 3),
+		0::numeric(1000, 3),
 		t1.calls,
 		t1.total_time::numeric(1000, 3),
 		(t1.total_time / t1.calls)::numeric(1000, 3),
@@ -2644,8 +2663,8 @@ $$
 	WHERE
 		t1.calls > 0 and t1.total_time > 0
 	ORDER BY
-		5 DESC,
-		4 DESC;
+		8 DESC,
+		7 DESC;
 $$
 LANGUAGE sql;
 

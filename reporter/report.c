@@ -1003,13 +1003,13 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	{
 		fprintf(out, "%-16s  ", PQgetvalue(res, i, 0));
 		fprintf(out, "%-16s  ", PQgetvalue(res, i, 1));
-		fprintf(out, "%8s  ", PQgetvalue(res, i, 3));
-		fprintf(out, "%10s sec  ", PQgetvalue(res, i, 4));
-		fprintf(out, "%9s sec  ", PQgetvalue(res, i, 5));
+		fprintf(out, "%8s  ", PQgetvalue(res, i, 6));
+		fprintf(out, "%10s sec  ", PQgetvalue(res, i, 7));
+		fprintf(out, "%9s sec  ", PQgetvalue(res, i, 8));
 		if (scope->version >= 90200)
 		{
-			fprintf(out, "%12s ms  ", PQgetvalue(res, i, 6));
-			fprintf(out, "%13s ms  ", PQgetvalue(res, i, 7));
+			fprintf(out, "%12s ms  ", PQgetvalue(res, i, 9));
+			fprintf(out, "%13s ms  ", PQgetvalue(res, i, 10));
 		}
 		else
 		{
