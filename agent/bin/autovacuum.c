@@ -201,8 +201,21 @@ parse_autovacuum_cancel(const Log *log)
 	AVCancelRequest	*entry;
 	List			*params;
 
-	if ((params = capture(log->context,
-		"automatic %s of table \"%s.%s.%s\"", 4)) == NIL)
+	/* parse context string */
+	char	*ctx;
+	char	*tok;
+	params = NIL;
+	ctx = pgut_strdup(log->context);
+	tok = strtok(ctx, "\n");
+	while( tok )
+	{
+		if ((params = capture( tok, 
+			"automatic %s of table \"%s.%s.%s\"", 4)) != NIL)
+			break;
+		tok = strtok(NULL, "\n");
+	}
+	free( ctx );
+	if (params == NIL)
 		return false;	/* should not happen */
 
 	/* get the query that caused cancel */
