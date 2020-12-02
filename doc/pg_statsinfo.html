@@ -2,7 +2,7 @@
 
 <html lang="en"><head>
 
-<title>pg_statsinfo 12</title>
+<title>pg_statsinfo 13</title>
 <link rel="home" title="pg_statsinfo" href="index.html">
 <style type="text/css">
 <!--
@@ -649,7 +649,7 @@ div.index li:before {
   <li><a href="#uninstall">Uninstallation</a></li>
   <li><a href="#restrictions">Restrictions</a></li>
   <li><a href="#QA">Q&A</a></li>
-  <li><a href="#change">Changes From pg_statsinfo 11</a></li>
+  <li><a href="#change">Changes From pg_statsinfo 12</a></li>
   <li><a href="#details">Detailed Information</a>
     <ol>
       <li><a href="#many-instances">Sharing Repository Database</a></li>
@@ -661,13 +661,13 @@ div.index li:before {
   <li><a href="#seealso">See Also</a></li>
 </ol>
 </div>
-<h1 id="pg_statsinfo">pg_statsinfo 12</h1>
+<h1 id="pg_statsinfo">pg_statsinfo 13</h1>
 <h2 id="name">What is pg_statsinfo ?</h2>
 <p>pg_statsinfo is a monitoring tool to record activities and
 statistics of PostgreSQL server in the form of time series of
 snapshots. You can examine the snapshots on graphical representations
 by
-using <a href="http://pgstatsinfo.sourceforge.net/documents/reporter12/html/pg_stats_reporter.html">pg_stats_reporter</a>.
+using <a href="http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter.html">pg_stats_reporter</a>.
 </p>
 
 
@@ -676,13 +676,13 @@ using <a href="http://pgstatsinfo.sourceforge.net/documents/reporter12/html/pg_s
 
 <p>Two or more PostgreSQL <i>instances</i> can share single repository database.
 
-<p>You can check for server health and activities in easy-to-grasp graphical representation by using  <a href="http://pgstatsinfo.sourceforge.net/documents/reporter12/html/pg_stats_reporter.html">pg_stats_reporter</a>. It shows various information as interactive tables and graphs.</p>
+<p>You can check for server health and activities in easy-to-grasp graphical representation by using  <a href="http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter.html">pg_stats_reporter</a>. It shows various information as interactive tables and graphs.</p>
 
 <p>Components of pg_statsinfo are typically placed as the picture
 below. Each pg_statsinfo collects the information of the <i>Database
 Server</i> where it resides on and sends snapshots to
 the <i>Repository
-Server</i>. <a href="http://pgstatsinfo.sourceforge.net/documents/reporter12/html/pg_stats_reporter.html">pg_stats_reporter</a>
+Server</i>. <a href="http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter.html">pg_stats_reporter</a>
 runs behind web server so that the Users can get graphical reports on
 web browser on the <i>Client</i>.</p>
 
@@ -706,16 +706,18 @@ are generated for every 10 minutes as default and when commanded
 manually.
 </p>
 
+<h4>Statistics that can be taken with a snapshot</h4>
+
 <p>Every snapshots holds the following information:</p>
 <ul>
-  <li>All of the information collected by <a href="http://www.postgresql.org/docs/12/static/monitoring-stats.html">the statistics collector</a>.
+  <li>All of the information collected by <a href="http://www.postgresql.org/docs/13/static/monitoring-stats.html">the statistics collector</a>.
       For example, numbers of INSERT/UPDATE/DELETEs and buffer access counters.</li>
   <li>Disk usage per tablespace, WAL, and archive log directory.</li>
   <li>Long transactions and their query strings.</li>
   <li>Session state statistics.</li>
   <li>WAL write rate.</li>
   <li>Number of CHECKPOINTs ,VACUUMs, and their execution time and buffer access statistics.</li>
-  <li>Long queries and execution statistics on queries, functions and plans.</li>
+  <li>Long queries and execution statistics on queries, functions and planning time.</li>
   <li>PostgreSQL configuration parameters.</li>
   <li>OS resource information. (CPU usage, memory usage, disk I/O, load average)</li>
   <li>Long lock conflicts.</li>
@@ -729,7 +731,7 @@ manually.
 The required storage for every snapshot depends on the numbers of objects in the monitored database. It occupies about 600 - 800kB in typical cases. pg_statsinfo takes snapshots for every 10 minutes by default, so the required storage for all snapshots in a day from every monitored database is roughly estimated to be  90 - 120MB.
 </p>
 <p>
-You can see the structure of the tables in pg_statsinfo's repository database in <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo12/files/pg_statsinfo_v12_repository_infomation.xls">this</a> document. (MS Excel document in Japanese).
+You can see the structure of the tables in pg_statsinfo's repository database in <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_repository_infomation.xls">this</a> document. (MS Excel document in Japanese).
 </p>
 
 <h3 id="features-log-route">Server Log Filter</h3>
@@ -780,7 +782,7 @@ The default alert function checks for the following properties:
 </p>
 
 <p>
-The contents of alert message of each alert item is shown in <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo12/files/pg_statsinfo_v12_report_infomation.xls">"report item list of pg_statsinfo v12".</a> (.xls in Japanese).
+The contents of alert message of each alert item is shown in <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_report_infomation.xls">"report item list of pg_statsinfo v13".</a> (.xls in Japanese).
 </p>
 
 <p>
@@ -803,9 +805,9 @@ text format. Following kinds of information are available.<p>
 </ul>
 
 <p>
-The comprehensive list of report items is shown in <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo12/files/pg_statsinfo_v12_report_infomation.xls">"report item list of pg_statsinfo v12".</a> (.xls in Japanese)<br>
-Report items are equivalent with <a href="http://pgstatsinfo.sourceforge.net/documents/reporter12/html/pg_stats_reporter.html">pg_stats_reporter</a>.<br>
-If you would like to see graphical reports, please try <a href="http://pgstatsinfo.sourceforge.net/documents/reporter12/html/pg_stats_reporter.html">pg_stats_reporter</a>.
+The comprehensive list of report items is shown in <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_report_infomation.xls">"report item list of pg_statsinfo v13".</a> (.xls in Japanese)<br>
+Report items are equivalent with <a href="http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter.html">pg_stats_reporter</a>.<br>
+If you would like to see graphical reports, please try <a href="http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter.html">pg_stats_reporter</a>.
 </p>
 
 <h4>Administrative operations</h4>
@@ -845,7 +847,7 @@ Setup reference of this feature is <a href="#usage-maintenance">here</a>.
 <h3 id="requirement">Requirement</h3>
 <dl>
 <dt>PostgreSQL versions</dt>
-<dd>PostgreSQL 12</dd>
+<dd>PostgreSQL 13</dd>
 <dt>OS</dt>
 <dd>RHEL 7.x (x86_64), CentOS 7.x (x86_64)</dd>
 <dd>RHEL 8.x (x86_64), CentOS 8.x (x86_64)</dd>
@@ -860,7 +862,7 @@ Setup reference of this feature is <a href="#usage-maintenance">here</a>.
 The following steps install pg_statsinfo using rpm.
 <pre>
 $ su
-# yum install pg_statsinfo-12.1-1.pg12.rhel7.x86_64.rpm
+# yum install pg_statsinfo-13.0-1.pg13.rhel7.x86_64.rpm
 </pre>
 
 <h5>RHEL 8</h5>
@@ -868,7 +870,7 @@ $ su
 The following steps install pg_statsinfo using rpm.
 <pre>
 $ su
-# dnf install pg_statsinfo-12.1-1.pg12.rhel8.x86_64.rpm
+# dnf install pg_statsinfo-13.0-1.pg13.rhel8.x86_64.rpm
 </pre>
 
 <h4>Installing from source</h4>
@@ -877,8 +879,8 @@ $ su
 
 <pre>
 $ cd pg_statsinfo
-$ tar xzvf pg_statsinfo-12.1.tar.gz 
-$ cd pg_statsinfo-12.1
+$ tar xzvf pg_statsinfo-13.0.tar.gz 
+$ cd pg_statsinfo-13.0
 $ make USE_PGXS=1
 $ su
 # make USE_PGXS=1 install
@@ -931,7 +933,7 @@ log_autovacuum_min_duration = 0
 
 <h4>Configuration of pg_hba.conf</h4>
 <p>Setup to allow the owner of the PostgreSQL process to log in the PostgreSQL server from localhost without password.
-"ident" is recommended method for authentication. In order to do that, add the following line to <a href="http://www.postgresql.org/docs/12/static/auth-pg-hba-conf.html">pg_hba.conf</a> when "OS-user = DB-superuser = postgres" which is the most common case.
+"ident" is recommended method for authentication. In order to do that, add the following line to <a href="http://www.postgresql.org/docs/13/static/auth-pg-hba-conf.html">pg_hba.conf</a> when "OS-user = DB-superuser = postgres" which is the most common case.
 Note that only the first line that matches the condition will be in effect.
 The "ident" authentication method with TYPE=local would be convenient on Linux.
 </p>
@@ -943,7 +945,7 @@ local   all             postgres                                ident
 
 <h4>Configuration for involving query statistics</h4>
 <p>
-You can have snapshots involving query statistics using <a href="http://www.postgresql.org/docs/12/static/pgstatstatements.html">pg_stat_statements</a>. pg_statsinfo automatically detects pg_stat_statements and use it. Installation of pg_stat_statements would be done in the following steps after adding it to shared_preload_libraries in postgresql.conf.
+You can have snapshots involving query statistics using <a href="http://www.postgresql.org/docs/13/static/pgstatstatements.html">pg_stat_statements</a>. pg_statsinfo automatically detects pg_stat_statements and use it. Installation of pg_stat_statements would be done in the following steps after adding it to shared_preload_libraries in postgresql.conf.
 </p>
 
 <pre>
@@ -954,6 +956,7 @@ $ psql -d postgres -c "CREATE EXTENSION pg_stat_statements"
 <ul>
   <li>pg_statsinfo.stat_statements_max</li>
   <li>pg_statsinfo.stat_statements_exclude_users</li>
+  <li>pg_stat_statements.track_planning</li>
 </ul>
 <p>Explanation for these parameters is seen in the <a href="#configuration">Configuration</a> section.</p>
 
@@ -1036,7 +1039,7 @@ The types of log files that pg_statsinfo handles and methods of filtering is des
 <h4>Types of log files</h4>
 <dl>
   <dt>CSV log files (*.csv) (named like postgresql-2013-10-01_000000.csv)</dt>
-  <dd>CSV log file is the source of the PostgreSQL log messages pg_statsinfo processes. (Detailed explanation for CSV log file is seen <a href="http://www.postgresql.org/docs/12/static/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG">Here</a>)</dd>
+  <dd>CSV log file is the source of the PostgreSQL log messages pg_statsinfo processes. (Detailed explanation for CSV log file is seen <a href="http://www.postgresql.org/docs/13/static/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG">Here</a>)</dd>
   <dt>Text log files (specifically that with the name of "pg_statsinfo.log")</dt>
   <dd>The log file written by pg_statsinfo is called text log file.</dd>
   <dd>This has the following characteristics.
@@ -1350,7 +1353,7 @@ Available options are described below,
   <dt>-r, --report=REPORTID</dt>
   <dd>Generates a report of the type specified by REPORTID.</dd>
   <dd>The following REPORTID are available.</dd>
-  <dd>More details are shown in  <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo12/files/pg_statsinfo_v12_report_infomation.xls">Items of a report in pg_statsinfo v12</a>(Both filename and contents are only in Japanese).</dd>
+  <dd>More details are shown in  <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_report_infomation.xls">Items of a report in pg_statsinfo v13</a>(Both filename and contents are only in Japanese).</dd>
   <dd>
     <ul>
       <li>Summary</li>
@@ -1714,6 +1717,11 @@ postgresql.conf for the monitored instance. Reloading configuration file of Post
     <td>syslog indent when syslog is enabled</td>
   </tr>
   <tr>
+    <td>pg_stat_statements.track_planning</td>
+    <td>off</td>
+    <td>Set 'on' to get the plan-generation time in the query statistics (pg_stat_statements).</td>
+  </tr>
+  <tr>
     <td>pg_statsinfo.textlog_min_messages</td>
     <td>warning</td>
     <td>Minimum message level for textlog <a href="#configuration-a1">(*1)</a>.</td>
@@ -1912,12 +1920,12 @@ postgresql.conf for the monitored instance. Reloading configuration file of Post
 The following values are available for a message level.
 Messages with the specified level or more severe level are recorded in the logs.
 "disable" discards all log entries.
-Severity order is the same as <a href="http://www.postgresql.org/docs/12/static/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-WHEN">log_min_messages</a> except additional levels "disable", "alert"  and "debug". That is,
+Severity order is the same as <a href="http://www.postgresql.org/docs/13/static/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-WHEN">log_min_messages</a> except additional levels "disable", "alert"  and "debug". That is,
 </dd>
 <dd>disable &gt; alert &gt; panic &gt; fatal &gt; log &gt; error &gt; warning &gt; notice &gt; info &gt; debug</p></dd>
 
 <dt id="configuration-a2">*2 : Prefix Format</dt>
-<dd>Same format with configuration parameter <a href="http://www.postgresql.org/docs/12/static/runtime-config-logging.html#GUC-LOG-LINE-PREFIX">log_line_prefix</a>.
+<dd>Same format with configuration parameter <a href="http://www.postgresql.org/docs/13/static/runtime-config-logging.html#GUC-LOG-LINE-PREFIX">log_line_prefix</a>.
 Note that log_line_prefix itself is ignored when pg_statsinfo is enabled.
 </dd>
 
@@ -1930,12 +1938,12 @@ If not suffixed by any unit, the value will be interpreted in seconds.</dd>
 <dd>
 A keyword/value style connection string.
 For example, 'hostaddr=127.0.0.1 port=5432 dbname=mydb user=postgres'.
-See also PQconnectdb in "<a href="http://www.postgresql.org/docs/12/static/libpq-connect.html">Database Connection Control Functions</a>" for details.
-<a href="http://www.postgresql.org/docs/12/static/libpq-envars.html">environment variables</a> describes the effect of environment variables.
+See also PQconnectdb in "<a href="http://www.postgresql.org/docs/13/static/libpq-connect.html">Database Connection Control Functions</a>" for details.
+<a href="http://www.postgresql.org/docs/13/static/libpq-envars.html">environment variables</a> describes the effect of environment variables.
 </dd>
 <dd>
 Password prompt should be avoided on connecting to the repository.
-Use  <a href="http://www.postgresql.org/docs/12/static/libpq-pgpass.html">.pgpass</a> file for providing passwords if needed. Note that hostaddr is taken as a host name when host is omitted in a connection string. See <a href="https://www.postgresql.org/docs/12/static/libpq-connect.html#LIBPQ-PARAMKEYWORDS">"Parameter Keywords"</a> for the details.
+Use  <a href="http://www.postgresql.org/docs/13/static/libpq-pgpass.html">.pgpass</a> file for providing passwords if needed. Note that hostaddr is taken as a host name when host is omitted in a connection string. See <a href="https://www.postgresql.org/docs/13/static/libpq-connect.html#LIBPQ-PARAMKEYWORDS">"Parameter Keywords"</a> for the details.
 </dd>
 <dt id="configuration-a5">*5 : SQLSTATE</dt>
 <dd>
@@ -2039,7 +2047,7 @@ be shown in wrong order.
 </dd>
 
 <dt>Storing logs under some time zones</dt>
-<dd>Each log entry has a timestamp followed by an abbreviated time zone names. This abbreviation may represent two or more time zones so the log entries will be stored with unexpected timestamp if the abbreviation represents a different time zone from your assumption. For example, CST is an abbreviation for time zones with three different offsets, which defaultly represents US/Central(CST-6), so timestamps of log entries sent from a server where log_timezone is China(PRC = CST+8) are wrongly advanced by 14 hours on a repository where no additional setup is made about time zone abbreviations. You need <a href="http://www.postgresql.org/docs/12/static/datetime-config-files.html">additional setup</a> if you get a wrong result as follows on repository database for the time zone on your system.</dd>
+<dd>Each log entry has a timestamp followed by an abbreviated time zone names. This abbreviation may represent two or more time zones so the log entries will be stored with unexpected timestamp if the abbreviation represents a different time zone from your assumption. For example, CST is an abbreviation for time zones with three different offsets, which defaultly represents US/Central(CST-6), so timestamps of log entries sent from a server where log_timezone is China(PRC = CST+8) are wrongly advanced by 14 hours on a repository where no additional setup is made about time zone abbreviations. You need <a href="http://www.postgresql.org/docs/13/static/datetime-config-files.html">additional setup</a> if you get a wrong result as follows on repository database for the time zone on your system.</dd>
 <pre>
 repository=$ SET TIME ZONE '<u>PRC</u>'; select '2014/1/1 0:0:0 <u>CST</u>'::timestamptz;
       timestamptz       
@@ -2064,8 +2072,8 @@ $psql -d postgres -c "SELECT * FROM statsrepo.snapshot WHERE COMMENT = 'test'"
 </pre>
 <h4>Q2. How to utilize the snapshots in repository?</h4>
 <p>The snapshots in repository can be of course inspected using sql queries but it needs too much labor for most cases.
-You can use pg_statsinfo's command line reporting feature to see them as simple reports in text format. For those who wants to see them in graphical interface, <a href="http://pgstatsinfo.sourceforge.net/documents/reporter12/html/pg_stats_reporter.html">pg_stats_reporter</a> provides sortable tables with pager and manipulative graphs. 
-An operable sample is available <a href='http://pgstatsinfo.sourceforge.net/documents/reporter12/html/files/report_sample.html'>here</a>.
+You can use pg_statsinfo's command line reporting feature to see them as simple reports in text format. For those who wants to see them in graphical interface, <a href="http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter.html">pg_stats_reporter</a> provides sortable tables with pager and manipulative graphs. 
+An operable sample is available <a href='http://pgstatsinfo.sourceforge.net/documents/reporter13/html/files/report_sample.html'>here</a>.
 </p>
 
 <h4>Q3. Auto maintenance seems not cleaning up snapshots. </h4>
@@ -2138,7 +2146,7 @@ Two or more snapshots in the repository are required to generate a report. If th
   <dd>Skipped if no replication activity information found in the snapshots for the period.</dd>
   
   <dt>Schema Information</dt>
-  <dd>Make sure the settings so that all target instances can be connected without prompting for password. See <a href="http://www.postgresql.org/docs/12/static/client-authentication.html">here</a> for details.</dd>
+  <dd>Make sure the settings so that all target instances can be connected without prompting for password. See <a href="http://www.postgresql.org/docs/13/static/client-authentication.html">here</a> for details.</dd>
 </dl>
 
 <h4>Q8. There's no plan statistics in a textual report although pg_store_plans has been installed.</h4>
@@ -2163,11 +2171,10 @@ Currently there is no available means of preventing this occurring.
 </p>
 <br>
 
-<h2 id="change">Changes from pg_statsinfo 11</h2>
-<p>Following changes have been made after pg_statsinfo 11.</p>
+<h2 id="change">Changes from pg_statsinfo 12</h2>
+<p>Following changes have been made after pg_statsinfo 12.</p>
 <ul>
-  <li>Supports PostgreSQL 12 (pg_statsinfo 12 supports only PostgreSQL 12).</li>
-  <li>Rename names that reference "xlog" to "wal".</li>
+  <li>Supports PostgreSQL 13 (pg_statsinfo 13 supports only PostgreSQL 13).</li>
 </ul>
 <br>
 
@@ -2179,7 +2186,7 @@ Currently there is no available means of preventing this occurring.
 As described above, multiple monitored instances can share single repository database. In order to build such configuration, the repository server should accept connections from the monitored instances without password prompts and the combination of PostgreSQL's system identifier, node name given by uname(2) and PostgreSQL's listen port number should be different from any other monitored instance.
 
 <h3 id="warm-standby">Going good along with warm standby</h3>
-pg_statsinfo can work good with <a href="http://www.postgresql.org/docs/12/static/warm-standby.html">warm standby</a>.
+pg_statsinfo can work good with <a href="http://www.postgresql.org/docs/13/static/warm-standby.html">warm standby</a>.
 There are two typical configuration that can work with warm standby mode.
 See "<a href="pg_statsinfo-warm-standby.html">pg_statsinfo: warm-standby</a>" for details for each configuration.
 </p>
@@ -2294,13 +2301,13 @@ prevents this from occurring for this case.
 </p>
 
 <h2 id="seealso">See Also</h2>
-<a href="http://www.postgresql.org/docs/12/static/app-pg-ctl.html">pg_ctl</a>,
-<a href="http://www.postgresql.org/docs/12/static/app-psql.html">psql</a>,
-<a href="http://www.postgresql.org/docs/12/static/runtime-config.html">Server Configuration</a>,
-<a href="http://www.postgresql.org/docs/12/static/monitoring-stats.html">The Statistics Collector</a>,
-<a href="http://www.postgresql.org/docs/12/static/catalogs.html">System Catalogs</a>,
-<a href="http://www.postgresql.org/docs/12/static/pgstatstatements.html">pg_stat_statements</a>,
-<a href="http://pgstatsinfo.sourceforge.net/documents/reporter12/html/pg_stats_reporter.html">pg_stats_reporter</a>
+<a href="http://www.postgresql.org/docs/13/static/app-pg-ctl.html">pg_ctl</a>,
+<a href="http://www.postgresql.org/docs/13/static/app-psql.html">psql</a>,
+<a href="http://www.postgresql.org/docs/13/static/runtime-config.html">Server Configuration</a>,
+<a href="http://www.postgresql.org/docs/13/static/monitoring-stats.html">The Statistics Collector</a>,
+<a href="http://www.postgresql.org/docs/13/static/catalogs.html">System Catalogs</a>,
+<a href="http://www.postgresql.org/docs/13/static/pgstatstatements.html">pg_stat_statements</a>,
+<a href="http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter.html">pg_stats_reporter</a>
 
 <hr />
 <div class="navigation">

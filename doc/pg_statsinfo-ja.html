@@ -2,7 +2,7 @@
 
 <html lang="ja"><head>
 
-<title>pg_statsinfo 12</title>
+<title>pg_statsinfo 13</title>
 <link rel="home" title="pg_statsinfo" href="http://pgstatsinfo.sourceforge.net/index_ja.html">
 <style type="text/css">
 <!--
@@ -650,7 +650,7 @@ div.index li:before {
   <li><a href="#uninstall">アンインストール</a></li>
   <li><a href="#restrictions">使用上の注意と制約</a></li>
   <li><a href="#QA">よくあるQ&A</a></li>
-  <li><a href="#change">pg_statsinfo 11 からの変更点</a></li>
+  <li><a href="#change">pg_statsinfo 12 からの変更点</a></li>
   <li><a href="#details">詳細情報</a>
     <ol>
       <li><a href="#many-instances">複数の監視対象インスタンス</a></li>
@@ -663,14 +663,14 @@ div.index li:before {
   <li><a href="#seealso">関連項目</a></li>
 </ol>
 </div>
-<h1 id="pg_statsinfo">pg_statsinfo 12</h1>
+<h1 id="pg_statsinfo">pg_statsinfo 13</h1>
 <h2 id="name">pg_statsinfoとは？</h2>
 <p>
 PostgreSQL サーバの利用統計情報を定期的に収集・蓄積することで、DB設計やPostgreSQLの運用(日々の処理傾向の把握、
 性能劣化などの兆候や問題発生時の原因の把握等)に役立つツールです。<br>
 起動や終了、パラメータの設定は PostgreSQL と密に連携しており、手間をかけずに導入可能です。
 </p>
-<p>pg_statsinfo 11 からの変更点は<a href="#change">こちら</a>をご覧ください。</p>
+<p>pg_statsinfo 12 からの変更点は<a href="#change">こちら</a>をご覧ください。</p>
 
 <h2 id="description">機能概要</h2>
 <p>pg_statsinfo は、PostgreSQL サーバの統計情報や活動状況を一定の時間間隔毎に定期的に収集し蓄積する機能と、
@@ -679,7 +679,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </p>
 
 <p>
-また、pg_statsinfo で収集した情報は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter12/html/pg_stats_reporter-ja.html">pg_stats_reporter</a>
+また、pg_statsinfo で収集した情報は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter-ja.html">pg_stats_reporter</a>
 を用いることでグラフィカルな形で解析・出力することがきます。
 </p>
 
@@ -714,13 +714,13 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 <h4>取得できる統計情報一覧</h4>
 <p>スナップショットとして以下の統計情報を収集します。</p>
 <ul>
-  <li><a href="http://www.postgresql.jp/document/12/html/monitoring-stats.html">統計情報コレクタ</a>が収集する全ての情報。挿入 / 更新 / 削除行数やバッファアクセス回数。</li>
+  <li><a href="http://www.postgresql.jp/document/13/html/monitoring-stats.html">統計情報コレクタ</a>が収集する全ての情報。挿入 / 更新 / 削除行数やバッファアクセス回数。</li>
   <li>テーブルスペース、WAL領域、アーカイブログ領域のディスク使用量。</li>
   <li>ロングトランザクション化しているクエリ。</li>
   <li>バックエンドプロセスの状況。処理中、ロック待ち、トランザクション中の待機、アイドルのそれぞれで集計します。</li>
   <li>トランザクションログ(WAL)の出力量</li>
   <li>チェックポイントや自動バキュームの経過時間やバッファアクセス回数。</li>
-  <li>実行回数、累積実行時間の多いSQLと関数および実行計画。</li>
+  <li>クエリの統計情報(実行回数、累積実行時間、累積実行計画生成時間の多いSQLと関数および実行計画)。</li>
   <li>PostgreSQLの設定パラメータ。</li>
   <li>OS リソース情報 (CPU使用量、メモリ使用量、ディスクI/O、ロードアベレージ)。</li>
   <li>ロック競合情報</li>
@@ -736,7 +736,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </p>
 
 <h4>リポジトリDBのテーブル構成</h4>
-<p>リポジトリDBのテーブル構成に関しては、「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo12/files/pg_statsinfo_v12_repository_infomation.xls">pg_statsinfo v12 リポジトリDB構成</a>」を参照してください。</p>
+<p>リポジトリDBのテーブル構成に関しては、「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_repository_infomation.xls">pg_statsinfo v13 リポジトリDB構成</a>」を参照してください。</p>
 
 <h3 id="features-log-route">サーバログ分配機能</h3>
 <p>PostgreSQL が出力するサーバログをCSVログ、テキストログ、syslog に分配して出力します。</p>
@@ -788,7 +788,7 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </p>
 
 <p>
-各アラート項目のアラートメッセージの内容については「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo12/files/pg_statsinfo_v12_report_infomation.xls">pg_statsinfo v12 レポート項目一覧</a>」をご覧ください。
+各アラート項目のアラートメッセージの内容については「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_report_infomation.xls">pg_statsinfo v13 レポート項目一覧</a>」をご覧ください。
 </p>
 
 <p>
@@ -813,9 +813,9 @@ PostgreSQL の出力するサーバログを解析することでSQLの性能情
 </ul>
 
 <p>
-簡易レポート機能が出力するレポートの項目については「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo12/files/pg_statsinfo_v12_report_infomation.xls">pg_statsinfo v12 レポート項目一覧</a>」をご覧ください。<br>
-なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter12/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> と同等です。<br>
-グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter12/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> を使用してください。
+簡易レポート機能が出力するレポートの項目については「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_report_infomation.xls">pg_statsinfo v13 レポート項目一覧</a>」をご覧ください。<br>
+なお、簡易レポート機能が出力するレポートの項目は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> と同等です。<br>
+グラフを用いたグラフィカルなレポートを出力したい場合は <a href="http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> を使用してください。
 </p>
 
 <h4>運用管理機能</h4>
@@ -857,7 +857,7 @@ pg_statsinfo の運用管理向けの操作を行うコマンドを提供しま�
 <h3 id="requirement">動作環境</h3>
 <dl>
   <dt>PostgreSQL</dt>
-  <dd>バージョン 12</dd>
+  <dd>バージョン 13</dd>
   <dt>動作検証済みOS</dt>
   <dd>RHEL 7.x (x86_64), CentOS 7.x (x86_64)</dd>
   <dd>RHEL 8.x (x86_64), CentOS 8.x (x86_64)</dd>
@@ -869,18 +869,18 @@ pg_statsinfo の運用管理向けの操作を行うコマンドを提供しま�
 
 <h5>RHEL 7</h5>
 
-以下はPostgreSQL12のRHEL7のx86_64用のrpmをインストールする例です。
+以下はPostgreSQL13のRHEL7のx86_64用のrpmをインストールする例です。
 <pre>
 $ su
-# yum install pg_statsinfo-12.1-1.pg12.rhel7.x86_64.rpm
+# yum install pg_statsinfo-13.0-1.pg13.rhel7.x86_64.rpm
 </pre>
 
 <h5>RHEL 8</h5>
 
-以下はPostgreSQL12のRHEL8のx86_64用のrpmをインストールする例です。
+以下はPostgreSQL13のRHEL8のx86_64用のrpmをインストールする例です。
 <pre>
 $ su
-# dnf install pg_statsinfo-12.1-1.pg12.rhel8.x86_64.rpm
+# dnf install pg_statsinfo-13.0-1.pg13.rhel8.x86_64.rpm
 </pre>
 
 <h4>source</h4>
@@ -888,8 +888,8 @@ $ su
 なお、pg_statsinfo の登録スクリプト (sql) を手動でインストールする必要はありません。
 監視対象インスタンス、リポジトリDB共に、初回起動時に必要に応じて エージェントがスキーマを自動的にインストールします。</p>
 <pre>
-$ tar xzvf pg_statsinfo-12.1.tar.gz
-$ cd pg_statsinfo-12.1
+$ tar xzvf pg_statsinfo-13.0.tar.gz
+$ cd pg_statsinfo-13.0
 $ make USE_PGXS=1
 $ su
 # make USE_PGXS=1 install
@@ -950,7 +950,7 @@ log_autovacuum_min_duration = 0                 # 自動バキュームを記録
 <p>
 PostgreSQL 起動ユーザでの localhost からのアクセスではパスワードの入力が不要になるよう設定します。
 この際の認証には ident 方式を推奨します。
-一般的によく利用される「OSユーザ名 = DB管理者名 = postgres」の場合には、<a href="http://www.postgresql.jp/document/12/html/auth-pg-hba-conf.html">pg_hba.conf</a> に以下を追加します。
+一般的によく利用される「OSユーザ名 = DB管理者名 = postgres」の場合には、<a href="http://www.postgresql.jp/document/13/html/auth-pg-hba-conf.html">pg_hba.conf</a> に以下を追加します。
 他の認証方式よりも優先するため、ファイルの最初のほうに書く必要があることに注意してください。
 UNIX 環境では TYPE=local の ident 認証を使うのが手軽です。
 </p>
@@ -962,7 +962,7 @@ local   all             postgres                                ident
 
 <h4 id="pg_stat_statements">クエリの統計情報の取得設定</h4>
 <p>
-監視対象インスタンスの postgres データベースに <a href="http://www.postgresql.jp/document/12/html/pgstatstatements.html">pg_stat_statements</a> をインストールすることで、クエリの統計情報もスナップショットとして収集できるようになります。<br>
+監視対象インスタンスの postgres データベースに <a href="http://www.postgresql.jp/document/13/html/pgstatstatements.html">pg_stat_statements</a> をインストールすることで、クエリの統計情報もスナップショットとして収集できるようになります。<br>
 利用する場合には、postgresql.conf の shared_preload_libraries に pg_stat_statements を追加し、初回起動時に以下の手順で登録してください。 
 </p>
 <pre>
@@ -973,6 +973,7 @@ $ psql -d postgres -c "CREATE EXTENSION pg_stat_statements"
 <ul>
   <li>pg_statsinfo.stat_statements_max</li>
   <li>pg_statsinfo.stat_statements_exclude_users</li>
+  <li>pg_stat_statements.track_planning</li>
 </ul>
 <p>上記のパラメータの説明は<a href="#configuration">設定ファイル</a>をご覧ください。</p>
 
@@ -1056,7 +1057,7 @@ pg_statsinfo には PostgreSQL のサーバログをフィルタリングによ�
 <h4>ログファイルの種類</h4>
 <dl>
   <dt>CSVログ (*.csv) (例: postgresql-2013-10-01_000000.csv)</dt>
-  <dd>CSVログとは、PostgreSQL が出力する生のログとなります。(CSVログの詳細は<a href="http://www.postgresql.jp/document/12/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG"> こちら </a>をご覧ください)</dd>
+  <dd>CSVログとは、PostgreSQL が出力する生のログとなります。(CSVログの詳細は<a href="http://www.postgresql.jp/document/13/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG"> こちら </a>をご覧ください)</dd>
   <dd>pg_statsinfo は本ログの情報を元に加工したログの出力を行いますが、本ログに関しては全く加工を行いません。</dd>
   <dt>テキストログ (pg_statsinfo.log)</dt>
   <dd>テキストログとは、PostgreSQL が出力したログ(CSVログ)の情報を元に pg_statsinfo が加工を行ったログです。</dd>
@@ -1400,7 +1401,7 @@ $ pg_statsinfo  -r All -h localhost -d postgres -p 5432 -U postgres
   <dt>-r, --report=REPORTID</dt>
   <dd>レポート種別IDを指定します。</dd>
   <dd>レポート種別IDに指定できる値は以下のとおりです。</dd>
-  <dd>レポート種別IDとレポートの内容についての対応は「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo12/files/pg_statsinfo_v12_report_infomation.xls">pg_statsinfo v12 レポート項目一覧</a>」をご覧ください。</dd>
+  <dd>レポート種別IDとレポートの内容についての対応は「<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_report_infomation.xls">pg_statsinfo v13 レポート項目一覧</a>」をご覧ください。</dd>
   <dd>
     <ul>
       <li>Summary</li>
@@ -1822,6 +1823,11 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
     <td>syslog の indent文字列指定。</td>
   </tr>
   <tr>
+    <td>pg_stat_statements.track_planning</td>
+    <td>off</td>
+    <td>クエリの統計情報で"実行計画生成時間"を取得する場合は on を設定します。</td>
+  </tr>
+  <tr>
     <td>pg_statsinfo.textlog_min_messages</td>
     <td>warning</td>
     <td>テキストログへ出力する最小メッセージレベル <a href="#configuration-a1">(*1)</a></td>
@@ -2016,12 +2022,12 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
 <dt id="configuration-a1">*1 : メッセージレベル</dt>
 <dd>以下の値が指定でき、そのレベルと、それより上位のレベルのメッセージが記録されます。
 全く記録しない場合には disable を指定します。
-独自に disable, alert レベルが追加されていることと、debug を区別しないことを除き、<a href="http://www.postgresql.jp/document/12/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-WHEN">log_min_messages</a> と同じ優先順位です。
+独自に disable, alert レベルが追加されていることと、debug を区別しないことを除き、<a href="http://www.postgresql.jp/document/13/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-WHEN">log_min_messages</a> と同じ優先順位です。
 </dd>
 <dd>disable &gt; alert &gt; panic &gt; fatal &gt; log &gt; error &gt; warning &gt; notice &gt; info &gt; debug</dd>
 
 <dt id="configuration-a2">*2 : 書式指定</dt>
-<dd>設定パラメータ <a href="http://www.postgresql.jp/document/12/html/runtime-config-logging.html#GUC-LOG-LINE-PREFIX">log_line_prefix</a> と同じ形式で指定します。
+<dd>設定パラメータ <a href="http://www.postgresql.jp/document/13/html/runtime-config-logging.html#GUC-LOG-LINE-PREFIX">log_line_prefix</a> と同じ形式で指定します。
 log_line_prefix の値そのものは無視されることに注意して下さい。
 </dd>
 
@@ -2031,13 +2037,13 @@ log_line_prefix の値そのものは無視されることに注意して下さ�
 <dt id="configuration-a4">*4 : 接続文字列</dt>
 <dd>
 例えば 'host=127.0.0.1 port=5432 dbname=mydb user=postgres' といったlibpq形式の接続情報文字列です。
-詳細は<a href="http://www.postgresql.jp/document/12/html/libpq-connect.html">データベース接続制御関数</a>のPQconnectdbを参照して下さい。
-この他、libpq が使用する環境変数の影響を受けますので、「<a href="http://www.postgresql.jp/document/12/html/libpq-envars.html">環境変数</a>」も参照して下さい。
+詳細は<a href="http://www.postgresql.jp/document/13/html/libpq-connect.html">データベース接続制御関数</a>のPQconnectdbを参照して下さい。
+この他、libpq が使用する環境変数の影響を受けますので、「<a href="http://www.postgresql.jp/document/13/html/libpq-envars.html">環境変数</a>」も参照して下さい。
 </dd>
 <dd>
 パスワードの入力待ちにならないようにする必要があります。
-パスワード認証が必要な場合には、PostgreSQL インスタンス起動ユーザに <a href="http://www.postgresql.jp/document/12/html/libpq-pgpass.html">.pgpass</a> を設定し、パスワードの入力を自動化してください。
-この際には、host を指定しない場合は hostaddr がホスト名として参照されます。詳細は「<a href="https://www.postgresql.jp/document/12/html/libpq-connect.html#libpq-paramkeywords">パラメータキーワード</a>」を参照してください。
+パスワード認証が必要な場合には、PostgreSQL インスタンス起動ユーザに <a href="http://www.postgresql.jp/document/13/html/libpq-pgpass.html">.pgpass</a> を設定し、パスワードの入力を自動化してください。
+この際には、host を指定しない場合は hostaddr がホスト名として参照されます。詳細は「<a href="https://www.postgresql.jp/document/13/html/libpq-connect.html#LIBPQ-PARAMKEYWORDS">パラメータキーワード</a>」を参照してください。
 </dd>
 
 <dt id="configuration-a5">*5 : SQLSTATE 指定</dt>
@@ -2166,7 +2172,7 @@ $ createdb -U &lt;DB管理者ユーザ名&gt; -O &lt;接続ユーザ名&gt; &lt;
 これらのCSVログファイルは pg_statsinfo で処理されないことに注意してください。</dd>
 
 <dt>一部のタイムゾーンでのログのリポジトリ格納における注意点</dt>
-<dd>ログのタイムスタンプにはタイムゾーンの省略形が付けられていますが、この省略形の中には複数のタイムゾーンに関連付けられているものがあります。リポジトリDBにおいてこの関連付けが想定と異なっていると、ログのタイムスタンプが間違って解釈されてリポジトリに格納されます。例えば CST は3つの時間帯に関連付けられておりデフォルトではUS/Central(CST-6) となっているため、この関連付けの設定を変更せずに運用するとlog_timezone を 中国(PRC=CST+8)に設定したサーバーからのログの時刻がリポジトリDBでは14時間進んで解釈されることになります。リポジトリDBで以下のように入力と異なる時刻が表示された場合には設定が必要です。設定方法は<a href="http://www.postgresql.jp/document/12/html/datetime-config-files.html">こちら</a>を参照してください。
+<dd>ログのタイムスタンプにはタイムゾーンの省略形が付けられていますが、この省略形の中には複数のタイムゾーンに関連付けられているものがあります。リポジトリDBにおいてこの関連付けが想定と異なっていると、ログのタイムスタンプが間違って解釈されてリポジトリに格納されます。例えば CST は3つの時間帯に関連付けられておりデフォルトではUS/Central(CST-6) となっているため、この関連付けの設定を変更せずに運用するとlog_timezone を 中国(PRC=CST+8)に設定したサーバーからのログの時刻がリポジトリDBでは14時間進んで解釈されることになります。リポジトリDBで以下のように入力と異なる時刻が表示された場合には設定が必要です。設定方法は<a href="http://www.postgresql.jp/document/13/html/datetime-config-files.html">こちら</a>を参照してください。
 <pre>
 repository=$ SET TIME ZONE '<u>PRC</u>'; select '2014/1/1 0:0:0 <u>CST</u>'::timestamptz;
       timestamptz       
@@ -2193,7 +2199,7 @@ $psql -d postgres -c "SELECT * FROM statsrepo.snapshot WHERE COMMENT = 'test'"
 <h4>Q2. 取得したスナップショットはどのように使えばいいの？</h4>
 <p>
 pg_statsinfo の統計情報の取得機能は、その時点の統計情報をスナップショットとして定期的に取得する機能のみになります。
-取得した統計情報から、有益な情報を見たい場合は <a href="#features-cmdline">簡易レポート機能</a> を利用するか、<a href="http://pgstatsinfo.sourceforge.net/documents/reporter12/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> をお使いください。
+取得した統計情報から、有益な情報を見たい場合は <a href="#features-cmdline">簡易レポート機能</a> を利用するか、<a href="http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter-ja.html">pg_stats_reporter</a> をお使いください。
 </p>
 
 <h4>Q3. 自動メンテナンス機能のスナップショット削除が動作しません。</h4>
@@ -2289,7 +2295,7 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
   <dd>レポート対象となる情報がスナップショットに存在しない可能性があります。</dd>
   
   <dt>Schema Information</dt>
-  <dd>一部のデータベースのスキーマ情報が含まれてない場合は、該当のデータベースに接続できる設定になっているか <a href="http://www.postgresql.jp/document/12/html/client-authentication.html">クライアント認証</a> などを確認してください。</dd>
+  <dd>一部のデータベースのスキーマ情報が含まれてない場合は、該当のデータベースに接続できる設定になっているか <a href="http://www.postgresql.jp/document/13/html/client-authentication.html">クライアント認証</a> などを確認してください。</dd>
 </dl>
 
 <h4>Q8. pg_store_plans をインストールしているのにレポートでプランの統計情報が出てきません。</h4>
@@ -2313,11 +2319,10 @@ pg_statsinfo は「インスタンスID」でインスタンスを識別しま�
 </p>
 <br>
 
-<h2 id="change">pg_statsinfo 11 からの変更点</h2>
-<p>pg_statsinfo 11 からの変更点は以下の通りです。</p>
+<h2 id="change">pg_statsinfo 12 からの変更点</h2>
+<p>pg_statsinfo 12 からの変更点は以下の通りです。</p>
 <ul>
-  <li>PostgreSQL 12に対応 (pg_statsinfo 12は PostgreSQL 12のみをサポートします)</li>
-  <li>名称中の「xlog」を「wal」に変更</li>
+  <li>PostgreSQL 13に対応 (pg_statsinfo 13は PostgreSQL 13のみをサポートします)</li>
 </ul>
 <br>
 
@@ -2339,7 +2344,7 @@ pg_statsinfo は「インスタンスID」でインスタンスを識別しま�
 
 <p>
 リポジトリDBは各監視対象インスタンスから上記で設定したデータベースにパスワード入力なしに接続できる必要があります。<br>
-各監視対象インスタンスからリポジトリDBにパスワード入力なしに接続できるよう <a href="http://www.postgresql.jp/document/12/html/client-authentication.html">クライアント認証</a> を設定してください。
+各監視対象インスタンスからリポジトリDBにパスワード入力なしに接続できるよう <a href="http://www.postgresql.jp/document/13/html/client-authentication.html">クライアント認証</a> を設定してください。
 </p>
 
 <h4>注意事項</h4>
@@ -2348,7 +2353,7 @@ pg_statsinfo は「インスタンスID」でインスタンスを識別しま�
 </ul>
 
 <h3 id="warm-standby">ウォームスタンバイ</h3>
-<p>構成例として、<a href="http://www.postgresql.jp/document/12/html/warm-standby.html">ウォームスタンバイ</a>での構成を説明します。
+<p>構成例として、<a href="http://www.postgresql.jp/document/13/html/warm-standby.html">ウォームスタンバイ</a>での構成を説明します。
 ウォームスタンバイ構成で pg_statsinfo を利用する場合、大きく分けて2つの構成があります。
 詳細は "<a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo_old/pg_statsinfo-warm-standby-ja.html">pg_statsinfo: warm-standby</a>" を参照してください。
 </p>
@@ -2465,17 +2470,17 @@ pg_statsinfo は、この SystemTap が収集するプロファイリング情�
 <a href="http://www.pgcon.org/2010/schedule/events/216.en.html">PGcon 2010: pg_statsinfo</a>
 <br><br>
 <h3 id="postgresql_document">PostgreSQLドキュメント</h3>
-<a href="http://www.postgresql.jp/document/12/html/app-pg-ctl.html">pg_ctl</a>,
-<a href="http://www.postgresql.jp/document/12/html/app-psql.html">psql</a>,
-<a href="http://www.postgresql.jp/document/12/html/runtime-config.html">サーバの構成</a>,
-<a href="http://www.postgresql.jp/document/12/html/monitoring-stats.html">統計情報コレクタ</a>,
-<a href="http://www.postgresql.jp/document/12/html/catalogs.html">システムカタログ</a>,
-<a href="http://www.postgresql.jp/document/12/html/pgstatstatements.html">pg_stat_statements</a>,
-<a href="http://pgstatsinfo.sourceforge.net/documents/reporter12/html/pg_stats_reporter-ja.html">pg_stats_reporter</a>
+<a href="http://www.postgresql.jp/document/13/html/app-pg-ctl.html">pg_ctl</a>,
+<a href="http://www.postgresql.jp/document/13/html/app-psql.html">psql</a>,
+<a href="http://www.postgresql.jp/document/13/html/runtime-config.html">サーバの構成</a>,
+<a href="http://www.postgresql.jp/document/13/html/monitoring-stats.html">統計情報コレクタ</a>,
+<a href="http://www.postgresql.jp/document/13/html/catalogs.html">システムカタログ</a>,
+<a href="http://www.postgresql.jp/document/13/html/pgstatstatements.html">pg_stat_statements</a>,
+<a href="http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter-ja.html">pg_stats_reporter</a>
 <hr>
 <div class="navigation">
   <a href="http://pgstatsinfo.sourceforge.net/index_ja.html">Top</a> &gt;
-  <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo12/pg_statsinfo-ja.html">pg_statsinfo</a>
+  <a href="http://pgstatsinfo.sourceforge.net/documents/statsinfo13/pg_statsinfo-ja.html">pg_statsinfo</a>
 <div>
 <p class="footer">Copyright (c) 2009-2020, NIPPON TELEGRAPH AND TELEPHONE CORPORATION</p>
 </div></div></div></div></body></html>
