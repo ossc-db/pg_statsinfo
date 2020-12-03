@@ -110,8 +110,9 @@ INSERT INTO tbl02 VALUES (generate_series(1,500000));
 INSERT INTO tbl03 VALUES (generate_series(1,500000));
 DELETE FROM tbl02 WHERE id <= 400000;
 DELETE FROM tbl03 WHERE id <= 300000;
-ANALYZE;
 EOF
+sleep 1
+psql -c "ANALYZE"
 sleep ${ANALYZE_DELAY}
 get_snapshot
 sleep ${WRITE_DELAY}

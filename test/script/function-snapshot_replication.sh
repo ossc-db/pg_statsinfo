@@ -44,6 +44,8 @@ CREATE TABLE xxx (col int);
 CREATE SUBSCRIPTION sub CONNECTION 'host=127.0.0.1 port=${PGPORT_ACT}' PUBLICATION pub;
 EOF
 
+sleep 1
+
 echo "/***-- Statistics of WAL (MASTER) --***/"
 get_snapshot ${PGPORT_ACT}
 send_query << EOF
