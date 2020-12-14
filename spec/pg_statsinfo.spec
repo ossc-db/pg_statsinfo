@@ -3,14 +3,14 @@
 
 # Original declaration for pg_statsinfo rpmbuild #
 
-%define _pgdir   /usr/pgsql-12
+%define _pgdir   /usr/pgsql-13
 %define _bindir  %{_pgdir}/bin
 %define _libdir  %{_pgdir}/lib
 %define _datadir %{_pgdir}/share
 
 ## Set general information for pg_statsinfo.
 Name:       pg_statsinfo
-Version:    12.1
+Version:    13.0
 Release:    1%{?dist}
 Summary:    Performance monitoring tool for PostgreSQL
 Group:      Applications/Databases
@@ -20,7 +20,7 @@ Source0:    %{name}-%{version}.tar.gz
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 
 ## We use postgresql-devel package
-BuildRequires:  postgresql12-devel
+BuildRequires:  postgresql13-devel
 %if %{rhel} == 7
 BuildRequires:  llvm-toolset-7 llvm5.0
 %endif
@@ -126,6 +126,8 @@ fi
 
 # History of pg_statsinfo-v12 RPM.
 %changelog
+* Mon Dec  14 2020 - NTT OSS Center 13.0-1
+- pg_statsinfo 13.0 released
 * Fri Feb  28 2020 - NTT OSS Center 12.1-1
 - pg_statsinfo 12.1 released
 * Fri Jan  24 2020 - NTT OSS Center 12.0-1
