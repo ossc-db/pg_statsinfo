@@ -51,14 +51,14 @@ $$
 	--
 	-- Data for Name: autoanalyze; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
-	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_branches', 0.841124545);
-	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_tellers', 0.0154855544);
-	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_history', 0.0700000003);
-	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_accounts', 0.389999986);
-	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_branches', 0.845144487);
-	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_tellers', 0.0154854855);
-	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_history', 0.159999996);
-	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_accounts', 0.280000001);
+	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_branches', 0,0,0,0,0, 0.841124545,  0.1,0.0);
+	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_tellers',  0,0,0,0,0, 0.0154855544, 0.2,0.1);
+	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_history',  0,0,0,0,0, 0.0700000003, 0.3,0.0);
+	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_accounts', 0,0,0,0,0, 0.389999986,  0.4,0.2);
+	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_branches', 0,0,0,0,0, 0.845144487,  0.5,0.0);
+	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_tellers',  0,0,0,0,0, 0.0154854855, 0.6,0.3);
+	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_history',  0,0,0,0,0, 0.159999996,  0.7,0.0);
+	INSERT INTO statsrepo.autoanalyze VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_accounts', 0,0,0,0,0, 0.280000001,  0.8,0.4);
 
 	--
 	-- Data for Name: autoanalyze_cancel; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
@@ -70,10 +70,14 @@ $$
 	--
 	-- Data for Name: autovacuum; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
-	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_branches', 1, 0, 6, 0, 3, 1, 10, 56, 0, 2, 0, 30.5180000000000007, 0);
-	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'public', 'pgbench_tellers', 1, 0, 6, 0, 300, 23, 20, 36, 0, 1, 0, 17.5960000000000001, 0);
-	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_branches', 1, 0, 7, 0, 1, 0, 30, 59, 0, 0, 0, 0, 0);
-	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'public', 'pgbench_tellers', 0, 0, 6, 6, 114, 16, 40, 35, 0, 0, 0, 0, 0);
+	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:00:30+09', 'postgres', 'pg_catalog', 'pg_statistic', 1, 0, 30, 0, 56, 441, 0, 110, 0, 0, 0, 0, 62, 0, 4690, 0, 2, 17, 56.67, 206, '{pg_statistic_relid_att_inh_index}', '{5}', '{0}', '{0}', '{0}', NULL, NULL);
+	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:00:30+09', 'template1', 'pg_catalog', 'pg_statistic', 1, 0, 28, 0, 116, 406, 0, 105, 0, 0, 0, 0, 94, 0, 11401, 0, 2, 16, 57.14, 212, '{pg_statistic_relid_att_inh_index}', '{5}', '{0}', '{0}', '{0}', NULL, NULL);
+	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:00:30+09', 'si_db_01', 'si_sc_01', 'si_tbl_01', 1, 0, 637, 0, 50000, 50000, 0, 3076, 0, 0, 0, 0, 1965, 0, 652893, 0.06, 2, 319, 50.08, 50000, '{si_tbl_01_idx_1,si_tbl_01_idx_2}', '{275,180}', '{0,137}', '{0,137}', '{0,0}', NULL, NULL);
+	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:01:30+09', 'si_db_01', 'pg_catalog', 'pg_statistic', 1, 0, 29, 0, 52, 411, 0, 90, 0, 0, 0, 0, 62, 0, 4665, 0, 2, 16, 55.17, 204, '{pg_statistic_relid_att_inh_index}', '{5}', '{0}', '{0}', '{0}', NULL, NULL);
+	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:01:30+09', 'postgres', 'statsrepo', 'column_20210618', 0, 0, 19, 0, 0, 1069, 0, 82, 2, 3, 34.041, 51.062, 20, 1, 9506, 0, 1, 0, 0, 0, '{}', '{}', '{}', '{}', '{}', 0.018, NULL);
+	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:02:30+09', 'si_db_01', 'si_sc_01', 'si_tbl_01', 1, 0, 955, 0, 50000, 50000, 0, 3968, 3, 3, 0.28, 0.28, 2532, 0, 679403, 0.08, 2, 637, 66.7, 99834, '{si_tbl_01_idx_1,si_tbl_01_idx_2}', '{275,295}', '{0,114}', '{0,251}', '{0,137}', 0.039, NULL);
+	INSERT INTO statsrepo.autovacuum VALUES ($1, '2012-11-01 00:02:30+09', 'si_db_01', 'si_sc_01', 'si_tbl_01', 1, 0, 955, 317, 50000, 66597, 0, 2675, 0, 0, 0, 0, 1668, 0, 504262, 0.06, 2, 318, 33.3, 49890, '{si_tbl_01_idx_1,si_tbl_01_idx_2}', '{275,295}', '{0,38}', '{0,215}', '{0,177}', NULL, NULL);
+
 
 	--
 	-- Data for Name: bgwriter; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
@@ -303,6 +307,28 @@ $$
 	INSERT INTO statsrepo.replication VALUES ($6 + 3, 14171, 10, 'postgres', 'walreceiver', '127.0.0.1', '', 58145, '2012-11-01 00:00:00+09', '400', 'streaming', '0/685E818 (000000010000000000000006)', '0/685E818 (000000010000000000000006)', '0/685E818 (000000010000000000000006)', '0/685E578 (000000010000000000000006)', '0/685E578 (000000010000000000000006)', '00:00:10', '00:00:11', '00:00:12', 0, 'async');
 
 	--
+	-- Data for Name: replication_slots; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
+	--
+	INSERT INTO statsrepo.replication_slots VALUES ($6    , 'mysub', 'pgoutput', 'logical', 12870, false, true, 22279, NULL, '742', '0/1B39C20', '0/2C0F4D0');
+	INSERT INTO statsrepo.replication_slots VALUES ($6    , 'mysub2', 'pgoutput', 'logical', 12870, false, false, NULL, NULL, '742', '0/1B39C20', '0/1B39C58');
+	INSERT INTO statsrepo.replication_slots VALUES ($6 + 1, 'mysub', 'pgoutput', 'logical', 12870, false, true, 22279, NULL, '749', '0/2D37028', '0/2D37060');
+	INSERT INTO statsrepo.replication_slots VALUES ($6 + 1, 'mysub2', 'pgoutput', 'logical', 12870, false, true, 22295, NULL, '749', '0/2D37028', '0/2D37060');
+	INSERT INTO statsrepo.replication_slots VALUES ($6 + 2, 'mysub', 'pgoutput', 'logical', 12870, false, true, 22279, NULL, '749', '0/2D37028', '0/4277E98');
+	INSERT INTO statsrepo.replication_slots VALUES ($6 + 2, 'mysub2', 'pgoutput', 'logical', 12870, false, true, 22295, NULL, '749', '0/2D37028', '0/4277E98');
+	INSERT INTO statsrepo.replication_slots VALUES ($6 + 3, 'mysub', 'pgoutput', 'logical', 12870, false, true, 22279, NULL, '766', '0/437C680', '0/437C6B8');
+	INSERT INTO statsrepo.replication_slots VALUES ($6 + 3, 'mysub2', 'pgoutput', 'logical', 12870, false, true, 22295, NULL, '766', '0/437C680', '0/437C6B8');
+
+	--
+	-- Data for Name: stat_replication_slots; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
+	--
+	INSERT INTO statsrepo.stat_replication_slots VALUES ($6    , 'mysub', 2, 486, 31800000, 0, 0, 0, 2, 31800000, '2012-11-01 00:00:00+09');
+	INSERT INTO statsrepo.stat_replication_slots VALUES ($6 + 1, 'mysub', 2, 365, 23850000, 0, 0, 0, 2, 23850000, '2012-11-01 00:00:00+09');
+	INSERT INTO statsrepo.stat_replication_slots VALUES ($6 + 2, 'mysub', 2, 607, 39750000, 0, 0, 0, 2, 39750000, '2012-11-01 00:00:00+09');
+	INSERT INTO statsrepo.stat_replication_slots VALUES ($6 + 2, 'mysub2', 0, 0, 0, 2, 607, 39750000, 2, 39750000, '2012-11-01 00:00:00+09');
+	INSERT INTO statsrepo.stat_replication_slots VALUES ($6 + 3, 'mysub', 4, 730, 47700000, 0, 0, 0, 4, 47700000, '2012-11-01 00:00:00+09');
+	INSERT INTO statsrepo.stat_replication_slots VALUES ($6 + 3, 'mysub2', 0, 0, 0, 4, 730, 47700000, 4, 47700000, '2012-11-01 00:00:00+09');
+
+	--
 	-- Data for Name: role; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
 	INSERT INTO statsrepo.role VALUES ($6, 10, 'postgres');
@@ -361,4 +387,13 @@ $$
 	INSERT INTO statsrepo.xlog VALUES ($6 + 1, '0/3B7C140', '000000010000000000000003');
 	INSERT INTO statsrepo.xlog VALUES ($6 + 2, '0/5635000', '000000010000000000000005');
 	INSERT INTO statsrepo.xlog VALUES ($6 + 3, '0/63614A8', '000000010000000000000006');
+
+	--
+	-- Data for Name: stat_wal; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
+	--
+	INSERT INTO statsrepo.stat_wal VALUES ($6    , 4320, 504, 4451688, 0, 146, 0, 0, 0, '2012-11-01 00:00:00+09');
+	INSERT INTO statsrepo.stat_wal VALUES ($6 + 1, 218663, 982, 24563492, 338, 521, 0, 0, 0, '2012-11-01 00:00:00+09');
+	INSERT INTO statsrepo.stat_wal VALUES ($6 + 2, 827323, 983, 68873779, 1876, 2085, 0, 0, 0, '2012-11-01 00:00:00+09');
+	INSERT INTO statsrepo.stat_wal VALUES ($6 + 3, 828860, 983, 69090158, 1876, 2096, 0, 0, 0, '2012-11-01 00:00:00+09');
+
 $$ LANGUAGE sql;

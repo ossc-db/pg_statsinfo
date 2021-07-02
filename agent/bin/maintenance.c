@@ -88,7 +88,7 @@ maintenance_log(const char *command, int *fd_err)
 					/* %l: log directory */
 					sp++;
 					if (is_absolute_path(log_directory))
-						StrNCpy(dp, log_directory, endp - dp);
+						strlcpy(dp, log_directory, endp - dp);
 					else
 						join_path_components(dp, data_directory, log_directory);
 					dp += strlen(dp);
