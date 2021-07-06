@@ -575,6 +575,41 @@ SELECT \
 FROM \
 	pg_replication_slots"
 
+/* stat replication slots*/
+#if PG_VERSION_NUM >= 140000
+#define SQL_SELECT_STAT_REPLICATION_SLOTS "\
+SELECT \
+	slot_name, \
+	spill_txns, \
+	spill_count, \
+	spill_bytes, \
+	stream_txns, \
+	stream_count, \
+	stream_bytes, \
+	total_txns, \
+	total_bytes, \
+	stats_reset \
+FROM \
+	pg_stat_replication_slots"
+#endif
+
+/* stat wal */
+#if PG_VERSION_NUM >= 140000
+#define SQL_SELECT_STAT_WAL "\
+SELECT \
+	wal_records, \
+	wal_fpi, \
+	wal_bytes, \
+	wal_buffers_full, \
+	wal_write, \
+	wal_sync, \
+	wal_write_time, \
+	wal_sync_time, \
+	stats_reset \
+FROM \
+	pg_stat_wal"
+#endif
+
 /* xlog */
 #if PG_VERSION_NUM >= 100000
 #define SQL_SELECT_XLOG "\

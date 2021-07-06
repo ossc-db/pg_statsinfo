@@ -356,19 +356,40 @@ CREATE TABLE statsrepo.autovacuum
 	page_dirty				bigint,
 	read_rate				double precision,
 	write_rate				double precision,
+	wal_records				bigint,
+	wal_page_images			bigint,
+	wal_bytes				bigint,
 	duration				real,
+	index_scan_ptn			integer,
+	tbl_scan_pages			bigint,
+	tbl_scan_pages_ratio	double precision,
+	dead_lp					bigint,
+	index_names             text[],
+	index_pages_total       bigint[],
+	index_pages_new_del     bigint[],
+	index_pgaes_current_del bigint[],
+	index_pages_reusable    bigint[],
+	io_timings_read			double precision,
+	io_timings_write		double precision,
 	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
 );
 CREATE INDEX statsrepo_autovacuum_idx ON statsrepo.autovacuum(instid, start);
 
 CREATE TABLE statsrepo.autoanalyze
 (
-	instid			bigint,
-	start			timestamptz,
-	database		text,
-	schema			text,
-	"table"			text,
-	duration		real,
+	instid				bigint,
+	start				timestamptz,
+	database			text,
+	schema				text,
+	"table"				text,
+	page_hit			bigint,
+	page_miss			bigint,
+	page_dirty			bigint,
+	read_rate			double precision,
+	write_rate			double precision,
+	duration			real,
+	io_timings_read		double precision,
+	io_timings_write	double precision,
 	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
 );
 CREATE INDEX statsrepo_autoanalyze_idx ON statsrepo.autoanalyze(instid, start);
@@ -557,6 +578,37 @@ CREATE TABLE statsrepo.replication_slots
 	catalog_xmin			xid,
 	restart_lsn				pg_lsn,
 	confirmed_flush_lsn		pg_lsn,
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
+CREATE TABLE statsrepo.stat_replication_slots
+(
+	snapid					bigint,
+	slot_name				text,
+	spill_txns				bigint,
+	spill_count				bigint,
+	spill_bytes				bigint,
+	stream_txns 			bigint,
+	stream_count			bigint,
+	stream_bytes			bigint,
+	total_txns				bigint,
+	total_bytes				bigint,
+	stats_reset				timestamp with time zone,
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
+CREATE TABLE statsrepo.stat_wal
+(
+	snapid					bigint,
+	wal_records				bigint,
+	wal_fpi					bigint,
+	wal_bytes				numeric,
+	wal_buffers_full		bigint,
+	wal_write				bigint,
+	wal_sync				bigint,
+	wal_write_time			double precision,
+	wal_sync_time			double precision,
+	stats_reset				timestamp with time zone,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
@@ -779,10 +831,10 @@ CREATE FUNCTION statsrepo.array_unique(anyarray) RETURNS anyarray AS
 LANGUAGE sql;
 
 -- array_accum - array concatenation aggregate function
-CREATE AGGREGATE statsrepo.array_accum(anyarray)
+CREATE AGGREGATE statsrepo.array_accum(anycompatiblearray)
 (
 	sfunc = array_cat,
-	stype = anyarray,
+	stype = anycompatiblearray,
 	initcond = '{}'
 );
 
@@ -1267,6 +1319,83 @@ $$
 $$
 LANGUAGE sql;
 
+-- generate information that corresponds to 'Replication Slots Statistics'
+CREATE FUNCTION statsrepo.get_stat_replication_slots_report(
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT slot_name			text,
+	OUT slot_type			text,
+	OUT slot_datname		text,
+	OUT spill_txns			bigint,
+	OUT spill_count			bigint,
+	OUT spill_bytes			bigint,
+	OUT stream_txns			bigint,
+	OUT stream_count		bigint,
+	OUT stream_bytes		bigint,
+	OUT total_txns			bigint,
+	OUT total_bytes			bigint,
+	OUT stats_reset			text
+) RETURNS SETOF record AS
+$$
+	SELECT
+		e.slot_name,
+		e.slot_type,
+		e.name,
+		(CASE WHEN e.stats_reset = f.stats_reset THEN e.spill_txns   - f.spill_txns   WHEN e.stats_reset IS NULL THEN e.spill_txns   - COALESCE(f.spill_txns  ,0) ELSE e.spill_txns   END),
+		(CASE WHEN e.stats_reset = f.stats_reset THEN e.spill_count  - f.spill_count  WHEN e.stats_reset IS NULL THEN e.spill_count  - COALESCE(f.spill_count ,0) ELSE e.spill_count  END),
+		(CASE WHEN e.stats_reset = f.stats_reset THEN e.spill_bytes  - f.spill_bytes  WHEN e.stats_reset IS NULL THEN e.spill_bytes  - COALESCE(f.spill_bytes ,0) ELSE e.spill_bytes  END),
+		(CASE WHEN e.stats_reset = f.stats_reset THEN e.stream_txns  - f.stream_txns  WHEN e.stats_reset IS NULL THEN e.stream_txns  - COALESCE(f.stream_txns ,0) ELSE e.stream_txns  END),
+		(CASE WHEN e.stats_reset = f.stats_reset THEN e.stream_count - f.stream_count WHEN e.stats_reset IS NULL THEN e.stream_count - COALESCE(f.stream_count,0) ELSE e.stream_count END),
+		(CASE WHEN e.stats_reset = f.stats_reset THEN e.stream_bytes - f.stream_bytes WHEN e.stats_reset IS NULL THEN e.stream_bytes - COALESCE(f.stream_bytes,0) ELSE e.stream_bytes END),
+		(CASE WHEN e.stats_reset = f.stats_reset THEN e.total_txns   - f.total_txns   WHEN e.stats_reset IS NULL THEN e.total_txns   - COALESCE(f.total_txns  ,0) ELSE e.total_txns   END),
+		(CASE WHEN e.stats_reset = f.stats_reset THEN e.total_bytes  - f.total_bytes  WHEN e.stats_reset IS NULL THEN e.total_bytes  - COALESCE(f.total_bytes ,0) ELSE e.total_bytes  END),
+		e.stats_reset
+	FROM
+		(SELECT
+			a.slot_name,
+			c.slot_type,
+			g.name,
+			a.spill_txns,
+			a.spill_count,
+			a.spill_bytes,
+			a.stream_txns,
+			a.stream_count,
+			a.stream_bytes,
+			a.total_txns,
+			a.total_bytes,
+			a.stats_reset
+		FROM
+			statsrepo.stat_replication_slots a
+			LEFT JOIN statsrepo.replication_slots c ON a.slot_name = c.slot_name AND a.snapid = c.snapid
+			LEFT JOIN statsrepo.database g ON c.datoid = g.dbid AND a.snapid = g.snapid
+		WHERE
+		 	a.snapid = $2) e
+		LEFT JOIN
+			(SELECT
+				b.slot_name,
+				d.slot_type,
+				h.name,
+				b.spill_txns,
+				b.spill_count,
+				b.spill_bytes,
+				b.stream_txns,
+				b.stream_count,
+				b.stream_bytes,
+				b.total_txns,
+				b.total_bytes,
+				b.stats_reset
+			FROM
+				statsrepo.stat_replication_slots b
+				LEFT JOIN statsrepo.replication_slots d ON b.slot_name = d.slot_name AND b.snapid = d.snapid
+				LEFT JOIN statsrepo.database h ON d.datoid = h.dbid AND b.snapid = h.snapid
+			WHERE
+				b.snapid = $1) f
+			ON e.slot_name = f.slot_name
+	ORDER BY
+		11 DESC;
+$$
+LANGUAGE sql;
+
 -- generate information that corresponds to 'Recovery Conflicts'
 CREATE FUNCTION statsrepo.get_recovery_conflicts(
 	IN snapid_begin			bigint,
@@ -1479,6 +1608,62 @@ $$
 		pg_catalog.max(last_archived_wal)
 	FROM
 		statsrepo.get_wal_tendency($1, $2);
+$$
+LANGUAGE sql;
+
+CREATE FUNCTION statsrepo.get_stat_wal(
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT wal_records			bigint,
+	OUT wal_fpi				bigint,
+	OUT wal_bytes			numeric,
+	OUT wal_buffers_full	bigint,
+	OUT wal_write			bigint,
+	OUT wal_sync			bigint,
+	OUT wal_write_time		numeric,
+	OUT wal_sync_time		numeric,
+	OUT stats_reset			text
+) RETURNS SETOF record AS
+$$
+	SELECT
+		(CASE WHEN a.stats_reset = b.stats_reset THEN a.wal_records - b.wal_records ELSE a.wal_records END),
+		(CASE WHEN a.stats_reset = b.stats_reset THEN a.wal_fpi - b.wal_fpi ELSE a.wal_fpi END),
+		(CASE WHEN a.stats_reset = b.stats_reset THEN a.wal_bytes - b.wal_bytes ELSE a.wal_bytes END),
+		(CASE WHEN a.stats_reset = b.stats_reset THEN a.wal_buffers_full - b.wal_buffers_full ELSE a.wal_buffers_full END),
+		(CASE WHEN a.stats_reset = b.stats_reset THEN a.wal_write - b.wal_write ELSE a.wal_write END),
+		(CASE WHEN a.stats_reset = b.stats_reset THEN a.wal_sync - b.wal_sync ELSE a.wal_sync END),
+		(CASE WHEN a.stats_reset = b.stats_reset THEN a.wal_write_time - b.wal_write_time ELSE a.wal_write_time END),
+		(CASE WHEN a.stats_reset = b.stats_reset THEN a.wal_sync_time - b.wal_sync_time ELSE a.wal_sync_time END),
+		a.stats_reset
+	FROM
+		(SELECT
+			wal_records,
+			wal_fpi,
+			wal_bytes,
+			wal_buffers_full,
+			wal_write,
+			wal_sync,
+			wal_write_time,
+			wal_sync_time,
+			stats_reset
+		 FROM
+		 	statsrepo.stat_wal
+		 WHERE
+		 	snapid = $1) b,
+		(SELECT
+			wal_records,
+			wal_fpi,
+			wal_bytes,
+			wal_buffers_full,
+			wal_write,
+			wal_sync,
+			wal_write_time,
+			wal_sync_time,
+			stats_reset
+		 FROM
+		 	statsrepo.stat_wal
+		 WHERE
+		 	snapid = $2) a;
 $$
 LANGUAGE sql;
 
@@ -2170,35 +2355,72 @@ LANGUAGE sql;
 
 -- generate information that corresponds to 'Autovacuum Activity'
 CREATE FUNCTION statsrepo.get_autovacuum_activity(
-	IN snapid_begin		bigint,
-	IN snapid_end		bigint,
-	OUT datname			text,
-	OUT nspname			text,
-	OUT relname			text,
-	OUT "count"			bigint,
-	OUT avg_tup_removed	numeric,
-	OUT avg_tup_remain	numeric,
-	OUT avg_tup_dead	numeric,
-	OUT avg_index_scans	numeric,
-	OUT avg_duration	numeric,
-	OUT max_duration	numeric,
-	OUT cancel			bigint
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT datname				text,
+	OUT nspname				text,
+	OUT relname				text,
+	OUT "count"				bigint,
+	OUT index_scanned		bigint,
+	OUT index_skipped		bigint,
+	OUT avg_tup_removed		numeric,
+	OUT avg_tup_remain		numeric,
+	OUT avg_tup_dead		numeric,
+	OUT scan_pages			numeric,
+	OUT scan_pages_ratio	numeric,
+	OUT removed_lp			numeric,
+	OUT dead_lp				numeric,
+	OUT avg_index_scans		numeric,
+	OUT avg_duration		numeric,
+	OUT max_duration		numeric,
+	OUT cancel				bigint
 ) RETURNS SETOF record AS
 $$
-	SELECT
-		COALESCE(tv.database, tc.database),
-		COALESCE(tv.schema, tc.schema),
-		COALESCE(tv.table, tc.table),
-		COALESCE(tv.count, 0),
-		pg_catalog.round(COALESCE(tv.avg_tup_removed, 0)::numeric, 3),
-		pg_catalog.round(COALESCE(tv.avg_tup_remain, 0)::numeric, 3),
-		pg_catalog.round(COALESCE(tv.avg_tup_dead, 0)::numeric, 3),
-		pg_catalog.round(COALESCE(tv.avg_index_scans, 0)::numeric, 3),
-		pg_catalog.round(COALESCE(tv.avg_duration, 0)::numeric, 3),
-		pg_catalog.round(COALESCE(tv.max_duration, 0)::numeric, 3),
-		COALESCE(tc.count, 0)
-	FROM
-		(SELECT
+	WITH
+	b AS ( SELECT pg_catalog.min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1 ),
+	e AS ( SELECT pg_catalog.max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2 ),
+	i AS ( SELECT instid FROM statsrepo.snapshot WHERE snapid = $2 ),
+	vall AS (
+		-- Select autovacuum for period / instance ID
+		SELECT
+			v.database,
+			v.schema,
+			v.table,
+			v.tup_removed,
+			v.tup_remain,
+			v.tup_dead,
+			v.index_scans,
+			v.duration,
+			v.index_scan_ptn,
+			v.tbl_scan_pages,
+			v.tbl_scan_pages_ratio,
+			v.dead_lp
+		 FROM
+			statsrepo.autovacuum v,
+			b, e, i
+		 WHERE
+			v.start BETWEEN b.time AND e.time
+			AND v.instid = i.instid
+	),
+	tc AS ( 
+		-- Select autovacuum_cancel for period / instance ID to aggregate
+		 SELECT
+			c.database,
+			c.schema,
+			c.table,
+			pg_catalog.count(*)
+		 FROM
+			statsrepo.autovacuum_cancel c,
+			b,e,i
+		 WHERE
+			c.timestamp BETWEEN b.time AND e.time
+			AND c.instid = i.instid
+		 GROUP BY
+			c.database, c.schema, c.table
+	),
+	tv AS (
+		-- Aggregate selected autovacuum
+		SELECT
 			v.database,
 			v.schema,
 			v.table,
@@ -2209,50 +2431,88 @@ $$
 			pg_catalog.avg(v.index_scans) AS avg_index_scans,
 			pg_catalog.avg(v.duration) AS avg_duration,
 			pg_catalog.max(v.duration) AS max_duration
-		 FROM
-			statsrepo.autovacuum v,
-			(SELECT pg_catalog.min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
-			(SELECT pg_catalog.max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e,
-			(SELECT instid FROM statsrepo.snapshot WHERE snapid = $2) i
-		 WHERE
-			v.start BETWEEN b.time AND e.time
-			AND v.instid = i.instid
-		 GROUP BY
-			v.database, v.schema, v."table") tv
-		 FULL JOIN
-			(SELECT
-				c.database,
-				c.schema,
-				c.table,
-				pg_catalog.count(*)
-			 FROM
-				statsrepo.autovacuum_cancel c,
-				(SELECT pg_catalog.min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
-				(SELECT pg_catalog.max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e,
-				(SELECT instid FROM statsrepo.snapshot WHERE snapid = $2) i
-			 WHERE
-				c.timestamp BETWEEN b.time AND e.time
-				AND c.instid = i.instid
-			 GROUP BY
-				c.database, c.schema, c.table) tc
-		 ON tv.database = tc.database AND tv.schema = tc.schema AND tv.table = tc.table
+		FROM
+			vall v
+		GROUP BY
+			v.database, v.schema, v.table
+	),
+	va AS (
+		-- Aggregate index-scanned data
+		SELECT
+			v.database,
+			v.schema,
+			v.table,
+			pg_catalog.count(*) AS index_scan,
+			pg_catalog.avg(v.tbl_scan_pages)       AS tbl_scan_pages,
+			pg_catalog.avg(v.tbl_scan_pages_ratio) AS tbl_scan_pages_ratio,
+			pg_catalog.avg(v.dead_lp) AS remain_lp
+		FROM
+			vall v
+		WHERE
+			v.index_scan_ptn in (2)  --(TBD)
+		GROUP BY
+			v.database, v.schema, v.table
+	),
+	vb AS (
+		-- Aggregate data that was not index-scanned
+		SELECT
+			v.database,
+			v.schema,
+			v.table,
+			pg_catalog.count(*)       AS index_skip,
+			pg_catalog.avg(v.dead_lp) AS dead_lp
+		FROM
+			vall v
+		WHERE
+			v.index_scan_ptn in (1,3,4)  --(TBD)
+		GROUP BY
+			v.database, v.schema, v.table
+	)
+	SELECT
+		COALESCE(tv.database, tc.database),
+		COALESCE(tv.schema, tc.schema),
+		COALESCE(tv.table, tc.table),
+		COALESCE(tv.count, 0),
+		COALESCE(va.index_scan, 0),
+		COALESCE(vb.index_skip, 0),
+		pg_catalog.round(COALESCE(tv.avg_tup_removed,      0)::numeric, 3),
+		pg_catalog.round(COALESCE(tv.avg_tup_remain,       0)::numeric, 3),
+		pg_catalog.round(COALESCE(tv.avg_tup_dead,         0)::numeric, 3),
+		pg_catalog.round(COALESCE(va.tbl_scan_pages,       0)::numeric, 3),
+		pg_catalog.round(COALESCE(va.tbl_scan_pages_ratio, 0)::numeric, 3),
+		pg_catalog.round(COALESCE(va.remain_lp,            0)::numeric, 3),
+		pg_catalog.round(COALESCE(vb.dead_lp,              0)::numeric, 3),
+		pg_catalog.round(COALESCE(tv.avg_index_scans,      0)::numeric, 3),
+		pg_catalog.round(COALESCE(tv.avg_duration,         0)::numeric, 3),
+		pg_catalog.round(COALESCE(tv.max_duration,         0)::numeric, 3),
+		COALESCE(tc.count, 0)
+	FROM
+		tv
+	LEFT JOIN
+		va ON tv.database = va.database AND tv.schema = va.schema AND tv.table = va.table
+	LEFT JOIN
+		vb ON tv.database = vb.database AND tv.schema = vb.schema AND tv.table = vb.table
+	FULL JOIN
+		tc ON tv.database = tc.database AND tv.schema = tc.schema AND tv.table = tc.table
 	ORDER BY
-		5 DESC;
+		7 DESC;
 $$
 LANGUAGE sql;
 
 -- generate information that corresponds to 'Autovacuum Activity'
 CREATE FUNCTION statsrepo.get_autovacuum_activity2(
-	IN snapid_begin		bigint,
-	IN snapid_end		bigint,
-	OUT datname			text,
-	OUT nspname			text,
-	OUT relname			text,
-	OUT avg_page_hit	numeric,
-	OUT avg_page_miss	numeric,
-	OUT avg_page_dirty	numeric,
-	OUT avg_read_rate	numeric,
-	OUT avg_write_rate	numeric
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT datname				text,
+	OUT nspname				text,
+	OUT relname				text,
+	OUT avg_page_hit		numeric,
+	OUT avg_page_miss		numeric,
+	OUT avg_page_dirty		numeric,
+	OUT avg_read_rate		numeric,
+	OUT avg_write_rate		numeric,
+	OUT avg_read_duration	numeric,
+	OUT avg_write_duration	numeric
 ) RETURNS SETOF record AS
 $$
 	SELECT
@@ -2263,18 +2523,135 @@ $$
 		pg_catalog.round(pg_catalog.avg(page_miss)::numeric,3),
 		pg_catalog.round(pg_catalog.avg(page_dirty)::numeric,3),
 		pg_catalog.round(pg_catalog.avg(read_rate)::numeric,3),
-		pg_catalog.round(pg_catalog.avg(write_rate)::numeric,3)
+		pg_catalog.round(pg_catalog.avg(write_rate)::numeric,3),
+		pg_catalog.round(pg_catalog.avg(io_timings_read)::numeric,3),
+		pg_catalog.round(pg_catalog.avg(io_timings_write)::numeric,3)
 	FROM
-		statsrepo.autovacuum v,
-		(SELECT pg_catalog.min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
-		(SELECT pg_catalog.max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
-	WHERE
-		v.start BETWEEN b.time AND e.time
-		AND v.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+		(SELECT
+			database,
+			schema,
+			"table",
+			page_hit,
+			page_miss,
+			page_dirty,
+			read_rate,
+			write_rate,
+			COALESCE(io_timings_read,  0) AS io_timings_read,
+			COALESCE(io_timings_write, 0) AS io_timings_write
+		 FROM
+			statsrepo.autovacuum v,
+			(SELECT pg_catalog.min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+			(SELECT pg_catalog.max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
+		 WHERE
+			v.start BETWEEN b.time AND e.time
+			AND v.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+		) AS tv
 	GROUP BY
 		database, schema, "table"
 	ORDER BY
 		4 DESC;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Vacuum WAL Statistics (Average)'
+CREATE FUNCTION statsrepo.get_autovacuum_wal_activity(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT datname			text,
+	OUT nspname			text,
+	OUT relname			text,
+	OUT "count"			bigint,
+	OUT wal_records		numeric,
+	OUT wal_fpis		numeric,
+	OUT wal_bytes		numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		tv.database,
+		tv.schema,
+		tv.table,
+		COALESCE(tv.count, 0) AS count,
+		pg_catalog.round(COALESCE(tv.wal_records, 0)::numeric, 3)     AS wal_records,
+		pg_catalog.round(COALESCE(tv.wal_page_images, 0)::numeric, 3) AS wal_fpis,
+		pg_catalog.round(COALESCE(tv.wal_bytes, 0)::numeric, 3)       AS wal_bytes
+	FROM
+		(SELECT
+			v.database,
+			v.schema,
+			v.table,
+			pg_catalog.count(*),
+			pg_catalog.avg(v.wal_records) AS wal_records,
+			pg_catalog.avg(v.wal_page_images) AS wal_page_images,
+			pg_catalog.avg(v.wal_bytes) AS wal_bytes
+		FROM
+			statsrepo.autovacuum v,
+			( SELECT pg_catalog.min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1 ) b,
+			( SELECT pg_catalog.max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2 ) e,
+			( SELECT instid FROM statsrepo.snapshot WHERE snapid = $2 ) i
+		WHERE
+			v.start BETWEEN b.time AND e.time
+			AND v.instid = i.instid
+		GROUP BY
+			v.database, v.schema, v."table") tv
+	ORDER BY
+		7 DESC;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Vacuum Index Statistics (Average)'
+CREATE FUNCTION statsrepo.get_autovacuum_index_activity(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT datname			text,
+	OUT nspname			text,
+	OUT relname			text,
+	OUT index_name		text,
+	OUT "count"			bigint,
+	OUT page_total		numeric,
+	OUT page_new_del	numeric,
+	OUT page_cur_del	numeric,
+	OUT page_reuse		numeric
+) RETURNS SETOF record AS
+$$
+	WITH
+	tv AS (
+		SELECT
+			v.database,
+			v.schema, 
+			v.table,
+			pg_catalog.unnest(v.index_names)             AS index,
+			pg_catalog.unnest(v.index_pages_total)       AS total,
+			pg_catalog.unnest(v.index_pages_new_del)     AS new_del,
+			pg_catalog.unnest(v.index_pgaes_current_del) AS cur_del,
+			pg_catalog.unnest(v.index_pages_reusable)    AS reuse
+		FROM
+			statsrepo.autovacuum v,
+			( SELECT pg_catalog.min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1 ) b,
+			( SELECT pg_catalog.max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2 ) e,
+			( SELECT instid FROM statsrepo.snapshot WHERE snapid = $2 ) i
+		WHERE
+			v.start BETWEEN b.time AND e.time
+			AND v.instid = i.instid
+	)
+	SELECT
+		tv.database,
+		tv.schema, 
+		tv.table,
+		tv.index,
+		count(*),
+		pg_catalog.round(pg_catalog.avg(tv.total)  ,3),
+		pg_catalog.round(pg_catalog.avg(tv.new_del),3),
+		pg_catalog.round(pg_catalog.avg(tv.cur_del),3),
+		pg_catalog.round(pg_catalog.avg(tv.reuse)  ,3)
+	FROM
+		tv
+	GROUP BY
+		tv.database,
+		tv.schema, 
+		tv.table,
+		tv.index
+	ORDER BY
+		6 DESC, 7 DESC, 9 DESC;
 $$
 LANGUAGE sql;
 

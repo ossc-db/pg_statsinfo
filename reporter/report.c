@@ -17,6 +17,7 @@
 #define SQL_SELECT_DBSTATS						"SELECT * FROM statsrepo.get_dbstats($1, $2)"
 #define SQL_SELECT_XACT_TENDENCY				"SELECT * FROM statsrepo.get_xact_tendency_report($1, $2)"
 #define SQL_SELECT_DBSIZE_TENDENCY				"SELECT * FROM statsrepo.get_dbsize_tendency_report($1, $2)"
+#define SQL_SELECT_STAT_REPLICATION_SLOTS		"SELECT * FROM statsrepo.get_stat_replication_slots_report($1, $2)"
 #define SQL_SELECT_RECOVERY_CONFLICTS 			"SELECT * FROM statsrepo.get_recovery_conflicts($1, $2)"
 #define SQL_SELECT_INSTANCE_PROC_TENDENCY "\
 SELECT * FROM statsrepo.get_proc_tendency_report($1, $2) \
@@ -32,6 +33,7 @@ FROM \
 #define SQL_SELECT_BGWRITER_STATS				"SELECT * FROM statsrepo.get_bgwriter_stats($1, $2)"
 #define SQL_SELECT_WALSTATS						"SELECT * FROM statsrepo.get_wal_stats($1, $2)"
 #define SQL_SELECT_WALSTATS_TENDENCY			"SELECT * FROM statsrepo.get_wal_tendency($1, $2)"
+#define SQL_SELECT_STAT_WAL						"SELECT * FROM statsrepo.get_stat_wal($1, $2)"
 #define SQL_SELECT_CPU_LOADAVG_TENDENCY "\
 SELECT * FROM statsrepo.get_cpu_loadavg_tendency($1, $2) \
 UNION ALL \
@@ -61,9 +63,15 @@ FROM \
 SELECT \
 	datname || '.' || nspname || '.' || relname, \
 	\"count\", \
+	index_scanned, \
+	index_skipped, \
 	avg_tup_removed, \
 	avg_tup_remain, \
 	avg_tup_dead, \
+	scan_pages, \
+	scan_pages_ratio, \
+	removed_lp, \
+	dead_lp, \
 	avg_index_scans, \
 	avg_duration, \
 	max_duration, \
@@ -77,9 +85,34 @@ SELECT \
 	avg_page_miss, \
 	avg_page_dirty, \
 	avg_read_rate, \
-	avg_write_rate \
+	avg_write_rate, \
+	avg_read_duration, \
+	avg_write_duration \
 FROM \
 	statsrepo.get_autovacuum_activity2($1, $2)"
+
+#define SQL_SELECT_AUTOVACUUM_WAL_ACTIVITY "\
+SELECT \
+	datname || '.' || nspname || '.' || relname, \
+	\"count\", \
+	wal_records, \
+	wal_fpis, \
+	wal_bytes \
+FROM \
+	statsrepo.get_autovacuum_wal_activity($1, $2)"
+
+#define SQL_SELECT_AUTOVACUUM_INDEX_ACTIVITY	"\
+SELECT \
+	datname || '.' || nspname || '.' || relname, \
+	index_name, \
+	\"count\", \
+	page_total, \
+	page_new_del, \
+	page_cur_del, \
+	page_reuse \
+FROM \
+	statsrepo.get_autovacuum_index_activity($1,$2)"
+
 #define SQL_SELECT_AUTOANALYZE_STATS "\
 SELECT \
 	datname || '.' || nspname || '.' || relname, \
@@ -423,6 +456,35 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
+	if (scope->version >= 140000 )
+	{
+		fprintf(out, "/** Replication Slots Statistics **/\n");
+		fprintf(out, "----------------------------------------\n");
+		fprintf(out, "%-15s  %-11s  %-15s  %11s  %11s  %12s  %11s  %12s  %12s  %11s  %12s  %-20s\n",
+			"Slot Name", "Slot Type", "Slot Database", "Spill Txns", "Spill Count" , "Spill Bytes" , "Stream Txns" , "Stream Count" , "Stream Bytes" , "Total Txns" , "Total Bytes" , "Replication Slots Reset");
+		fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+
+		res = pgut_execute(conn, SQL_SELECT_STAT_REPLICATION_SLOTS, lengthof(params), params);
+		for(i = 0; i < PQntuples(res); i++)
+		{
+			fprintf(out, "%-15s  %-11s  %-15s  %11s  %11s  %12s  %11s  %12s  %12s  %11s  %12s  %-20s\n",
+				PQgetvalue(res, i, 0),
+				PQgetvalue(res, i, 1),
+				PQgetvalue(res, i, 2),
+				PQgetvalue(res, i, 3),
+				PQgetvalue(res, i, 4),
+				PQgetvalue(res, i, 5),
+				PQgetvalue(res, i, 6),
+				PQgetvalue(res, i, 7),
+				PQgetvalue(res, i, 8),
+				PQgetvalue(res, i, 9),
+				PQgetvalue(res, i, 10),
+				PQgetvalue(res, i, 11));
+		}
+		fprintf(out, "\n");
+		PQclear(res);
+	}
+
 	fprintf(out, "/** Recovery Conflicts **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %19s  %13s  %17s  %18s  %17s\n",
@@ -507,6 +569,31 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	}
 	fprintf(out, "\n");
 	PQclear(res);
+	
+	if (scope->version >= 140000 )
+	{
+		fprintf(out, "----------------------------------------\n");
+		fprintf(out, "%13s  %11s  %12s  %16s  %12s  %12s  %14s  %13s  %-20s\n",
+			"Wal Records", "Wal Fpi", "Wal Bytes", "Wal Buffers Full", "Wal write" , "Wal Sync" , "Wal write Time" , "Wal Sync Time" , "Wal Reset");
+		fprintf(out, "----------------------------------------------------------------------------------------------------------------------------------------------------\n");
+
+		res = pgut_execute(conn, SQL_SELECT_STAT_WAL, lengthof(params), params);
+		for(i = 0; i < PQntuples(res); i++)
+		{
+			fprintf(out, "%13s  %11s  %12s  %16s  %12s  %12s  %11s ms  %10s ms  %-20s\n",
+				PQgetvalue(res, i, 0),
+				PQgetvalue(res, i, 1),
+				PQgetvalue(res, i, 2),
+				PQgetvalue(res, i, 3),
+				PQgetvalue(res, i, 4),
+				PQgetvalue(res, i, 5),
+				PQgetvalue(res, i, 6),
+				PQgetvalue(res, i, 7),
+				PQgetvalue(res, i, 8));
+		}
+		fprintf(out, "\n");
+		PQclear(res);
+	}
 
 	fprintf(out, "/** Instance Processes **/\n");
 	fprintf(out, "-----------------------------------\n");
@@ -885,24 +972,31 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Vacuum Basic Statistics (Average) **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-32s  %8s  %12s  %12s  %12s  %12s  %12s  %13s  %7s\n",
-		"Table", "Count", "Removed Rows", "Remain Rows", "Remain Dead",
+	fprintf(out, "%-40s  %8s  %13s  %13s  %12s  %12s  %12s  %10s  %16s  %10s  %10s %12s  %12s  %13s  %7s\n",
+		"Table", "Count", "Index Scanned", "Index Skipped", "Removed Rows", "Remain Rows", "Remain Dead",
+		"Scan Pages", "Scan Pages Ratio", "Removed Lp", "Dead Lp",
 		"Index Scans", "Duration", "Duration(Max)", "Cancels");
-	fprintf(out, "-------------------------------------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_ACTIVITY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-32s  %8s  %12s  %12s  %12s  %12s  %10s s  %11s s  %7s\n",
+		fprintf(out, "%-40s  %8s  %13s  %13s  %12s  %12s  %12s  %10s  %16s  %10s  %10s %12s  %10s s  %11s s  %7s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
 			PQgetvalue(res, i, 3),
-			scope->version >= 90400 ? PQgetvalue(res, i, 4) : "(N/A)",
+			PQgetvalue(res, i, 4),
 			PQgetvalue(res, i, 5),
-			PQgetvalue(res, i, 6),
+			scope->version >= 90400 ? PQgetvalue(res, i, 6) : "(N/A)",
 			PQgetvalue(res, i, 7),
-			PQgetvalue(res, i, 8));
+			PQgetvalue(res, i, 8),
+			PQgetvalue(res, i, 9),
+			PQgetvalue(res, i, 10),
+			PQgetvalue(res, i, 11),
+			PQgetvalue(res, i, 12),
+			PQgetvalue(res, i, 13),
+			PQgetvalue(res, i, 14));
 	}
 	fprintf(out, "\n");
 	PQclear(res);
@@ -911,20 +1005,66 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	{
 		fprintf(out, "/** Vacuum I/O Statistics (Average) **/\n");
 		fprintf(out, "-----------------------------------\n");
-		fprintf(out, "%-32s  %10s  %10s  %10s  %13s  %13s\n",
-			"Table", "Page Hit", "Page Miss", "Page Dirty", "Read Rate", "Write Rate");
-		fprintf(out, "-----------------------------------------------------------------------------------------------------\n");
+		fprintf(out, "%-40s  %10s  %10s  %10s  %13s  %13s  %14s  %14s\n",
+			"Table", "Page Hit", "Page Miss", "Page Dirty", "Read Rate", "Write Rate", "Read Duration", "Write Duration");
+		fprintf(out, "---------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 		res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_ACTIVITY2, lengthof(params), params);
 		for(i = 0; i < PQntuples(res); i++)
 		{
-			fprintf(out, "%-32s  %10s  %10s  %10s  %7s MiB/s  %7s MiB/s\n",
+			fprintf(out, "%-40s  %10s  %10s  %10s  %7s MiB/s  %7s MiB/s  %12s s  %12s s\n",
 				PQgetvalue(res, i, 0),
 				PQgetvalue(res, i, 1),
 				PQgetvalue(res, i, 2),
 				PQgetvalue(res, i, 3),
 				PQgetvalue(res, i, 4),
-				PQgetvalue(res, i, 5));
+				PQgetvalue(res, i, 5),
+				PQgetvalue(res, i, 6),
+				PQgetvalue(res, i, 7));
+		}
+		fprintf(out, "\n");
+		PQclear(res);
+	}
+
+	if (scope->version >= 140000)
+	{
+		fprintf(out, "/** Vacuum WAL Statistics (Average) **/\n");
+		fprintf(out, "-----------------------------------\n");
+		fprintf(out, "%-40s  %8s %10s  %10s  %10s\n",
+			"Table", "Count", "WAL Records", "WAL FPIs", "WAL bytes" );
+		fprintf(out, "-----------------------------------------------------------------------------------------\n");
+		
+		res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_WAL_ACTIVITY, lengthof(params), params);
+		for(i = 0; i < PQntuples(res); i++)
+		{
+			fprintf(out, "%-40s  %8s  %10s  %10s  %10s\n",
+				PQgetvalue(res, i, 0),
+				PQgetvalue(res, i, 1),
+				PQgetvalue(res, i, 2),
+				PQgetvalue(res, i, 3),
+				PQgetvalue(res, i, 4));
+		}
+		fprintf(out, "\n");
+		PQclear(res);
+
+
+		fprintf(out, "/** Vacuum Index Statistics (Average) **/\n");
+		fprintf(out, "-----------------------------------\n");
+		fprintf(out, "%-40s  %-32s  %8s  %13s  %13s  %13s  %13s\n",
+			"Table", "Index", "Count", "Page Total", "Page New Del", "Page Curr Del", "Page Reuse" );
+		fprintf(out, "---------------------------------------------------------------------------------------------------------------------------------------------------\n");
+
+		res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_INDEX_ACTIVITY, lengthof(params), params);
+		for(i = 0; i < PQntuples(res); i++)
+		{
+			fprintf(out, "%-40s  %-32s  %8s  %13s  %13s  %13s  %13s\n",
+				PQgetvalue(res, i, 0),
+				PQgetvalue(res, i, 1),
+				PQgetvalue(res, i, 2),
+				PQgetvalue(res, i, 3),
+				PQgetvalue(res, i, 4),
+				PQgetvalue(res, i, 5),
+				PQgetvalue(res, i, 6));
 		}
 		fprintf(out, "\n");
 		PQclear(res);
@@ -932,15 +1072,15 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Analyze Statistics **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-32s  %8s  %15s  %15s  %15s  %-19s  %7s  %13s\n",
+	fprintf(out, "%-40s  %8s  %15s  %15s  %15s  %-19s  %7s  %13s\n",
 		"Table", "Count", "Duration(Total)", "Duration(Avg)",
 		"Duration(Max)", "Last Analyze Time", "Cancels", "Mod Rows(Max)");
-	fprintf(out, "---------------------------------------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_AUTOANALYZE_STATS, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-32s  %8s  %13s s  %13s s  %13s s  %-19s  %7s  %13s\n",
+		fprintf(out, "%-40s  %8s  %13s s  %13s s  %13s s  %-19s  %7s  %13s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),

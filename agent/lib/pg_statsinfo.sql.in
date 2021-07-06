@@ -17,10 +17,10 @@ REVOKE ALL ON SCHEMA statsinfo FROM PUBLIC;
 --
 -- statsinfo.array_agg()
 --
-CREATE AGGREGATE statsinfo.array_agg(anyelement)
+CREATE AGGREGATE statsinfo.array_agg(anycompatible)
 (
 	SFUNC=array_append,
-	STYPE=anyarray,
+	STYPE=anycompatiblearray,
 	INITCOND='{}'
 );
 

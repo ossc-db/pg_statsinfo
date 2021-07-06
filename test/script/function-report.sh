@@ -26,6 +26,7 @@ SELECT statsrepo.input_data(2, '5807946214009601531', 'statsinfo', 5433, '9.3.0'
 SELECT statsrepo.input_data(3, '5807946214009601532', 'statsinfo', 5434, '9.4.0', 9);
 SELECT statsrepo.input_data(4, '5807946214009601533', 'statsinfo', 5435, '9.5.0', 13);
 SELECT statsrepo.input_data(5, '5807946214009601534', 'statsinfo', 5436, '9.6.0', 17);
+SELECT statsrepo.input_data(6, '5807946214009601535', 'statsinfo', 5437, '140000', 21);
 EOF
 
 echo "/*---- Create report ----*/"
@@ -114,5 +115,5 @@ cat ${REPOSITORY_DATA}/report.log
 
 echo "/*---- Quasi-normal pattern ----*/"
 echo "/**--- Contain the snapshot that is same acquisition date ---**/"
-send_query -c "UPDATE statsrepo.snapshot SET time = '2012-11-01 00:00:00' WHERE instid = 5"
-exec_command "exec_statsinfo -r All -i 5"
+send_query -c "UPDATE statsrepo.snapshot SET time = '2012-11-01 00:00:00' WHERE instid = 6"
+exec_command "exec_statsinfo -r All -i 6"
