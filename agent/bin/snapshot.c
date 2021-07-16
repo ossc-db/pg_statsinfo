@@ -123,12 +123,12 @@ static const char *database_gets[] =
 
 static const char *database_puts[] =
 {
-	SQL_INSERT_SCHEMA,
-	SQL_INSERT_TABLE,
-	SQL_INSERT_COLUMN,
-	SQL_INSERT_INDEX,
-	SQL_INSERT_INHERITS,
-	SQL_INSERT_FUNCTION,
+	SQL_COPY_SCHEMA,
+	SQL_COPY_TABLE,
+	SQL_COPY_COLUMN,
+	SQL_COPY_INDEX,
+	SQL_COPY_INHERITS,
+	SQL_COPY_FUNCTION,
 	NULL
 };
 
@@ -139,9 +139,11 @@ static List *do_gets(PGconn *conn, const char *sql[],
 static PGresult *do_get(PGconn *conn, const char *sql,
 						int nParams, const char **params);
 static bool do_puts(PGconn *conn, const char *sql[], List *src,
-					const char *snapid, const char *dbid);
+					const char *snapid, const char *dbid, const char *snap_date);
 static bool do_put(PGconn *conn, const char *sql, PGresult *src,
 				   const char *snapid, const char *dbid);
+static bool do_put_copy(PGconn *conn, const char *sql, PGresult *src,
+				   const char *snapid, const char *dbid, const char *snap_date);
 static bool has_pg_stat_statements(PGconn *conn);
 static bool has_pg_store_plans(PGconn *conn);
 #if PG_VERSION_NUM < 90400
@@ -380,9 +382,10 @@ Snap_free(Snap *snap)
 static bool
 Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 {
-	PGresult   *snapid_res = NULL;
+	PGresult   *snapid_date_res = NULL;
 	const char *params[4];
 	const char *snapid;
+	const char *snap_date;
 	ListCell   *db;
 	int			i;
 	PGresult   *repo_size = NULL;
@@ -421,16 +424,17 @@ Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 	params[0] = instid;
 	params[1] = snap->start;
 	params[2] = snap->comment;
-	snapid_res = pgut_execute(conn, SQL_NEW_SNAPSHOT, 3, params);
-	if (PQntuples(snapid_res) == 0)
+	snapid_date_res = pgut_execute(conn, SQL_NEW_SNAPSHOT, 3, params);
+	if (PQntuples(snapid_date_res) == 0 || PQnfields(snapid_date_res) != 2)
 		goto error;
 
-	snapid = PQgetvalue(snapid_res, 0, 0);
+	snapid = PQgetvalue(snapid_date_res, 0, 0);
+	snap_date = PQgetvalue(snapid_date_res, 0, 1);
 
 	if (!do_put(conn, SQL_INSERT_DATABASE, snap->dbnames, snapid, NULL))
 		goto error;
 
-	if (!do_puts(conn, instance_puts, snap->instance, snapid, NULL))
+	if (!do_puts(conn, instance_puts, snap->instance, snapid, NULL, NULL))
 		goto error;
 
 	i = 0;
@@ -439,7 +443,7 @@ Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 		List	   *dbsnap = (List*) lfirst(db);
 		const char *dbid = PQgetvalue(snap->dbnames, i ,0);
 
-		if (!do_puts(conn, database_puts, dbsnap, snapid, dbid))
+		if (!do_puts(conn, database_puts, dbsnap, snapid, dbid, snap_date))
 			goto error;
 		i++;
 	}
@@ -500,7 +504,7 @@ Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 			elog(ALERT, "%s", PQgetvalue(alerts, i, 0));
 
 	free(end);
-	PQclear(snapid_res);
+	PQclear(snapid_date_res);
 	PQclear(repo_size);
 	PQclear(alerts);
 	PQclear(update_res);
@@ -509,7 +513,7 @@ Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 error:
 	if (end != NULL)
 		free(end);
-	PQclear(snapid_res);
+	PQclear(snapid_date_res);
 	PQclear(repo_size);
 	PQclear(alerts);
 	PQclear(update_res);
@@ -569,10 +573,11 @@ do_puts(PGconn *conn,
 		const char *sql[],
 		List *src,
 		const char *snapid,
-		const char *dbid)
+		const char *dbid,
+		const char *snap_date)
 {
 	ListCell   *cell;
-	int			i;
+	int		 i;
 
 	i = 0;
 	foreach(cell, src)
@@ -581,8 +586,24 @@ do_puts(PGconn *conn,
 
 		if (res && sql[i])
 		{
-			if (!do_put(conn, sql[i], res, snapid, dbid))
-				return false;
+			/* TABLE, COLUMN, INDEX need snap_date for partition key */
+			if ( (strcmp(sql[i],SQL_COPY_TABLE) == 0)
+					|| (strcmp(sql[i], SQL_COPY_COLUMN) == 0)
+					|| (strcmp(sql[i], SQL_COPY_INDEX) == 0) )
+			{
+				if (!do_put_copy(conn, sql[i], res, snapid, dbid, snap_date))
+						return false;
+			}
+			else if( (pg_strncasecmp(sql[i], "COPY ", 5)) == 0)
+			{
+				if (!do_put_copy(conn, sql[i], res, snapid, dbid, NULL))
+						return false;
+			}
+			else
+			{
+				if (!do_put(conn, sql[i], res, snapid, dbid))
+						return false;
+			}
 		}
 		i++;
 	}
@@ -637,6 +658,160 @@ do_put(PGconn *conn,
 	}
 
 	return true;
+}
+
+/*
+ *	statsrepo.table/column/index has columns as snapid, dbid, xx, xx, date, ....
+ *	If we perform COPY  to these tables, must care about partition key column(date).
+ *	For now, these tables has date column at attnum = 5.
+ *	And in do_put_copy() snapid and dbid would be always set.
+ *	So, when the data to be copied is extracted from the resultSet and added to the buffer,
+ *	snap_date should be inserted at the position of this constant.
+ */
+#define PART_KEY_POSITION 2
+
+static bool
+do_put_copy(PGconn *conn,
+			const char *sql,
+			PGresult *src,
+			const char *snapid,
+			const char *dbid,
+			const char *snap_date)
+{
+	char buffer[4096];
+	int		rows, cols;
+	int		r, c;
+	int		shift;
+	int copy_res;
+	PGresult   *res;
+	char *copy_errormsg = NULL;
+	bool has_snap_date = false;
+	size_t  max_len = sizeof(buffer) - 1;
+	size_t  len = 0;
+	size_t  n;
+
+	Assert(src);
+
+	cols = PQnfields(src);
+	shift = 0;
+
+	shift++;
+	if (dbid)
+		shift++;
+
+	if(snap_date)
+	{
+		has_snap_date = true;
+		shift++;
+	}
+
+	if (shift + cols > FUNC_MAX_ARGS)
+	{
+		elog(WARNING, "too many columns: %d", cols);
+		return false;
+	}
+
+	rows = PQntuples(src);
+	res = pgut_execute(conn, sql, 0, NULL);
+	if (PQresultStatus(res) != PGRES_COPY_IN)
+	{
+		PQclear(res);
+		return false;
+	}
+
+	for (r = 0; r < rows; r++)
+	{
+		buffer[0] = '\0';
+		len = 0;
+
+		strcpy(&buffer[ len ], snapid);
+		len += strlen(snapid);;
+		strcpy(&buffer[ len ], COPY_DELIMITER);
+		len += 1;
+
+		if (dbid)
+		{
+			strcpy(&buffer[ len ], dbid);
+			len += strlen(dbid);
+			strcpy(&buffer[ len ], COPY_DELIMITER);
+			len += 1;
+		}
+
+		for (c = 0; c < cols; c++)
+		{
+			const char *field;
+			const char *p;
+
+			/* insert date info for partition key if reaches the corresponding position */
+			if (c == PART_KEY_POSITION && has_snap_date)
+			{
+				strcpy(&buffer[ len ], snap_date);
+				len += strlen(snap_date);
+				strcpy(&buffer[ len ], COPY_DELIMITER);
+				len += 1;
+			}
+
+			if (PQgetisnull(src, r, c))
+				field = NULL_STR;
+			else
+				field = PQgetvalue(src, r, c);
+
+			n = strlen(field);
+			p = field;
+			while ( len + n + 1 >= max_len )
+			{
+				/* If the buffer overflows, split and call PQputCopyData */
+				int  s;
+				// Number of characters that can be stored in the buffer.
+				// (Including delimiter characters)
+				s = max_len - len - 1;
+				Assert( s>=0 );
+
+				strncpy(&buffer[ len ], p, s);
+				len += s;
+				copy_res = PQputCopyData(conn, buffer, len);
+				if (copy_res  != 1)
+					goto FAILED_COPY_DATA;
+				
+				n -= s;
+				p += s;
+				buffer[0] = '\0'; //clear buffer
+				len = 0;
+			}
+			strcpy(&buffer[ len ], p);
+			len += n;
+			strcpy(&buffer[ len ], COPY_DELIMITER);
+			len += 1;
+		}
+
+		// Overwrite end of  COPY_DELIMITER with "\n"
+		buffer[len - 1] = '\n';
+
+		copy_res = PQputCopyData(conn, buffer, len);
+		if (copy_res  != 1)
+			goto FAILED_COPY_DATA;
+		
+	}
+
+	switch (PQputCopyEnd(conn, copy_errormsg))
+	{
+		case 1:
+			break;
+		default:
+			elog(WARNING, "Failed Copy and/or sent CopyDone Msg:%s:%s",
+							copy_errormsg, PQerrorMessage(conn) );
+			PQclear(res);
+			return false;
+	}
+
+	PQclear(res);
+	return true;
+
+FAILED_COPY_DATA:
+	PQclear(res);
+	elog(WARNING, "PQputCopyData was failed. return code %d", copy_res);
+	return false;
+
 }
 
 static bool
