@@ -758,14 +758,19 @@ do_put_copy(PGconn *conn,
 
 			n = strlen(field);
 			p = field;
+			/*
+			 * If there are huge column values, split them into "buffer" sizes and
+			 * call PQputCopyData individually.
+			 */
 			while ( len + n + 1 >= max_len )
 			{
-				/* If the buffer overflows, split and call PQputCopyData */
 				int  s;
-				// Number of characters that can be stored in the buffer.
-				// (Including delimiter characters)
+				/*
+				 * Number of characters that can be stored in the buffer.
+				 * (Including delimiter characters)
+				 */
 				s = max_len - len - 1;
-				Assert( s>=0 );
+				Assert( s >= 0 );
 
 				strncpy(&buffer[ len ], p, s);
 				len += s;
@@ -775,7 +780,7 @@ do_put_copy(PGconn *conn,
 				
 				n -= s;
 				p += s;
-				buffer[0] = '\0'; //clear buffer
+				buffer[0] = '\0'; /* clear buffer */
 				len = 0;
 			}
 			strcpy(&buffer[ len ], p);
@@ -784,7 +789,7 @@ do_put_copy(PGconn *conn,
 			len += 1;
 		}
 
-		// Overwrite end of  COPY_DELIMITER with "\n"
+		/* Overwrite end of  COPY_DELIMITER with "\n" */
 		buffer[len - 1] = '\n';
 
 		copy_res = PQputCopyData(conn, buffer, len);
