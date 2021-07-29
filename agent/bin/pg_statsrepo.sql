@@ -52,6 +52,7 @@ CREATE TABLE statsrepo.snapshot
 	comment					text,
 	exec_time				interval,
 	snapshot_increase_size	bigint,
+	xid_current				xid8,
 	PRIMARY KEY (snapid),
 	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
 );
@@ -774,6 +775,11 @@ LANGUAGE sql IMMUTABLE STRICT;
 -- sub() - NULL-safe operator -
 CREATE FUNCTION statsrepo.sub(anyelement, anyelement) RETURNS anyelement AS
 'SELECT coalesce($1, 0) - coalesce($2, 0)'
+LANGUAGE sql;
+
+-- xid_sub() - subtraction xid8
+CREATE or replace FUNCTION statsrepo.xid_sub(xid8, xid8) RETURNS numeric AS
+'SELECT $1::text::numeric - $2::text::numeric'
 LANGUAGE sql;
 
 -- convert_hex() - convert a hexadecimal string to a decimal number
@@ -1664,6 +1670,34 @@ $$
 		 	statsrepo.stat_wal
 		 WHERE
 		 	snapid = $2) a;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Transaction Increase Tendency'
+CREATE FUNCTION statsrepo.get_xid_tendency(
+	IN snapid_begin     bigint,
+	IN snapid_end       bigint,
+	OUT "timestamp"     text,
+	OUT xid_inclease    numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		pg_catalog.to_char(time, 'YYYY-MM-DD HH24:MI'),
+		statsrepo.xid_sub(xid_current, xid_prev)
+	FROM
+		( SELECT
+			snapid,
+			instid,
+			time,
+			xid_current,
+			lag(xid_current) OVER (PARTITION BY instid ORDER BY snapid) AS xid_prev
+		  FROM
+			statsrepo.snapshot) s
+	WHERE
+		s.snapid BETWEEN $1 AND $2
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+	ORDER BY
+		snapid;
 $$
 LANGUAGE sql;
 

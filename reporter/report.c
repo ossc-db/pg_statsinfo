@@ -34,6 +34,8 @@ FROM \
 #define SQL_SELECT_WALSTATS						"SELECT * FROM statsrepo.get_wal_stats($1, $2)"
 #define SQL_SELECT_WALSTATS_TENDENCY			"SELECT * FROM statsrepo.get_wal_tendency($1, $2)"
 #define SQL_SELECT_STAT_WAL						"SELECT * FROM statsrepo.get_stat_wal($1, $2)"
+#define SQL_SELECT_XID_INCREASE_TENDENCY		"SELECT * FROM statsrepo.get_xid_tendency($1, $2)"
+
 #define SQL_SELECT_CPU_LOADAVG_TENDENCY "\
 SELECT * FROM statsrepo.get_cpu_loadavg_tendency($1, $2) \
 UNION ALL \
@@ -624,6 +626,22 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "Written Buffers By Backend (Maximum)  : %s buffers/s\n", PQgetvalue(res, 0, 3));
 	fprintf(out, "Backend Executed fsync (Average)      : %s sync/s\n", PQgetvalue(res, 0, 4));
 	fprintf(out, "Backend Executed fsync (Maximum)      : %s sync/s\n\n", PQgetvalue(res, 0, 5));
+	PQclear(res);
+
+	fprintf(out, "/** Transaction Increase Tendency **/\n");
+	fprintf(out, "-----------------------------------\n");
+	fprintf(out, "%-16s  %12s\n",
+		"DateTime", "XID Inclease");
+	fprintf(out, "---------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_XID_INCREASE_TENDENCY, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "%-16s  %12s\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1));
+	}
+	fprintf(out, "\n");
 	PQclear(res);
 }
 

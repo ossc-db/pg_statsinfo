@@ -20,10 +20,10 @@ $$
 	--
 	-- Data for Name: snapshot; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
-	INSERT INTO statsrepo.snapshot VALUES ($6, $1, '2012-11-01 00:00:00+09', '', '00:00:01', 270336);
-	INSERT INTO statsrepo.snapshot VALUES ($6 + 1, $1, '2012-11-01 00:01:00+09', '', '00:00:01', 8192);
-	INSERT INTO statsrepo.snapshot VALUES ($6 + 2, $1, '2012-11-01 00:02:00+09', '', '00:00:01', 0);
-	INSERT INTO statsrepo.snapshot VALUES ($6 + 3, $1, '2012-11-01 00:03:00+09', '', '00:00:01', 16384);
+	INSERT INTO statsrepo.snapshot VALUES ($6, $1, '2012-11-01 00:00:00+09', '', '00:00:01', 270336, '871');
+	INSERT INTO statsrepo.snapshot VALUES ($6 + 1, $1, '2012-11-01 00:01:00+09', '', '00:00:01', 8192, '22507');
+	INSERT INTO statsrepo.snapshot VALUES ($6 + 2, $1, '2012-11-01 00:02:00+09', '', '00:00:01', 0, '22522');
+	INSERT INTO statsrepo.snapshot VALUES ($6 + 3, $1, '2012-11-01 00:03:00+09', '', '00:00:01', 16384, '22526');
 
 	--
 	-- Data for Name: activity; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
