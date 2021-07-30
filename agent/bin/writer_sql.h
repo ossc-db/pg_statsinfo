@@ -13,7 +13,7 @@
 
 #define SQL_NEW_SNAPSHOT "\
 INSERT INTO statsrepo.snapshot(instid, time, comment) VALUES \
-($1, $2, $3) RETURNING snapid"
+($1, $2, $3) RETURNING snapid, CAST(time AS DATE)"
 
 #define SQL_INSERT_DATABASE "\
 INSERT INTO statsrepo.database VALUES \
@@ -101,30 +101,27 @@ INSERT INTO statsrepo.memory VALUES ($1, $2, $3, $4, $5, $6)"
 #define SQL_INSERT_PROFILE "\
 INSERT INTO statsrepo.profile VALUES ($1, $2, $3, $4)"
 
-#define SQL_INSERT_SCHEMA "\
-INSERT INTO statsrepo.schema VALUES ($1, $2, $3, $4)"
+/* Definition of delimiter and null identifier for COPY command */
+#define COPY_DELIMITER "\t"
+#define NULL_STR "null"
 
-#define SQL_INSERT_TABLE "\
-INSERT INTO statsrepo.table VALUES \
-($1, $2, $3, $4, statsrepo.get_snap_date($1), $5, $6, $7, $8, $9, $10, \
- $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, \
- $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, \
- $31, $32, $33, $34, $35, $36)"
+#define SQL_COPY_SCHEMA "\
+COPY statsrepo.schema FROM STDIN with(NULL '" NULL_STR "')"
 
-#define SQL_INSERT_COLUMN "\
-INSERT INTO statsrepo.column VALUES \
-($1, $2, $3, $4, statsrepo.get_snap_date($1), $5, $6, $7, $8, $9, $10, $11, $12, $13)"
+#define SQL_COPY_TABLE "\
+COPY statsrepo.table FROM STDIN with(NULL '" NULL_STR "')"
 
-#define SQL_INSERT_INDEX "\
-INSERT INTO statsrepo.index VALUES \
-($1, $2, $3, $4, statsrepo.get_snap_date($1), $5, $6, $7, $8, $9, $10, \
- $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)"
+#define SQL_COPY_COLUMN "\
+COPY statsrepo.column FROM STDIN with(NULL '" NULL_STR "')"
 
-#define SQL_INSERT_INHERITS "\
-INSERT INTO statsrepo.inherits VALUES ($1, $2, $3, $4, $5)"
+#define SQL_COPY_INDEX "\
+COPY statsrepo.index FROM STDIN with(NULL '" NULL_STR "')"
 
-#define SQL_INSERT_FUNCTION "\
-INSERT INTO statsrepo.function VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
+#define SQL_COPY_INHERITS "\
+COPY statsrepo.inherits FROM STDIN with(NULL '" NULL_STR "')"
+
+#define SQL_COPY_FUNCTION "\
+COPY statsrepo.function FROM STDIN with(NULL '" NULL_STR "')"
 
 #define SQL_INSERT_ALERT "\
 INSERT INTO statsrepo.alert_message VALUES ($1, $2)"
