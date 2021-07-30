@@ -631,7 +631,7 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "/** Transaction Increase Tendency **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %12s\n",
-		"DateTime", "XID Inclease");
+		"DateTime", "XID Increase");
 	fprintf(out, "---------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_XID_INCREASE_TENDENCY, lengthof(params), params);

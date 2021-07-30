@@ -436,7 +436,7 @@ Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 /** Transaction Increase Tendency **/
 -----------------------------------
-DateTime          XID Inclease
+DateTime          XID Increase
 ---------------------------------
 2012-11-01 00:00              
 2012-11-01 00:01         21636
@@ -486,7 +486,7 @@ Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 /** Transaction Increase Tendency **/
 -----------------------------------
-DateTime          XID Inclease
+DateTime          XID Increase
 ---------------------------------
 2012-11-01 00:00              
 2012-11-01 00:01         21636
@@ -536,7 +536,7 @@ Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 /** Transaction Increase Tendency **/
 -----------------------------------
-DateTime          XID Inclease
+DateTime          XID Increase
 ---------------------------------
 2012-11-01 00:00              
 2012-11-01 00:01         21636
@@ -586,7 +586,7 @@ Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 /** Transaction Increase Tendency **/
 -----------------------------------
-DateTime          XID Inclease
+DateTime          XID Increase
 ---------------------------------
 2012-11-01 00:00              
 2012-11-01 00:01         21636
@@ -636,7 +636,7 @@ Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 /** Transaction Increase Tendency **/
 -----------------------------------
-DateTime          XID Inclease
+DateTime          XID Increase
 ---------------------------------
 2012-11-01 00:00              
 2012-11-01 00:01         21636
@@ -691,7 +691,7 @@ Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 /** Transaction Increase Tendency **/
 -----------------------------------
-DateTime          XID Inclease
+DateTime          XID Increase
 ---------------------------------
 2012-11-01 00:00              
 2012-11-01 00:01         21636
@@ -2696,7 +2696,7 @@ Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 /** Transaction Increase Tendency **/
 -----------------------------------
-DateTime          XID Inclease
+DateTime          XID Increase
 ---------------------------------
 2012-11-01 00:00              
 2012-11-01 00:01         21636
@@ -3053,7 +3053,7 @@ Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 /** Transaction Increase Tendency **/
 -----------------------------------
-DateTime          XID Inclease
+DateTime          XID increase
 ---------------------------------
 2012-11-01 00:00              
 2012-11-01 00:01         21636
@@ -3410,7 +3410,7 @@ Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 /** Transaction Increase Tendency **/
 -----------------------------------
-DateTime          XID Inclease
+DateTime          XID increase
 ---------------------------------
 2012-11-01 00:00              
 2012-11-01 00:01         21636
@@ -3767,7 +3767,7 @@ Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 /** Transaction Increase Tendency **/
 -----------------------------------
-DateTime          XID Inclease
+DateTime          XID increase
 ---------------------------------
 2012-11-01 00:00              
 2012-11-01 00:01         21636
@@ -4124,7 +4124,7 @@ Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 /** Transaction Increase Tendency **/
 -----------------------------------
-DateTime          XID Inclease
+DateTime          XID increase
 ---------------------------------
 2012-11-01 00:00              
 2012-11-01 00:01         21636
@@ -4493,7 +4493,7 @@ Backend Executed fsync (Maximum)      : 3.000 sync/s
 
 /** Transaction Increase Tendency **/
 -----------------------------------
-DateTime          XID Inclease
+DateTime          XID increase
 ---------------------------------
 2012-11-01 00:00              
 2012-11-01 00:01         21636
@@ -5079,7 +5079,7 @@ Backend Executed fsync (Maximum)      : 0.000 sync/s
 
 /** Transaction Increase Tendency **/
 -----------------------------------
-DateTime          XID Inclease
+DateTime          XID increase
 ---------------------------------
 2012-11-01 00:00              
 2012-11-01 00:00         21636

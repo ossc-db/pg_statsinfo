@@ -1678,7 +1678,7 @@ CREATE FUNCTION statsrepo.get_xid_tendency(
 	IN snapid_begin     bigint,
 	IN snapid_end       bigint,
 	OUT "timestamp"     text,
-	OUT xid_inclease    numeric
+	OUT xid_increase    numeric
 ) RETURNS SETOF record AS
 $$
 	SELECT
