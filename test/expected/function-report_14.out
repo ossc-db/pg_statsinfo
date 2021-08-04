@@ -434,6 +434,15 @@ Written Buffers By Backend (Maximum)  : 300.000 buffers/s
 Backend Executed fsync (Average)      : 2.000 sync/s
 Backend Executed fsync (Maximum)      : 3.000 sync/s
 
+/** Transaction Increase Tendency **/
+-----------------------------------
+DateTime          XID Increase
+---------------------------------
+2012-11-01 00:00              
+2012-11-01 00:01         21636
+2012-11-01 00:02            15
+2012-11-01 00:03             4
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
 ---------------------------------------------
@@ -474,6 +483,15 @@ Written Buffers By Backend (Average)  : 200.000 buffers/s
 Written Buffers By Backend (Maximum)  : 300.000 buffers/s
 Backend Executed fsync (Average)      : 2.000 sync/s
 Backend Executed fsync (Maximum)      : 3.000 sync/s
+
+/** Transaction Increase Tendency **/
+-----------------------------------
+DateTime          XID Increase
+---------------------------------
+2012-11-01 00:00              
+2012-11-01 00:01         21636
+2012-11-01 00:02            15
+2012-11-01 00:03             4
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -516,6 +534,15 @@ Written Buffers By Backend (Maximum)  : 300.000 buffers/s
 Backend Executed fsync (Average)      : 2.000 sync/s
 Backend Executed fsync (Maximum)      : 3.000 sync/s
 
+/** Transaction Increase Tendency **/
+-----------------------------------
+DateTime          XID Increase
+---------------------------------
+2012-11-01 00:00              
+2012-11-01 00:01         21636
+2012-11-01 00:02            15
+2012-11-01 00:03             4
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
 ---------------------------------------------
@@ -557,6 +584,15 @@ Written Buffers By Backend (Maximum)  : 300.000 buffers/s
 Backend Executed fsync (Average)      : 2.000 sync/s
 Backend Executed fsync (Maximum)      : 3.000 sync/s
 
+/** Transaction Increase Tendency **/
+-----------------------------------
+DateTime          XID Increase
+---------------------------------
+2012-11-01 00:00              
+2012-11-01 00:01         21636
+2012-11-01 00:02            15
+2012-11-01 00:03             4
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
 ---------------------------------------------
@@ -597,6 +633,15 @@ Written Buffers By Backend (Average)  : 200.000 buffers/s
 Written Buffers By Backend (Maximum)  : 300.000 buffers/s
 Backend Executed fsync (Average)      : 2.000 sync/s
 Backend Executed fsync (Maximum)      : 3.000 sync/s
+
+/** Transaction Increase Tendency **/
+-----------------------------------
+DateTime          XID Increase
+---------------------------------
+2012-11-01 00:00              
+2012-11-01 00:01         21636
+2012-11-01 00:02            15
+2012-11-01 00:03             4
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5437)
@@ -643,6 +688,15 @@ Written Buffers By Backend (Average)  : 200.000 buffers/s
 Written Buffers By Backend (Maximum)  : 300.000 buffers/s
 Backend Executed fsync (Average)      : 2.000 sync/s
 Backend Executed fsync (Maximum)      : 3.000 sync/s
+
+/** Transaction Increase Tendency **/
+-----------------------------------
+DateTime          XID Increase
+---------------------------------
+2012-11-01 00:00              
+2012-11-01 00:01         21636
+2012-11-01 00:02            15
+2012-11-01 00:03             4
 
 exit: 0
 
@@ -2640,6 +2694,15 @@ Written Buffers By Backend (Maximum)  : 300.000 buffers/s
 Backend Executed fsync (Average)      : 2.000 sync/s
 Backend Executed fsync (Maximum)      : 3.000 sync/s
 
+/** Transaction Increase Tendency **/
+-----------------------------------
+DateTime          XID Increase
+---------------------------------
+2012-11-01 00:00              
+2012-11-01 00:01         21636
+2012-11-01 00:02            15
+2012-11-01 00:03             4
+
 ----------------------------------------
 /* OS Resource Usage */
 ----------------------------------------
@@ -2987,6 +3050,15 @@ Written Buffers By Backend (Average)  : 200.000 buffers/s
 Written Buffers By Backend (Maximum)  : 300.000 buffers/s
 Backend Executed fsync (Average)      : 2.000 sync/s
 Backend Executed fsync (Maximum)      : 3.000 sync/s
+
+/** Transaction Increase Tendency **/
+-----------------------------------
+DateTime          XID increase
+---------------------------------
+2012-11-01 00:00              
+2012-11-01 00:01         21636
+2012-11-01 00:02            15
+2012-11-01 00:03             4
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -3336,6 +3408,15 @@ Written Buffers By Backend (Maximum)  : 300.000 buffers/s
 Backend Executed fsync (Average)      : 2.000 sync/s
 Backend Executed fsync (Maximum)      : 3.000 sync/s
 
+/** Transaction Increase Tendency **/
+-----------------------------------
+DateTime          XID increase
+---------------------------------
+2012-11-01 00:00              
+2012-11-01 00:01         21636
+2012-11-01 00:02            15
+2012-11-01 00:03             4
+
 ----------------------------------------
 /* OS Resource Usage */
 ----------------------------------------
@@ -3684,6 +3765,15 @@ Written Buffers By Backend (Maximum)  : 300.000 buffers/s
 Backend Executed fsync (Average)      : 2.000 sync/s
 Backend Executed fsync (Maximum)      : 3.000 sync/s
 
+/** Transaction Increase Tendency **/
+-----------------------------------
+DateTime          XID increase
+---------------------------------
+2012-11-01 00:00              
+2012-11-01 00:01         21636
+2012-11-01 00:02            15
+2012-11-01 00:03             4
+
 ----------------------------------------
 /* OS Resource Usage */
 ----------------------------------------
@@ -4031,6 +4121,15 @@ Written Buffers By Backend (Average)  : 200.000 buffers/s
 Written Buffers By Backend (Maximum)  : 300.000 buffers/s
 Backend Executed fsync (Average)      : 2.000 sync/s
 Backend Executed fsync (Maximum)      : 3.000 sync/s
+
+/** Transaction Increase Tendency **/
+-----------------------------------
+DateTime          XID increase
+---------------------------------
+2012-11-01 00:00              
+2012-11-01 00:01         21636
+2012-11-01 00:02            15
+2012-11-01 00:03             4
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -4391,6 +4490,15 @@ Written Buffers By Backend (Average)  : 200.000 buffers/s
 Written Buffers By Backend (Maximum)  : 300.000 buffers/s
 Backend Executed fsync (Average)      : 2.000 sync/s
 Backend Executed fsync (Maximum)      : 3.000 sync/s
+
+/** Transaction Increase Tendency **/
+-----------------------------------
+DateTime          XID increase
+---------------------------------
+2012-11-01 00:00              
+2012-11-01 00:01         21636
+2012-11-01 00:02            15
+2012-11-01 00:03             4
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -4968,6 +5076,15 @@ Written Buffers By Backend (Average)  : 0.000 buffers/s
 Written Buffers By Backend (Maximum)  : 0.000 buffers/s
 Backend Executed fsync (Average)      : 0.000 sync/s
 Backend Executed fsync (Maximum)      : 0.000 sync/s
+
+/** Transaction Increase Tendency **/
+-----------------------------------
+DateTime          XID increase
+---------------------------------
+2012-11-01 00:00              
+2012-11-01 00:00         21636
+2012-11-01 00:00            15
+2012-11-01 00:00             4
 
 ----------------------------------------
 /* OS Resource Usage */

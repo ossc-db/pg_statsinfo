@@ -136,7 +136,8 @@ UPDATE \
 SET \
 	exec_time = pg_catalog.age($2, $3), \
 	snapshot_increase_size = ((SELECT pg_catalog.sum(pg_catalog.pg_relation_size(oid)) FROM pg_class \
-								WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'statsrepo')) - $4) \
+								WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'statsrepo')) - $4), \
+  xid_current = pg_catalog.pg_snapshot_xmax(pg_catalog.pg_current_snapshot()) \
 WHERE \
 	snapid = $1"
 
