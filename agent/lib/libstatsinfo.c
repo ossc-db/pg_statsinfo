@@ -968,15 +968,14 @@ statsinfo_activity(PG_FUNCTION_ARGS)
 
 	if (activity.samples > 0)
 	{
-		double		samples = activity.samples;
 
 		memset(nulls, 0, sizeof(nulls));
 
 		i = 0;
-		values[i++] = Float8GetDatum(activity.idle / samples);
-		values[i++] = Float8GetDatum(activity.idle_in_xact / samples);
-		values[i++] = Float8GetDatum(activity.waiting / samples);
-		values[i++] = Float8GetDatum(activity.running / samples);
+		values[i++] = Int32GetDatum(activity.idle);
+		values[i++] = Int32GetDatum(activity.idle_in_xact);
+		values[i++] = Int32GetDatum(activity.waiting);
+		values[i++] = Int32GetDatum(activity.running);
 		values[i++] = Int32GetDatum(activity.max_backends);
 
 		Assert(i == lengthof(values));
