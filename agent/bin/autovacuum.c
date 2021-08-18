@@ -507,7 +507,7 @@ Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 	const char	   *params[32];
 
 	elog(DEBUG2, "write (autovacuum)");
-	Assert(list_length(av->params) == NUM_AUTOVACUUM + NUM_RUSAGE + NUM_IO_TIMING);
+	Assert(list_length(av->params) == NUM_AUTOVACUUM + NUM_RUSAGE + NUM_INDEX_SCAN + NUM_INDEXES + NUM_IO_TIMING);
 
 	memset(params, 0, sizeof(params));
 
