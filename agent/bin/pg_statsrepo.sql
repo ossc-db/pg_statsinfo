@@ -1472,40 +1472,6 @@ $$
 LANGUAGE sql;
 
 -- generate information that corresponds to 'Instance Processes'
-CREATE FUNCTION statsrepo.get_proc_tendency(
-	IN snapid_begin		bigint,
-	IN snapid_end		bigint,
-	OUT snapid			bigint,
-	OUT idle			numeric,
-	OUT idle_in_xact	numeric,
-	OUT waiting			numeric,
-	OUT running			numeric
-) RETURNS SETOF record AS
-$$
-	SELECT
-		a.snapid,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * running / (idle + idle_in_xact + waiting + running))::numeric(5,1) END
-	FROM
-		statsrepo.activity a,
-		statsrepo.snapshot s
-	WHERE
-		a.snapid BETWEEN $1 AND $2
-		AND a.snapid = s.snapid
-		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-		AND idle IS NOT NULL
-	ORDER BY
-		a.snapid;
-$$
-LANGUAGE sql;
-
--- generate information that corresponds to 'Instance Processes'
 CREATE FUNCTION statsrepo.get_proc_tendency_report(
 	IN snapid_begin			bigint,
 	IN snapid_end			bigint,
