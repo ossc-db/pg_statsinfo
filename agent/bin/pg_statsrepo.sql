@@ -1435,6 +1435,76 @@ $$
 $$
 LANGUAGE sql;
 
+-- generate information that corresponds to 'Instance Processes ratio'
+CREATE FUNCTION statsrepo.get_proc_ratio(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT idle			numeric,
+	OUT idle_in_xact	numeric,
+	OUT waiting			numeric,
+	OUT running			numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		CASE WHEN pg_catalog.sum(total)::float4 = 0 THEN 0
+			ELSE (100 * pg_catalog.sum(idle)::float / pg_catalog.sum(total)::float4)::numeric(5,1) END,
+		CASE WHEN pg_catalog.sum(total)::float4 = 0 THEN 0
+			ELSE (100 * pg_catalog.sum(idle_in_xact)::float / pg_catalog.sum(total)::float4)::numeric(5,1) END,
+		CASE WHEN pg_catalog.sum(total)::float4 = 0 THEN 0
+			ELSE (100 * pg_catalog.sum(waiting)::float / pg_catalog.sum(total)::float4)::numeric(5,1) END,
+		CASE WHEN pg_catalog.sum(total)::float4 = 0 THEN 0
+			ELSE (100 * pg_catalog.sum(running)::float / pg_catalog.sum(total)::float4)::numeric(5,1) END
+	FROM 
+		(SELECT
+			snapid,
+			idle,
+			idle_in_xact,
+			waiting, running,
+			idle + idle_in_xact + waiting + running AS total
+		 FROM
+		 	statsrepo.activity) a,
+		statsrepo.snapshot s
+	WHERE
+		a.snapid BETWEEN $1 AND $2
+		AND a.snapid = s.snapid
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Instance Processes'
+CREATE FUNCTION statsrepo.get_proc_tendency(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT snapid			bigint,
+	OUT idle			numeric,
+	OUT idle_in_xact	numeric,
+	OUT waiting			numeric,
+	OUT running			numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		a.snapid,
+		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+			ELSE (100 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
+		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+			ELSE (100 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
+		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+			ELSE (100 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
+		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+			ELSE (100 * running / (idle + idle_in_xact + waiting + running))::numeric(5,1) END
+	FROM
+		statsrepo.activity a,
+		statsrepo.snapshot s
+	WHERE
+		a.snapid BETWEEN $1 AND $2
+		AND a.snapid = s.snapid
+		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+		AND idle IS NOT NULL
+	ORDER BY
+		a.snapid;
+$$
+LANGUAGE sql;
+
 -- generate information that corresponds to 'Instance Processes'
 CREATE FUNCTION statsrepo.get_proc_tendency_report(
 	IN snapid_begin			bigint,
@@ -1452,20 +1522,16 @@ CREATE FUNCTION statsrepo.get_proc_tendency_report(
 $$
 	SELECT
 		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE idle END,
+		idle,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
 			ELSE (100.0 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS idle_per,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE idle_in_xact END,
+		idle_in_xact,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
 			ELSE (100.0 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS idle_in_xact_per,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE waiting END,
+		waiting,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
 			ELSE (100.0 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS waiting_per,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE running END,
+		running,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
 			ELSE (100.0 * running / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS running_per
 	FROM
