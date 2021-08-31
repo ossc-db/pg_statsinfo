@@ -50,9 +50,9 @@ static CPUstats	 prev_cpustats = {0, 0, 0, 0};
 
 static const char *instance_gets[] =
 {
-/*	SQL_SELECT_ACTIVITY,			*/
+/*	SQL_SELECT_ACTIVITY,		*/
 /*	SQL_SELECT_LONG_TRANSACTION,	*/
-/*	SQL_SELECT_CPU,					*/
+/*	SQL_SELECT_CPU,			*/
 	SQL_SELECT_DEVICE,
 	SQL_SELECT_LOADAVG,
 	SQL_SELECT_MEMORY,
@@ -75,7 +75,8 @@ static const char *instance_gets[] =
 #endif
 	SQL_SELECT_REPLICATION_SLOTS,
 /*	SQL_SELECT_STATEMENT,	*/
-/*	SQL_SELECT_PLAN,		*/
+/*	SQL_SELECT_PLAN,	*/
+/*	SQL_SELECT_RUSAGE,	*/
 	NULL
 };
 
@@ -107,6 +108,7 @@ static const char *instance_puts[] =
 	SQL_INSERT_REPLICATION_SLOTS,
 	SQL_INSERT_STATEMENT,
 	SQL_INSERT_PLAN,
+	SQL_INSERT_RUSAGE,
 	NULL
 };
 
@@ -150,6 +152,8 @@ static bool has_pg_store_plans(PGconn *conn);
 static bool has_pg_store_plans_hash_query(PGconn *conn);
 #endif
 static bool has_statsrepo_alert(PGconn *conn);
+static bool is_rusage_enabled(PGconn *conn);
+
 
 QueueItem *
 get_snapshot(char *comment)
@@ -305,6 +309,24 @@ get_snapshot(char *comment)
 
 		pgut_command(conn, "SET pg_store_plans.plan_format TO 'raw'", 0, NULL);
 		stmt = pgut_execute(conn, SQL_SELECT_PLAN, 2, params);
+		if (PQresultStatus(stmt) == PGRES_TUPLES_OK)
+			snap->instance = lappend(snap->instance, stmt);
+		else
+		{
+			PQclear(stmt);
+			snap->instance = lappend(snap->instance, NULL);
+		}
+	}
+	else
+		snap->instance = lappend(snap->instance, NULL);
+
+	/* When rusage is enabled, we collect it*/
+	if (is_rusage_enabled(conn))
+	{
+		PGresult   *stmt;
+		const char *params[] = {stat_statements_exclude_users, stat_statements_max};
+
+		stmt = pgut_execute(conn, SQL_SELECT_RUSAGE, 2, params);
 		if (PQresultStatus(stmt) == PGRES_TUPLES_OK)
 			snap->instance = lappend(snap->instance, stmt);
 		else
@@ -889,4 +911,22 @@ has_statsrepo_alert(PGconn *conn)
 	PQclear(res);
 
 	return result;
+}
+
+static bool
+is_rusage_enabled(PGconn *conn)
+{
+	PGresult   *res;
+	bool	    result;
+
+	/* check whether rusage is enabled  */
+	res = pgut_execute(conn,
+			"SELECT 1 FROM pg_settings"
+			" WHERE name = 'pg_statsinfo.rusage_track' AND setting IN ('all', 'top');",
+					   0, NULL);
+	result = (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0);
+	PQclear(res);
+
+	return result;
+
 }

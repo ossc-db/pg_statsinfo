@@ -241,4 +241,38 @@ RETURNS SETOF record
 AS 'MODULE_PATHNAME', 'statsinfo_last_xact_activity'
 LANGUAGE C STRICT;
 
+CREATE FUNCTION statsinfo.rusage_info(
+    OUT queryid bigint,
+    OUT top bool,
+    OUT userid      oid,
+    OUT dbid	oid,
+    /* planning time */
+    OUT plan_reads       bigint,	     /* total reads, in bytes */
+    OUT plan_writes      bigint,	     /* total writes, in bytes */
+    OUT plan_user_time   double precision,   /* total user CPU time used */
+    OUT plan_system_time double precision,   /* total system CPU time used */
+    OUT plan_minflts     bigint,	     /* total page reclaims (soft page faults) */
+    OUT plan_majflts     bigint,	     /* total page faults (hard page faults) */
+    OUT plan_nvcsws      bigint,	     /* total voluntary context switches */
+    OUT plan_nivcsws     bigint,	     /* total involuntary context switches */
+    /* execution time */
+    OUT exec_reads       bigint,	     /* total reads, in bytes */
+    OUT exec_writes      bigint,	     /* total writes, in bytes */
+    OUT exec_user_time   double precision,   /* total user CPU time used */
+    OUT exec_system_time double precision,   /* total system CPU time used */
+    OUT exec_minflts     bigint,	     /* total page reclaims (soft page faults) */
+    OUT exec_majflts     bigint,	     /* total page faults (hard page faults) */
+    OUT exec_nvcsws      bigint,	     /* total voluntary context switches */
+    OUT exec_nivcsws     bigint	      /* total involuntary context switches */
+)
+RETURNS SETOF record
+AS 'MODULE_PATHNAME', 'statsinfo_rusage_info'
+LANGUAGE C STRICT;
+
+CREATE FUNCTION statsinfo.rusage_reset()
+RETURNS void
+AS 'MODULE_PATHNAME', 'statsinfo_rusage_reset'
+LANGUAGE C STRICT;
+
+
 COMMIT;

@@ -727,6 +727,33 @@ CREATE TABLE statsrepo.log
 	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
 );
 
+CREATE TABLE statsrepo.rusage
+(
+    snapid           bigint,
+    dbid             oid,
+    userid           oid,
+    queryid          bigint,
+    plan_reads       bigint,
+    plan_writes      bigint,
+    plan_user_time   double precision,
+    plan_system_time double precision,
+    plan_minflts     bigint,
+    plan_majflts     bigint,
+    plan_nvcsws      bigint,
+    plan_nivcsws     bigint,
+    exec_reads       bigint,
+    exec_writes      bigint,
+    exec_user_time   double precision,
+    exec_system_time double precision,
+    exec_minflts     bigint,
+    exec_majflts     bigint,
+    exec_nvcsws      bigint,
+    exec_nivcsws     bigint,
+    FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE,
+    FOREIGN KEY (snapid, dbid) REFERENCES statsrepo.database (snapid, dbid)
+);
+CREATE INDEX statsrepo_rusage_idx ON statsrepo.rusage(snapid, dbid);
+
 -- del_snapshot(snapid) - delete the specified snapshot.
 CREATE FUNCTION statsrepo.del_snapshot(bigint) RETURNS void AS
 $$
