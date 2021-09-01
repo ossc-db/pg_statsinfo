@@ -24,6 +24,7 @@
 
 #include "../common.h"
 #include "pgut/pgut-be.h"
+#include "wait_sampling.h"
 
 #ifndef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;

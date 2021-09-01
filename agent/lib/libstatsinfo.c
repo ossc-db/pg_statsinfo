@@ -70,6 +70,7 @@
 #include "pgut/pgut-be.h"
 #include "pgut/pgut-spi.h"
 #include "../common.h"
+#include "wait_sampling.h"
 
 #define INVALID_PID			(-1)
 #define START_WAIT_MIN		(10)
@@ -273,6 +274,7 @@ default_log_maintenance_command(void)
 /*---- GUC variables ----*/
 
 #define DEFAULT_SAMPLING_INTERVAL			5		/* sec */
+#define DEFAULT_SAMPLING_WAIT_EVENTS_INTERVAL			10		/* msec */
 #define DEFAULT_SNAPSHOT_INTERVAL			600		/* sec */
 #define DEFAULT_SYSLOG_LEVEL				DISABLE
 #define DEFAULT_TEXTLOG_LEVEL				WARNING
@@ -289,6 +291,8 @@ default_log_maintenance_command(void)
 #define DEFAULT_LONG_TRANSACTION_MAX		10
 #define LONG_TRANSACTION_THRESHOLD			1.0		/* sec */
 #define DEFAULT_ENABLE_MAINTENANCE			"on"	/* snapshot + log */
+#define DEFAULT_PROFILE_QUERIES				true
+#define DEFAULT_PROFILE_MAX					1024
 
 static const struct config_enum_entry elevel_options[] =
 {
@@ -336,6 +340,7 @@ static const char *const RELOAD_PARAM_NAMES[] =
 	GUC_PREFIX ".stat_statements_exclude_users",
 	GUC_PREFIX ".repository_server",
 	GUC_PREFIX ".sampling_interval",
+	GUC_PREFIX ".sampling_wait_events_interval",
 	GUC_PREFIX ".snapshot_interval",
 	GUC_PREFIX ".syslog_line_prefix",
 	GUC_PREFIX ".syslog_min_messages",
@@ -362,13 +367,16 @@ static const char *const RELOAD_PARAM_NAMES[] =
 	GUC_PREFIX ".log_maintenance_command",
 	GUC_PREFIX ".controlfile_fsync_interval",
 	GUC_PREFIX ".enable_alert",
-	GUC_PREFIX ".target_server"
+	GUC_PREFIX ".target_server",
+	GUC_PREFIX ".profile_queries",
+	GUC_PREFIX ".profile_max"
 };
 
 static char	   *excluded_dbnames = NULL;
 static char	   *excluded_schemas = NULL;
 static char	   *repository_server = NULL;
 static int		sampling_interval = DEFAULT_SAMPLING_INTERVAL;
+static int		sampling_wait_events_interval = DEFAULT_SAMPLING_WAIT_EVENTS_INTERVAL;
 static int		snapshot_interval = DEFAULT_SNAPSHOT_INTERVAL;
 static char	   *syslog_line_prefix = NULL;
 static int		syslog_min_messages = DEFAULT_SYSLOG_LEVEL;
@@ -400,14 +408,22 @@ static int		long_transaction_max = DEFAULT_LONG_TRANSACTION_MAX;
 static int		controlfile_fsync_interval = DEFAULT_CONTROLFILE_FSYNC_INTERVAL;
 static bool		enable_alert = true;
 static char	   *target_server = NULL;
+bool			profile_queries = DEFAULT_PROFILE_QUERIES;
+int				pgws_max = DEFAULT_PROFILE_MAX;
+extern pgwsSharedState	*pgws;
 
 /*---- Function declarations ----*/
 
 PG_FUNCTION_INFO_V1(statsinfo_sample);
+PG_FUNCTION_INFO_V1(statsinfo_sample_wait_events);
+PG_FUNCTION_INFO_V1(statsinfo_sample_wait_events_reset);
+PG_FUNCTION_INFO_V1(statsinfo_sample_wait_events_info);
 PG_FUNCTION_INFO_V1(statsinfo_activity);
 PG_FUNCTION_INFO_V1(statsinfo_long_xact);
 PG_FUNCTION_INFO_V1(statsinfo_snapshot);
 PG_FUNCTION_INFO_V1(statsinfo_maintenance);
+PG_FUNCTION_INFO_V1(statsinfo_wait_sampling_profile);
+PG_FUNCTION_INFO_V1(statsinfo_wait_sampling_reset_profile);
 PG_FUNCTION_INFO_V1(statsinfo_tablespaces);
 PG_FUNCTION_INFO_V1(statsinfo_start);
 PG_FUNCTION_INFO_V1(statsinfo_stop);
@@ -420,10 +436,15 @@ PG_FUNCTION_INFO_V1(statsinfo_memory);
 PG_FUNCTION_INFO_V1(statsinfo_profile);
 
 extern Datum PGUT_EXPORT statsinfo_sample(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_sample_wait_events(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_sample_wait_events_reset(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_sample_wait_events_info(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_activity(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_long_xact(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_snapshot(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_maintenance(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_wait_sampling_profile(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_wait_sampling_reset_profile(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_tablespaces(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_start(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_stop(PG_FUNCTION_ARGS);
@@ -439,6 +460,9 @@ extern PGUT_EXPORT void	_PG_init(void);
 extern PGUT_EXPORT void	_PG_fini(void);
 extern PGUT_EXPORT void	init_last_xact_activity(void);
 extern PGUT_EXPORT void	fini_last_xact_activity(void);
+extern PGUT_EXPORT void	init_wait_sampling(void);
+extern PGUT_EXPORT void	fini_wait_sampling(void);
+extern PGUT_EXPORT void	pgws_shmem_startup(void);
 
 /*----  Internal declarations ----*/
 
@@ -563,6 +587,12 @@ static void lx_entry_dealloc(void);
 static int lx_entry_cmp(const void *lhs, const void *rhs);
 static uint32 ds_hash_fn(const void *key, Size keysize);
 static int ds_match_fn(const void *key1, const void *key2, Size keysize);
+static void sample_waits(void);
+static void probe_waits(void);
+uint32 pgws_hash_fn(const void *key, Size keysize);
+int pgws_match_fn(const void *key1, const void *key2, Size keysize);
+static void pgws_entry_dealloc(void);
+static int pgws_entry_cmp(const void *lhs, const void *rhs);
 
 #if defined(WIN32)
 static int str_to_elevel(const char *name, const char *str,
@@ -596,6 +626,8 @@ static shmem_startup_hook_type	prev_shmem_startup_hook = NULL;
 static Activity		 activity = { 0, 0, 0, 0, 0, 0 };
 static HTAB			*long_xacts = NULL;
 static HTAB			*diskstats = NULL;
+HTAB				*pgws_hash = NULL;
+
 
 /* variables for pg_statsinfo launcher */
 static volatile bool	 got_SIGCHLD = false;
@@ -616,6 +648,96 @@ statsinfo_sample(PG_FUNCTION_ARGS)
 	sample_diskstats();
 
 	PG_RETURN_VOID();
+}
+
+/*
+ * statsinfo_sample_wait_events - sample statistics of wait events for server instance.
+ */
+Datum
+statsinfo_sample_wait_events(PG_FUNCTION_ARGS)
+{
+	must_be_superuser();
+
+	sample_waits();
+
+	PG_RETURN_VOID();
+}
+
+/*
+ * statsinfo_sample_wait_events_reset - reset sample statistics of wait events for server instance.
+ */
+Datum
+statsinfo_sample_wait_events_reset(PG_FUNCTION_ARGS)
+{
+	HASH_SEQ_STATUS hash_seq;
+	pgwsEntry  *entry;
+	long		num_entries;
+
+	must_be_superuser();
+
+	LWLockAcquire(pgws->lock, LW_EXCLUSIVE);
+	num_entries = hash_get_num_entries(pgws_hash);
+
+	/* Remove all entries. */
+	hash_seq_init(&hash_seq, pgws_hash);
+	while ((entry = hash_seq_search(&hash_seq)) != NULL)
+	{
+		hash_search(pgws_hash, &entry->key, HASH_REMOVE, NULL);
+	}
+
+	LWLockRelease(pgws->lock);
+
+	/*
+	 * Reset global statistics for sample_wait_events since all entries are
+	 * removed.
+	 */
+	{
+		volatile pgwsSharedState *s = (volatile pgwsSharedState *) pgws;
+		TimestampTz stats_reset = GetCurrentTimestamp();
+
+		SpinLockAcquire(&s->mutex);
+		s->stats.dealloc = 0;
+		s->stats.stats_reset = stats_reset;
+		SpinLockRelease(&s->mutex);
+	}
+
+	PG_RETURN_VOID();
+}
+
+/* Number of output arguments (columns) for sample_wait_events_info */
+#define SAMPLE_WAIT_EVENTS_INFO_COLS	2
+
+/*
+ * Return statistics of sample_wait_events.
+ */
+Datum
+statsinfo_sample_wait_events_info(PG_FUNCTION_ARGS)
+{
+	pgwsGlobalStats stats;
+	TupleDesc	tupdesc;
+	Datum		values[SAMPLE_WAIT_EVENTS_INFO_COLS];
+	bool		nulls[SAMPLE_WAIT_EVENTS_INFO_COLS];
+
+	/* Build a tuple descriptor for our result type */
+	if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
+		elog(ERROR, "return type must be a row type");
+
+	MemSet(values, 0, sizeof(values));
+	MemSet(nulls, 0, sizeof(nulls));
+
+	/* Read global statistics for sample_wait_events_info */
+	{
+		volatile pgwsSharedState *s = (volatile pgwsSharedState *) pgws;
+
+		SpinLockAcquire(&s->mutex);
+		stats = s->stats;
+		SpinLockRelease(&s->mutex);
+	}
+
+	values[0] = Int64GetDatum(stats.dealloc);
+	values[1] = TimestampTzGetDatum(stats.stats_reset);
+
+	PG_RETURN_DATUM(HeapTupleGetDatum(heap_form_tuple(tupdesc, values, nulls)));
 }
 
 static void
@@ -1086,6 +1208,102 @@ statsinfo_long_xact(PG_FUNCTION_ARGS)
 	return (Datum) 0;
 }
 
+#define WAIT_SAMPLING_PROFILE_COLS		7
+
+/*
+ * statsinfo_wait_sampling_profile - get wait sampling information
+ */
+Datum
+statsinfo_wait_sampling_profile(PG_FUNCTION_ARGS)
+{
+	ReturnSetInfo	   *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
+	TupleDesc			tupdesc;
+	Tuplestorestate	   *tupstore;
+	MemoryContext		per_query_ctx;
+	MemoryContext		oldcontext;
+	HASH_SEQ_STATUS		hash_seq;
+	pgwsEntry		   *entry;
+	Datum				values[WAIT_SAMPLING_PROFILE_COLS];
+	bool				nulls[WAIT_SAMPLING_PROFILE_COLS];
+	int					i;
+	const char			*event_type,
+						*event;
+
+	/* check to see if caller supports us returning a tuplestore */
+	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
+		ereport(ERROR,
+				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+				 errmsg("set-valued function called in context that cannot accept a set")));
+	if (!(rsinfo->allowedModes & SFRM_Materialize))
+		ereport(ERROR,
+				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+				 errmsg("materialize mode required, but it is not " \
+						"allowed in this context")));
+
+	/* Build a tuple descriptor for our result type */
+	if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
+		elog(ERROR, "return type must be a row type");
+	Assert(tupdesc->natts == lengthof(values));
+
+	per_query_ctx = rsinfo->econtext->ecxt_per_query_memory;
+	oldcontext = MemoryContextSwitchTo(per_query_ctx);
+
+	tupstore = tuplestore_begin_heap(true, false, work_mem);
+	rsinfo->returnMode = SFRM_Materialize;
+	rsinfo->setResult = tupstore;
+	rsinfo->setDesc = tupdesc;
+
+	MemoryContextSwitchTo(oldcontext);
+
+	if (pgws_hash)
+	{
+		hash_seq_init(&hash_seq, pgws_hash);
+		while ((entry = hash_seq_search(&hash_seq)) != NULL)
+		{
+			memset(values, 0, sizeof(values));
+			memset(nulls, 0, sizeof(nulls));
+
+			event_type = pgstat_get_wait_event_type(entry->key.wait_event_info);
+			event = pgstat_get_wait_event(entry->key.wait_event_info);
+
+			i = 0;
+
+			values[i++] = Int32GetDatum(entry->key.dbid);
+			values[i++] = Int32GetDatum(entry->key.userid);
+
+			if (profile_queries)
+				values[i++] = Int64GetDatumFast(entry->key.queryid);
+			else
+				values[i++] = (Datum) 0;
+
+			if (entry->key.backend_type)
+				values[i++] = CStringGetTextDatum(GetBackendTypeDesc(entry->key.backend_type));
+			else
+				nulls[i++] = true;
+
+			if (event_type)
+				values[i++] = PointerGetDatum(cstring_to_text(event_type));
+			else
+				nulls[i++] = true;
+
+			if (event)
+				values[i++] = PointerGetDatum(cstring_to_text(event));
+			else
+				nulls[i++] = true;
+
+			values[i++] = Int64GetDatumFast(entry->counters.count);
+
+			Assert(i == lengthof(values));
+			tuplestore_putvalues(tupstore, tupdesc, values, nulls);
+		}
+	}
+
+	/* clean up and return the tuplestore */
+	tuplestore_donestoring(tupstore);
+
+	return (Datum) 0;
+}
+
 /*
  * statsinfo_snapshot(comment) - take a manual snapshot asynchronously.
  */
@@ -1116,6 +1334,21 @@ statsinfo_maintenance(PG_FUNCTION_ARGS)
 
 	ereport(LOG,
 		(errmsg(LOGMSG_MAINTENANCE),
+		(errdetail("%d", (int) timestamptz_to_time_t(repository_keep_period)))));
+
+	PG_RETURN_VOID();
+}
+
+/*
+ * statsinfo_wait_sampling_reset_profile(repository_keep_period) - perform reset wait sampling profile asynchronously.
+ */
+Datum
+statsinfo_wait_sampling_reset_profile(PG_FUNCTION_ARGS)
+{
+	TimestampTz	repository_keep_period = PG_GETARG_TIMESTAMP(0);
+
+	ereport(LOG,
+		(errmsg(LOGMSG_RESET),
 		(errdetail("%d", (int) timestamptz_to_time_t(repository_keep_period)))));
 
 	PG_RETURN_VOID();
@@ -1271,6 +1504,19 @@ _PG_init(void)
 #if PG_VERSION_NUM >= 90100
 							NULL,
 #endif
+							NULL,
+							NULL);
+
+	DefineCustomIntVariable(GUC_PREFIX ".sampling_wait_events_interval",
+							"Sets the sampling wait events interval.",
+							NULL,
+							&sampling_wait_events_interval,
+							DEFAULT_SAMPLING_WAIT_EVENTS_INTERVAL,
+							1,
+							INT_MAX,
+							PGC_SIGHUP,
+							GUC_UNIT_MS,
+							NULL,
 							NULL,
 							NULL);
 
@@ -1617,6 +1863,30 @@ _PG_init(void)
 							NULL,
 							NULL);
 
+	DefineCustomBoolVariable(GUC_PREFIX ".profile_queries",
+							"Whether wait sampling profile should be collected per query or not.",
+							NULL,
+							&profile_queries,
+							DEFAULT_PROFILE_QUERIES,
+							PGC_SUSET,
+							0,
+							NULL,
+							NULL,
+							NULL);
+
+	DefineCustomIntVariable(GUC_PREFIX ".profile_max",
+							"Set maximum number of wait sampling profile records.",
+							NULL,
+							&pgws_max,
+							DEFAULT_PROFILE_MAX,
+							1,
+							INT_MAX,
+							PGC_POSTMASTER,
+							0,
+							NULL,
+							NULL,
+							NULL);
+
 	EmitWarningsOnPlaceholders("pg_statsinfo");
 
 	if (IsUnderPostmaster)
@@ -1667,6 +1937,8 @@ _PG_init(void)
 
 	/* Install xact_last_activity */
 	init_last_xact_activity();
+	/* Install wait_sampling */
+	init_wait_sampling();
 #if PG_VERSION_NUM >= 90200
 	/* Install emit_log_hook */
 	TAKE_HOOK(emit_log, pg_statsinfo_emit_log_hook);
@@ -1699,6 +1971,8 @@ _PG_fini(void)
 {
 	/* Uninstall xact_last_activity */
 	fini_last_xact_activity();
+	/* Uninstall wait_sampling */
+	fini_wait_sampling();
 #if PG_VERSION_NUM >= 90200
 	/* Uninstall emit_log_hook */
 	RESTORE_HOOK(emit_log);
@@ -4239,6 +4513,8 @@ pg_statsinfo_shmem_startup_hook(void)
 	/* create or attach to the shared memory state */
 	silShmemInit();
 
+	pgws_shmem_startup();
+
 	return;
 }
 
@@ -4294,5 +4570,163 @@ lookup_sil_state(void)
 								silShmemSize(),
 								&found);
 	LWLockRelease(sil_state->lockid);
+}
+
+static void
+sample_waits(void){
+	probe_waits();
+}
+
+uint32
+pgws_hash_fn(const void *key, Size keysize)
+{
+	const pgwsHashKey	*k = (const pgwsHashKey *) key;
+
+	return hash_uint32((uint32) k->userid) ^
+			hash_uint32((uint32) k->dbid) ^
+			hash_uint32((uint32) k->queryid) ^
+			hash_uint32((uint32) k->backend_type) ^
+			hash_uint32((uint32) k->wait_event_info);
+}
+
+int
+pgws_match_fn(const void *key1, const void *key2, Size keysize)
+{
+	const pgwsHashKey	*k1 = (const pgwsHashKey *) key1;
+	const pgwsHashKey	*k2 = (const pgwsHashKey *) key2;
+
+	if (k1->userid == k2->userid &&
+		k1->dbid == k2->dbid &&
+		k1->queryid == k2->queryid &&
+		k1->backend_type == k2->backend_type &&
+		k1->wait_event_info == k2->wait_event_info)
+		return 0;
+	else
+		return 1;
+}
+
+static void
+pgws_entry_dealloc(void)
+{
+	HASH_SEQ_STATUS hash_seq;
+	pgwsEntry **entries;
+	pgwsEntry  *entry;
+	int		     nvictims;
+	int		     i;
+
+	/*
+	 * Sort entries by usage and deallocate USAGE_DEALLOC_PERCENT of them.
+	 * While we're scanning the table, apply the decay factor to the usage
+	 * values.
+	 */
+	entries = palloc(hash_get_num_entries(pgws_hash) * sizeof(pgwsEntry *));
+
+	i = 0;
+	hash_seq_init(&hash_seq, pgws_hash);
+	while ((entry = hash_seq_search(&hash_seq)) != NULL)
+	{
+		entries[i++] = entry;
+		entry->counters.usage *= STATSINFO_USAGE_DECREASE_FACTOR; /* usage is decayed by time passes */
+	}
+
+	qsort(entries, i, sizeof(pgwsEntry *), pgws_entry_cmp);
+
+	nvictims = Max(10, i * STATSINFO_USAGE_DEALLOC_PERCENT / 100);
+	nvictims = Min(nvictims, i);
+
+	for (i = 0; i < nvictims; i++)
+	{
+		hash_search(pgws_hash, &entries[i]->key, HASH_REMOVE, NULL);
+	}
+
+	/* Increment the number of times entries are deallocated */
+	{
+		volatile pgwsSharedState *s = (volatile pgwsSharedState *) pgws;
+
+		SpinLockAcquire(&s->mutex);
+		s->stats.dealloc += 1;
+		SpinLockRelease(&s->mutex);
+	}
+
+	pfree(entries);
+}
+
+static int
+pgws_entry_cmp(const void *lhs, const void *rhs)
+{
+	uint64		l_count = (*(pgwsEntry *const *) lhs)->counters.usage;
+	uint64		r_count = (*(pgwsEntry *const *) rhs)->counters.usage;
+
+	if (l_count < r_count)
+		return -1;
+	else if (l_count > r_count)
+		return +1;
+	else
+		return 0;
+}
+
+static void
+probe_waits(void)
+{
+	int			i;
+
+	for (i = pgstat_fetch_stat_numbackends(); i > 0; i--)
+	{
+		PgBackendStatus	*be;
+		pgwsEntry		item;
+		PGPROC			*proc;
+		pgwsEntry	   *entry;
+		bool			found;
+		int				procpid;
+
+		be = pgstat_fetch_stat_beentry(i);
+		if (!be)
+			continue;
+
+		procpid = be->st_procpid;
+
+		if (procpid == 0)
+			continue;
+
+		proc = BackendPidGetProc(procpid);
+
+		if (proc == NULL)
+			 continue;	/* This backend is dead */
+
+		if (proc->wait_event_info == 0)
+			continue;
+
+		item.key.userid = be->st_userid;
+		item.key.dbid = be->st_databaseid;
+
+		if (profile_queries)
+			item.key.queryid = be->st_query_id;
+		else
+			item.key.queryid = 0;
+
+		item.key.backend_type = be->st_backendType;
+
+		item.key.wait_event_info = proc->wait_event_info;
+
+		/* Make space if needed */
+		while (hash_get_num_entries(pgws_hash) >= pgws_max)
+			pgws_entry_dealloc();
+
+		entry = (pgwsEntry *) hash_search(pgws_hash, &item, HASH_ENTER, &found);
+		if (found)
+		{
+			SpinLockAcquire(&entry->mutex);
+ 			entry->counters.count++;
+			entry->counters.usage += STATSINFO_USAGE_INCREASE; /* usage is raised by touching */
+			SpinLockRelease(&entry->mutex);
+ 		}
+		else
+		{
+			SpinLockAcquire(&entry->mutex);
+ 			entry->counters.count = 1;
+			entry->counters.usage = STATSINFO_USAGE_INIT;
+			SpinLockRelease(&entry->mutex);
+		}
+	}
 }
 #endif

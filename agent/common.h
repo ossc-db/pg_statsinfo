@@ -43,6 +43,8 @@
 #define LOGMSG_SNAPSHOT						LOG_PREFIX "snapshot requested"
 /* manual maintenance log message */
 #define LOGMSG_MAINTENANCE					LOG_PREFIX "maintenance requested"
+/* wait sampling reset profile log message */
+#define LOGMSG_RESET						LOG_PREFIX "wait sampling reset profile requested"
 #define LOGMSG_RESTART						LOG_PREFIX "restart requested"
 /* statistics log message */
 #define LOGMSG_AUTOVACUUM_CANCEL_REQUEST	LOG_PREFIX "autovacuum cancel request"

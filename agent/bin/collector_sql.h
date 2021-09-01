@@ -854,4 +854,7 @@ FROM \
 WHERE \
 	n.nspname <> ALL (('{' || $1 || '}')::text[])"
 
+/* wait sampling profile */
+#define SQL_SELECT_WAIT_SAMPLING_PROFILE	"SELECT * FROM statsinfo.wait_sampling_profile()"
+
 #endif

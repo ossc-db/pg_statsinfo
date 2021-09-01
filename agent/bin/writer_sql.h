@@ -147,4 +147,7 @@ SELECT statsrepo.create_snapshot_partition($1)"
 #define SQL_CREATE_REPOLOG_PARTITION "\
 SELECT statsrepo.create_repolog_partition($1)"
 
+#define SQL_INSERT_WAIT_SAMPLING_PROFILE "\
+INSERT INTO statsrepo.wait_sampling VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
+
 #endif
