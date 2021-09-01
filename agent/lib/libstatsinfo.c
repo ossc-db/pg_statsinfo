@@ -4722,10 +4722,9 @@ probe_waits(void)
  		}
 		else
 		{
-			SpinLockAcquire(&entry->mutex);
  			entry->counters.count = 1;
 			entry->counters.usage = STATSINFO_USAGE_INIT;
-			SpinLockRelease(&entry->mutex);
+			SpinLockInit(&entry->mutex);
 		}
 	}
 }
