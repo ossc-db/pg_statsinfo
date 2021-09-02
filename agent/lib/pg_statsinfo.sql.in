@@ -35,10 +35,10 @@ LANGUAGE C STRICT;
 -- statsinfo.activity()
 --
 CREATE FUNCTION statsinfo.activity(
-	OUT idle			float8,
-	OUT idle_in_xact	float8,
-	OUT waiting			float8,
-	OUT running			float8,
+	OUT idle			integer,
+	OUT idle_in_xact	integer,
+	OUT waiting			integer,
+	OUT running			integer,
 	OUT backends		integer)
 AS 'MODULE_PATHNAME', 'statsinfo_activity'
 LANGUAGE C STRICT;

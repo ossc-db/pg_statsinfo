@@ -211,10 +211,10 @@ CREATE TABLE statsrepo.column
 CREATE TABLE statsrepo.activity
 (
 	snapid				bigint,
-	idle				float8,
-	idle_in_xact		float8,
-	waiting				float8,
-	running				float8,
+	idle				integer,
+	idle_in_xact		integer,
+	waiting				integer,
+	running				integer,
 	max_backends		integer,
 	PRIMARY KEY (snapid),
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
@@ -1472,60 +1472,34 @@ $$
 LANGUAGE sql;
 
 -- generate information that corresponds to 'Instance Processes'
-CREATE FUNCTION statsrepo.get_proc_tendency(
-	IN snapid_begin		bigint,
-	IN snapid_end		bigint,
-	OUT snapid			bigint,
-	OUT idle			numeric,
-	OUT idle_in_xact	numeric,
-	OUT waiting			numeric,
-	OUT running			numeric
-) RETURNS SETOF record AS
-$$
-	SELECT
-		a.snapid,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * running / (idle + idle_in_xact + waiting + running))::numeric(5,1) END
-	FROM
-		statsrepo.activity a,
-		statsrepo.snapshot s
-	WHERE
-		a.snapid BETWEEN $1 AND $2
-		AND a.snapid = s.snapid
-		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-		AND idle IS NOT NULL
-	ORDER BY
-		a.snapid;
-$$
-LANGUAGE sql;
-
--- generate information that corresponds to 'Instance Processes'
 CREATE FUNCTION statsrepo.get_proc_tendency_report(
-	IN snapid_begin		bigint,
-	IN snapid_end		bigint,
-	OUT "timestamp"		text,
-	OUT idle			numeric,
-	OUT idle_in_xact	numeric,
-	OUT waiting			numeric,
-	OUT running			numeric
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT "timestamp"			text,
+	OUT idle				integer,
+	OUT idle_per			numeric,
+	OUT idle_in_xact		integer,
+	OUT idle_in_xact_per	numeric,
+	OUT waiting				integer,
+	OUT waiting_per			numeric,
+	OUT running				integer,
+	OUT running_per			numeric
 ) RETURNS SETOF record AS
 $$
 	SELECT
 		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+		idle,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
+			ELSE (100.0 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS idle_per,
+		idle_in_xact,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
+			ELSE (100.0 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS idle_in_xact_per,
+		waiting,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,1) END,
+			ELSE (100.0 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS waiting_per,
+		running,
 		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100 * running / (idle + idle_in_xact + waiting + running))::numeric(5,1) END
+			ELSE (100.0 * running / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS running_per
 	FROM
 		statsrepo.activity a,
 		statsrepo.snapshot s

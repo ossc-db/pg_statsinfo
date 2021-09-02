@@ -20,14 +20,28 @@
 #define SQL_SELECT_STAT_REPLICATION_SLOTS		"SELECT * FROM statsrepo.get_stat_replication_slots_report($1, $2)"
 #define SQL_SELECT_RECOVERY_CONFLICTS 			"SELECT * FROM statsrepo.get_recovery_conflicts($1, $2)"
 #define SQL_SELECT_INSTANCE_PROC_TENDENCY "\
-SELECT * FROM statsrepo.get_proc_tendency_report($1, $2) \
+SELECT \
+	timestamp, \
+	idle, \
+	'(' || idle_per || ' %)', \
+	idle_in_xact, \
+	'(' || idle_in_xact_per || ' %)', \
+	waiting, \
+	'(' || waiting_per || ' %)', \
+	running, \
+	'(' || running_per || ' %)' \
+FROM statsrepo.get_proc_tendency_report($1, $2) \
 UNION ALL \
 SELECT \
 	'Average', \
 	pg_catalog.avg(idle)::numeric(5,1), \
+	'(' || pg_catalog.avg(idle_per)::numeric(5,1) || ' %)', \
 	pg_catalog.avg(idle_in_xact)::numeric(5,1), \
+	'(' || pg_catalog.avg(idle_in_xact_per)::numeric(5,1) || ' %)', \
 	pg_catalog.avg(waiting)::numeric(5,1), \
-	pg_catalog.avg(running)::numeric(5,1) \
+	'(' || pg_catalog.avg(waiting_per)::numeric(5,1) || ' %)', \
+	pg_catalog.avg(running)::numeric(5,1), \
+	'(' || pg_catalog.avg(running_per)::numeric(5,1) || ' %)' \
 FROM \
 	statsrepo.get_proc_tendency_report($1, $2)"
 #define SQL_SELECT_BGWRITER_STATS				"SELECT * FROM statsrepo.get_bgwriter_stats($1, $2)"
@@ -599,19 +613,23 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Instance Processes **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %12s  %12s  %12s  %12s\n",
-		"DateTime", "Idle", "Idle In Xact", "Waiting", "Running");
-	fprintf(out, "---------------------------------------------------------------------------\n");
+	fprintf(out, "%-16s  %12s  %12s  %12s  %12s  %12s  %12s  %12s  %12s\n",
+		"DateTime", "Idle", "(%)", "Idle In Xact", "(%)", "Waiting", "(%)", "Running", "(%)");
+	fprintf(out, "---------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_INSTANCE_PROC_TENDENCY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %10s %%  %10s %%  %10s %%  %10s %%\n",
+		fprintf(out, "%-16s  %12s  %12s  %12s  %12s  %12s  %12s  %12s  %12s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
 			PQgetvalue(res, i, 3),
-			PQgetvalue(res, i, 4));
+			PQgetvalue(res, i, 4),
+			PQgetvalue(res, i, 5),
+			PQgetvalue(res, i, 6),
+			PQgetvalue(res, i, 7),
+			PQgetvalue(res, i, 8));
 	}
 	fprintf(out, "\n");
 	PQclear(res);

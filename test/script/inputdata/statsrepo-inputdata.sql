@@ -28,10 +28,10 @@ $$
 	--
 	-- Data for Name: activity; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
-	INSERT INTO statsrepo.activity VALUES ($6, 0.111111111111110994, 0.111111111111110994, 1.88888888888888995, 1, 3);
-	INSERT INTO statsrepo.activity VALUES ($6 + 1, 0.25, 0.833333333333333037, 2.08333333333332993, 0.833333333333333037, 4);
-	INSERT INTO statsrepo.activity VALUES ($6 + 2, 0, 0.583333333333333037, 2.25, 1.16666666666667007, 5);
-	INSERT INTO statsrepo.activity VALUES ($6 + 3, 0.083333333333333301, 0.666666666666666963, 2.08333333333332993, 1.16666666666667007, 6);
+	INSERT INTO statsrepo.activity VALUES ($6, 17, 2, 0, 19, 3);
+	INSERT INTO statsrepo.activity VALUES ($6 + 1, 1, 0, 9, 1, 4);
+	INSERT INTO statsrepo.activity VALUES ($6 + 2, 12, 22, 4, 83, 5);
+	INSERT INTO statsrepo.activity VALUES ($6 + 3, 24, 30, 0,69, 6);
 
 	--
 	-- Data for Name: alert_message; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
