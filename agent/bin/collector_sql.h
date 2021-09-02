@@ -858,3 +858,34 @@ WHERE \
 #define SQL_SELECT_WAIT_SAMPLING_PROFILE	"SELECT * FROM statsinfo.wait_sampling_profile()"
 
 #endif
+
+/* device */
+/* TODO: exec_user_time is best key? */
+#define SQL_SELECT_RUSAGE "\
+SELECT \
+        s.dbid, \
+        s.userid, \
+        s.queryid, \
+	s.plan_reads, \
+	s.plan_writes, \
+	s.plan_user_time, \
+	s.plan_system_time, \
+	s.plan_minflts, \
+	s.plan_majflts, \
+	s.plan_nvcsws, \
+	s.plan_nivcsws, \
+	s.exec_reads, \
+        s.exec_writes, \
+        s.exec_user_time, \
+        s.exec_system_time, \
+        s.exec_minflts, \
+        s.exec_majflts, \
+        s.exec_nvcsws, \
+        s.exec_nivcsws \
+FROM \
+        statsinfo.rusage_info() s \
+        LEFT JOIN pg_roles r ON r.oid = s.userid \
+WHERE \
+        r.rolname <> ALL (('{' || $1 || '}')::text[]) \
+ORDER BY \
+        s.exec_user_time DESC LIMIT $2"

@@ -219,3 +219,14 @@ INSERT 0 1
       9 |      1 | xxx  |         | xxx       | xxx
 (9 rows)
 
+/**--- Statistics of rusage ---**/
+ cnt 
+-----
+ t
+(1 row)
+
+ eut | est 
+-----+-----
+ xxx | xxx
+(1 row)
+

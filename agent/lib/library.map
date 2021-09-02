@@ -16,6 +16,8 @@
     statsinfo_memory;
     statsinfo_profile;
     statsinfo_restart;
+    statsinfo_rusage_info;
+    statsinfo_rusage_reset;
     statsinfo_sample;
     statsinfo_sample_wait_events;
     statsinfo_sample_wait_events_reset;
