@@ -423,7 +423,6 @@ PG_FUNCTION_INFO_V1(statsinfo_long_xact);
 PG_FUNCTION_INFO_V1(statsinfo_snapshot);
 PG_FUNCTION_INFO_V1(statsinfo_maintenance);
 PG_FUNCTION_INFO_V1(statsinfo_wait_sampling_profile);
-PG_FUNCTION_INFO_V1(statsinfo_wait_sampling_reset_profile);
 PG_FUNCTION_INFO_V1(statsinfo_tablespaces);
 PG_FUNCTION_INFO_V1(statsinfo_start);
 PG_FUNCTION_INFO_V1(statsinfo_stop);
@@ -444,7 +443,6 @@ extern Datum PGUT_EXPORT statsinfo_long_xact(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_snapshot(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_maintenance(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_wait_sampling_profile(PG_FUNCTION_ARGS);
-extern Datum PGUT_EXPORT statsinfo_wait_sampling_reset_profile(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_tablespaces(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_start(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_stop(PG_FUNCTION_ARGS);
@@ -671,12 +669,10 @@ statsinfo_sample_wait_events_reset(PG_FUNCTION_ARGS)
 {
 	HASH_SEQ_STATUS hash_seq;
 	pgwsEntry  *entry;
-	long		num_entries;
 
 	must_be_superuser();
 
 	LWLockAcquire(pgws->lock, LW_EXCLUSIVE);
-	num_entries = hash_get_num_entries(pgws_hash);
 
 	/* Remove all entries. */
 	hash_seq_init(&hash_seq, pgws_hash);
@@ -1334,21 +1330,6 @@ statsinfo_maintenance(PG_FUNCTION_ARGS)
 
 	ereport(LOG,
 		(errmsg(LOGMSG_MAINTENANCE),
-		(errdetail("%d", (int) timestamptz_to_time_t(repository_keep_period)))));
-
-	PG_RETURN_VOID();
-}
-
-/*
- * statsinfo_wait_sampling_reset_profile(repository_keep_period) - perform reset wait sampling profile asynchronously.
- */
-Datum
-statsinfo_wait_sampling_reset_profile(PG_FUNCTION_ARGS)
-{
-	TimestampTz	repository_keep_period = PG_GETARG_TIMESTAMP(0);
-
-	ereport(LOG,
-		(errmsg(LOGMSG_RESET),
 		(errdetail("%d", (int) timestamptz_to_time_t(repository_keep_period)))));
 
 	PG_RETURN_VOID();
@@ -4722,7 +4703,7 @@ probe_waits(void)
  		}
 		else
 		{
- 			entry->counters.count = 1;
+			entry->counters.count = 1;
 			entry->counters.usage = STATSINFO_USAGE_INIT;
 			SpinLockInit(&entry->mutex);
 		}

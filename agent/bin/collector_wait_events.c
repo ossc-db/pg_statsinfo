@@ -14,7 +14,6 @@ volatile char	*reset_requested;
 static PGconn  *collector_wait_events_conn = NULL;
 
 static void do_sample_wait_events(void);
-static void reset_sample_wait_events(void);
 static void get_server_encoding(void);
 static void collector_wait_events_disconnect(void);
 static bool extract_dbname(const char *conninfo, char *dbname, size_t size);
@@ -50,16 +49,6 @@ collector_wait_events_main(void *arg)
 			elog(DEBUG2, "collector_wait_events_main time_ms_diff %ld sampling_wait_events_interval %d", time_ms_diff(now, prev), sampling_wait_events_interval);
 			do_sample_wait_events();
 			prev = getlocaltime_ms();
-
-			/* reset by manual */
-			if (reset_requested)
-			{
-				pthread_mutex_lock(&reset_lock);
-				reset_requested = NULL;
-				pthread_mutex_unlock(&reset_lock);
-
-				reset_sample_wait_events();
-			}
 		}
 
 		usleep(1000);	/* 1ms */
@@ -86,25 +75,6 @@ do_sample_wait_events(void)
 			continue;
 
 		pgut_command(conn, "SELECT statsinfo.sample_wait_events()", 0, NULL);
-		break;	/* ok */
-	}
-}
-
-static void
-reset_sample_wait_events(void)
-{
-	PGconn	   *conn;
-	int			retry;
-
-	for (retry = 0;
-		 shutdown_state < SHUTDOWN_REQUESTED && retry < DB_MAX_RETRY;
-		 delay(), retry++)
-	{
-		/* connect to postgres database and ensure functions are installed */
-		if ((conn = collector_wait_events_connect(NULL)) == NULL)
-			continue;
-
-		pgut_command(conn, "SELECT statsinfo.sample_wait_events_reset()", 0, NULL);
 		break;	/* ok */
 	}
 }

@@ -569,19 +569,6 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 				}
 				continue;
 			}
-
-			/* wait sampling reset profile requested ? */
-			if (strcmp(log.message, LOGMSG_RESET) == 0)
-			{
-				if (!only_routing)
-				{
-					pthread_mutex_lock(&reset_lock);
-					free((char *) reset_requested);
-					reset_requested = pgut_strdup(log.detail);
-					pthread_mutex_unlock(&reset_lock);
-				}
-				continue;
-			}
 #if PG_VERSION_NUM >= 90200
 			/* autovacuum cancel request ? */
 			if (strcmp(log.message, LOGMSG_AUTOVACUUM_CANCEL_REQUEST) == 0)

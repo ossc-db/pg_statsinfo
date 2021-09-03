@@ -501,13 +501,15 @@ CREATE TABLE statsrepo.wait_sampling (
 	snapid			bigint,
 	dbid			oid,
 	userid			oid,
-	queryid			int8,
+	queryid			bigint,
 	backend_type	text,
 	event_type		text,
 	event			text,
-	count			int8,
+	count			bigint,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
+
+CREATE INDEX statsrepo_wait_sampling_idx ON statsrepo.wait_sampling(snapid);
 
 CREATE TABLE statsrepo.profile
 (
@@ -3690,7 +3692,7 @@ CREATE FUNCTION statsrepo.get_wait_sampling(
 	OUT backend_type text,
 	OUT event_type text,
 	OUT event text,
-	OUT count int8
+	OUT count bigint
 ) RETURNS SETOF record AS
 $$
 	SELECT
@@ -3714,15 +3716,6 @@ $$
 	WHERE
 		ws2.backend_type NOT IN ('background worker')
 		AND ws2.event_type NOT IN ('Activity')
-	GROUP BY
-		db.name,
-		ro.name,
-		ws2.queryid,
-		ws2.backend_type,
-		ws2.event_type,
-		ws2.event,
-		ws1.count,
-		ws2.count
 	ORDER BY
 		count DESC;
 $$

@@ -284,18 +284,14 @@ LANGUAGE C STRICT;
 CREATE FUNCTION statsinfo.wait_sampling_profile (
 	OUT dbid oid,
 	OUT userid oid,
-	OUT queryid int8,
+	OUT queryid bigint,
 	OUT backend_type text,
 	OUT event_type text,
 	OUT event text,
-	OUT count int8
+	OUT count bigint
 )
 RETURNS SETOF record
 AS 'MODULE_PATHNAME', 'statsinfo_wait_sampling_profile'
-LANGUAGE C VOLATILE STRICT;
-
-CREATE FUNCTION statsinfo.wait_sampling_reset_profile() RETURNS void
-AS 'MODULE_PATHNAME', 'statsinfo_wait_sampling_reset_profile'
 LANGUAGE C VOLATILE STRICT;
 
 CREATE FUNCTION statsinfo.sample_wait_events_reset() RETURNS void
