@@ -644,3 +644,14 @@ SELECT
 FROM
 	statsrepo.snapshot;
 EOF
+echo "/**--- Statistics of rusage ---**/"
+send_query << EOF
+SELECT (COUNT(*) > 1) as cnt FROM statsrepo.rusage;
+EOF
+send_query << EOF
+SELECT 
+    CASE WHEN sum(exec_user_time) > 0 THEN 'xxx' ELSE 'yyy' END AS eut,
+    CASE WHEN sum(exec_system_time) > 0 THEN 'xxx' ELSE 'yyy' END AS est
+FROM
+    statsrepo.rusage;
+EOF

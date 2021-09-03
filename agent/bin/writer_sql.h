@@ -101,6 +101,12 @@ INSERT INTO statsrepo.memory VALUES ($1, $2, $3, $4, $5, $6)"
 #define SQL_INSERT_PROFILE "\
 INSERT INTO statsrepo.profile VALUES ($1, $2, $3, $4)"
 
+#define SQL_INSERT_RUSAGE "\
+INSERT INTO statsrepo.rusage \
+ SELECT (($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)::statsrepo.rusage).* \
+   FROM statsrepo.database d \
+  WHERE d.snapid = $1 AND d.dbid = $2"
+
 /* Definition of delimiter and null identifier for COPY command */
 #define COPY_DELIMITER "\t"
 #define NULL_STR "null"
