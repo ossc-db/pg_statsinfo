@@ -21,6 +21,7 @@
 
 #include "../common.h"
 #include "pgut/pgut-be.h"
+#include "wait_sampling.h"
 
 /* For rusage */
 #include <unistd.h>

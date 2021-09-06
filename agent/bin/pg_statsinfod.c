@@ -42,6 +42,7 @@ char		   *excluded_schemas;
 char		   *stat_statements_max;
 char		   *stat_statements_exclude_users;
 int				sampling_interval;
+int				sampling_wait_events_interval;
 int				snapshot_interval;
 int				enable_maintenance;
 time_t			maintenance_time;
@@ -76,6 +77,8 @@ char		   *repolog_nologging_users;
 int				controlfile_fsync_interval;
 /*---- GUC variables (writer) ----------*/
 char		   *repository_server;
+bool		   profile_queries;
+int			   profile_max;
 /*---- message format ----*/
 char		   *msg_debug;
 char		   *msg_info;
@@ -106,6 +109,7 @@ volatile WriterState	writer_state;
 
 /* threads */
 pthread_t	th_collector;
+pthread_t	th_collector_wait_events;
 pthread_t	th_writer;
 pthread_t	th_logger;
 pthread_t	th_logger_send;
@@ -159,6 +163,7 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".stat_statements_exclude_users", assign_string, &stat_statements_exclude_users},
 	{GUC_PREFIX ".repository_server", assign_string, &repository_server},
 	{GUC_PREFIX ".sampling_interval", assign_int, &sampling_interval},
+	{GUC_PREFIX ".sampling_wait_events_interval", assign_int, &sampling_wait_events_interval},
 	{GUC_PREFIX ".snapshot_interval", assign_int, &snapshot_interval},
 	{GUC_PREFIX ".syslog_line_prefix", assign_string, &syslog_line_prefix},
 	{GUC_PREFIX ".syslog_min_messages", assign_elevel, &syslog_min_messages},
@@ -186,6 +191,8 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".controlfile_fsync_interval", assign_int, &controlfile_fsync_interval},
 	{GUC_PREFIX ".enable_alert", assign_bool, &enable_alert},
 	{GUC_PREFIX ".target_server", assign_string, &target_server},
+	{GUC_PREFIX ".profile_queries", assign_bool, &profile_queries},
+	{GUC_PREFIX ".profile_max", assign_int, &profile_max},
 	{":debug", assign_string, &msg_debug},
 	{":info", assign_string, &msg_info},
 	{":notice", assign_string, &msg_notice},
@@ -298,6 +305,7 @@ main(int argc, char *argv[])
 	/* init logger, collector, and writer module */
 	pthread_mutex_init(&shutdown_state_lock, NULL);
 	collector_init();
+	collector_wait_events_init();
 	writer_init();
 	logger_init();
 
@@ -308,12 +316,14 @@ main(int argc, char *argv[])
 
 	/* run the modules in each thread */
 	pthread_create(&th_collector, NULL, collector_main, NULL);
+	pthread_create(&th_collector_wait_events, NULL, collector_wait_events_main, NULL);
 	pthread_create(&th_writer, NULL, writer_main, NULL);
 	pthread_create(&th_logger, NULL, logger_main, &ctrl);
 	pthread_create(&th_logger_send, NULL, logger_send_main, &ctrl);
 
 	/* join the threads */ 
 	pthread_join(th_collector, (void **) NULL);
+	pthread_join(th_collector_wait_events, (void **) NULL);
 	pthread_join(th_writer, (void **) NULL);
 	pthread_join(th_logger, (void **) NULL);
 	pthread_join(th_logger_send, (void **) NULL);
@@ -454,6 +464,35 @@ do_connect(PGconn **conn, const char *info, const char *schema)
 		/* install required schema if requested */
 		if (ensure_schema(*conn, schema))
 			return *conn;
+	}
+
+	/* connection failed */
+	pgut_disconnect(*conn);
+	*conn = NULL;
+	return NULL;
+}
+
+/*
+ * Connect to the database and install schema if not installed yet.
+ * Returns the same value with *conn.
+ */
+PGconn *
+do_wait_events_connect(PGconn **conn, const char *info, const char *schema)
+{
+	/* skip reconnection if connected to the database already */
+	if (PQstatus(*conn) == CONNECTION_OK)
+		return *conn;
+
+	pgut_disconnect(*conn);
+	*conn = pgut_connect(info, NO, ERROR);
+
+	if (PQstatus(*conn) == CONNECTION_OK)
+	{
+		/* adjust setting parameters */
+		pgut_command(*conn,
+			"SET search_path = 'pg_catalog', 'public'", 0, NULL);
+
+		return *conn;
 	}
 
 	/* connection failed */
@@ -839,6 +878,87 @@ getlocaltimestamp(void)
 #endif   /* WIN32 */
 
 	return tp;
+}
+
+tim
+getlocaltime_ms(void)
+{
+#ifndef WIN32
+	struct timeval	 tv;
+	struct tm		*ts;
+#else
+	SYSTEMTIME		 stTime;
+	FILETIME		 fTime;
+#endif
+//	char			*tp;
+	tim				q;
+
+//	if ((tp = (char *)pgut_malloc((size_t)32)) == NULL)
+//		return NULL;
+
+//	memset(tp, 0x00, 32);
+
+#ifndef WIN32
+	if (gettimeofday(&tv, NULL) != 0)
+	{
+//		free(tp);
+		ereport(ERROR,
+			(errcode_errno(),
+			 errmsg("gettimeofday function call failed")));
+//		return NULL;
+	}
+
+	if ((ts = localtime(&tv.tv_sec)) == NULL)
+	{
+//		free(tp);
+		ereport(ERROR,
+			(errcode_errno(),
+			 errmsg("localtime function call failed")));
+//		return NULL;
+	}
+
+	q.tim = mktime(ts);
+	q.msec = tv.tv_usec / 1000;
+
+//	snprintf(tp, 32, "%04d-%02d-%02d %02d:%02d:%02d.%06ld",
+//			ts->tm_year + 1900,
+//			ts->tm_mon + 1,
+//			ts->tm_mday,
+//			ts->tm_hour,
+//			ts->tm_min,
+//			ts->tm_sec,
+//			tv.tv_usec);
+#else
+	GetLocalTime(&stTime);
+
+//	snprintf(tp, 32, "%04d-%02d-%02d %02d:%02d:%02d.%06ld",
+//			stTime.wYear,
+//			stTime.wMonth,
+//			stTime.wDay,
+//			stTime.wHour,
+//			stTime.wMinute,
+//			stTime.wSecond,
+//			stTime.wMilliseconds);
+
+	SystemTimeToFileTime(&stTime, &fTime);
+
+	q.tim = (fTime - 0x19DB1DED53E8000) / 10000000;
+	q.msec = stTime.wMilliseconds;
+
+#endif   /* WIN32 */
+
+	return q;
+}
+
+long
+time_ms_diff(tim q1, tim q2){
+	long sec;
+	long msec;
+
+	sec = difftime(q1.tim, q2.tim);
+	msec = q1.msec - q2.msec;
+
+	return sec * 1000 + msec;
 }
 
 time_t

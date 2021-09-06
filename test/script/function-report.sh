@@ -75,6 +75,9 @@ exec_command "exec_statsinfo -r SchemaInformation"
 echo "/**--- REPORTID: Alert ---**/"
 exec_command "exec_statsinfo -r Alert"
 
+echo "/**--- REPORTID: WaitSampling ---**/"
+exec_command "exec_statsinfo -r WaitSampling"
+
 echo "/**--- REPORTID: Profiles ---**/"
 exec_command "exec_statsinfo -r Profiles"
 

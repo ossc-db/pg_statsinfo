@@ -19,9 +19,14 @@
     statsinfo_rusage_info;
     statsinfo_rusage_reset;
     statsinfo_sample;
+    statsinfo_sample_wait_events;
+    statsinfo_sample_wait_events_reset;
+    statsinfo_sample_wait_events_info;
     statsinfo_snapshot;
     statsinfo_start;
     statsinfo_stop;
     statsinfo_tablespaces;
+    statsinfo_wait_sampling_profile;
+    statsinfo_wait_sampling_reset_profile;
   local: *;
 };

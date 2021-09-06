@@ -6,6 +6,7 @@
 SRCS = \
 	libstatsinfo.c \
 	last_xact_activity.c \
+	wait_sampling.c \
 	pg_control.c \
 	port.c \
 	pgut/pgut-be.c \

@@ -32,6 +32,13 @@ AS 'MODULE_PATHNAME', 'statsinfo_sample'
 LANGUAGE C STRICT;
 
 --
+-- statsinfo.sample_wait_events()
+--
+CREATE FUNCTION statsinfo.sample_wait_events() RETURNS void
+AS 'MODULE_PATHNAME', 'statsinfo_sample_wait_events'
+LANGUAGE C STRICT;
+
+--
 -- statsinfo.activity()
 --
 CREATE FUNCTION statsinfo.activity(
@@ -274,5 +281,33 @@ RETURNS void
 AS 'MODULE_PATHNAME', 'statsinfo_rusage_reset'
 LANGUAGE C STRICT;
 
+CREATE FUNCTION statsinfo.wait_sampling_profile (
+	OUT dbid oid,
+	OUT userid oid,
+	OUT queryid bigint,
+	OUT backend_type text,
+	OUT event_type text,
+	OUT event text,
+	OUT count bigint
+)
+RETURNS SETOF record
+AS 'MODULE_PATHNAME', 'statsinfo_wait_sampling_profile'
+LANGUAGE C VOLATILE STRICT;
+
+CREATE FUNCTION statsinfo.sample_wait_events_reset() RETURNS void
+AS 'MODULE_PATHNAME', 'statsinfo_sample_wait_events_reset'
+LANGUAGE C VOLATILE STRICT;
+
+--- Define statsinfo.sample_wait_events_info
+CREATE FUNCTION statsinfo.sample_wait_events_info(
+	OUT dealloc bigint,
+	OUT stats_reset timestamp with time zone
+)
+RETURNS record
+AS 'MODULE_PATHNAME', 'statsinfo_sample_wait_events_info'
+LANGUAGE C STRICT VOLATILE PARALLEL SAFE;
+
+CREATE VIEW statsinfo.sample_wait_events_info AS
+	SELECT * FROM statsinfo.sample_wait_events_info();
 
 COMMIT;

@@ -107,6 +107,7 @@ extern char		   *excluded_schemas;
 extern char		   *stat_statements_max;
 extern char		   *stat_statements_exclude_users;
 extern int			sampling_interval;
+extern int			sampling_wait_events_interval;
 extern int			snapshot_interval;
 extern int		    enable_maintenance;
 extern time_t		maintenance_time;
@@ -141,6 +142,8 @@ extern char		   *repolog_nologging_users;
 extern int			controlfile_fsync_interval;
 /*---- GUC variables (writer) ----------*/
 extern char		   *repository_server;
+extern bool		   profile_queries;
+extern int		   profile_max;
 /*---- message format ----*/
 extern char		   *msg_debug;
 extern char		   *msg_info;
@@ -180,6 +183,10 @@ extern volatile time_t	collector_reload_time;
 extern volatile char   *snapshot_requested;
 extern volatile char   *maintenance_requested;
 extern volatile char   *postmaster_start_time;
+
+/* collector_wait_events.c */
+extern pthread_mutex_t	reset_lock;
+extern volatile char   *reset_requested;
 
 /* queue item for writer */
 typedef struct QueueItem	QueueItem;
@@ -235,10 +242,19 @@ typedef struct ControlFile
 	pg_crc32		crc;						/* CRC of all above ... MUST BE LAST! */
 } ControlFile;
 
+typedef struct tim {
+	time_t	tim; /* yyyymmddhhmmss */
+	long	msec;
+} tim;
+
 /* collector.c */
 extern void collector_init(void);
 extern void *collector_main(void *arg);
 extern PGconn *collector_connect(const char *db);
+/* collector_wait_events.c */
+extern void collector_wait_events_init(void);
+extern void *collector_wait_events_main(void *arg);
+extern PGconn *collector_wait_events_connect(const char *db);
 /* snapshot.c */
 extern QueueItem *get_snapshot(char *comment);
 extern void readopt_from_file(FILE *fp);
@@ -301,12 +317,15 @@ bool check_maintenance_log(pid_t log_maintenance_pid, int fd_err);
 /* pg_statsinfod.c */
 extern bool postmaster_is_alive(void);
 extern PGconn *do_connect(PGconn **conn, const char *info, const char *schema);
+extern PGconn *do_wait_events_connect(PGconn **conn, const char *info, const char *schema);
 extern bool ensure_schema(PGconn *conn, const char *schema);
 extern int str_to_elevel(const char *value);
 extern const char *elevel_to_str(int elevel);
 extern void shutdown_progress(ShutdownState state);
 extern void delay(void);
 extern char *getlocaltimestamp(void);
+extern tim getlocaltime_ms(void);
+extern long time_ms_diff(tim q1, tim q2);
 extern time_t get_next_time(time_t now, int interval);
 
 #endif   /* PG_STATSINFOD_H */
