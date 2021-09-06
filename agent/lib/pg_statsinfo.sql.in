@@ -310,4 +310,33 @@ LANGUAGE C STRICT VOLATILE PARALLEL SAFE;
 CREATE VIEW statsinfo.sample_wait_events_info AS
 	SELECT * FROM statsinfo.sample_wait_events_info();
 
+--
+-- statsinfo.cpuinfo()
+--
+CREATE FUNCTION statsinfo.cpuinfo
+(
+	OUT vendor_id			text,
+	OUT model_name			text,
+	OUT cpu_mhz				real,
+	OUT processors			int,
+	OUT threads_per_core	int,
+	OUT cores_per_socket	int,
+	OUT sockets				int
+)
+RETURNS SETOF record
+AS 'MODULE_PATHNAME', 'statsinfo_cpuinfo'
+LANGUAGE C STRICT;
+
+--
+-- statsinfo.meminfo()
+--
+CREATE FUNCTION statsinfo.meminfo
+(
+	OUT mem_total			bigint,
+	OUT swap_total			bigint
+)
+RETURNS SETOF record
+AS 'MODULE_PATHNAME', 'statsinfo_meminfo'
+LANGUAGE C STRICT;
+
 COMMIT;

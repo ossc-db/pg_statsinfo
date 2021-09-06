@@ -768,6 +768,29 @@ CREATE TABLE statsrepo.rusage
 );
 CREATE INDEX statsrepo_rusage_idx ON statsrepo.rusage(snapid, dbid);
 
+CREATE TABLE statsrepo.cpuinfo
+(
+	instid				bigint,
+	timestamp			timestamptz,
+	vendor_id			text,
+	model_name			text,
+	cpu_mhz				real,
+	processors			integer,
+	threads_per_core	integer,
+	cores_per_socket	integer,
+	sockets				integer,
+	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
+);
+
+CREATE TABLE statsrepo.meminfo
+(
+	instid				bigint,
+	timestamp			timestamptz,
+	mem_total			bigint,
+	swap_total			bigint,
+	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
+);
+
 -- del_snapshot(snapid) - delete the specified snapshot.
 CREATE FUNCTION statsrepo.del_snapshot(bigint) RETURNS void AS
 $$

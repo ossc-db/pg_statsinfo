@@ -433,6 +433,8 @@ PG_FUNCTION_INFO_V1(statsinfo_devicestats);
 PG_FUNCTION_INFO_V1(statsinfo_loadavg);
 PG_FUNCTION_INFO_V1(statsinfo_memory);
 PG_FUNCTION_INFO_V1(statsinfo_profile);
+PG_FUNCTION_INFO_V1(statsinfo_cpuinfo);
+PG_FUNCTION_INFO_V1(statsinfo_meminfo);
 
 extern Datum PGUT_EXPORT statsinfo_sample(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_sample_wait_events(PG_FUNCTION_ARGS);
@@ -453,6 +455,8 @@ extern Datum PGUT_EXPORT statsinfo_devicestats(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_loadavg(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_memory(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_profile(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_cpuinfo(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_meminfo(PG_FUNCTION_ARGS);
 
 extern PGUT_EXPORT void	_PG_init(void);
 extern PGUT_EXPORT void	_PG_fini(void);
@@ -2776,6 +2780,302 @@ statsinfo_profile(PG_FUNCTION_ARGS)
 	}
 
 	fclose(fp);
+
+	/* clean up and return the tuplestore */
+	tuplestore_donestoring(tupstore);
+
+	PG_RETURN_VOID();
+}
+
+/*
+ * Removes all leading and trailing white spaces.
+ * Note: this function modify the argument string
+ */
+static char*
+str_trim( char *str )
+{
+	char *start;
+	char *end;
+
+	if (!str)
+		return( str );
+
+	start = str;
+	end = str + strlen( str ) - 1;
+
+	while ( (start <= end) && isspace(start[0]) )
+		start++;
+
+	while ( (start <= end) && isspace(end[0]) )
+		end--;
+	end[1] = '\0';
+
+	return( start );
+}
+
+#define FILE_CPUINFO		"/proc/cpuinfo"
+#define NUM_CPUINFO_COLS	7
+#define VALUE_LEN			255
+
+/*
+ * statsinfo_cpuinfo - get cpu information
+ */
+Datum
+statsinfo_cpuinfo(PG_FUNCTION_ARGS)
+{
+	ReturnSetInfo	*rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
+	TupleDesc		 tupdesc;
+	Tuplestorestate	*tupstore;
+	MemoryContext	 per_query_ctx;
+	MemoryContext	 oldcontext;
+
+	struct stat		 st;
+	FILE			*fp = NULL;
+	char			 readbuf[1024];
+	Datum			 values[NUM_CPUINFO_COLS];
+	bool			 nulls[NUM_CPUINFO_COLS];
+
+	char			 vendor_id[VALUE_LEN + 1];
+	char			 model_name[VALUE_LEN + 1];
+	float4			 cpu_mhz;
+	int				 processors;		/* logical processors count */
+	int				 siblings;			/* threads(processor) par cpu */
+	int				 cores_per_socket;	/* cores per socket */
+	int				 sockets;			/* sockets count */
+
+	char			*item;
+	char			*val;
+
+	/* check to see if caller supports us returning a tuplestore */
+	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
+		ereport(ERROR,
+				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+				 errmsg("set-valued function called in context that cannot accept a set")));
+	if (!(rsinfo->allowedModes & SFRM_Materialize))
+		ereport(ERROR,
+				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+				 errmsg("materialize mode required, but it is not " \
+						"allowed in this context")));
+
+	/* Build a tuple descriptor for our result type */
+	if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
+		elog(ERROR, "return type must be a row type");
+	Assert(tupdesc->natts == lengthof(values));
+
+	per_query_ctx = rsinfo->econtext->ecxt_per_query_memory;
+	oldcontext = MemoryContextSwitchTo(per_query_ctx);
+
+	tupstore = tuplestore_begin_heap(true, false, work_mem);
+	rsinfo->returnMode = SFRM_Materialize;
+	rsinfo->setResult = tupstore;
+	rsinfo->setDesc = tupdesc;
+
+	MemoryContextSwitchTo(oldcontext);
+
+	/* cpuinfo stat check */
+	if (stat(FILE_CPUINFO, &st) == -1)
+	{
+		/* clean up and return the tuplestore */
+		tuplestore_donestoring(tupstore);
+		PG_RETURN_VOID();
+	}
+
+	/* cpuinfo open */
+	if ((fp = fopen(FILE_CPUINFO, "r")) == NULL)
+		ereport(ERROR,
+			(errcode_for_file_access(),
+			 errmsg("could not open file \"%s\": ", FILE_CPUINFO)));
+
+	memset(nulls, 0, sizeof(nulls));
+	memset(values, 0, sizeof(values));
+
+	vendor_id[0] = '\0';
+	model_name[0] = '\0';
+	cpu_mhz = 0;
+	processors = 0;
+	siblings = 0;
+	cores_per_socket = 0;
+	sockets = 0;
+
+	/* cpuinfo line data read */
+	while (fgets(readbuf, sizeof(readbuf), fp) != NULL)
+	{
+		/* remove line separator */
+		if (readbuf[strlen(readbuf) - 1] == '\n')
+			readbuf[strlen(readbuf) - 1] = '\0';
+
+		/* split item name and value */
+		if ( (val = strchr(readbuf, ':')) == NULL )
+			continue;
+		val[0] = '\0';
+		val++;
+		item = str_trim( readbuf );
+		val = str_trim( val );
+
+		if (strcmp(item, "vendor_id") == 0)
+		{
+			if (vendor_id[0] == '\0')
+				strncpy(vendor_id, val, VALUE_LEN);
+		}
+		else if (strcmp(item, "model name") == 0)
+		{
+			if (model_name[0] == '\0')
+				strncpy(model_name, val, VALUE_LEN);
+		}
+		else if (strcmp(item, "cpu MHz") == 0)
+		{
+			if (cpu_mhz == 0)
+				cpu_mhz = atof(val);
+		}
+		else if (strcmp(item, "processor") == 0)
+		{
+			processors++;
+		}
+		else if (strcmp(item,"siblings") == 0)
+		{
+			if (siblings == 0)
+				siblings = atoi(val);
+		}
+		else if (strcmp(item, "cpu cores") == 0)
+		{
+			if (cores_per_socket == 0)
+				cores_per_socket = atoi(val);
+		}
+		else if (strcmp(item, "physical id") == 0)
+		{
+			if (sockets < atoi(val))
+				sockets = atoi(val);
+		}
+	}
+	sockets++;
+
+	fclose(fp);
+
+	values[0] = CStringGetTextDatum( vendor_id );
+	values[1] = CStringGetTextDatum( model_name );
+	values[2] = Float4GetDatum( cpu_mhz );
+	values[3] = Int32GetDatum( processors );
+	if (cores_per_socket > 0)
+		values[4] = Int32GetDatum( siblings / cores_per_socket );
+	else
+		values[4] = Int32GetDatum( 0 );
+	values[5] = Int32GetDatum( cores_per_socket );
+	values[6] = Int32GetDatum( sockets );
+
+	tuplestore_putvalues(tupstore, tupdesc, values, nulls);
+
+	/* clean up and return the tuplestore */
+	tuplestore_donestoring(tupstore);
+
+	PG_RETURN_VOID();
+}
+
+#define FILE_MEMINFO		"/proc/meminfo"
+#define NUM_MEMINFO_COLS	2
+
+/*
+ * statsinfo_meminfo - get memory information
+ */
+Datum
+statsinfo_meminfo(PG_FUNCTION_ARGS)
+{
+	ReturnSetInfo	*rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
+	TupleDesc		 tupdesc;
+	Tuplestorestate	*tupstore;
+	MemoryContext	 per_query_ctx;
+	MemoryContext	 oldcontext;
+
+	struct stat		 st;
+	FILE			*fp = NULL;
+	char			 readbuf[1024];
+	Datum			 values[NUM_MEMINFO_COLS];
+	bool			 nulls[NUM_MEMINFO_COLS];
+
+	int64			 mem_total;
+	int64			 swap_total;
+
+	char			*item;
+	char			*val;
+	char			*unit;
+
+
+	/* meminfo stat check */
+	if (stat(FILE_MEMINFO, &st) == -1)
+	{
+		PG_RETURN_VOID();
+	}
+
+	/* check to see if caller supports us returning a tuplestore */
+	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
+		ereport(ERROR,
+				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+				 errmsg("set-valued function called in context that cannot accept a set")));
+	if (!(rsinfo->allowedModes & SFRM_Materialize))
+		ereport(ERROR,
+				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+				 errmsg("materialize mode required, but it is not " \
+						"allowed in this context")));
+
+	/* Build a tuple descriptor for our result type */
+	if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
+		elog(ERROR, "return type must be a row type");
+	Assert(tupdesc->natts == lengthof(values));
+
+	per_query_ctx = rsinfo->econtext->ecxt_per_query_memory;
+	oldcontext = MemoryContextSwitchTo(per_query_ctx);
+
+	tupstore = tuplestore_begin_heap(true, false, work_mem);
+	rsinfo->returnMode = SFRM_Materialize;
+	rsinfo->setResult = tupstore;
+	rsinfo->setDesc = tupdesc;
+
+	MemoryContextSwitchTo(oldcontext);
+
+	/* meminfo open */
+	if ((fp = fopen(FILE_MEMINFO, "r")) == NULL)
+		ereport(ERROR,
+			(errcode_for_file_access(),
+			 errmsg("could not open file \"%s\": ", FILE_MEMINFO)));
+
+	memset(nulls, 0, sizeof(nulls));
+	memset(values, 0, sizeof(values));
+
+	mem_total = 0;
+	swap_total = 0;
+
+	/* meminfo line data read */
+	while(fgets(readbuf, sizeof(readbuf), fp) != NULL)
+	{
+		/* remove line separator */
+		if (readbuf[strlen(readbuf) - 1] == '\n')
+			readbuf[strlen(readbuf) - 1] = '\0';
+
+		/* split item name and value */
+		if ( (val = strchr(readbuf, ':')) == NULL )
+			continue;
+		*val = '\0';
+		val++;
+		item = str_trim( readbuf );
+		val = str_trim( val );
+
+		/* split value and unit string */
+		if ( (unit = strchr(val, ' ')) != NULL)
+		{
+			*unit = '\0';
+			unit++;
+		}
+
+		if (strcmp(item, "MemTotal") == 0)
+			mem_total = atoll(val) * 1024;
+		else if (strcmp(item, "SwapTotal") == 0)
+			swap_total = atoll(val) * 1024;
+	}
+	fclose(fp);
+
+	values[0] = Int64GetDatum( mem_total );
+	values[1] = Int64GetDatum( swap_total );
+
+	tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 
 	/* clean up and return the tuplestore */
 	tuplestore_donestoring(tupstore);

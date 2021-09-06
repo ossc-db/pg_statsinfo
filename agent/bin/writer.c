@@ -46,6 +46,7 @@ static void destroy_writer_queue(QueueItem *item);
 static void set_connect_privileges(void);
 static RepositoryState validate_repository(void);
 static bool check_repository(PGconn *conn);
+static bool update_hardwareinfo( PGconn *conn );
 static void set_writer_state(WriterState state);
 static void writer_delay(void);
 static void validate_logstore(void);
@@ -510,6 +511,9 @@ validate_repository(void)
 	if (!ensure_schema(writer_conn, "statsrepo"))
 		return REPOSITORY_INVALID_DATABASE;
 
+	/* update hardware information*/
+	update_hardwareinfo(writer_conn);
+
 	/* update last used time of the connection */
 	writer_conn_last_used = time(NULL);
 
@@ -579,6 +583,157 @@ error:
 		(errmsg("query failed: %s", PQerrorMessage(conn)),
 		 errdetail("query was: %s", query)));
 	PQclear(res);
+	return false;
+}
+
+#define COL_NUM_CPUINFO	7
+#define COL_NUM_MEMINFO	2
+static bool
+update_hardwareinfo( PGconn *conn )
+{
+	PGresult	    *res_info = NULL;
+	PGresult	    *res_repo = NULL;
+	PGresult	    *res = NULL;
+	const char	    *params[8];
+	char			*instid = NULL;
+	int				 i;
+
+	if ((instid = get_instid(conn)) == NULL)
+		return false;
+
+	if (pgut_command(conn, "BEGIN TRANSACTION READ WRITE", 0, NULL) != PGRES_COMMAND_OK)
+		goto error;
+
+	/*
+	 * update CPU information
+	 */
+
+	/* get current CPU information */
+	res_info = pgut_execute(conn,
+			"SELECT "
+			"  vendor_id, model_name, cpu_mhz, processors, "
+			"  threads_per_core, cores_per_socket, sockets "
+			"FROM statsinfo.cpuinfo()",
+			0, NULL);
+	if (PQresultStatus(res_info) != PGRES_TUPLES_OK)
+		goto error;
+
+	/* check the latest CPU information in statsrepo */
+	params[0] = instid;
+	params[1] = PQgetvalue(res_info, 0, 0);	/* vendor_id */
+	params[2] = PQgetvalue(res_info, 0, 1);	/* model_name */
+	params[3] = PQgetvalue(res_info, 0, 3);	/* processors */
+	params[4] = PQgetvalue(res_info, 0, 6);	/* sockets */
+	res_repo = pgut_execute(conn,
+			"SELECT * FROM statsrepo.cpuinfo "
+			"WHERE instid = $1"
+			"  AND timestamp = (SELECT pg_catalog.max(timestamp) "
+								"FROM statsrepo.cpuinfo WHERE instid = $1)"
+			"  AND vendor_id = $2"
+			"  AND model_name = $3"
+			"  AND processors = $4"
+			"  AND sockets = $5",
+			5, params);
+
+	if (PQresultStatus(res_repo) != PGRES_TUPLES_OK)
+		goto error;
+
+	if (PQntuples(res_repo) == 0)
+	{
+		/* cpu information changed ... insert new data */
+		params[0] = instid;
+		for (i=0; i<COL_NUM_CPUINFO; i++)
+			params[i + 1] = PQgetvalue(res_info, 0, i);
+		res = pgut_execute(conn,
+			"INSERT INTO statsrepo.cpuinfo "
+			"  (instid, timestamp, "
+			"   vendor_id, model_name, cpu_mhz, processors, "
+			"   threads_per_core, cores_per_socket, sockets) "
+			"VALUES "
+			"  ($1, pg_catalog.transaction_timestamp(), "
+			"   $2, $3, $4, $5, $6, $7, $8)",
+			8, params);
+
+		if (PQresultStatus(res) != PGRES_COMMAND_OK)
+			goto error;
+		PQclear(res);
+		res = NULL;
+	}
+	else
+	{
+		/* cpu information not changed ... do nothing */
+	}
+	PQclear(res_repo);
+	PQclear(res_info);
+	res_repo = NULL;
+	res_info = NULL;
+
+	/*
+	 * update Memory information
+	 */
+
+	/* get current Memory information */
+	res_info = pgut_execute(conn,
+			"SELECT "
+			"  mem_total, swap_total "
+			"FROM statsinfo.meminfo()",
+			0, NULL);
+	if (PQresultStatus(res_info) != PGRES_TUPLES_OK)
+		goto error;
+
+	/* check the latest Memory information in statsrepo */
+	params[0] = instid;
+	params[1] = PQgetvalue(res_info, 0, 0);	/* mem_total */
+	res_repo = pgut_execute(conn,
+			"SELECT * FROM statsrepo.meminfo "
+			"WHERE instid = $1"
+			"  AND timestamp = (SELECT pg_catalog.max(timestamp) "
+								"FROM statsrepo.meminfo WHERE instid = $1)"
+			"  AND mem_total = $2",
+			2, params);
+
+	if (PQresultStatus(res_repo) != PGRES_TUPLES_OK)
+		goto error;
+
+	if (PQntuples(res_repo) == 0)
+	{
+		/* memory information changed ... insert new data */
+		params[0] = instid;
+		for (i=0; i<COL_NUM_MEMINFO; i++)
+			params[i + 1] = PQgetvalue(res_info, 0, i);
+		res = pgut_execute(conn,
+			"INSERT INTO statsrepo.meminfo "
+			"  (instid, timestamp, mem_total, swap_total) "
+			"VALUES "
+			"  ($1, pg_catalog.transaction_timestamp(), $2, $3)",
+			3, params);
+
+		if (PQresultStatus(res) != PGRES_COMMAND_OK)
+			goto error;
+		PQclear(res);
+		res = NULL;
+	}
+	else
+	{
+		/* memory information not changed ... do nothing */
+	}
+	PQclear(res_repo);
+	PQclear(res_info);
+	res_repo = NULL;
+	res_info = NULL;
+
+	if (!pgut_commit(conn))
+		goto error;
+
+	free(instid);
+	return true;
+
+error:
+	free(instid);
+	PQclear(res);
+	PQclear(res_repo);
+	PQclear(res_info);
+	pgut_rollback(conn);
 	return false;
 }
 
