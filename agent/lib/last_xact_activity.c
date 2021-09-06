@@ -714,7 +714,7 @@ ru_check_stat_statements(void)
 			ru_track_utility = false;
 			ereport(WARNING,
 					errmsg("pg_statsinfo.ru_track_utility is set to false."),
-					errhint("pg_statsinfo must be loaded after pg_stat_statements."));
+					errhint("pg_statsinfo must be loaded after pg_stat_statements when enable ru_track_utility ."));
 		}
 	}
 	else
