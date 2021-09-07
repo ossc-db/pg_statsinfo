@@ -8,20 +8,17 @@
 
 #include <time.h>
 
-pthread_mutex_t	reset_lock;
-volatile char	*reset_requested;
-
 static PGconn  *collector_wait_events_conn = NULL;
 
 static void do_sample_wait_events(void);
 static void get_server_encoding(void);
 static void collector_wait_events_disconnect(void);
-static bool extract_dbname(const char *conninfo, char *dbname, size_t size);
+extern bool extract_dbname(const char *conninfo, char *dbname, size_t size);
 
 void
 collector_wait_events_init(void)
 {
-		pthread_mutex_init(&reset_lock, NULL);
+	/* do nothing */
 }
 
 /*
@@ -174,31 +171,5 @@ collector_wait_events_disconnect(void)
 {
 	pgut_disconnect(collector_wait_events_conn);
 	collector_wait_events_conn = NULL;
-}
-
-static bool
-extract_dbname(const char *conninfo, char *dbname, size_t size)
-{
-	PQconninfoOption	*options;
-	PQconninfoOption	*option;
-
-	if ((options = PQconninfoParse(conninfo, NULL)) == NULL)
-		return false;
-
-	for (option = options; option->keyword != NULL; option++)
-	{
-		if (strcmp(option->keyword, "dbname") == 0)
-		{
-			if (option->val != NULL && option->val[0] != '\0')
-			{
-				strncpy(dbname, option->val, size);
-				PQconninfoFree(options);
-				return true;
-			}
-		}
-	}
-
-	PQconninfoFree(options);
-	return false;
 }
 

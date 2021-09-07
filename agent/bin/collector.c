@@ -27,7 +27,7 @@ static void do_sample(void);
 static void do_snapshot(char *comment);
 static void get_server_encoding(void);
 static void collector_disconnect(void);
-static bool extract_dbname(const char *conninfo, char *dbname, size_t size);
+bool extract_dbname(const char *conninfo, char *dbname, size_t size);
 static void get_postmaster_start_time(void);
 
 void
@@ -355,7 +355,7 @@ collector_disconnect(void)
 	collector_conn = NULL;
 }
 
-static bool
+bool
 extract_dbname(const char *conninfo, char *dbname, size_t size)
 {
 	PQconninfoOption	*options;
