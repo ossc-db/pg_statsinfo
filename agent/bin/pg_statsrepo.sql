@@ -1366,6 +1366,74 @@ $$
 $$
 LANGUAGE sql;
 
+-- generate information that corresponds to 'Database Resource Usage (rusdage)'
+CREATE FUNCTION statsrepo.get_db_rusage_report(
+	IN snapid_begin	bigint,
+	IN snapid_end	bigint,
+	OUT datname	name,
+	OUT plan_reads	bigint,
+	OUT plan_writes	bigint,
+	OUT plan_utime	numeric,
+	OUT plan_stime	numeric,
+	OUT exec_reads	bigint,
+	OUT exec_writes	bigint,
+	OUT exec_utime	numeric,
+	OUT exec_stime	numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		d.name,
+		statsrepo.sub(e.plan_reads, b.plan_reads),
+		statsrepo.sub(e.plan_writes, b.plan_writes),
+		statsrepo.sub(e.plan_user_time, b.plan_user_time)::numeric(12,6),
+		statsrepo.sub(e.plan_system_time, b.plan_system_time)::numeric(12,6),
+		statsrepo.sub(e.exec_reads, b.exec_reads),
+		statsrepo.sub(e.exec_writes, b.exec_writes),
+		statsrepo.sub(e.exec_user_time, b.exec_user_time)::numeric(12,6),
+		statsrepo.sub(e.exec_system_time, b.exec_system_time)::numeric(12,6)
+	FROM
+		(SELECT dbid, name FROM statsrepo.database WHERE snapid = $2) d
+		LEFT JOIN
+		(SELECT
+			dbid,
+			sum(plan_reads) as plan_reads,
+			sum(plan_writes) as plan_writes,
+			sum(plan_user_time) as plan_user_time,
+			sum(plan_system_time) as plan_system_time,
+			sum(exec_reads) as exec_reads,
+			sum(exec_writes) as exec_writes,
+			sum(exec_user_time) as exec_user_time,
+			sum(exec_system_time) as exec_system_time
+		FROM
+			statsrepo.rusage
+		WHERE
+			snapid = $2
+		GROUP BY dbid
+		) e
+		ON d.dbid = e.dbid
+		LEFT JOIN
+		(SELECT
+			dbid,
+			sum(plan_reads) as plan_reads,
+			sum(plan_writes) as plan_writes,
+			sum(plan_user_time) as plan_user_time,
+			sum(plan_system_time) as plan_system_time,
+			sum(exec_reads) as exec_reads,
+			sum(exec_writes) as exec_writes,
+			sum(exec_user_time) as exec_user_time,
+			sum(exec_system_time) as exec_system_time
+		FROM
+			statsrepo.rusage
+		WHERE
+			snapid = $1
+		GROUP BY dbid
+		) b
+		ON e.dbid = b.dbid;
+$$
+LANGUAGE sql;
+
+
+
 -- generate information that corresponds to 'Replication Slots Statistics'
 CREATE FUNCTION statsrepo.get_stat_replication_slots_report(
 	IN snapid_begin			bigint,
@@ -2909,7 +2977,11 @@ CREATE FUNCTION statsrepo.get_query_activity_statements(
 	OUT total_exec_time	numeric,
 	OUT time_per_call	numeric,
 	OUT blk_read_time	numeric,
-	OUT blk_write_time	numeric
+	OUT blk_write_time	numeric,
+	OUT dbid	oid,
+	OUT userid	oid,
+	OUT queryid	bigint,
+	OUT last	bigint
 ) RETURNS SETOF record AS
 $$
 DECLARE
@@ -2918,6 +2990,7 @@ DECLARE
 	vmin			integer;
 	vrev			integer;
 BEGIN
+	-- TODO: needs version info?
 	SELECT
 		coalesce(pg_catalog.substring(pg_catalog.split_part(pg_version, '.', 1), '^\d+')::integer, 0),
 		coalesce(pg_catalog.substring(pg_catalog.split_part(pg_version, '.', 2), '^\d+')::integer, 0),
@@ -2931,11 +3004,7 @@ BEGIN
 		pg_version_num := (100 * vmaj + vmin) * 100 + vrev;
 	END IF;
 
-	IF pg_version_num >= 90400 THEN
-		RETURN QUERY SELECT * FROM statsrepo.get_query_activity_statemets_body($1, $2);
-	ELSE
-		RETURN QUERY SELECT * FROM statsrepo.get_query_activity_statemets_body_legacy($1, $2);
-	END IF;
+	RETURN QUERY SELECT * FROM statsrepo.get_query_activity_statemets_body($1, $2);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -2953,7 +3022,11 @@ CREATE FUNCTION statsrepo.get_query_activity_statemets_body(
 	OUT total_exec_time	numeric,
 	OUT time_per_call	numeric,
 	OUT blk_read_time	numeric,
-	OUT blk_write_time	numeric
+	OUT blk_write_time	numeric,
+	OUT dbid	oid,
+	OUT userid	oid,
+	OUT queryid	bigint,
+	OUT last	bigint
 ) RETURNS SETOF record AS
 $$
 	SELECT
@@ -2969,11 +3042,19 @@ $$
 		CASE t1.calls
 			WHEN 0 THEN 0 ELSE (t1.total_exec_time / t1.calls)::numeric(1000, 3) END,
 		t1.blk_read_time::numeric(1000, 3),
-		t1.blk_write_time::numeric(1000, 3)
+		t1.blk_write_time::numeric(1000, 3),
+		t1.dbid,
+		t1.userid,
+		t1.queryid,
+		t1.last
 	FROM
 		(SELECT
 			rol.name AS rolname,
 			db.name AS dbname,
+			reg.dbid,
+			reg.userid,
+			reg.queryid,
+			reg.last,
 			reg.query,
 			statsrepo.sub(st2.plans, st1.plans) AS plans,
 			statsrepo.sub(st2.total_plan_time, st1.total_plan_time) AS total_plan_time,
@@ -3016,6 +3097,50 @@ $$
 	ORDER BY
 		8 DESC,
 		7 DESC;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Query Activity (Statements rusage)'
+CREATE FUNCTION statsrepo.get_query_activity_statements_rusage(
+	IN snapid_begin		bigint,
+	IN snapid_end		bigint,
+	OUT rolname			text,
+	OUT datname			name,
+	OUT query			text,
+	OUT plan_reads			bigint,
+	OUT plan_writes			bigint,
+	OUT plan_user_times	numeric,
+	OUT plan_sys_times	numeric,
+	OUT exec_reads			bigint,
+	OUT exec_writes			bigint,
+	OUT exec_user_times	numeric,
+	OUT exec_sys_times	numeric
+) RETURNS SETOF record AS
+$$
+	SELECT
+		reg.rolname,
+		reg.datname,
+		reg.query,
+		statsrepo.sub(e.plan_reads, b.plan_reads),
+		statsrepo.sub(e.plan_writes, b.plan_writes),
+		statsrepo.sub(e.plan_user_time, b.plan_user_time)::numeric(12,6),
+		statsrepo.sub(e.plan_system_time, b.plan_system_time)::numeric(12,6),
+		statsrepo.sub(e.exec_reads, b.exec_reads),
+		statsrepo.sub(e.exec_writes, b.exec_writes),
+		statsrepo.sub(e.exec_user_time, b.exec_user_time)::numeric(12,6),
+		statsrepo.sub(e.exec_system_time, b.exec_system_time)::numeric(12,6)
+	FROM
+		-- Use get_query_activity_statements, it's already have an organized query list of things.
+		(SELECT * FROM statsrepo.get_query_activity_statements($1, $2)) reg
+		LEFT JOIN statsrepo.rusage b ON
+			(b.dbid = reg.dbid AND b.userid = reg.userid AND
+			 b.queryid = reg.queryid AND b.snapid = $1)
+		JOIN statsrepo.rusage e ON
+			(e.dbid = reg.dbid AND e.userid = reg.userid AND
+			 e.queryid = reg.queryid AND e.snapid = reg.last)
+	ORDER BY
+		reg.total_exec_time DESC,
+		reg.calls DESC;
 $$
 LANGUAGE sql;
 

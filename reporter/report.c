@@ -17,6 +17,7 @@
 #define SQL_SELECT_DBSTATS						"SELECT * FROM statsrepo.get_dbstats($1, $2)"
 #define SQL_SELECT_XACT_TENDENCY				"SELECT * FROM statsrepo.get_xact_tendency_report($1, $2)"
 #define SQL_SELECT_DBSIZE_TENDENCY				"SELECT * FROM statsrepo.get_dbsize_tendency_report($1, $2)"
+#define SQL_SELECT_DB_RUSAGE				"SELECT * FROM statsrepo.get_db_rusage_report($1, $2)"
 #define SQL_SELECT_STAT_REPLICATION_SLOTS		"SELECT * FROM statsrepo.get_stat_replication_slots_report($1, $2)"
 #define SQL_SELECT_RECOVERY_CONFLICTS 			"SELECT * FROM statsrepo.get_recovery_conflicts($1, $2)"
 #define SQL_SELECT_INSTANCE_PROC_TENDENCY "\
@@ -143,6 +144,7 @@ FROM \
 	statsrepo.get_autoanalyze_stats($1, $2)"
 #define SQL_SELECT_QUERY_ACTIVITY_FUNCTIONS		"SELECT * FROM statsrepo.get_query_activity_functions($1, $2) LIMIT 20"
 #define SQL_SELECT_QUERY_ACTIVITY_STATEMENTS	"SELECT * FROM statsrepo.get_query_activity_statements($1, $2) LIMIT 20"
+#define SQL_SELECT_QUERY_ACTIVITY_STATEMENTS_RUSAGE	"SELECT * FROM statsrepo.get_query_activity_statements_rusage($1, $2) LIMIT 20"
 #define SQL_SELECT_QUERY_ACTIVITY_PLANS			"SELECT * FROM statsrepo.get_query_activity_plans($1, $2) LIMIT 20"
 #define SQL_SELECT_LOCK_CONFLICTS				"SELECT * FROM statsrepo.get_lock_activity($1, $2) LIMIT 20"
 #define SQL_SELECT_REPLICATION_STATUS "\
@@ -473,6 +475,31 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 	}
 	fprintf(out, "\n");
 	PQclear(res);
+
+	fprintf(out, "/** Database Resource Usage(rusage) **/\n");
+	fprintf(out, "-----------------------------------\n");
+	fprintf(out, "%-16s  %12s  %12s  %14s  %13s  %12s  %12s  %14s  %13s\n",
+		"Database", "Plan Reads", "Plan Writes", "Plan User Time", "Plan Sys Time",
+		"Exec Reads", "Exec Writes", "Exec User Time", "Exec Sys Time");
+	fprintf(out, "----------------------------------------------------------------------------------------------------------------------------------------\n");
+
+
+	res = pgut_execute(conn, SQL_SELECT_DB_RUSAGE, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "%-16s  %12s  %12s  %14s  %13s  %12s  %12s  %14s  %13s\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1),
+			PQgetvalue(res, i, 2),
+			PQgetvalue(res, i, 3),
+			PQgetvalue(res, i, 4),
+			PQgetvalue(res, i, 5),
+			PQgetvalue(res, i, 6),
+			PQgetvalue(res, i, 7),
+			PQgetvalue(res, i, 8));
+	}
+	PQclear(res);
+	fprintf(out, "\n");
 
 	if (scope->version >= 140000 )
 	{
@@ -1195,6 +1222,33 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 			fprintf(out, "%16s  ", "(N/A)");
 		}
 		fprintf(out, "%-s\n", PQgetvalue(res, i, 2));
+	}
+	fprintf(out, "\n");
+	PQclear(res);
+
+	fprintf(out, "/** Statements (rusage) **/\n");
+	fprintf(out, "-----------------------------------\n");
+	fprintf(out, "%-16s  %-16s  %12s  %12s  %14s  %13s  %12s  %12s  %14s  %13s  %-s\n",
+		"User", "Database", "Plan Reads", "Plan Writes", "Plan User Time", "Plan Sys Time",
+		"Exec Reads", "Exec Writes", "Exec User Time", "Exec Sys Time", "Query");
+	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+
+
+	res = pgut_execute(conn, SQL_SELECT_QUERY_ACTIVITY_STATEMENTS_RUSAGE, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "%-16s  %-16s  %12s  %12s  %14s  %13s  %12s  %12s  %14s  %13s  %-s\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1),
+			PQgetvalue(res, i, 3),
+			PQgetvalue(res, i, 4),
+			PQgetvalue(res, i, 5),
+			PQgetvalue(res, i, 6),
+			PQgetvalue(res, i, 7),
+			PQgetvalue(res, i, 8),
+			PQgetvalue(res, i, 9),
+			PQgetvalue(res, i, 10),
+			PQgetvalue(res, i, 2));
 	}
 	fprintf(out, "\n");
 	PQclear(res);

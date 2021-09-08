@@ -18,6 +18,7 @@
 #include "pgstat.h"
 #include "utils/memutils.h"
 #include "access/htup_details.h"
+#include "utils/varlena.h"
 
 #include "../common.h"
 #include "pgut/pgut-be.h"
@@ -157,13 +158,19 @@ static const struct config_enum_entry ru_track_options[] =
 
 static int	ru_track;		/* tracking level */
 static bool	ru_track_planning;	/* whether to track planning duration */
+static bool	ru_track_utility;	/* whether to track utility duration */
 
 #define ru_enabled(level) \
-	(ru_track == STATSINFO_RUSAGE_TRACK_ALL || \
+	((ru_track == STATSINFO_RUSAGE_TRACK_ALL && (level) < STATSINFO_RUSAGE_MAX_NESTED_LEVEL) || \
 	(ru_track == STATSINFO_RUSAGE_TRACK_TOP && (level) == 0))
 
 #define is_top(level) (level) == 0
 
+
+/* For decision retrieving rusage of utility statements (same as pg_stat_statements) */
+#define PGSS_HANDLED_UTILITY(n)		(!IsA(n, ExecuteStmt) && \
+							!IsA(n, PrepareStmt) && \
+							!IsA(n, DeallocateStmt))
 
 #ifndef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;
@@ -249,17 +256,18 @@ static void ru_shmem_shutdown(int code, Datum arg);
 static Size ru_memsize(void);
 static Size ru_queryids_array_size(void);
 
-static void     ru_entry_store(uint64 queryId, ruStoreKind kind, int level, ruCounters counters);
+static void	 ru_entry_store(uint64 queryId, ruStoreKind kind, int level, ruCounters counters);
 static ruEntry *ru_entry_alloc(ruHashKey *key);
-static void     ru_entry_dealloc(void);
-static int      ru_entry_cmp(const void *lhs, const void *rhs);
-static void     ru_entry_reset(void);
+static void	 ru_entry_dealloc(void);
+static int	  ru_entry_cmp(const void *lhs, const void *rhs);
+static void	 ru_entry_reset(void);
 static uint32   ru_hash_fn(const void *key, Size keysize);
-static int      ru_match_fn(const void *key1, const void *key2, Size keysize);
-static void     ru_compute_counters(ruCounters *counters,
+static int	  ru_match_fn(const void *key1, const void *key2, Size keysize);
+static void	 ru_compute_counters(ruCounters *counters,
 					  struct rusage *rusage_start,
 					  struct rusage *rusage_end,
 					  QueryDesc *queryDesc);
+static void	ru_check_stat_statements(void);
 
 static PlannedStmt * myPlanner(Query *parse,
 			 const char *query_string,
@@ -381,14 +389,22 @@ init_last_xact_activity(void)
 							 NULL,
 							 NULL,
 							 NULL);
+	DefineCustomBoolVariable(GUC_PREFIX ".rusage_track_utility",
+							 "Enable tracking rusage info for Utility Statements.",
+							 NULL,
+							 &ru_track_utility,
+							 true,
+							 PGC_SUSET,
+							 0,
+							 NULL,
+							 NULL,
+							 NULL);
 
 
 	RequestAddinShmemSpace(buffer_size(MaxBackends));
 
 
-	/* TODO: auto pg_stat_statements.max detection & set to rusage.max
-	ru_setmax();
-	*/
+	ru_check_stat_statements();
 	RequestAddinShmemSpace(ru_memsize());
 	RequestNamedLWLockTranche("pg_statsinfo_rusage", 2);
 
@@ -457,6 +473,8 @@ shmem_startup(void)
 		ru_ss->lock = &(locks[0]).lock;
 		ru_ss->queryids_lock = &(locks[1]).lock;
 	}
+
+	ru_check_stat_statements();
 
 	memset(&info, 0, sizeof(info));
 	info.keysize = sizeof(ruHashKey);
@@ -632,6 +650,88 @@ error:
 	unlink(STATSINFO_RUSAGE_DUMP_FILE);
 }
 
+/*
+ * is_shared_preload_prior - does prior appear before target in shared-preload-libraries ?
+ */
+static bool
+is_shared_preload_prior(const char *prior, const char *target)
+{
+	char			*rawstring;
+	List			*elemlist;
+	ListCell		*cell;
+	bool			 find = false;
+
+	if (shared_preload_libraries_string == NULL ||
+			shared_preload_libraries_string[0] == '\0')
+			return false;
+
+	/* need a modifiable copy of string */
+	rawstring = pstrdup(shared_preload_libraries_string);
+
+	/* parse string into list of identifiers */
+	SplitIdentifierString(rawstring, ',', &elemlist);
+
+	foreach (cell, elemlist)
+	{
+		/* reach the target, break */
+		if (strcmp((char *) lfirst(cell), target) == 0)
+		{
+			break;
+		}
+		/* find prior*/
+		else if (strcmp((char *) lfirst(cell), prior) == 0)
+		{
+			find = true;
+		}
+
+	}
+
+	pfree(rawstring);
+	list_free(elemlist);
+	return find;
+}
+
+static void
+ru_check_stat_statements(void)
+{
+	const char *pgss_max;
+	const char *name = "pg_stat_statements.max";
+	const char *pgss = "pg_stat_statements";
+	const char *pgst = "pg_statsinfo";
+
+	/*
+	 * Check if pg_stat_statements is loaded before statsinfo.
+	 */
+	if (!is_shared_preload_prior(pgss, pgst))
+	{
+		/*
+		 * pg_stat_statements might not be loaded before statsinfo.
+		 * In this case, queryId might be set 0 at Utility-hook in pg_stat_statments,
+		 * so our Utility-hook could not handle those statements.
+		 * For this reason, set ru_track_utility to false.
+		 */
+		if (ru_track_utility)
+		{
+			ru_track_utility = false;
+			ereport(WARNING,
+					errmsg("pg_statsinfo.ru_track_utility is set to false."),
+					errhint("pg_statsinfo must be loaded after pg_stat_statements when enable ru_track_utility ."));
+		}
+	}
+	else
+	{
+		pgss_max = GetConfigOptionByName(name, NULL, true);
+		/* if ru_max is smaller than pgss_max, use pgss_max. */
+		if (ru_max < atoi(pgss_max))
+		{
+			ru_max = atoi(pgss_max);
+			ereport(LOG,
+					errmsg("pg_statsinfo.rusage.max is changed from %d to %d.",
+						ru_max, atoi(pgss_max)));
+		}
+	}
+}
+
 static void
 ru_compute_counters(ruCounters *counters,
 					  struct rusage *rusage_start,
@@ -750,7 +850,7 @@ static ruEntry
 *ru_entry_alloc(ruHashKey *key)
 {
 	ruEntry  *entry;
-	bool	    found;
+	bool		found;
 
 	/* Make space if needed */
 	while (hash_get_num_entries(ru_hash) >= ru_max)
@@ -779,8 +879,8 @@ ru_entry_dealloc(void)
 	HASH_SEQ_STATUS hash_seq;
 	ruEntry **entries;
 	ruEntry  *entry;
-	int		     nvictims;
-	int		     i;
+	int			 nvictims;
+	int			 i;
 
 	/*
 	 * Sort entries by usage and deallocate USAGE_DEALLOC_PERCENT of them.
@@ -893,7 +993,7 @@ myPlanner(Query *parse,
 
 		ru_compute_counters(&counters, rusage_start, &rusage_end, NULL);
 
-		/* store current number of block reads and writes */
+		/* store rusage info */
 		ru_entry_store(parse->queryId, STATSINFO_RUSAGE_PLAN, plan_nested_level + exec_nested_level, counters);
 	}
 	else
@@ -920,7 +1020,7 @@ myExecutorStart(QueryDesc *queryDesc, int eflags)
 {
 	statEntry *entry;
 
-	if (ru_enabled(exec_nested_level))
+	if (ru_enabled(exec_nested_level) && (queryDesc->plannedstmt->queryId != UINT64CONST(0)))
 	{
 		struct rusage *rusage_start = &exec_rusage_start[exec_nested_level];
 
@@ -1028,7 +1128,7 @@ myExecutorEnd(QueryDesc * queryDesc)
 	struct rusage rusage_end;
 	ruCounters counters;
 
-	if (ru_enabled(exec_nested_level))
+	if (ru_enabled(exec_nested_level) && queryDesc->plannedstmt->queryId != UINT64CONST(0))
 	{
 		struct rusage *rusage_start = &exec_rusage_start[exec_nested_level];
 
@@ -1046,7 +1146,7 @@ myExecutorEnd(QueryDesc * queryDesc)
 
 		ru_compute_counters(&counters, rusage_start, &rusage_end, queryDesc);
 
-		/* store current number of block reads and writes */
+		/* store rusage info */
 		ru_entry_store(queryId, STATSINFO_RUSAGE_EXEC, exec_nested_level, counters);
 	}
 
@@ -1197,28 +1297,71 @@ myProcessUtility(PlannedStmt *pstmt, const char *queryString,
 				 QueryEnvironment *queryEnv,
 				 DestReceiver *dest, QueryCompletion *qc)
 {
+	Node		*parsetree = pstmt->utilityStmt;
+	uint64		saved_queryId = pstmt->queryId;
 	/*
 	 * Do my process before other hook runs.
 	 */
 	myProcessUtility0(pstmt->utilityStmt, queryString);
 
-	PG_TRY();
-	{
-		if (prev_ProcessUtility_hook)
-			prev_ProcessUtility_hook(pstmt, queryString, readOnlyTree, context, params,
-									 queryEnv, dest, qc);
-		else
-			standard_ProcessUtility(pstmt, queryString, readOnlyTree, context, params,
-									queryEnv, dest, qc);
-	}
-	PG_CATCH();
-	{
-		exit_transaction_if_needed();
-		PG_RE_THROW();
-	}
-	PG_END_TRY();
+	/* Determine whether to get rusage next. */
 
-	exit_transaction_if_needed();
+	/* set queryID to 0 as same as pg_stat_statements */
+	//if (ru_enabled(exec_nested_level) && ru_track_utility)
+	//	pstmt->queryId = UINT64CONST(0);
+
+	if (ru_track_utility && ru_enabled(exec_nested_level) &&
+			PGSS_HANDLED_UTILITY(parsetree))
+	{
+		struct rusage *rusage_start = &exec_rusage_start[exec_nested_level];
+		struct rusage rusage_end;
+		ruCounters counters;
+
+		/* capture kernel usage stats in rusage_start */
+		getrusage(RUSAGE_SELF, rusage_start);
+		exec_nested_level++;
+
+		PG_TRY();
+		{
+			if (prev_ProcessUtility_hook)
+				prev_ProcessUtility_hook(pstmt, queryString, readOnlyTree, context, params,
+									 queryEnv, dest, qc);
+				else
+				standard_ProcessUtility(pstmt, queryString, readOnlyTree, context, params,
+									queryEnv, dest, qc);
+		}
+		PG_FINALLY();
+		{
+			exec_nested_level--;
+			exit_transaction_if_needed();
+		}
+		PG_END_TRY();
+
+		/* capture kernel usage stats in rusage_end */
+		getrusage(RUSAGE_SELF, &rusage_end);
+
+		ru_compute_counters(&counters, rusage_start, &rusage_end, NULL);
+
+		/* store rusage info */
+		ru_entry_store(saved_queryId, STATSINFO_RUSAGE_EXEC, exec_nested_level, counters);
+	}
+	else
+	{
+		PG_TRY();
+		{
+			if (prev_ProcessUtility_hook)
+				prev_ProcessUtility_hook(pstmt, queryString, readOnlyTree, context, params,
+									 queryEnv, dest, qc);
+				else
+				standard_ProcessUtility(pstmt, queryString, readOnlyTree, context, params,
+									queryEnv, dest, qc);
+		}
+		PG_FINALLY();
+		{
+			exit_transaction_if_needed();
+		}
+		PG_END_TRY();
+	}
 }
 
 /*
@@ -1239,9 +1382,9 @@ statsinfo_rusage_reset(PG_FUNCTION_ARGS)
 Datum
 statsinfo_rusage_info(PG_FUNCTION_ARGS)
 {
-        statsinfo_rusage_info_internal(fcinfo);
+		statsinfo_rusage_info_internal(fcinfo);
 
-        return (Datum) 0;
+		return (Datum) 0;
 }
 
 static void
@@ -1250,10 +1393,10 @@ statsinfo_rusage_info_internal(FunctionCallInfo fcinfo)
 	ReturnSetInfo   *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	MemoryContext   per_query_ctx;
 	MemoryContext   oldcontext;
-	TupleDesc	       tupdesc;
+	TupleDesc		   tupdesc;
 	Tuplestorestate *tupstore;
 	HASH_SEQ_STATUS hash_seq;
-	ruEntry	       *entry;
+	ruEntry		   *entry;
 
 
 	if (!ru_ss)
@@ -1292,10 +1435,10 @@ statsinfo_rusage_info_internal(FunctionCallInfo fcinfo)
 	while ((entry = hash_seq_search(&hash_seq)) != NULL)
 	{
 		Datum		   values[STATSINFO_RUSAGE_COLS];
-		bool		    nulls[STATSINFO_RUSAGE_COLS];
-		ruCounters    tmp;
-		int			     i = 0;
-		int			     kind, min_kind = 0;
+		bool			nulls[STATSINFO_RUSAGE_COLS];
+		ruCounters	tmp;
+		int				 i = 0;
+		int				 kind, min_kind = 0;
 #ifdef HAVE_GETRUSAGE
 		int64		   reads, writes;
 #endif
@@ -1352,7 +1495,7 @@ statsinfo_rusage_info_internal(FunctionCallInfo fcinfo)
 		
 		}
 
-	       tuplestore_putvalues(tupstore, tupdesc, values, nulls);
+		   tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 	}
 
 	LWLockRelease(ru_ss->lock);
@@ -1719,7 +1862,7 @@ attatch_shmem(void)
 static Size 
 ru_memsize(void)
 {
-	Size    size;
+	Size	size;
 
 	size = MAXALIGN(sizeof(ruSharedState));
 	size = add_size(size, hash_estimate_size(ru_max, sizeof(ruEntry)));
