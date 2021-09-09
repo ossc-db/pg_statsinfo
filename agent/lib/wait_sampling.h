@@ -37,6 +37,19 @@ typedef struct pgwsEntry
 	slock_t			mutex;				/* protects the counters only */
 } pgwsEntry;
 
+typedef struct
+{
+	Oid				userid;			/* user OID */
+	Oid				dbid;			/* database OID */
+	uint64			queryid;		/* query identifier */
+} pgwsSubHashKey;
+
+typedef struct pgwsSubEntry
+{
+	pgwsSubHashKey		key;			/* hash key of entry - MUST BE FIRST */
+	double				usage;			/* usage factor */
+} pgwsSubEntry;
+
 /*
  * Global statistics for sample_wait_events
  */
