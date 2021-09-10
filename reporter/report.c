@@ -501,35 +501,6 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 	PQclear(res);
 	fprintf(out, "\n");
 
-	if (scope->version >= 140000 )
-	{
-		fprintf(out, "/** Replication Slots Statistics **/\n");
-		fprintf(out, "----------------------------------------\n");
-		fprintf(out, "%-15s  %-11s  %-15s  %11s  %11s  %12s  %11s  %12s  %12s  %11s  %12s  %-20s\n",
-			"Slot Name", "Slot Type", "Slot Database", "Spill Txns", "Spill Count" , "Spill Bytes" , "Stream Txns" , "Stream Count" , "Stream Bytes" , "Total Txns" , "Total Bytes" , "Replication Slots Reset");
-		fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
-
-		res = pgut_execute(conn, SQL_SELECT_STAT_REPLICATION_SLOTS, lengthof(params), params);
-		for(i = 0; i < PQntuples(res); i++)
-		{
-			fprintf(out, "%-15s  %-11s  %-15s  %11s  %11s  %12s  %11s  %12s  %12s  %11s  %12s  %-20s\n",
-				PQgetvalue(res, i, 0),
-				PQgetvalue(res, i, 1),
-				PQgetvalue(res, i, 2),
-				PQgetvalue(res, i, 3),
-				PQgetvalue(res, i, 4),
-				PQgetvalue(res, i, 5),
-				PQgetvalue(res, i, 6),
-				PQgetvalue(res, i, 7),
-				PQgetvalue(res, i, 8),
-				PQgetvalue(res, i, 9),
-				PQgetvalue(res, i, 10),
-				PQgetvalue(res, i, 11));
-		}
-		fprintf(out, "\n");
-		PQclear(res);
-	}
-
 	fprintf(out, "/** Recovery Conflicts **/\n");
 	fprintf(out, "-----------------------------------\n");
 	fprintf(out, "%-16s  %19s  %13s  %17s  %18s  %17s\n",
@@ -1355,6 +1326,32 @@ report_replication_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	}
 	if (PQntuples(res) == 0)
 		fprintf(out, "\n");
+	PQclear(res);
+
+	fprintf(out, "/** Replication Slots Statistics **/\n");
+	fprintf(out, "----------------------------------------\n");
+	fprintf(out, "%-15s  %-11s  %-15s  %11s  %11s  %12s  %11s  %12s  %12s  %11s  %12s  %-20s\n",
+		"Slot Name", "Slot Type", "Slot Database", "Spill Txns", "Spill Count" , "Spill Bytes" , "Stream Txns" , "Stream Count" , "Stream Bytes" , "Total Txns" , "Total Bytes" , "Replication Slots Reset");
+	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_STAT_REPLICATION_SLOTS, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "%-15s  %-11s  %-15s  %11s  %11s  %12s  %11s  %12s  %12s  %11s  %12s  %-20s\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1),
+			PQgetvalue(res, i, 2),
+			PQgetvalue(res, i, 3),
+			PQgetvalue(res, i, 4),
+			PQgetvalue(res, i, 5),
+			PQgetvalue(res, i, 6),
+			PQgetvalue(res, i, 7),
+			PQgetvalue(res, i, 8),
+			PQgetvalue(res, i, 9),
+			PQgetvalue(res, i, 10),
+			PQgetvalue(res, i, 11));
+	}
+	fprintf(out, "\n");
 	PQclear(res);
 }
 

@@ -377,13 +377,6 @@ DateTime          Database                    Size
 2012-11-01 00:02  postgres              24.841 MiB
 2012-11-01 00:03  postgres              26.099 MiB
 
-/** Replication Slots Statistics **/
-----------------------------------------
-Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
-mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
-
 /** Recovery Conflicts **/
 -----------------------------------
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
@@ -2071,6 +2064,13 @@ Write Lag Time        : 00:00:10.000000
 Flush Lag Time        : 00:00:11.000000
 Replay Lag Time       : 00:00:12.000000
 
+/** Replication Slots Statistics **/
+----------------------------------------
+Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
+mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
 ---------------------------------------------
@@ -2100,6 +2100,13 @@ Replay Delay Peak     : 130 KiB
 Write Lag Time        : 00:00:10.000000
 Flush Lag Time        : 00:00:11.000000
 Replay Lag Time       : 00:00:12.000000
+
+/** Replication Slots Statistics **/
+----------------------------------------
+Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
+mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -2131,6 +2138,13 @@ Write Lag Time        : 00:00:10.000000
 Flush Lag Time        : 00:00:11.000000
 Replay Lag Time       : 00:00:12.000000
 
+/** Replication Slots Statistics **/
+----------------------------------------
+Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
+mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
 ---------------------------------------------
@@ -2160,6 +2174,13 @@ Replay Delay Peak     : 130 KiB
 Write Lag Time        : 00:00:10.000000
 Flush Lag Time        : 00:00:11.000000
 Replay Lag Time       : 00:00:12.000000
+
+/** Replication Slots Statistics **/
+----------------------------------------
+Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
+mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
@@ -2191,6 +2212,13 @@ Write Lag Time        : 00:00:10.000000
 Flush Lag Time        : 00:00:11.000000
 Replay Lag Time       : 00:00:12.000000
 
+/** Replication Slots Statistics **/
+----------------------------------------
+Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
+mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5437)
 ---------------------------------------------
@@ -2220,6 +2248,13 @@ Replay Delay Peak     : 130 KiB
 Write Lag Time        : 00:00:10.000000
 Flush Lag Time        : 00:00:11.000000
 Replay Lag Time       : 00:00:12.000000
+
+/** Replication Slots Statistics **/
+----------------------------------------
+Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
+mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
 
 exit: 0
 
@@ -2913,6 +2948,13 @@ Write Lag Time        : 00:00:10.000000
 Flush Lag Time        : 00:00:11.000000
 Replay Lag Time       : 00:00:12.000000
 
+/** Replication Slots Statistics **/
+----------------------------------------
+Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
+mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
+
 ----------------------------------------
 /* Setting Parameters */
 ----------------------------------------
@@ -3269,6 +3311,13 @@ Replay Delay Peak     : 130 KiB
 Write Lag Time        : 00:00:10.000000
 Flush Lag Time        : 00:00:11.000000
 Replay Lag Time       : 00:00:12.000000
+
+/** Replication Slots Statistics **/
+----------------------------------------
+Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
+mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
 
 ----------------------------------------
 /* Setting Parameters */
@@ -3627,6 +3676,13 @@ Write Lag Time        : 00:00:10.000000
 Flush Lag Time        : 00:00:11.000000
 Replay Lag Time       : 00:00:12.000000
 
+/** Replication Slots Statistics **/
+----------------------------------------
+Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
+mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
+
 ----------------------------------------
 /* Setting Parameters */
 ----------------------------------------
@@ -3983,6 +4039,13 @@ Replay Delay Peak     : 130 KiB
 Write Lag Time        : 00:00:10.000000
 Flush Lag Time        : 00:00:11.000000
 Replay Lag Time       : 00:00:12.000000
+
+/** Replication Slots Statistics **/
+----------------------------------------
+Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
+mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
 
 ----------------------------------------
 /* Setting Parameters */
@@ -4341,6 +4404,13 @@ Write Lag Time        : 00:00:10.000000
 Flush Lag Time        : 00:00:11.000000
 Replay Lag Time       : 00:00:12.000000
 
+/** Replication Slots Statistics **/
+----------------------------------------
+Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
+mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
+
 ----------------------------------------
 /* Setting Parameters */
 ----------------------------------------
@@ -4435,13 +4505,6 @@ DateTime          Database                    Size
 2012-11-01 00:01  postgres              23.646 MiB
 2012-11-01 00:02  postgres              24.841 MiB
 2012-11-01 00:03  postgres              26.099 MiB
-
-/** Replication Slots Statistics **/
-----------------------------------------
-Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
-mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
 
 /** Recovery Conflicts **/
 -----------------------------------
@@ -4729,6 +4792,13 @@ Replay Delay Peak     : 130 KiB
 Write Lag Time        : 00:00:10.000000
 Flush Lag Time        : 00:00:11.000000
 Replay Lag Time       : 00:00:12.000000
+
+/** Replication Slots Statistics **/
+----------------------------------------
+Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
+mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
 
 ----------------------------------------
 /* Setting Parameters */
@@ -5022,13 +5092,6 @@ DateTime          Database                    Size
 2012-11-01 00:00  postgres              24.841 MiB
 2012-11-01 00:00  postgres              26.099 MiB
 
-/** Replication Slots Statistics **/
-----------------------------------------
-Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
-mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
-
 /** Recovery Conflicts **/
 -----------------------------------
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
@@ -5315,6 +5378,13 @@ Replay Delay Peak     : 130 KiB
 Write Lag Time        : 00:00:10.000000
 Flush Lag Time        : 00:00:11.000000
 Replay Lag Time       : 00:00:12.000000
+
+/** Replication Slots Statistics **/
+----------------------------------------
+Slot Name        Slot Type    Slot Database     Spill Txns  Spill Count   Spill Bytes  Stream Txns  Stream Count  Stream Bytes   Total Txns   Total Bytes  Replication Slots Reset
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mysub2           logical      postgres                   0            0             0            4           730      47700000            4      47700000  2012-11-01 00:00:00+09
+mysub            logical      postgres                   2          244      15900000            0             0             0            2      15900000  2012-11-01 00:00:00+09
 
 ----------------------------------------
 /* Setting Parameters */
