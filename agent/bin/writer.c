@@ -586,17 +586,12 @@ error:
 	return false;
 }
 
-#define COL_NUM_CPUINFO	7
-#define COL_NUM_MEMINFO	2
 static bool
 update_hardwareinfo( PGconn *conn )
 {
-	PGresult	    *res_info = NULL;
-	PGresult	    *res_repo = NULL;
 	PGresult	    *res = NULL;
-	const char	    *params[8];
+	const char	    *params[1];
 	char			*instid = NULL;
-	int				 i;
 
 	if ((instid = get_instid(conn)) == NULL)
 		return false;
@@ -604,123 +599,53 @@ update_hardwareinfo( PGconn *conn )
 	if (pgut_command(conn, "BEGIN TRANSACTION READ WRITE", 0, NULL) != PGRES_COMMAND_OK)
 		goto error;
 
-	/*
-	 * update CPU information
-	 */
-
-	/* get current CPU information */
-	res_info = pgut_execute(conn,
-			"SELECT "
-			"  vendor_id, model_name, cpu_mhz, processors, "
-			"  threads_per_core, cores_per_socket, sockets "
-			"FROM statsinfo.cpuinfo()",
-			0, NULL);
-	if (PQresultStatus(res_info) != PGRES_TUPLES_OK)
-		goto error;
-
-	/* check the latest CPU information in statsrepo */
 	params[0] = instid;
-	params[1] = PQgetvalue(res_info, 0, 0);	/* vendor_id */
-	params[2] = PQgetvalue(res_info, 0, 1);	/* model_name */
-	params[3] = PQgetvalue(res_info, 0, 3);	/* processors */
-	params[4] = PQgetvalue(res_info, 0, 6);	/* sockets */
-	res_repo = pgut_execute(conn,
-			"SELECT * FROM statsrepo.cpuinfo "
-			"WHERE instid = $1"
-			"  AND timestamp = (SELECT pg_catalog.max(timestamp) "
-								"FROM statsrepo.cpuinfo WHERE instid = $1)"
-			"  AND vendor_id = $2"
-			"  AND model_name = $3"
-			"  AND processors = $4"
-			"  AND sockets = $5",
-			5, params);
 
-	if (PQresultStatus(res_repo) != PGRES_TUPLES_OK)
+	/* Update if the CPU information is different from the latest repository. */
+	res = pgut_execute(conn,
+		"WITH "
+		"  ic AS ("
+		"    SELECT vendor_id, model_name, cpu_mhz, processors, threads_per_core, cores_per_socket, sockets"
+		"    FROM statsinfo.cpuinfo() ),"
+		"  r1 AS ("
+		"    SELECT ic.vendor_id, ic.model_name, ic.processors, ic.sockets FROM ic ),"
+		"  r2 AS ("
+		"    SELECT rc.vendor_id, rc.model_name, rc.processors, rc.sockets FROM statsrepo.cpuinfo rc"
+		"    WHERE instid = $1"
+		"      AND timestamp = (SELECT pg_catalog.max(timestamp) FROM statsrepo.cpuinfo WHERE instid = $1) ) "
+		"INSERT INTO statsrepo.cpuinfo"
+		"  (instid, timestamp, vendor_id, model_name, cpu_mhz, "
+		"   processors, threads_per_core, cores_per_socket, sockets) "
+		"SELECT $1, pg_catalog.transaction_timestamp(), t.vendor_id, t.model_name,"
+		"       ic.cpu_mhz, t.processors, ic.threads_per_core, ic.cores_per_socket, t.sockets "
+		"FROM (SELECT * FROM r1 EXCEPT SELECT * FROM r2) t, ic",
+		1, params);
+
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 		goto error;
 
-	if (PQntuples(res_repo) == 0)
-	{
-		/* cpu information changed ... insert new data */
-		params[0] = instid;
-		for (i=0; i<COL_NUM_CPUINFO; i++)
-			params[i + 1] = PQgetvalue(res_info, 0, i);
-		res = pgut_execute(conn,
-			"INSERT INTO statsrepo.cpuinfo "
-			"  (instid, timestamp, "
-			"   vendor_id, model_name, cpu_mhz, processors, "
-			"   threads_per_core, cores_per_socket, sockets) "
-			"VALUES "
-			"  ($1, pg_catalog.transaction_timestamp(), "
-			"   $2, $3, $4, $5, $6, $7, $8)",
-			8, params);
+	PQclear(res);
+	res = NULL;
 
-		if (PQresultStatus(res) != PGRES_COMMAND_OK)
-			goto error;
-		PQclear(res);
-		res = NULL;
-	}
-	else
-	{
-		/* cpu information not changed ... do nothing */
-	}
-	PQclear(res_repo);
-	PQclear(res_info);
-	res_repo = NULL;
-	res_info = NULL;
+	/* Update if the memory information is different from the latest repository. */
+	res = pgut_execute(conn,
+		"WITH"
+		"  r1 AS ( "
+		"    SELECT mem_total FROM statsinfo.meminfo() ),"
+		"  r2 AS ("
+		"    SELECT rm.mem_total FROM statsrepo.meminfo rm"
+		"    WHERE instid = $1"
+		"      AND timestamp = (SELECT pg_catalog.max(timestamp) FROM statsrepo.meminfo WHERE instid = $1) ) "
+		"INSERT INTO statsrepo.meminfo (instid, timestamp, mem_total) "
+		"SELECT $1, pg_catalog.transaction_timestamp(), t.mem_total "
+		"FROM (SELECT * FROM r1 EXCEPT SELECT * FROM r2) t",
+		1, params);
 
-	/*
-	 * update Memory information
-	 */
-
-	/* get current Memory information */
-	res_info = pgut_execute(conn,
-			"SELECT "
-			"  mem_total, swap_total "
-			"FROM statsinfo.meminfo()",
-			0, NULL);
-	if (PQresultStatus(res_info) != PGRES_TUPLES_OK)
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 		goto error;
 
-	/* check the latest Memory information in statsrepo */
-	params[0] = instid;
-	params[1] = PQgetvalue(res_info, 0, 0);	/* mem_total */
-	res_repo = pgut_execute(conn,
-			"SELECT * FROM statsrepo.meminfo "
-			"WHERE instid = $1"
-			"  AND timestamp = (SELECT pg_catalog.max(timestamp) "
-								"FROM statsrepo.meminfo WHERE instid = $1)"
-			"  AND mem_total = $2",
-			2, params);
-
-	if (PQresultStatus(res_repo) != PGRES_TUPLES_OK)
-		goto error;
-
-	if (PQntuples(res_repo) == 0)
-	{
-		/* memory information changed ... insert new data */
-		params[0] = instid;
-		for (i=0; i<COL_NUM_MEMINFO; i++)
-			params[i + 1] = PQgetvalue(res_info, 0, i);
-		res = pgut_execute(conn,
-			"INSERT INTO statsrepo.meminfo "
-			"  (instid, timestamp, mem_total, swap_total) "
-			"VALUES "
-			"  ($1, pg_catalog.transaction_timestamp(), $2, $3)",
-			3, params);
-
-		if (PQresultStatus(res) != PGRES_COMMAND_OK)
-			goto error;
-		PQclear(res);
-		res = NULL;
-	}
-	else
-	{
-		/* memory information not changed ... do nothing */
-	}
-	PQclear(res_repo);
-	PQclear(res_info);
-	res_repo = NULL;
-	res_info = NULL;
+	PQclear(res);
+	res = NULL;
 
 	if (!pgut_commit(conn))
 		goto error;
@@ -731,8 +656,6 @@ update_hardwareinfo( PGconn *conn )
 error:
 	free(instid);
 	PQclear(res);
-	PQclear(res_repo);
-	PQclear(res_info);
 	pgut_rollback(conn);
 	return false;
 }

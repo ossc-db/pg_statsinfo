@@ -323,7 +323,7 @@ CREATE FUNCTION statsinfo.cpuinfo
 	OUT cores_per_socket	int,
 	OUT sockets				int
 )
-RETURNS SETOF record
+RETURNS record
 AS 'MODULE_PATHNAME', 'statsinfo_cpuinfo'
 LANGUAGE C STRICT;
 
@@ -332,10 +332,8 @@ LANGUAGE C STRICT;
 --
 CREATE FUNCTION statsinfo.meminfo
 (
-	OUT mem_total			bigint,
-	OUT swap_total			bigint
-)
-RETURNS SETOF record
+	OUT mem_total			bigint
+) RETURNS bigint
 AS 'MODULE_PATHNAME', 'statsinfo_meminfo'
 LANGUAGE C STRICT;
 

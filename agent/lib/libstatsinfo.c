@@ -2823,13 +2823,9 @@ str_trim( char *str )
 Datum
 statsinfo_cpuinfo(PG_FUNCTION_ARGS)
 {
-	ReturnSetInfo	*rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	TupleDesc		 tupdesc;
-	Tuplestorestate	*tupstore;
-	MemoryContext	 per_query_ctx;
-	MemoryContext	 oldcontext;
+	HeapTuple		 tuple;
 
-	struct stat		 st;
 	FILE			*fp = NULL;
 	char			 readbuf[1024];
 	Datum			 values[NUM_CPUINFO_COLS];
@@ -2846,39 +2842,10 @@ statsinfo_cpuinfo(PG_FUNCTION_ARGS)
 	char			*item;
 	char			*val;
 
-	/* check to see if caller supports us returning a tuplestore */
-	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("set-valued function called in context that cannot accept a set")));
-	if (!(rsinfo->allowedModes & SFRM_Materialize))
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("materialize mode required, but it is not " \
-						"allowed in this context")));
-
 	/* Build a tuple descriptor for our result type */
 	if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
 		elog(ERROR, "return type must be a row type");
 	Assert(tupdesc->natts == lengthof(values));
-
-	per_query_ctx = rsinfo->econtext->ecxt_per_query_memory;
-	oldcontext = MemoryContextSwitchTo(per_query_ctx);
-
-	tupstore = tuplestore_begin_heap(true, false, work_mem);
-	rsinfo->returnMode = SFRM_Materialize;
-	rsinfo->setResult = tupstore;
-	rsinfo->setDesc = tupdesc;
-
-	MemoryContextSwitchTo(oldcontext);
-
-	/* cpuinfo stat check */
-	if (stat(FILE_CPUINFO, &st) == -1)
-	{
-		/* clean up and return the tuplestore */
-		tuplestore_donestoring(tupstore);
-		PG_RETURN_VOID();
-	}
 
 	/* cpuinfo open */
 	if ((fp = fopen(FILE_CPUINFO, "r")) == NULL)
@@ -2962,16 +2929,13 @@ statsinfo_cpuinfo(PG_FUNCTION_ARGS)
 	values[5] = Int32GetDatum( cores_per_socket );
 	values[6] = Int32GetDatum( sockets );
 
-	tuplestore_putvalues(tupstore, tupdesc, values, nulls);
+	tuple = heap_form_tuple(tupdesc, values, nulls);
 
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
-
-	PG_RETURN_VOID();
+	PG_RETURN_DATUM(HeapTupleGetDatum(tuple));
 }
 
 #define FILE_MEMINFO		"/proc/meminfo"
-#define NUM_MEMINFO_COLS	2
+#define NUM_MEMINFO_COLS	1
 
 /*
  * statsinfo_meminfo - get memory information
@@ -2979,57 +2943,13 @@ statsinfo_cpuinfo(PG_FUNCTION_ARGS)
 Datum
 statsinfo_meminfo(PG_FUNCTION_ARGS)
 {
-	ReturnSetInfo	*rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
-	TupleDesc		 tupdesc;
-	Tuplestorestate	*tupstore;
-	MemoryContext	 per_query_ctx;
-	MemoryContext	 oldcontext;
-
-	struct stat		 st;
 	FILE			*fp = NULL;
 	char			 readbuf[1024];
-	Datum			 values[NUM_MEMINFO_COLS];
-	bool			 nulls[NUM_MEMINFO_COLS];
-
 	int64			 mem_total;
-	int64			 swap_total;
 
 	char			*item;
 	char			*val;
 	char			*unit;
-
-
-	/* meminfo stat check */
-	if (stat(FILE_MEMINFO, &st) == -1)
-	{
-		PG_RETURN_VOID();
-	}
-
-	/* check to see if caller supports us returning a tuplestore */
-	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("set-valued function called in context that cannot accept a set")));
-	if (!(rsinfo->allowedModes & SFRM_Materialize))
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("materialize mode required, but it is not " \
-						"allowed in this context")));
-
-	/* Build a tuple descriptor for our result type */
-	if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
-		elog(ERROR, "return type must be a row type");
-	Assert(tupdesc->natts == lengthof(values));
-
-	per_query_ctx = rsinfo->econtext->ecxt_per_query_memory;
-	oldcontext = MemoryContextSwitchTo(per_query_ctx);
-
-	tupstore = tuplestore_begin_heap(true, false, work_mem);
-	rsinfo->returnMode = SFRM_Materialize;
-	rsinfo->setResult = tupstore;
-	rsinfo->setDesc = tupdesc;
-
-	MemoryContextSwitchTo(oldcontext);
 
 	/* meminfo open */
 	if ((fp = fopen(FILE_MEMINFO, "r")) == NULL)
@@ -3037,11 +2957,7 @@ statsinfo_meminfo(PG_FUNCTION_ARGS)
 			(errcode_for_file_access(),
 			 errmsg("could not open file \"%s\": ", FILE_MEMINFO)));
 
-	memset(nulls, 0, sizeof(nulls));
-	memset(values, 0, sizeof(values));
-
 	mem_total = 0;
-	swap_total = 0;
 
 	/* meminfo line data read */
 	while(fgets(readbuf, sizeof(readbuf), fp) != NULL)
@@ -3067,20 +2983,10 @@ statsinfo_meminfo(PG_FUNCTION_ARGS)
 
 		if (strcmp(item, "MemTotal") == 0)
 			mem_total = atoll(val) * 1024;
-		else if (strcmp(item, "SwapTotal") == 0)
-			swap_total = atoll(val) * 1024;
 	}
 	fclose(fp);
 
-	values[0] = Int64GetDatum( mem_total );
-	values[1] = Int64GetDatum( swap_total );
-
-	tuplestore_putvalues(tupstore, tupdesc, values, nulls);
-
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
-
-	PG_RETURN_VOID();
+	PG_RETURN_INT64(mem_total);
 }
 
 static bool

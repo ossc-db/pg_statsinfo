@@ -779,7 +779,8 @@ CREATE TABLE statsrepo.cpuinfo
 	threads_per_core	integer,
 	cores_per_socket	integer,
 	sockets				integer,
-	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
+	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE,
+	UNIQUE (timestamp, vendor_id, model_name, processors, sockets)
 );
 
 CREATE TABLE statsrepo.meminfo
@@ -787,8 +788,8 @@ CREATE TABLE statsrepo.meminfo
 	instid				bigint,
 	timestamp			timestamptz,
 	mem_total			bigint,
-	swap_total			bigint,
-	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
+	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE,
+	UNIQUE (timestamp, mem_total)
 );
 
 -- del_snapshot(snapid) - delete the specified snapshot.
