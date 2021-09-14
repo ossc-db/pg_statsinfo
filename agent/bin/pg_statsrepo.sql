@@ -1771,7 +1771,7 @@ CREATE FUNCTION statsrepo.get_stat_wal2(
 ) RETURNS SETOF record AS
 $$
   SELECT
-    to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+    pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
     (sw.wal_fpi - pg_catalog.lag(sw.wal_fpi) OVER w),
     (sw.wal_bytes - pg_catalog.lag(sw.wal_bytes) OVER w),
     (sw.wal_buffers_full - pg_catalog.lag(sw.wal_buffers_full) OVER w),
