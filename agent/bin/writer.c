@@ -46,7 +46,7 @@ static void destroy_writer_queue(QueueItem *item);
 static void set_connect_privileges(void);
 static RepositoryState validate_repository(void);
 static bool check_repository(PGconn *conn);
-static bool update_hardwareinfo( PGconn *conn );
+static bool update_hardwareinfo(PGconn *conn);
 static void set_writer_state(WriterState state);
 static void writer_delay(void);
 static void validate_logstore(void);
@@ -587,7 +587,7 @@ error:
 }
 
 static bool
-update_hardwareinfo( PGconn *conn )
+update_hardwareinfo(PGconn *conn)
 {
 	PGresult	    *res = NULL;
 	const char	    *params[1];
