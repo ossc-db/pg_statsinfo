@@ -1756,7 +1756,7 @@ $$
 $$
 LANGUAGE sql;
 
--- generate information that corresponds to 'WAL Statistics'
+-- generate information that corresponds to 'WAL Statistics' for pg_stats_reporter
 CREATE FUNCTION statsrepo.get_stat_wal2(
     IN snapid_begin			bigint,
     IN snapid_end			bigint,
