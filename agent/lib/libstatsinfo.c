@@ -2835,7 +2835,7 @@ statsinfo_cpuinfo(PG_FUNCTION_ARGS)
 	char			 model_name[VALUE_LEN + 1];
 	float4			 cpu_mhz;
 	int				 processors;		/* logical processors count */
-	int				 siblings;			/* threads(processor) par cpu */
+	int				 siblings;			/* threads(processors) per cpu */
 	int				 cores_per_socket;	/* cores per socket */
 	int				 sockets;			/* sockets count */
 
