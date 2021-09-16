@@ -2526,6 +2526,75 @@ DateTime             Message
 
 exit: 0
 
+/**--- REPORTID: WaitSampling ---**/
+---------------------------------------------
+STATSINFO Report (host: statsinfo, port: 5432)
+---------------------------------------------
+
+/* Wait Sampling */
+-----------------------------------
+Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                  postgres          0                         walsender                         IO            WALRead                                 14
+postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
+
+---------------------------------------------
+STATSINFO Report (host: statsinfo, port: 5433)
+---------------------------------------------
+
+/* Wait Sampling */
+-----------------------------------
+Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                  postgres          0                         walsender                         IO            WALRead                                 14
+postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
+
+---------------------------------------------
+STATSINFO Report (host: statsinfo, port: 5434)
+---------------------------------------------
+
+/* Wait Sampling */
+-----------------------------------
+Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                  postgres          0                         walsender                         IO            WALRead                                 14
+postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
+
+---------------------------------------------
+STATSINFO Report (host: statsinfo, port: 5435)
+---------------------------------------------
+
+/* Wait Sampling */
+-----------------------------------
+Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                  postgres          0                         walsender                         IO            WALRead                                 14
+postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
+
+---------------------------------------------
+STATSINFO Report (host: statsinfo, port: 5436)
+---------------------------------------------
+
+/* Wait Sampling */
+-----------------------------------
+Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                  postgres          0                         walsender                         IO            WALRead                                 14
+postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
+
+---------------------------------------------
+STATSINFO Report (host: statsinfo, port: 5437)
+---------------------------------------------
+
+/* Wait Sampling */
+-----------------------------------
+Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                  postgres          0                         walsender                         IO            WALRead                                 14
+postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
+
+exit: 0
+
 /**--- REPORTID: Profiles ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
@@ -2941,6 +3010,13 @@ postgres          public            pgbench_accounts_pkey  pgbench_accounts     
 postgres          public            pgbench_branches_pkey  pgbench_branches       0 MiB       0 MiB            0      0.000           0           29  bid
 postgres          public            pgbench_tellers_pkey  pgbench_tellers        0 MiB       0 MiB            0      0.000           0            3  tid
 
+/* Wait Sampling */
+-----------------------------------
+Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                  postgres          0                         walsender                         IO            WALRead                                 14
+postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
+
 ----------------------------------------
 /* Profiles */
 ----------------------------------------
@@ -3297,6 +3373,13 @@ Database          Schema            Index             Table                   Si
 postgres          public            pgbench_accounts_pkey  pgbench_accounts       2 MiB       0 MiB       133066      1.000           0       269814  aid
 postgres          public            pgbench_branches_pkey  pgbench_branches       0 MiB       0 MiB            0      0.000           0           29  bid
 postgres          public            pgbench_tellers_pkey  pgbench_tellers        0 MiB       0 MiB            0      0.000           0            3  tid
+
+/* Wait Sampling */
+-----------------------------------
+Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                  postgres          0                         walsender                         IO            WALRead                                 14
+postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
 
 ----------------------------------------
 /* Profiles */
@@ -3655,6 +3738,13 @@ postgres          public            pgbench_accounts_pkey  pgbench_accounts     
 postgres          public            pgbench_branches_pkey  pgbench_branches       0 MiB       0 MiB            0      0.000           0           29  bid
 postgres          public            pgbench_tellers_pkey  pgbench_tellers        0 MiB       0 MiB            0      0.000           0            3  tid
 
+/* Wait Sampling */
+-----------------------------------
+Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                  postgres          0                         walsender                         IO            WALRead                                 14
+postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
+
 ----------------------------------------
 /* Profiles */
 ----------------------------------------
@@ -4012,6 +4102,13 @@ postgres          public            pgbench_accounts_pkey  pgbench_accounts     
 postgres          public            pgbench_branches_pkey  pgbench_branches       0 MiB       0 MiB            0      0.000           0           29  bid
 postgres          public            pgbench_tellers_pkey  pgbench_tellers        0 MiB       0 MiB            0      0.000           0            3  tid
 
+/* Wait Sampling */
+-----------------------------------
+Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                  postgres          0                         walsender                         IO            WALRead                                 14
+postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
+
 ----------------------------------------
 /* Profiles */
 ----------------------------------------
@@ -4368,6 +4465,13 @@ Database          Schema            Index             Table                   Si
 postgres          public            pgbench_accounts_pkey  pgbench_accounts       2 MiB       0 MiB       133066      1.000           0       269814  aid
 postgres          public            pgbench_branches_pkey  pgbench_branches       0 MiB       0 MiB            0      0.000           0           29  bid
 postgres          public            pgbench_tellers_pkey  pgbench_tellers        0 MiB       0 MiB            0      0.000           0            3  tid
+
+/* Wait Sampling */
+-----------------------------------
+Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                  postgres          0                         walsender                         IO            WALRead                                 14
+postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
 
 ----------------------------------------
 /* Profiles */
@@ -4757,6 +4861,13 @@ Database          Schema            Index             Table                   Si
 postgres          public            pgbench_accounts_pkey  pgbench_accounts       2 MiB       0 MiB       133066      1.000           0       269814  aid
 postgres          public            pgbench_branches_pkey  pgbench_branches       0 MiB       0 MiB            0      0.000           0           29  bid
 postgres          public            pgbench_tellers_pkey  pgbench_tellers        0 MiB       0 MiB            0      0.000           0            3  tid
+
+/* Wait Sampling */
+-----------------------------------
+Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                  postgres          0                         walsender                         IO            WALRead                                 14
+postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
 
 ----------------------------------------
 /* Profiles */
@@ -5343,6 +5454,13 @@ Database          Schema            Index             Table                   Si
 postgres          public            pgbench_accounts_pkey  pgbench_accounts       2 MiB       0 MiB       133066      1.000           0       269814  aid
 postgres          public            pgbench_branches_pkey  pgbench_branches       0 MiB       0 MiB            0      0.000           0           29  bid
 postgres          public            pgbench_tellers_pkey  pgbench_tellers        0 MiB       0 MiB            0      0.000           0            3  tid
+
+/* Wait Sampling */
+-----------------------------------
+Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                  postgres          0                         walsender                         IO            WALRead                                 14
+postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
 
 ----------------------------------------
 /* Profiles */
