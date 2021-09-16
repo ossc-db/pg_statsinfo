@@ -176,6 +176,8 @@ FROM \
 #define SQL_SELECT_ALERT						"SELECT * FROM statsrepo.get_alert($1, $2)"
 #define SQL_SELECT_WAIT_SAMPLING				"SELECT * FROM statsrepo.get_wait_sampling($1, $2)"
 #define SQL_SELECT_PROFILES						"SELECT * FROM statsrepo.get_profiles($1, $2)"
+#define SQL_SELECT_CPU_INFO						"SELECT * FROM statsrepo.get_cpuinfo($1, $2)"
+#define SQL_SELECT_MEM_INFO						"SELECT * FROM statsrepo.get_meminfo($1, $2)"
 
 #define SQL_SELECT_REPORT_SCOPE_BY_SNAPID "\
 	SELECT \
@@ -252,6 +254,7 @@ static void report_alert(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_alert_section(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_wait_sampling(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_profiles(PGconn *conn, ReportScope *scope, FILE *out);
+static void report_hardware_info(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_all(PGconn *conn, ReportScope *scope, FILE *out);
 
 static ReportBuild parse_reportid(const char *value);
@@ -1558,6 +1561,60 @@ report_profiles(PGconn *conn, ReportScope *scope, FILE *out)
 }
 
 /*
+ * generate a report that corresponds to 'Hardware Information'
+ */
+static void
+report_hardware_info(PGconn *conn, ReportScope *scope, FILE *out)
+{
+	PGresult	*res;
+	const char	*params[] = { scope->beginid, scope->endid };
+	int			 i;
+
+	fprintf(out, "----------------------------------------\n");
+	fprintf(out, "/* Hardware Information */\n");
+	fprintf(out, "----------------------------------------\n\n");
+
+	fprintf(out, "/** CPU Information **/\n");
+	fprintf(out, "-----------------------------------\n");
+
+	fprintf(out, "%-16s  %-12s  %-48s  %8s  %3s  %12s  %12s  %6s\n",
+		"DateTime", "Vendor", "Model name", "CPU MHz", "CPU", "Threads/core", "Cores/socket", "Socket");
+	fprintf(out, "-------------------------------------------------------------------------------------------------------------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_CPU_INFO, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "%-16s  %-12s  %-48s  %8s  %3s  %12s  %12s  %6s\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1),
+			PQgetvalue(res, i, 2),
+			PQgetvalue(res, i, 3),
+			PQgetvalue(res, i, 4),
+			PQgetvalue(res, i, 5),
+			PQgetvalue(res, i, 6),
+			PQgetvalue(res, i, 7));
+	}
+	fprintf(out, "\n");
+	PQclear(res);
+
+	fprintf(out, "/** Memory Information **/\n");
+	fprintf(out, "-----------------------------------\n");
+	
+	fprintf(out, "%-16s  %13s\n", "DateTime", "System memory");
+	fprintf(out, "---------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_MEM_INFO, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "%-16s  %13s\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1));
+	}
+	fprintf(out, "\n");
+	PQclear(res);
+}
+
+/*
  * generate a report that corresponds to 'All'
  */
 static void
@@ -1580,6 +1637,7 @@ report_all(PGconn *conn, ReportScope *scope, FILE *out)
 	report_schema_information(conn, scope, out);
 	report_wait_sampling(conn, scope, out);
 	report_profiles(conn, scope, out);
+	report_hardware_info(conn, scope, out);
 }
 
 /*
@@ -1637,6 +1695,8 @@ parse_reportid(const char *value)
 		return (ReportBuild) report_wait_sampling;
 	else if (pg_strncasecmp(REPORTID_PROFILES, v, len) == 0)
 		return (ReportBuild) report_profiles;
+	else if (pg_strncasecmp(REPORTID_HARDWARE_INFO, v, len) == 0)
+		return (ReportBuild) report_hardware_info;
 	else if (pg_strncasecmp(REPORTID_ALL, v, len) == 0)
 		return (ReportBuild) report_all;
 
