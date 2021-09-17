@@ -1756,6 +1756,43 @@ $$
 $$
 LANGUAGE sql;
 
+-- generate information that corresponds to 'WAL Statistics' for pg_stats_reporter
+CREATE FUNCTION statsrepo.get_stat_wal2(
+    IN snapid_begin			bigint,
+    IN snapid_end			bigint,
+    OUT "time"				text,
+    OUT wal_fpi				bigint,
+    OUT wal_bytes			numeric,
+    OUT wal_buffers_full	bigint,
+    OUT wal_write			bigint,
+    OUT wal_sync			bigint,
+    OUT wal_write_time		double precision,
+    OUT wal_sync_time		double precision
+) RETURNS SETOF record AS
+$$
+  SELECT
+    pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+    (sw.wal_fpi - pg_catalog.lag(sw.wal_fpi) OVER w),
+    (sw.wal_bytes - pg_catalog.lag(sw.wal_bytes) OVER w),
+    (sw.wal_buffers_full - pg_catalog.lag(sw.wal_buffers_full) OVER w),
+    (sw.wal_write - pg_catalog.lag(sw.wal_write) OVER w),
+    (sw.wal_sync - pg_catalog.lag(sw.wal_sync) OVER w),
+    (sw.wal_write_time - pg_catalog.lag(sw.wal_write_time) OVER w),
+    (sw.wal_sync_time - pg_catalog.lag(sw.wal_sync_time) OVER w)
+  FROM
+    statsrepo.stat_wal sw,
+    statsrepo.snapshot s
+  WHERE
+    sw.snapid BETWEEN $1 AND $2
+    AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+    AND sw.snapid = s.snapid
+  WINDOW
+    w AS (PARTITION BY s.instid ORDER BY sw.snapid)
+  ORDER BY
+    sw.snapid;
+$$
+LANGUAGE sql;
+
 -- generate information that corresponds to 'Transaction Increase Tendency'
 CREATE FUNCTION statsrepo.get_xid_tendency(
 	IN snapid_begin     bigint,
