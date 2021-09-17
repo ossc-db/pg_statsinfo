@@ -148,6 +148,7 @@ pgws_memsize(void)
 
 	size = MAXALIGN(sizeof(pgwsSharedState));
 	size = add_size(size, hash_estimate_size(pgws_max, sizeof(pgwsEntry)));
+	size = add_size(size, hash_estimate_size(pgws_max, sizeof(pgwsSubEntry)));
 
 	return size;
 }

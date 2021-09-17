@@ -593,6 +593,8 @@ static void sample_waits(void);
 static void probe_waits(void);
 uint32 pgws_hash_fn(const void *key, Size keysize);
 int pgws_match_fn(const void *key1, const void *key2, Size keysize);
+static uint32 pgws_sub_hash_fn(const void *key, Size keysize);
+static int pgws_sub_match_fn(const void *key1, const void *key2, Size keysize);
 static void pgws_entry_dealloc(void);
 static int pgws_entry_cmp(const void *lhs, const void *rhs);
 
@@ -4799,6 +4801,11 @@ pgws_entry_dealloc(void)
 	pgwsEntry  *entry;
 	int		     nvictims;
 	int		     i;
+	HTAB		*hash_tmp;
+	HASHCTL		ctl_tmp;
+	pgwsSubEntry  *subentry;
+	pgwsSubEntry  item;
+	bool		  found;
 
 	/*
 	 * Sort entries by usage and deallocate USAGE_DEALLOC_PERCENT of them.
@@ -4807,12 +4814,46 @@ pgws_entry_dealloc(void)
 	 */
 	entries = palloc(hash_get_num_entries(pgws_hash) * sizeof(pgwsEntry *));
 
+	ctl_tmp.hash = pgws_sub_hash_fn;
+	ctl_tmp.match = pgws_sub_match_fn;
+	ctl_tmp.keysize = sizeof(pgwsSubHashKey);
+	ctl_tmp.entrysize = sizeof(pgwsSubEntry);
+	hash_tmp = hash_create("temporary table to find victims of pgws_hash",
+							pgws_max,
+							&ctl_tmp,
+							HASH_FUNCTION | HASH_ELEM);
+
 	i = 0;
 	hash_seq_init(&hash_seq, pgws_hash);
 	while ((entry = hash_seq_search(&hash_seq)) != NULL)
 	{
 		entries[i++] = entry;
 		entry->counters.usage *= STATSINFO_USAGE_DECREASE_FACTOR; /* usage is decayed by time passes */
+
+		item.key.userid = entry->key.userid;
+		item.key.dbid = entry->key.dbid;
+		item.key.queryid = entry->key.queryid;
+		subentry = (pgwsSubEntry *) hash_search(hash_tmp, &item, HASH_ENTER, &found);
+		if (!found)
+			subentry->usage = entry->counters.usage;
+		else if (subentry->usage < entry->counters.usage)
+			subentry->usage = entry->counters.usage;
+	}
+
+	/*
+	 * replace usage by maximum value in each (userid, dbid, queryid)
+	 * in order to dealloc properly consistent with pg_stat_statements
+	 */
+	for (i = 0; entries[i]; i++)
+	{
+		item.key.userid = entries[i]->key.userid;
+		item.key.dbid = entries[i]->key.dbid;
+		item.key.queryid = entries[i]->key.queryid;
+		subentry = (pgwsSubEntry *) hash_search(hash_tmp, &item, HASH_FIND, NULL);
+		if (!subentry)
+			elog(WARNING, "There is a missing item in hash_tmp");
+		else if (entries[i]->counters.usage < subentry->usage)
+			entries[i]->counters.usage = subentry->usage;
 	}
 
 	qsort(entries, i, sizeof(pgwsEntry *), pgws_entry_cmp);
@@ -4834,7 +4875,32 @@ pgws_entry_dealloc(void)
 		SpinLockRelease(&s->mutex);
 	}
 
+	hash_destroy(hash_tmp);
 	pfree(entries);
+}
+
+static uint32
+pgws_sub_hash_fn(const void *key, Size keysize)
+{
+	const pgwsSubHashKey	*k = (const pgwsSubHashKey *) key;
+
+	return hash_uint32((uint32) k->userid) ^
+		   hash_uint32((uint32) k->dbid) ^
+		   hash_uint32((uint32) k->queryid);
+}
+
+static int
+pgws_sub_match_fn(const void *key1, const void *key2, Size keysize)
+{
+	const pgwsSubHashKey	*k1 = (const pgwsSubHashKey *) key1;
+	const pgwsSubHashKey	*k2 = (const pgwsSubHashKey *) key2;
+
+	if (k1->userid == k2->userid &&
+		k1->dbid == k2->dbid &&
+		k1->queryid == k2->queryid)
+		return 0;
+	else
+		return 1;
 }
 
 static int
