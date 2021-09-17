@@ -81,6 +81,9 @@ exec_command "exec_statsinfo -r WaitSampling"
 echo "/**--- REPORTID: Profiles ---**/"
 exec_command "exec_statsinfo -r Profiles"
 
+echo "/**--- REPORTID: HardwareInformation ---**/"
+exec_command "exec_statsinfo -r HardwareInformation"
+
 echo "/**--- REPORTID: All ---**/"
 exec_command "exec_statsinfo -r All"
 

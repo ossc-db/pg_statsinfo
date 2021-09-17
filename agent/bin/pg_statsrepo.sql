@@ -768,6 +768,30 @@ CREATE TABLE statsrepo.rusage
 );
 CREATE INDEX statsrepo_rusage_idx ON statsrepo.rusage(snapid, dbid);
 
+CREATE TABLE statsrepo.cpuinfo
+(
+	instid				bigint,
+	timestamp			timestamptz,
+	vendor_id			text,
+	model_name			text,
+	cpu_mhz				real,
+	processors			integer,
+	threads_per_core	integer,
+	cores_per_socket	integer,
+	sockets				integer,
+	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE,
+	UNIQUE (instid, timestamp, vendor_id, model_name, processors, sockets)
+);
+
+CREATE TABLE statsrepo.meminfo
+(
+	instid				bigint,
+	timestamp			timestamptz,
+	mem_total			bigint,
+	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE,
+	UNIQUE (instid, timestamp, mem_total)
+);
+
 -- del_snapshot(snapid) - delete the specified snapshot.
 CREATE FUNCTION statsrepo.del_snapshot(bigint) RETURNS void AS
 $$
@@ -3905,6 +3929,82 @@ $$
 		p.processing
 	ORDER BY
 		executes;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'CPU Information'
+CREATE FUNCTION statsrepo.get_cpuinfo(
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT "timestamp"			text,
+	OUT vendor_id			text,
+	OUT model_name			text,
+	OUT cpu_mhz				real,
+	OUT processors			int,
+	OUT threads_per_core	int,
+	OUT cores_per_socket	int,
+	OUT sockets				int
+) RETURNS SETOF record AS
+$$
+	WITH
+	i AS ( SELECT instid FROM statsrepo.snapshot WHERE snapid = $2 ),
+	b AS ( SELECT pg_catalog.min(time) AS time
+			FROM statsrepo.snapshot s, i
+			WHERE s.instid = i.instid AND snapid >= $1 ),
+	e AS ( SELECT pg_catalog.max(time) AS time
+			FROM statsrepo.snapshot s, i
+			WHERE s.instid = i.instid AND snapid <= $2 ),
+	b2 AS ( SELECT pg_catalog.max(timestamp) AS time 
+			FROM statsrepo.cpuinfo c, i, b
+			WHERE c.instid = i.instid AND c.timestamp <= b.time)
+	SELECT
+		pg_catalog.to_char(timestamp, 'YYYY-MM-DD HH24:MI'),
+		vendor_id,
+		model_name,
+		cpu_mhz,
+		processors,
+		threads_per_core,
+		cores_per_socket,
+		sockets
+	FROM
+		statsrepo.cpuinfo c, i, b2, e
+	WHERE
+		c.timestamp BETWEEN COALESCE(b2.time, '1997-01-29') AND e.time
+		AND c.instid = i.instid
+	ORDER BY
+		c.timestamp
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Memory Information'
+CREATE FUNCTION statsrepo.get_meminfo(
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT "timestamp"			text,
+	OUT mem_total			text
+) RETURNS SETOF record AS
+$$
+	WITH
+	i AS ( SELECT instid FROM statsrepo.snapshot WHERE snapid = $2 ),
+	b AS ( SELECT pg_catalog.min(time) AS time
+			FROM statsrepo.snapshot s, i
+			WHERE s.instid = i.instid AND snapid >= $1 ),
+	e AS ( SELECT pg_catalog.max(time) AS time
+			FROM statsrepo.snapshot s, i
+			WHERE s.instid = i.instid AND snapid <= $2 ),
+	b2 AS ( SELECT pg_catalog.max(timestamp) AS time 
+			FROM statsrepo.meminfo m, i, b
+			WHERE m.instid = i.instid AND m.timestamp <= b.time)
+	SELECT
+		pg_catalog.to_char(timestamp, 'YYYY-MM-DD HH24:MI'),
+		pg_catalog.pg_size_pretty(mem_total)
+	FROM
+		statsrepo.meminfo m, i, b2, e
+	WHERE
+		m.timestamp BETWEEN COALESCE(b2.time, '1997-01-29') AND e.time
+		AND m.instid = i.instid
+	ORDER BY
+		m.timestamp
 $$
 LANGUAGE sql;
 

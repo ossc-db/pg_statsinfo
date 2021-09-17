@@ -148,6 +148,7 @@ pgut_help(bool details)
 	printf("                          * SettingParameters\n");
 	printf("                          * SchemaInformation\n");
 	printf("                          * Profiles\n");
+	printf("                          * HardwareInformation\n");
 	printf("                          * All\n");
 	printf("                         ---------------------------\n");
 	printf("                         (can prefix match. For example, \"su\" means 'Summary')\n");

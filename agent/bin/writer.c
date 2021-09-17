@@ -46,6 +46,7 @@ static void destroy_writer_queue(QueueItem *item);
 static void set_connect_privileges(void);
 static RepositoryState validate_repository(void);
 static bool check_repository(PGconn *conn);
+static bool update_hardwareinfo(PGconn *conn);
 static void set_writer_state(WriterState state);
 static void writer_delay(void);
 static void validate_logstore(void);
@@ -510,6 +511,9 @@ validate_repository(void)
 	if (!ensure_schema(writer_conn, "statsrepo"))
 		return REPOSITORY_INVALID_DATABASE;
 
+	/* update hardware information*/
+	update_hardwareinfo(writer_conn);
+
 	/* update last used time of the connection */
 	writer_conn_last_used = time(NULL);
 
@@ -579,6 +583,80 @@ error:
 		(errmsg("query failed: %s", PQerrorMessage(conn)),
 		 errdetail("query was: %s", query)));
 	PQclear(res);
+	return false;
+}
+
+static bool
+update_hardwareinfo(PGconn *conn)
+{
+	PGresult	    *res = NULL;
+	const char	    *params[1];
+	char			*instid = NULL;
+
+	if ((instid = get_instid(conn)) == NULL)
+		return false;
+
+	if (pgut_command(conn, "BEGIN TRANSACTION READ WRITE", 0, NULL) != PGRES_COMMAND_OK)
+		goto error;
+
+	params[0] = instid;
+
+	/* Update if the CPU information is different from the latest repository. */
+	res = pgut_execute(conn,
+		"WITH "
+		"  ic AS ("
+		"    SELECT vendor_id, model_name, cpu_mhz, processors, threads_per_core, cores_per_socket, sockets"
+		"    FROM statsinfo.cpuinfo() ),"
+		"  r1 AS ("
+		"    SELECT ic.vendor_id, ic.model_name, ic.processors, ic.sockets FROM ic ),"
+		"  r2 AS ("
+		"    SELECT rc.vendor_id, rc.model_name, rc.processors, rc.sockets FROM statsrepo.cpuinfo rc"
+		"    WHERE instid = $1"
+		"      AND timestamp = (SELECT pg_catalog.max(timestamp) FROM statsrepo.cpuinfo WHERE instid = $1) ) "
+		"INSERT INTO statsrepo.cpuinfo"
+		"  (instid, timestamp, vendor_id, model_name, cpu_mhz, "
+		"   processors, threads_per_core, cores_per_socket, sockets) "
+		"SELECT $1, pg_catalog.transaction_timestamp(), t.vendor_id, t.model_name,"
+		"       ic.cpu_mhz, t.processors, ic.threads_per_core, ic.cores_per_socket, t.sockets "
+		"FROM (SELECT * FROM r1 EXCEPT SELECT * FROM r2) t, ic",
+		1, params);
+
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
+		goto error;
+
+	PQclear(res);
+	res = NULL;
+
+	/* Update if the memory information is different from the latest repository. */
+	res = pgut_execute(conn,
+		"WITH"
+		"  r1 AS ( "
+		"    SELECT mem_total FROM statsinfo.meminfo() ),"
+		"  r2 AS ("
+		"    SELECT rm.mem_total FROM statsrepo.meminfo rm"
+		"    WHERE instid = $1"
+		"      AND timestamp = (SELECT pg_catalog.max(timestamp) FROM statsrepo.meminfo WHERE instid = $1) ) "
+		"INSERT INTO statsrepo.meminfo (instid, timestamp, mem_total) "
+		"SELECT $1, pg_catalog.transaction_timestamp(), t.mem_total "
+		"FROM (SELECT * FROM r1 EXCEPT SELECT * FROM r2) t",
+		1, params);
+
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
+		goto error;
+
+	PQclear(res);
+	res = NULL;
+
+	if (!pgut_commit(conn))
+		goto error;
+
+	free(instid);
+	return true;
+
+error:
+	free(instid);
+	PQclear(res);
+	pgut_rollback(conn);
 	return false;
 }
 

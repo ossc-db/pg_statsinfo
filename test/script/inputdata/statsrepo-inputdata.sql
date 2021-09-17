@@ -408,5 +408,18 @@ $$
 	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 3, 12870, 10, 1067368138, 'client backend', 'Client', 'ClientRead', 8);
 	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 3, 0, 10, 0, 'walsender', 'IO', 'WALRead', 16);
 
+	--
+	-- Data for Name: cpuinfo; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
+	--
+	INSERT INTO statsrepo.cpuinfo VALUES ($1, '2012-10-31 00:00:00+09', 'CPU_vendor01', 'CPU_model_name', 3191.998, 4, 1, 4, 1);
+	INSERT INTO statsrepo.cpuinfo VALUES ($1, '2012-11-01 00:01:00+09', 'CPU_vendor01', 'CPU_model_name', 3191.998, 2, 1, 2, 1);
+	INSERT INTO statsrepo.cpuinfo VALUES ($1, '2012-11-01 00:02:00+09', 'CPU_vendor01', 'CPU_model_name', 3191.998, 4, 1, 4, 1);
+
+	--
+	-- Data for Name: meminfo; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
+	--
+	INSERT INTO statsrepo.meminfo VALUES ($1, '2012-10-31 00:00:00+09', 3917156352);
+	INSERT INTO statsrepo.meminfo VALUES ($1, '2012-11-01 00:01:00+09', 1904697344);
+	INSERT INTO statsrepo.meminfo VALUES ($1, '2012-11-01 00:02:00+09', 3917156352);
 
 $$ LANGUAGE sql;

@@ -33,6 +33,7 @@
 #define REPORTID_ALERT					"Alert"
 #define REPORTID_WAIT_SAMPLING			"WaitSampling"
 #define REPORTID_PROFILES				"Profiles"
+#define REPORTID_HARDWARE_INFO			"HardwareInformation"
 #define REPORTID_ALL					"All"
 
 /* report.c */
