@@ -2776,6 +2776,45 @@ $$
 $$
 LANGUAGE sql;
 
+-- generate information that corresponds to 'Vacuum WAL Statistics' for pg_stats_reporter
+CREATE FUNCTION statsrepo.get_autovacuum_wal_activity_tendency(
+        IN snapid_begin                 bigint,
+        IN snapid_end                   bigint,
+        OUT snapid                      bigint,
+        OUT "timestamp"                 text,
+        OUT wal_fpi                     numeric,
+        OUT wal_bytes                   numeric
+) RETURNS SETOF record AS
+$$
+        SELECT
+                s.snapid,
+                pg_catalog.to_char(s.t2, 'YYYY-MM-DD HH24:MI'),
+                pg_catalog.sum(a.wal_page_images),
+                pg_catalog.sum(a.wal_bytes)
+        FROM
+                (SELECT
+                        snapid,
+                        instid,
+                        (pg_catalog.lag(time) OVER w) AS t1,
+                        time AS t2
+                FROM
+                        statsrepo.snapshot
+                WHERE
+                        instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+                        AND snapid BETWEEN $1 AND $2
+                WINDOW w AS (ORDER BY snapid)
+                ) s,
+                statsrepo.autovacuum a
+        WHERE
+                a.start BETWEEN s.t1 AND s.t2
+                AND a.instid = s.instid
+        GROUP BY
+                s.snapid, s.t2
+        ORDER BY
+                s.snapid;
+$$
+LANGUAGE sql;
+
 -- generate information that corresponds to 'Vacuum Index Statistics (Average)'
 CREATE FUNCTION statsrepo.get_autovacuum_index_activity(
 	IN snapid_begin		bigint,
@@ -2925,6 +2964,60 @@ $$
 		ON t1.database = t2.database AND t1.schema = t2.schema AND t1.table = t2.table
 	ORDER BY
 		4 DESC;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'Analyze I/O Summary'  for pg_stats_reporter
+CREATE FUNCTION statsrepo.get_autoanalyze_activity2(
+        IN snapid_begin                 bigint,
+        IN snapid_end                   bigint,
+        OUT datname                             text,
+        OUT nspname                             text,
+        OUT relname                             text,
+        OUT avg_page_hit                numeric,
+        OUT avg_page_miss               numeric,
+        OUT avg_page_dirty              numeric,
+        OUT avg_read_rate               numeric,
+        OUT avg_write_rate              numeric,
+        OUT avg_read_duration   numeric,
+        OUT avg_write_duration  numeric
+) RETURNS SETOF record AS
+$$
+        SELECT
+                database,
+                schema,
+                "table",
+                pg_catalog.round(pg_catalog.avg(page_hit)::numeric,3),
+                pg_catalog.round(pg_catalog.avg(page_miss)::numeric,3),
+                pg_catalog.round(pg_catalog.avg(page_dirty)::numeric,3),
+                pg_catalog.round(pg_catalog.avg(read_rate)::numeric,3),
+                pg_catalog.round(pg_catalog.avg(write_rate)::numeric,3),
+                pg_catalog.round(pg_catalog.avg(io_timings_read)::numeric,3),
+                pg_catalog.round(pg_catalog.avg(io_timings_write)::numeric,3)
+        FROM
+                (SELECT
+                        database,
+                        schema,
+                        "table",
+                        page_hit,
+                        page_miss,
+                        page_dirty,
+                        read_rate,
+                        write_rate,
+                        COALESCE(io_timings_read,  0) AS io_timings_read,
+                        COALESCE(io_timings_write, 0) AS io_timings_write
+                 FROM
+                        statsrepo.autoanalyze v,
+                        (SELECT pg_catalog.min(time) AS time FROM statsrepo.snapshot WHERE snapid >= $1) b,
+                        (SELECT pg_catalog.max(time) AS time FROM statsrepo.snapshot WHERE snapid <= $2) e
+                 WHERE
+                        v.start BETWEEN b.time AND e.time
+                        AND v.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+                ) AS tv
+        GROUP BY
+                database, schema, "table"
+        ORDER BY
+                4 DESC;
 $$
 LANGUAGE sql;
 
