@@ -1568,7 +1568,7 @@ $$
 $$
 LANGUAGE sql;
 
--- generate information that corresponds to 'Instance Processes ratio'
+-- generate information that corresponds to 'Instance Processes ratio' for pg_stats_reporter
 CREATE FUNCTION statsrepo.get_proc_ratio(
 	IN snapid_begin		bigint,
 	IN snapid_end		bigint,
@@ -1948,7 +1948,7 @@ $$
 $$
 LANGUAGE sql;
 
--- generate information that corresponds to 'CPU Usage'
+-- generate information that corresponds to 'CPU Usage' for pg_stats_reporter
 CREATE FUNCTION statsrepo.get_cpu_usage_tendency_report(
 	IN snapid_begin	bigint,
 	IN snapid_end	bigint,
@@ -2162,7 +2162,7 @@ $$
 $$
 LANGUAGE sql;
 
--- generate information that corresponds to 'Load Average'
+-- generate information that corresponds to 'Load Average' for pg_stats_reporter
 CREATE FUNCTION statsrepo.get_loadavg_tendency(
 	IN snapid_begin		bigint,
 	IN snapid_end		bigint,
@@ -2928,7 +2928,7 @@ $$
 $$
 LANGUAGE sql;
 
--- generate information that corresponds to 'Autovacuum Activity'
+-- generate information that corresponds to 'Autovacuum Activity' for pg_stats_reporter
 CREATE FUNCTION statsrepo.get_modified_row_ratio(
 	IN snapid_begin		bigint,
 	IN snapid_end		bigint,
@@ -3356,7 +3356,7 @@ $$
 $$
 LANGUAGE sql;
 
--- generate information that corresponds to 'Query Activity (Plans)'
+-- generate information that corresponds to 'Query Activity (Plans)' for pg_stats_reporter
 CREATE FUNCTION statsrepo.get_query_activity_plans_report(
 	IN snapid_begin		bigint,
 	IN snapid_end		bigint,
