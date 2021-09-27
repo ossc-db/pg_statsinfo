@@ -149,8 +149,9 @@ extern void CHECK_FOR_INTERRUPTS(void);
 #define appendStringInfoString	appendPQExpBufferStr
 #define appendStringInfoChar	appendPQExpBufferChar
 #define appendBinaryStringInfo	appendBinaryPQExpBuffer
+#define appendStringInfoVA		appendPQExpBufferVA
 
-extern bool appendStringInfoVA2(StringInfo str, const char *fmt, va_list args)
+extern bool appendPQExpBufferVA(StringInfo str, const char *fmt, va_list args)
 __attribute__((format(PG_PRINTF_ATTRIBUTE, 2, 0)));
 extern int appendStringInfoFile(StringInfo str, FILE *fp);
 extern int appendStringInfoFd(StringInfo str, int fd);

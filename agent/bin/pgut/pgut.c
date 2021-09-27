@@ -810,7 +810,7 @@ elog(int elevel, const char *fmt, ...)
 	do
 	{
 		va_start(args, fmt);
-		ok = appendStringInfoVA2(&edata->msg, fmt, args);
+		ok = appendStringInfoVA(&edata->msg, fmt, args);
 		va_end(args);
 	} while (!ok);
 	len = strlen(fmt);
@@ -975,7 +975,7 @@ errmsg(const char *fmt,...)
 	do
 	{
 		va_start(args, fmt);
-		ok = appendStringInfoVA2(&edata->msg, fmt, args);
+		ok = appendStringInfoVA(&edata->msg, fmt, args);
 		va_end(args);
 	} while (!ok);
 	len = strlen(fmt);
@@ -996,7 +996,7 @@ errdetail(const char *fmt,...)
 	do
 	{
 		va_start(args, fmt);
-		ok = appendStringInfoVA2(&edata->detail, fmt, args);
+		ok = appendStringInfoVA(&edata->detail, fmt, args);
 		va_end(args);
 	} while (!ok);
 	trimStringBuffer(&edata->detail);
@@ -1182,7 +1182,7 @@ exit_or_abort(int exitcode)
  * unlike the server code, this function automatically extend the buffer.
  */
 bool
-appendStringInfoVA2(StringInfo str, const char *fmt, va_list args)
+appendPQExpBufferVA(StringInfo str, const char *fmt, va_list args)
 {
 	size_t		avail;
 	int			nprinted;
