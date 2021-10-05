@@ -118,8 +118,6 @@ static const char *database_gets[] =
 {
 	SQL_SELECT_SCHEMA,
 	SQL_SELECT_TABLE,
-	SQL_SELECT_COLUMN,
-	SQL_SELECT_INDEX,
 	SQL_SELECT_INHERITS,
 	SQL_SELECT_FUNCTION,
 	NULL
@@ -129,10 +127,10 @@ static const char *database_puts[] =
 {
 	SQL_COPY_SCHEMA,
 	SQL_COPY_TABLE,
-	SQL_COPY_COLUMN,
-	SQL_COPY_INDEX,
 	SQL_COPY_INHERITS,
 	SQL_COPY_FUNCTION,
+	SQL_COPY_COLUMN,
+	SQL_COPY_INDEX,
 	NULL
 };
 
@@ -155,6 +153,8 @@ static bool has_pg_store_plans_hash_query(PGconn *conn);
 #endif
 static bool has_statsrepo_alert(PGconn *conn);
 static bool is_rusage_enabled(PGconn *conn);
+static bool is_collect_column_enabled(PGconn *conn);
+static bool is_collect_index_enabled(PGconn *conn);
 
 
 QueueItem *
@@ -346,6 +346,8 @@ get_snapshot(char *comment)
 	{
 		const char *db = PQgetvalue(snap->dbnames, r, 1);
 		List	   *dbsnap = NIL;
+		PGresult	*dbsnap_column = NULL;
+		PGresult	*dbsnap_index = NULL;
 		const char *params[] = {excluded_schemas};
 
 		elog(DEBUG2, "snapshot (database=%s)", db);
@@ -356,9 +358,35 @@ get_snapshot(char *comment)
 			if ((conn = collector_connect(db)) == NULL ||
 				(dbsnap = do_gets(conn, database_gets, 1, params)) == NIL)
 				continue;
+			
+			if (is_collect_column_enabled(conn))
+			{
+				if (dbsnap_column == NULL)
+				{
+					dbsnap_column = do_get(conn, SQL_SELECT_COLUMN, 1, params);
+					if (dbsnap_column == NULL)
+						continue;
+				}
+			}
 
+			if (is_collect_index_enabled(conn))
+			{
+				if (dbsnap_index == NULL)
+				{
+        			dbsnap_index = do_get(conn, SQL_SELECT_INDEX, 1, params);
+					if (dbsnap_index == NULL)
+						continue;
+				}
+			}
+			
 			break;	/* ok */
 		}
+		
+		/* if is_collect_column_enabled is false, dbsnap_column is null */
+		dbsnap = lappend(dbsnap, dbsnap_column);
+
+		/* if is_collect_index_enabled is false, dbsnap_index is null */
+		dbsnap = lappend(dbsnap, dbsnap_index);
 
 		snap->dbsnaps = lappend(snap->dbsnaps, dbsnap);
 	}
@@ -925,6 +953,42 @@ is_rusage_enabled(PGconn *conn)
 	res = pgut_execute(conn,
 			"SELECT 1 FROM pg_settings"
 			" WHERE name = 'pg_statsinfo.rusage_track' AND setting IN ('all', 'top');",
+					   0, NULL);
+	result = (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0);
+	PQclear(res);
+
+	return result;
+
+}
+
+static bool
+is_collect_column_enabled(PGconn *conn)
+{
+	PGresult   *res;
+	bool	    result;
+
+	/* check collect_column is enabled  */
+	res = pgut_execute(conn,
+			"SELECT 1 FROM pg_settings"
+			" WHERE name = 'pg_statsinfo.collect_column' AND setting = 'on';",
+					   0, NULL);
+	result = (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0);
+	PQclear(res);
+
+	return result;
+
+}
+
+static bool
+is_collect_index_enabled(PGconn *conn)
+{
+	PGresult   *res;
+	bool	    result;
+
+	/* check collect_index is enabled  */
+	res = pgut_execute(conn,
+			"SELECT 1 FROM pg_settings"
+			" WHERE name = 'pg_statsinfo.collect_index' AND setting = 'on';",
 					   0, NULL);
 	result = (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0);
 	PQclear(res);

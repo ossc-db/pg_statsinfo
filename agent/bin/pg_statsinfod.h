@@ -116,6 +116,8 @@ extern int			repolog_keepday;
 extern char		   *log_maintenance_command;
 extern bool			enable_alert;
 extern char		   *target_server;
+extern bool			collect_column;
+extern bool			collect_index;
 /*---- GUC variables (logger) ----------*/
 extern char		   *log_directory;
 extern char		   *log_error_verbosity;

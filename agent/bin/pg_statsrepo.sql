@@ -3778,29 +3778,29 @@ $$
 		statsrepo.sub(e.seq_scan, b.seq_scan),
 		statsrepo.sub(e.idx_scan, b.idx_scan)
 	FROM
-		statsrepo.tables e LEFT JOIN statsrepo.table b
-			ON e.tbl = b.tbl AND e.nsp = b.nsp AND e.dbid = b.dbid AND b.snapid = $1,
+		statsrepo.tables e LEFT JOIN
+		statsrepo.table b
+			ON e.tbl = b.tbl AND e.nsp = b.nsp AND e.dbid = b.dbid AND b.snapid = $1
+		LEFT JOIN 
 		(SELECT
-			dbid,
-			tbl,
-			pg_catalog.count(*) AS "columns",
-			pg_catalog.sum(avg_width) AS avg_width
-		 FROM
-		 	statsrepo.column
-		 WHERE
-		 	snapid = $2
-		 GROUP BY
-		 	dbid, tbl) AS c
+		dbid,
+		tbl,
+		pg_catalog.count(*) AS "columns"
+		FROM
+		statsrepo.column
+		WHERE
+		snapid = $2
+		GROUP BY
+		dbid, tbl) AS c
+		ON e.tbl = c.tbl AND e.dbid = c.dbid
 	WHERE
 		e.snapid = $2
 		AND e.schema NOT IN ('pg_catalog', 'pg_toast', 'information_schema', 'statsrepo')
-		AND e.tbl = c.tbl
-		AND e.dbid = c.dbid
 	ORDER BY
-		1,
-		2,
-		3;
-$$
+		e.database,
+		e.schema,
+		e.table;
+	$$
 LANGUAGE sql;
 
 -- generate information that corresponds to 'Schema Information (Indexes)'

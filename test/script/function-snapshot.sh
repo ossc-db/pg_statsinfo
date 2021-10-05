@@ -655,3 +655,21 @@ SELECT
 FROM
     statsrepo.rusage;
 EOF
+
+echo "/*---- do not collect column info and index info ----*/"
+
+psql -c "ALTER SYSTEM SET pg_statsinfo.collect_column = off"
+psql -c "ALTER SYSTEM SET pg_statsinfo.collect_index = off"
+pg_ctl reload -D ${PGDATA} > /dev/null
+get_snapshot
+
+send_query -c "SELECT (COUNT(*) > 0) as cnt FROM statsrepo.column WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
+send_query -c "SELECT (COUNT(*) > 0) as cnt FROM statsrepo.index WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
+send_query -c "SELECT (COUNT(*) > 0) as cnt  FROM statsrepo.table WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
+send_query -c "SELECT (COUNT(*) > 0) as cnt  FROM statsrepo.inherits WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
+send_query -c "SELECT (COUNT(*) > 0) as cnt  FROM statsrepo.function WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
+send_query -c "SELECT (COUNT(*) > 0) as cnt  FROM statsrepo.schema WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot)"
+
+psql -c "ALTER SYSTEM SET pg_statsinfo.collect_column = on"
+psql -c "ALTER SYSTEM SET pg_statsinfo.collect_index = on"
+pg_ctl reload -D ${PGDATA} > /dev/null
