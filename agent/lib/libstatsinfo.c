@@ -4600,6 +4600,7 @@ pgws_entry_dealloc(void)
 	pgwsSubEntry  *subentry;
 	pgwsSubEntry  item;
 	bool		  found;
+	double		  usage_tie;
 
 	/*
 	 * Sort entries by usage and deallocate USAGE_DEALLOC_PERCENT of them.
@@ -4612,6 +4613,14 @@ pgws_entry_dealloc(void)
 	ctl_tmp.match = pgws_sub_match_fn;
 	ctl_tmp.keysize = sizeof(pgwsSubHashKey);
 	ctl_tmp.entrysize = sizeof(pgwsSubEntry);
+	/*
+	 * hash_tmp is contraction of pgws_hash
+	 * to reduce the dimension
+	 * applied to fields (backend_type, wait_event_info)
+	 * Choosing victims in terms of each (userid, dbid, queryid)
+	 * is a election that should work something like limit .. with tie
+	 * because of consistency with pg_stat_statements.
+	 */
 	hash_tmp = hash_create("temporary table to find victims of pgws_hash",
 							pgws_max,
 							&ctl_tmp,
@@ -4634,10 +4643,6 @@ pgws_entry_dealloc(void)
 			subentry->usage = entry->counters.usage;
 	}
 
-	/*
-	 * replace usage by maximum value in each (userid, dbid, queryid)
-	 * in order to dealloc properly consistent with pg_stat_statements
-	 */
 	for (i = 0; entries[i]; i++)
 	{
 		item.key.userid = entries[i]->key.userid;
@@ -4658,6 +4663,16 @@ pgws_entry_dealloc(void)
 	for (i = 0; i < nvictims; i++)
 	{
 		hash_search(pgws_hash, &entries[i]->key, HASH_REMOVE, NULL);
+	}
+
+	usage_tie = entries[nvictims - 1]->counters.usage;
+
+	for (i = nvictims; entries[i]; i++)
+	{
+		if (usage_tie >= entries[i]->counters.usage)
+			hash_search(pgws_hash, &entries[i]->key, HASH_REMOVE, NULL);
+		else
+			break;
 	}
 
 	/* Increment the number of times entries are deallocated */
