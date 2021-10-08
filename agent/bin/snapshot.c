@@ -355,28 +355,28 @@ get_snapshot(char *comment)
 			 shutdown_state < SHUTDOWN_REQUESTED && retry < DB_MAX_RETRY;
 			 delay(), retry++)
 		{
-			if ((conn = collector_connect(db)) == NULL ||
-				(dbsnap = do_gets(conn, database_gets, 1, params)) == NIL)
+			if ((conn = collector_connect(db)) == NULL)
 				continue;
-			
-			if (is_collect_column_enabled(conn))
+
+			if (dbsnap == NIL)
 			{
-				if (dbsnap_column == NULL)
-				{
-					dbsnap_column = do_get(conn, SQL_SELECT_COLUMN, 1, params);
-					if (dbsnap_column == NULL)
-						continue;
-				}
+				dbsnap = do_gets(conn, database_gets, 1, params);
+				if (dbsnap == NIL)
+					continue;
 			}
 
-			if (is_collect_index_enabled(conn))
+			if (is_collect_column_enabled(conn) && dbsnap_column == NULL)
 			{
+				dbsnap_column = do_get(conn, SQL_SELECT_COLUMN, 1, params);
+				if (dbsnap_column == NULL)
+					continue;
+			}
+
+			if (is_collect_index_enabled(conn) && dbsnap_index == NULL)
+			{
+        		dbsnap_index = do_get(conn, SQL_SELECT_INDEX, 1, params);
 				if (dbsnap_index == NULL)
-				{
-        			dbsnap_index = do_get(conn, SQL_SELECT_INDEX, 1, params);
-					if (dbsnap_index == NULL)
-						continue;
-				}
+					continue;
 			}
 			
 			break;	/* ok */
