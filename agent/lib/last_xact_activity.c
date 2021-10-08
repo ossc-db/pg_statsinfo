@@ -118,11 +118,21 @@ typedef struct ruEntry
 	slock_t		mutex;					/* protects the counters only */
 } ruEntry;
 
+
+/* Global statistics for rusage */
+typedef struct ruGlobalStats
+{
+	int64		dealloc;		/* # of times entries were deallocated */
+	TimestampTz	stats_reset;	/* timestamp with all stats reset */
+} ruGlobalStats;
+
 /* Global shared state (same as pg_stat_statements) */
 typedef struct ruSharedState
 {
-	LWLock	*lock;					/* protects hashtable search/modification */
-	LWLock	*queryids_lock;				/* protects queryids array */
+	LWLock	*lock;				/* protects hashtable search/modification */
+	LWLock	*queryids_lock;		/* protects queryids array */
+	slock_t		mutex;			/* protects ruGlobalStats fields: */
+	ruGlobalStats stats;		/* global statistics for rusage */
 	uint64	queryids[FLEXIBLE_ARRAY_MEMBER];	/* queryid info for  parallel leaders */
 } ruSharedState;
 
@@ -280,11 +290,13 @@ static void myExecutorRun(QueryDesc *queryDesc,
 				 ,bool execute_once);
 static void myExecutorFinish(QueryDesc *queryDesc);
 
-static void statsinfo_rusage_info_internal(FunctionCallInfo fcinfo);
+static void statsinfo_rusage_internal(FunctionCallInfo fcinfo);
 
+Datum statsinfo_rusage(PG_FUNCTION_ARGS);
 Datum statsinfo_rusage_reset(PG_FUNCTION_ARGS);
 Datum statsinfo_rusage_info(PG_FUNCTION_ARGS);
 
+PG_FUNCTION_INFO_V1(statsinfo_rusage);
 PG_FUNCTION_INFO_V1(statsinfo_rusage_reset);
 PG_FUNCTION_INFO_V1(statsinfo_rusage_info);
 
@@ -472,6 +484,8 @@ shmem_startup(void)
 		LWLockPadded *locks = GetNamedLWLockTranche("pg_statsinfo_rusage");
 		ru_ss->lock = &(locks[0]).lock;
 		ru_ss->queryids_lock = &(locks[1]).lock;
+		ru_ss->stats.dealloc = 0;
+		ru_ss->stats.stats_reset = GetCurrentTimestamp();
 	}
 
 	ru_check_stat_statements();
@@ -908,6 +922,15 @@ ru_entry_dealloc(void)
 	}
 
 	pfree(entries);
+
+	/* Increment the number of times entries are deallocated */
+	{
+		volatile ruSharedState *s = (volatile ruSharedState *) ru_ss;
+
+		SpinLockAcquire(&s->mutex);
+		s->stats.dealloc += 1;
+		SpinLockRelease(&s->mutex);
+	}
 }
 
 static int
@@ -937,6 +960,17 @@ ru_entry_reset(void)
 	{
 		hash_search(ru_hash, &entry->key, HASH_REMOVE, NULL);
 	}
+
+ 	/* Reset global statistics for rusage since all entries are removed. */
+    {
+        volatile ruSharedState *s = (volatile ruSharedState *) ru_ss;
+        TimestampTz stats_reset = GetCurrentTimestamp();
+
+        SpinLockAcquire(&s->mutex);
+        s->stats.dealloc = 0;
+        s->stats.stats_reset = stats_reset;
+        SpinLockRelease(&s->mutex);
+    }
 
 	LWLockRelease(ru_ss->lock);
 }
@@ -1380,15 +1414,15 @@ statsinfo_rusage_reset(PG_FUNCTION_ARGS)
 }
 
 Datum
-statsinfo_rusage_info(PG_FUNCTION_ARGS)
+statsinfo_rusage(PG_FUNCTION_ARGS)
 {
-		statsinfo_rusage_info_internal(fcinfo);
+		statsinfo_rusage_internal(fcinfo);
 
 		return (Datum) 0;
 }
 
 static void
-statsinfo_rusage_info_internal(FunctionCallInfo fcinfo)
+statsinfo_rusage_internal(FunctionCallInfo fcinfo)
 {
 	ReturnSetInfo   *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	MemoryContext   per_query_ctx;
@@ -1504,6 +1538,43 @@ statsinfo_rusage_info_internal(FunctionCallInfo fcinfo)
 	tuplestore_donestoring(tupstore);
 }
 
+#define RUSAGE_STATS_INFO_COLS 2
+
+/* Return statistics of rusage. */
+Datum
+statsinfo_rusage_info(PG_FUNCTION_ARGS)
+{
+	ruGlobalStats	stats;
+	TupleDesc		tupdesc;
+	Datum			values[RUSAGE_STATS_INFO_COLS];
+	bool			nulls[RUSAGE_STATS_INFO_COLS];
+
+	if (!ru_ss || !ru_hash)
+		ereport(ERROR,
+				(errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
+				errmsg("pg_statsinfo must be loaded via shared_preload_libraries")));
+
+	/* Build a tuple descriptor for our result type */
+	if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
+		elog(ERROR, "return type must be a row type");
+
+	MemSet(values, 0, sizeof(values));
+	MemSet(nulls, 0, sizeof(nulls));
+
+	/* Read global statistics for rusage of pg_statsinfo */
+	{
+		volatile ruSharedState *s = (volatile ruSharedState *) ru_ss;
+
+		SpinLockAcquire(&s->mutex);
+		stats = s->stats;
+		SpinLockRelease(&s->mutex);
+	}
+
+	values[0] = Int64GetDatum(stats.dealloc);
+	values[1] = TimestampTzGetDatum(stats.stats_reset);
+
+	PG_RETURN_DATUM(HeapTupleGetDatum(heap_form_tuple(tupdesc, values, nulls)));
+}
 
 #define LAST_XACT_ACTIVITY_COLS		4
 

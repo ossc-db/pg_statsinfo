@@ -107,6 +107,10 @@ INSERT INTO statsrepo.rusage \
    FROM statsrepo.database d \
   WHERE d.snapid = $1 AND d.dbid = $2"
 
+#define SQL_INSERT_HT_INFO "\
+INSERT INTO statsrepo.ht_info VALUES ($1, $2, $3, $4, $5, $6, $7)"
+
+
 /* Definition of delimiter and null identifier for COPY command */
 #define COPY_DELIMITER "\t"
 #define NULL_STR "null"

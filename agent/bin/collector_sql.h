@@ -883,9 +883,36 @@ SELECT \
         s.exec_nvcsws, \
         s.exec_nivcsws \
 FROM \
-        statsinfo.rusage_info() s \
+        statsinfo.rusage() s \
         LEFT JOIN pg_roles r ON r.oid = s.userid \
 WHERE \
         r.rolname <> ALL (('{' || $1 || '}')::text[]) \
 ORDER BY \
         s.exec_user_time DESC LIMIT $2"
+
+/* It does not have join key but ok, because each view and finc have only one record. */
+#define SQL_SELECT_HT_INFO "\
+SELECT \
+	s.dealloc, \
+	s.stats_reset, \
+	w.dealloc, \
+	w.stats_reset, \
+	r.dealloc, \
+	r.stats_reset \
+FROM \
+	pg_stat_statements_info s, \
+	statsinfo.sample_wait_events_info() w, \
+	statsinfo.rusage_info() r"
+
+/* If pg_stat_statements is not installed, avoid referencing pg_stat_statements_info.*/
+#define SQL_SELECT_HT_INFO_EXCEPT_SS "\
+SELECT \
+	NULL, \
+	NULL, \
+	w.dealloc, \
+	w.stats_reset, \
+	r.dealloc, \
+	r.stats_reset \
+FROM \
+	statsinfo.sample_wait_events_info() w, \
+	statsinfo.rusage_info() r"
