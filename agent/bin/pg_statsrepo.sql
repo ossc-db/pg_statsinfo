@@ -1568,7 +1568,7 @@ $$
 $$
 LANGUAGE sql;
 
--- generate information that corresponds to 'Instance Processes ratio'
+-- generate information that corresponds to 'Instance Processes ratio' for pg_stats_reporter
 CREATE FUNCTION statsrepo.get_proc_ratio(
 	IN snapid_begin		bigint,
 	IN snapid_end		bigint,
@@ -1948,7 +1948,7 @@ $$
 $$
 LANGUAGE sql;
 
--- generate information that corresponds to 'CPU Usage'
+-- generate information that corresponds to 'CPU Usage' for pg_stats_reporter
 CREATE FUNCTION statsrepo.get_cpu_usage_tendency_report(
 	IN snapid_begin	bigint,
 	IN snapid_end	bigint,
@@ -2162,7 +2162,7 @@ $$
 $$
 LANGUAGE sql;
 
--- generate information that corresponds to 'Load Average'
+-- generate information that corresponds to 'Load Average' for pg_stats_reporter
 CREATE FUNCTION statsrepo.get_loadavg_tendency(
 	IN snapid_begin		bigint,
 	IN snapid_end		bigint,
@@ -3021,7 +3021,7 @@ $$
 $$
 LANGUAGE sql;
 
--- generate information that corresponds to 'Autovacuum Activity'
+-- generate information that corresponds to 'Autovacuum Activity' for pg_stats_reporter
 CREATE FUNCTION statsrepo.get_modified_row_ratio(
 	IN snapid_begin		bigint,
 	IN snapid_end		bigint,
@@ -3449,7 +3449,7 @@ $$
 $$
 LANGUAGE sql;
 
--- generate information that corresponds to 'Query Activity (Plans)'
+-- generate information that corresponds to 'Query Activity (Plans)' for pg_stats_reporter
 CREATE FUNCTION statsrepo.get_query_activity_plans_report(
 	IN snapid_begin		bigint,
 	IN snapid_end		bigint,
@@ -3871,29 +3871,29 @@ $$
 		statsrepo.sub(e.seq_scan, b.seq_scan),
 		statsrepo.sub(e.idx_scan, b.idx_scan)
 	FROM
-		statsrepo.tables e LEFT JOIN statsrepo.table b
-			ON e.tbl = b.tbl AND e.nsp = b.nsp AND e.dbid = b.dbid AND b.snapid = $1,
+		statsrepo.tables e LEFT JOIN
+		statsrepo.table b
+			ON e.tbl = b.tbl AND e.nsp = b.nsp AND e.dbid = b.dbid AND b.snapid = $1
+		LEFT JOIN 
 		(SELECT
-			dbid,
-			tbl,
-			pg_catalog.count(*) AS "columns",
-			pg_catalog.sum(avg_width) AS avg_width
-		 FROM
-		 	statsrepo.column
-		 WHERE
-		 	snapid = $2
-		 GROUP BY
-		 	dbid, tbl) AS c
+		dbid,
+		tbl,
+		pg_catalog.count(*) AS "columns"
+		FROM
+		statsrepo.column
+		WHERE
+		snapid = $2
+		GROUP BY
+		dbid, tbl) AS c
+		ON e.tbl = c.tbl AND e.dbid = c.dbid
 	WHERE
 		e.snapid = $2
 		AND e.schema NOT IN ('pg_catalog', 'pg_toast', 'information_schema', 'statsrepo')
-		AND e.tbl = c.tbl
-		AND e.dbid = c.dbid
 	ORDER BY
-		1,
-		2,
-		3;
-$$
+		e.database,
+		e.schema,
+		e.table;
+	$$
 LANGUAGE sql;
 
 -- generate information that corresponds to 'Schema Information (Indexes)'
