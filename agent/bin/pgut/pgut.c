@@ -1179,7 +1179,17 @@ exit_or_abort(int exitcode)
 }
 
 /*
- * unlike the server code, this function automatically extend the buffer.
+ * Now that the function appendStringInfoVA has been published in PostgreSQL,
+ * rename this function to appendStringInfoVA2.
+ * 
+ * The function appendStringInfoVA has been published in PostgreSQL14.
+ * However, as defined in pgut.h, the StringInfo type handled by pg_statsinfo is
+ * a PQExpBuffer type for PostgreSQL, so the appendStringInfoVA function declared
+ * in PostgreSQL cannot be called.
+ * Also, the PostgreSQL function that performs the same processing as this function
+ * in PQExpBuffer type is appendPQExpBufferVA, but this function cannot be called
+ * because it is private.
+ * Therefore, this function is renamed to appendStringInfoVA2.
  */
 bool
 appendStringInfoVA2(StringInfo str, const char *fmt, va_list args)
