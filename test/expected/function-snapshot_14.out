@@ -230,3 +230,38 @@ INSERT 0 1
  xxx | xxx
 (1 row)
 
+/*---- do not collect column info and index info ----*/
+ALTER SYSTEM
+ALTER SYSTEM
+ cnt 
+-----
+ f
+(1 row)
+
+ cnt 
+-----
+ f
+(1 row)
+
+ cnt 
+-----
+ t
+(1 row)
+
+ cnt 
+-----
+ t
+(1 row)
+
+ cnt 
+-----
+ t
+(1 row)
+
+ cnt 
+-----
+ t
+(1 row)
+
+ALTER SYSTEM
+ALTER SYSTEM

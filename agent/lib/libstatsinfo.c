@@ -369,7 +369,9 @@ static const char *const RELOAD_PARAM_NAMES[] =
 	GUC_PREFIX ".enable_alert",
 	GUC_PREFIX ".target_server",
 	GUC_PREFIX ".profile_queries",
-	GUC_PREFIX ".profile_max"
+	GUC_PREFIX ".profile_max",
+	GUC_PREFIX ".collect_column",
+	GUC_PREFIX ".collect_index"
 };
 
 static char	   *excluded_dbnames = NULL;
@@ -411,6 +413,8 @@ static char	   *target_server = NULL;
 bool			profile_queries = DEFAULT_PROFILE_QUERIES;
 int				pgws_max = DEFAULT_PROFILE_MAX;
 extern pgwsSharedState	*pgws;
+static bool		collect_column = true;
+static bool		collect_index = true;
 
 /*---- Function declarations ----*/
 
@@ -1869,6 +1873,28 @@ _PG_init(void)
 							INT_MAX,
 							PGC_POSTMASTER,
 							0,
+							NULL,
+							NULL,
+							NULL);
+
+	DefineCustomBoolVariable(GUC_PREFIX ".collect_column",
+							"Enable collect column information.",
+							NULL,
+							&collect_column,
+							true,
+							PGC_SIGHUP,
+							GUC_SUPERUSER_ONLY,
+							NULL,
+							NULL,
+							NULL);
+
+	DefineCustomBoolVariable(GUC_PREFIX ".collect_index",
+							"Enable collect index information.",
+							NULL,
+							&collect_index,
+							true,
+							PGC_SIGHUP,
+							GUC_SUPERUSER_ONLY,
 							NULL,
 							NULL,
 							NULL);

@@ -51,6 +51,8 @@ int				repolog_keepday;
 char		   *log_maintenance_command;
 bool			enable_alert;
 char		   *target_server;
+bool			collect_column;
+bool			collect_index;
 /*---- GUC variables (logger) ----------*/
 char		   *log_directory;
 char		   *log_error_verbosity;
@@ -193,6 +195,8 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".target_server", assign_string, &target_server},
 	{GUC_PREFIX ".profile_queries", assign_bool, &profile_queries},
 	{GUC_PREFIX ".profile_max", assign_int, &profile_max},
+	{GUC_PREFIX ".collect_column", assign_bool, &collect_column},
+	{GUC_PREFIX ".collect_index", assign_bool, &collect_index},
 	{":debug", assign_string, &msg_debug},
 	{":info", assign_string, &msg_info},
 	{":notice", assign_string, &msg_notice},
