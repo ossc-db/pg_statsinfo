@@ -4658,7 +4658,7 @@ pgws_entry_dealloc(void)
 			entries[i]->counters.usage = subentry->usage;
 	}
 
-	// order by usage, queryid, userid, dbid
+	/* order by usage, queryid, userid, dbid */
 	qsort(entries, i, sizeof(pgwsEntry *), pgws_entry_cmp);
 
 	nvictims = Max(10, i * STATSINFO_USAGE_DEALLOC_PERCENT / 100);
