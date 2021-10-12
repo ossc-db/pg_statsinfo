@@ -4658,7 +4658,7 @@ pgws_entry_dealloc(void)
 			entries[i]->counters.usage = subentry->usage;
 	}
 
-	// order by usage, queryid, userid, dbid
+	/* order by usage, queryid, userid, dbid */
 	qsort(entries, i, sizeof(pgwsEntry *), pgws_entry_cmp);
 
 	nvictims = Max(10, i * STATSINFO_USAGE_DEALLOC_PERCENT / 100);
@@ -4667,7 +4667,7 @@ pgws_entry_dealloc(void)
 	for (i = 0; i < nvictims; i++)
 	{
 		hash_search(pgws_hash, &entries[i]->key, HASH_REMOVE, NULL);
-		elog(DEBUG2, "debug HASH_REMOVE under nvictims userid %d dbid %d queryid %d usage %f", entries[i]->key.userid, entries[i]->key.dbid, entries[i]->key.queryid,  entries[i]->counters.usage);
+		elog(DEBUG2, "debug HASH_REMOVE under nvictims userid %d dbid %d queryid %ld usage %f", entries[i]->key.userid, entries[i]->key.dbid, entries[i]->key.queryid,  entries[i]->counters.usage);
 	}
 
 	usage_tie = entries[nvictims - 1]->counters.usage;
@@ -4677,7 +4677,7 @@ pgws_entry_dealloc(void)
 
 	for (i = nvictims; entries[i]; i++)
 	{
-		elog(DEBUG2, "debug HASH_REMOVE over nvictims userid %d dbid %d queryid %d usage %f", entries[i]->key.userid, entries[i]->key.dbid, entries[i]->key.queryid,  entries[i]->counters.usage);
+		elog(DEBUG2, "debug HASH_REMOVE over nvictims userid %d dbid %d queryid %ld usage %f", entries[i]->key.userid, entries[i]->key.dbid, entries[i]->key.queryid,  entries[i]->counters.usage);
 		if (usage_tie >= entries[i]->counters.usage &&
 			queryid_tie >= entries[i]->key.queryid &&
 			userid_tie >= entries[i]->key.userid &&
