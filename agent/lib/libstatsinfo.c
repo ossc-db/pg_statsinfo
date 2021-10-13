@@ -4602,8 +4602,6 @@ pgws_entry_dealloc(void)
 	bool		  found;
 	double		  usage_tie;
 	uint64		  queryid_tie;
-	Oid			  userid_tie;
-	Oid			  dbid_tie;
 
 	/*
 	 * Sort entries by usage and deallocate USAGE_DEALLOC_PERCENT of them.
@@ -4658,7 +4656,7 @@ pgws_entry_dealloc(void)
 			entries[i]->counters.usage = subentry->usage;
 	}
 
-	/* order by usage, queryid, userid, dbid */
+	/* order by usage, queryid */
 	qsort(entries, i, sizeof(pgwsEntry *), pgws_entry_cmp);
 
 	nvictims = Max(10, i * STATSINFO_USAGE_DEALLOC_PERCENT / 100);
@@ -4672,16 +4670,12 @@ pgws_entry_dealloc(void)
 
 	usage_tie = entries[nvictims - 1]->counters.usage;
 	queryid_tie = entries[nvictims - 1]->key.queryid;
-	userid_tie = entries[nvictims - 1]->key.userid;
-	dbid_tie = entries[nvictims - 1]->key.dbid;
 
 	for (i = nvictims; entries[i]; i++)
 	{
 		elog(DEBUG2, "debug HASH_REMOVE over nvictims userid %d dbid %d queryid %ld usage %f", entries[i]->key.userid, entries[i]->key.dbid, entries[i]->key.queryid,  entries[i]->counters.usage);
 		if (usage_tie >= entries[i]->counters.usage &&
-			queryid_tie >= entries[i]->key.queryid &&
-			userid_tie >= entries[i]->key.userid &&
-			dbid_tie >= entries[i]->key.dbid)
+			queryid_tie >= entries[i]->key.queryid)
 			hash_search(pgws_hash, &entries[i]->key, HASH_REMOVE, NULL);
 		else
 			break;
@@ -4731,10 +4725,6 @@ pgws_entry_cmp(const void *lhs, const void *rhs)
 	double		r_usage = (*(pgwsEntry *const *) rhs)->counters.usage;
 	uint64		l_queryid = (*(pgwsEntry *const *) lhs)->key.queryid;
 	uint64		r_queryid = (*(pgwsEntry *const *) rhs)->key.queryid;
-	Oid			l_userid = (*(pgwsEntry *const *) lhs)->key.userid;
-	Oid			r_userid = (*(pgwsEntry *const *) rhs)->key.userid;
-	Oid			l_dbid = (*(pgwsEntry *const *) lhs)->key.dbid;
-	Oid			r_dbid = (*(pgwsEntry *const *) rhs)->key.dbid;
 
 	if (l_usage < r_usage)
 		return -1;
@@ -4744,16 +4734,6 @@ pgws_entry_cmp(const void *lhs, const void *rhs)
 	if (l_queryid < r_queryid)
 		return -1;
 	else if (l_queryid > r_queryid)
-		return +1;
-
-	if (l_userid < r_userid)
-		return -1;
-	else if (l_userid > r_userid)
-		return +1;
-
-	if (l_dbid < r_dbid)
-		return -1;
-	else if (l_dbid > r_dbid)
 		return +1;
 
 	return 0;
