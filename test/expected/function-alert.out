@@ -49,7 +49,7 @@ ANALYZE
 ALERT:  pg_statsinfo: correlation of the clustered table fell below threshold in snapshot 'xxx' --- 'postgres.public.tbl04', 70 % (threshold = 100 %)
 /**--- Alert the number of backend processes ---**/
 UPDATE 1
-ALERT:  pg_statsinfo: too many backends in snapshot 'xxx' --- 1 (threshold = 0)
+ALERT:  pg_statsinfo: too many backends in snapshot 'xxx' --- 2 (threshold = 0)
 /**--- Alert the condition of the OS resource ---**/
 UPDATE 1
 UPDATE 1
