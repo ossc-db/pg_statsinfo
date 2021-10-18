@@ -114,86 +114,23 @@
 	"received SIGHUP, reloading configuration files"
 
 /* log_autovacuum_min_duration: vacuum */
-#if PG_VERSION_NUM >= 140000
 #define MSG_AUTOVACUUM \
 	"automatic %s of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain, %d skipped due to pins, %u skipped frozen\n" \
+	"pages: %u removed, %u remain, %u skipped due to pins, %u skipped frozen\n" \
 	"tuples: %lld removed, %lld remain, %lld are dead but not yet removable, oldest xmin: %u\n" \
-	"buffer usage: %lld hits, %lld misses, %lld dirtied\n" \
 	"%s" \
 	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
-	"%s" \
-	"system usage: %s\n" \
-	"WAL usage: %lld records, %lld full page images, %llu bytes"
-#elif PG_VERSION_NUM >= 130000
-#define MSG_AUTOVACUUM \
-	"automatic %s of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain, %d skipped due to pins, %u skipped frozen\n" \
-	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable, oldest xmin: %u\n" \
 	"buffer usage: %lld hits, %lld misses, %lld dirtied\n" \
-	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
-	"system usage: %s\n" \
-	"WAL usage: %ld records, %ld full page images, %llu bytes"
-#elif PG_VERSION_NUM >= 100000
-#define MSG_AUTOVACUUM \
-	"automatic %s of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain, %d skipped due to pins, %u skipped frozen\n" \
-	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable, oldest xmin: %u\n" \
-	"buffer usage: %d hits, %d misses, %d dirtied\n" \
-	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
+	"WAL usage: %lld records, %lld full page images, %llu bytes\n" \
 	"system usage: %s"
-#elif PG_VERSION_NUM >= 90600
-#define MSG_AUTOVACUUM \
-	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain, %d skipped due to pins, %u skipped frozen\n" \
-	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable\n" \
-	"buffer usage: %d hits, %d misses, %d dirtied\n" \
-	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
-	"system usage: %s"
-#elif PG_VERSION_NUM >= 90500
-#define MSG_AUTOVACUUM \
-	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain, %d skipped due to pins\n" \
-	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable\n" \
-	"buffer usage: %d hits, %d misses, %d dirtied\n" \
-	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
-	"system usage: %s"
-#elif PG_VERSION_NUM >= 90400
-#define MSG_AUTOVACUUM \
-	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain\n" \
-	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable\n" \
-	"buffer usage: %d hits, %d misses, %d dirtied\n" \
-	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
-	"system usage: %s"
-#elif PG_VERSION_NUM >= 90200
-#define MSG_AUTOVACUUM \
-	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain\n" \
-	"tuples: %.0f removed, %.0f remain\n" \
-	"buffer usage: %d hits, %d misses, %d dirtied\n" \
-	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
-	"system usage: %s"
-#else
-#define MSG_AUTOVACUUM \
-	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain\n" \
-	"tuples: %.0f removed, %.0f remain\n" \
-	"system usage: %s"
-#endif
 
 /* log_autovacuum_min_duration: analyze */
-#if PG_VERSION_NUM >= 140000
 #define MSG_AUTOANALYZE \
 	"automatic analyze of table \"%s.%s.%s\"\n" \
-	"buffer usage: %lld hits, %lld misses, %lld dirtied\n" \
-	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
 	"%s" \
+	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
+	"buffer usage: %lld hits, %lld misses, %lld dirtied\n" \
 	"system usage: %s"
-#elif PG_VERSION_NUM >= 130000
-#define MSG_AUTOANALYZE \
-	"automatic analyze of table \"%s.%s.%s\" system usage: %s"
-#endif
 
 /* log_checkpoint: staring */
 #define MSG_CHECKPOINT_STARTING \
