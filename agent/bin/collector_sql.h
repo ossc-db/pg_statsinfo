@@ -890,7 +890,7 @@ WHERE \
 ORDER BY \
         s.exec_user_time DESC LIMIT $2"
 
-/* It does not have join key but ok, because each view and finc have only one record. */
+/* It does not have join key but ok, because each view and func have only one record. */
 #define SQL_SELECT_HT_INFO "\
 SELECT \
 	s.dealloc, \
