@@ -792,6 +792,20 @@ CREATE TABLE statsrepo.meminfo
 	UNIQUE (instid, timestamp, mem_total)
 );
 
+CREATE TABLE statsrepo.ht_info
+(
+	snapid				bigint,
+	statements_dealloc	bigint,
+	statements_reset	timestamptz,
+	wait_sampling_dealloc	bigint,
+	wait_sampling_reset	timestamptz,
+	rusage_dealloc		bigint,
+	rusage_reset		timestamptz,
+	PRIMARY KEY (snapid),
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
+
 -- del_snapshot(snapid) - delete the specified snapshot.
 CREATE FUNCTION statsrepo.del_snapshot(bigint) RETURNS void AS
 $$
@@ -4100,6 +4114,32 @@ $$
 		m.timestamp
 $$
 LANGUAGE sql;
+
+-- generate information that corresponds to 'Hash table statistics information'
+CREATE FUNCTION statsrepo.get_ht_info(
+    IN snapid_begin         bigint,
+    IN snapid_end           bigint,
+    OUT statements_dealloc  bigint,
+    OUT statements_reset    timestamptz,
+    OUT wait_sampling_dealloc  bigint,
+    OUT wait_sampling_reset    timestamptz,
+    OUT rusage_dealloc 		bigint,
+    OUT rusage_reset    	timestamptz
+) RETURNS SETOF record AS
+$$
+	SELECT
+		statsrepo.sub(e.statements_dealloc, b.statements_dealloc),
+		e.statements_reset,
+		statsrepo.sub(e.wait_sampling_dealloc, b.wait_sampling_dealloc),
+		e.wait_sampling_reset,
+		statsrepo.sub(e.rusage_dealloc, b.rusage_dealloc),
+		e.rusage_reset
+	FROM
+		(SELECT * FROM statsrepo.ht_info WHERE snapid = $1) b,
+		(SELECT * FROM statsrepo.ht_info WHERE snapid = $2) e
+$$
+LANGUAGE sql;
+
 
 ------------------------------------------------------------------------------
 -- function for partitioning.

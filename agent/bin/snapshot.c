@@ -109,6 +109,7 @@ static const char *instance_puts[] =
 	SQL_INSERT_REPLICATION_SLOTS,
 	SQL_INSERT_WAIT_SAMPLING_PROFILE,
 	SQL_INSERT_STATEMENT,
+	SQL_INSERT_HT_INFO,
 	SQL_INSERT_PLAN,
 	SQL_INSERT_RUSAGE,
 	NULL
@@ -278,6 +279,7 @@ get_snapshot(char *comment)
 	{
 		StringInfoData	 query;
 		PGresult		*stmt;
+		PGresult		*htinfo;
 		const char		*params[] = {stat_statements_exclude_users, stat_statements_max};
 
 		initStringInfo(&query);
@@ -299,9 +301,37 @@ get_snapshot(char *comment)
 		}
 
 		termStringInfo(&query);
+
+		/* 
+		 * If pg_stat_statements is installed, also collect info(dealloc and stats_reset).
+		 * Following query collect rusage and wait sampling infos together.
+		 */
+		htinfo = pgut_execute(conn, SQL_SELECT_HT_INFO, 0, NULL);
+		if (PQresultStatus(htinfo) == PGRES_TUPLES_OK)
+			snap->instance = lappend(snap->instance, htinfo);
+		else
+		{
+			PQclear(htinfo);
+			snap->instance = lappend(snap->instance, NULL);
+		}
+		 
 	}
 	else
+	{
+		PGresult        *htinfo;
 		snap->instance = lappend(snap->instance, NULL);
+
+		/* Collect the hash table info excepts pg_stat_statements. */
+		htinfo = pgut_execute(conn, SQL_SELECT_HT_INFO_EXCEPT_SS, 0, NULL);
+		if (PQresultStatus(htinfo) == PGRES_TUPLES_OK)
+			snap->instance = lappend(snap->instance, htinfo);
+		else
+		{
+			PQclear(htinfo);
+			snap->instance = lappend(snap->instance, NULL);
+		}
+
+	}
 
 	/* When pg_store_plans is installed, we collect it */
 	if (has_pg_store_plans(conn))
