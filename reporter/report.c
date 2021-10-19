@@ -1509,21 +1509,23 @@ report_wait_sampling(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/* Wait Sampling */\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %-24s  %-32s  %-12s  %-32s  %8s\n",
-	"Database", "User Name", "Query ID", "Backend Type", "Event Type", "Event", "Count");
-	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "%-24s  %-16s  %-16s  %-32s  %-12s  %-32s  %8s  %32s  %32s\n",
+	"Query ID", "Database", "User Name", "Backend Type", "Event Type", "Event", "Count", "Rate", "Effective Rate");
+	fprintf(out, "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_WAIT_SAMPLING, lengthof(params), params);
 	for (i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-16s  %-16s  %-24s  %-32s  %-12s  %-32s  %8s\n",
+		fprintf(out, "%-24s  %-16s  %-16s  %-32s  %-12s  %-32s  %8s  %32s  %32s\n",
 		PQgetvalue(res, i, 0),
 		PQgetvalue(res, i, 1),
 		PQgetvalue(res, i, 2),
 		PQgetvalue(res, i, 3),
 		PQgetvalue(res, i, 4),
 		PQgetvalue(res, i, 5),
-		PQgetvalue(res, i, 6));
+		PQgetvalue(res, i, 6),
+		PQgetvalue(res, i, 7),
+		PQgetvalue(res, i, 8));
 	}
 	fprintf(out, "\n");
 	PQclear(res);

@@ -3963,7 +3963,7 @@ $$
 LANGUAGE sql;
 
 -- generate information that corresponds to 'Wait Sampling'
-CREATE FUNCTION statsrepo.get_wait_sampling(
+CREATE FUNCTION statsrepo.wait_sampling_view(
 	IN snapid_begin bigint,
 	IN snapid_end bigint,
 	OUT database text,
@@ -3978,26 +3978,88 @@ $$
 	SELECT
 		db.name,
 		ro.name,
-		ws2.queryid,
-		ws2.backend_type,
-		ws2.event_type,
-		ws2.event,
-		statsrepo.sub(ws2.count, ws1.count) as count
+		we.queryid,
+		we.backend_type,
+		we.event_type,
+		we.event,
+		statsrepo.sub(we.count, wb.count) as count
 	FROM
-		(SELECT * FROM statsrepo.wait_sampling WHERE snapid = $2) ws2 
-		LEFT JOIN (SELECT * FROM statsrepo.wait_sampling WHERE snapid = $1) ws1
-		ON ws1.dbid = ws2.dbid AND ws1.userid = ws2.userid
-		AND ws1.queryid = ws2.queryid AND ws1.backend_type = ws2.backend_type
-		AND ws1.event_type = ws2.event_type AND ws1.event = ws2.event
-		LEFT JOIN (SELECT * FROM statsrepo.database WHERE snapid = $2) db
-		ON ws2.dbid = db.dbid
-		LEFT JOIN (SELECT * FROM statsrepo.role WHERE snapid = $2) ro
-		ON ws2.userid = ro.userid
+		(SELECT * FROM statsrepo.wait_sampling WHERE snapid = $2) we
+	LEFT JOIN
+		(SELECT * FROM statsrepo.wait_sampling WHERE snapid = $1) wb
+		ON wb.dbid = we.dbid 
+		AND wb.userid = we.userid
+		AND wb.queryid = we.queryid
+		AND wb.backend_type = we.backend_type
+		AND wb.event_type = we.event_type
+		AND wb.event = we.event
+	LEFT JOIN (SELECT * FROM statsrepo.database WHERE snapid = $2) db
+		ON we.dbid = db.dbid
+	LEFT JOIN (SELECT * FROM statsrepo.role WHERE snapid = $2) ro
+		ON we.userid = ro.userid
+$$
+LANGUAGE sql;
+
+CREATE FUNCTION statsrepo.wait_sampling_view_effective(
+	IN snapid_begin bigint,
+	IN snapid_end bigint,
+	OUT database text,
+	OUT role text,
+	OUT queryid bigint,
+	OUT backend_type text,
+	OUT event_type text,
+	OUT event text,
+	OUT count bigint
+) RETURNS SETOF record AS
+$$
+	SELECT
+		database,
+		role,
+		queryid,
+		backend_type,
+		event_type,
+		event,
+		count
+	FROM
+		statsrepo.wait_sampling_view($1, $2)
 	WHERE
-		ws2.backend_type NOT IN ('background worker')
-		AND ws2.event_type NOT IN ('Activity')
+		backend_type NOT IN ('background worker')
+		AND event_type NOT IN ('Activity')
+$$
+LANGUAGE sql;
+
+CREATE FUNCTION statsrepo.get_wait_sampling(
+	IN snapid_begin bigint,
+	IN snapid_end bigint,
+	OUT queryid bigint,
+	OUT database text,
+	OUT role text,
+	OUT backend_type text,
+	OUT event_type text,
+	OUT event text,
+	OUT count bigint,
+	OUT rate numeric,
+	OUT rate_effective numeric
+) RETURNS SETOF record AS
+$$
+	WITH
+	v AS ( SELECT pg_catalog.sum(count) AS sum FROM statsrepo.wait_sampling_view($1, $2) ),
+	ve AS ( SELECT pg_catalog.sum(count) AS sum FROM statsrepo.wait_sampling_view_effective($1, $2) )
+	SELECT
+		queryid,
+		database,
+		role,
+		backend_type,
+		event_type,
+		event,
+		count,
+		statsrepo.div(count, v.sum) * 100 AS rate,
+		statsrepo.div(count, ve.sum) * 100 AS rate_effective
+	FROM
+		statsrepo.wait_sampling_view_effective($1, $2),
+		v, ve
 	ORDER BY
-		count DESC;
+		queryid, database, role, backend_type, event_type, event;
 $$
 LANGUAGE sql;
 
