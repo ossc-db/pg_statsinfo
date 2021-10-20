@@ -114,15 +114,6 @@ AS 'MODULE_PATHNAME', 'statsinfo_stop'
 LANGUAGE C;
 
 --
--- statsinfo.restart()
---
-/*
-CREATE FUNCTION statsinfo.restart() RETURNS text
-AS 'MODULE_PATHNAME', 'statsinfo_restart'
-LANGUAGE C;
-*/
-
---
 -- statsinfo.cpustats()
 --
 CREATE TYPE statsinfo.cpustats_type AS

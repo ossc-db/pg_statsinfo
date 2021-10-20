@@ -430,7 +430,6 @@ PG_FUNCTION_INFO_V1(statsinfo_wait_sampling_profile);
 PG_FUNCTION_INFO_V1(statsinfo_tablespaces);
 PG_FUNCTION_INFO_V1(statsinfo_start);
 PG_FUNCTION_INFO_V1(statsinfo_stop);
-PG_FUNCTION_INFO_V1(statsinfo_restart);
 PG_FUNCTION_INFO_V1(statsinfo_cpustats);
 PG_FUNCTION_INFO_V1(statsinfo_cpustats_noarg);
 PG_FUNCTION_INFO_V1(statsinfo_devicestats);
@@ -452,7 +451,6 @@ extern Datum PGUT_EXPORT statsinfo_wait_sampling_profile(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_tablespaces(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_start(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_stop(PG_FUNCTION_ARGS);
-extern Datum PGUT_EXPORT statsinfo_restart(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_cpustats(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_cpustats_noarg(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_devicestats(PG_FUNCTION_ARGS);
@@ -2157,55 +2155,6 @@ done:
 	client_min_messages = save_client_min_messages;
 	log_min_messages = save_log_min_messages;
 	PG_RETURN_VOID();
-}
-
-/*
- * statsinfo_restart - Restart statsinfo background process.
- */
-Datum
-statsinfo_restart(PG_FUNCTION_ARGS)
-{
-	char	cmd[MAXPGPATH];
-	int		save_log_min_messages = 0;
-
-	must_be_superuser();
-
-	/* send log to terminate existing daemon. */
-	if (log_min_messages >= FATAL)
-	{
-		/* adjust elevel to LOG so that LOGMSG_RESTART must be written. */
-		save_log_min_messages = log_min_messages;
-		log_min_messages = LOG;
-	}
-	elog(LOG, LOGMSG_RESTART);
-	if (save_log_min_messages > 0)
-	{
-		log_min_messages = save_log_min_messages;
-	}
-
-	/* short sleep to ensure message is written */
-	pg_usleep(100 * 1000);
-	/*
-	 * FIXME: server logs written during the sleep might not be routed by
-	 * pg_statsinfo daemon, but I have no idea to ensure to place the
-	 * LOGMSG_RESTART message at the end of previous log file...
-	 */
-
-	/* force rotate the log file */
-	DirectFunctionCall1(pg_rotate_logfile, (Datum) 0);
-
-	/* wait for the previous daemon's exit and log rotation */
-	pg_usleep(500 * 1000);
-
-	/* spawn a new daemon process */
-	exec_background_process(cmd, NULL);
-
-	/*
-	 * return the command line for the new daemon; Note that we cannot
-	 * return the child pid because it is different from the pid of statsinfo
-	 * daemon because the child process will call daemon().
-	 */
-	PG_RETURN_TEXT_P(cstring_to_text(cmd));
 }
 
 #define FILE_CPUSTAT			"/proc/stat"

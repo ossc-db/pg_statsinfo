@@ -17,7 +17,6 @@
     statsinfo_profile;
     statsinfo_cpuinfo;
     statsinfo_meminfo;
-    statsinfo_restart;
     statsinfo_rusage;
     statsinfo_rusage_reset;
 	statsinfo_rusage_info;
