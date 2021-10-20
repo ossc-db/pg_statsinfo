@@ -4595,6 +4595,7 @@ pgws_entry_dealloc(void)
 	pgwsEntry  *entry;
 	int		     nvictims;
 	int		     i;
+	int		     j;
 	HTAB		*hash_tmp;
 	HASHCTL		ctl_tmp;
 	pgwsSubEntry  *subentry;
@@ -4604,7 +4605,6 @@ pgws_entry_dealloc(void)
 	uint64		  queryid_tie;
 	Oid			  userid_tie;
 	Oid			  dbid_tie;
-	int		     j;
 
 	/*
 	 * Sort entries by usage and deallocate USAGE_DEALLOC_PERCENT of them.
@@ -4647,6 +4647,8 @@ pgws_entry_dealloc(void)
 			subentry->usage = entry->counters.usage;
 	}
 
+	Assert(hash_get_num_entries(pgws_hash) == i);
+
 	for (j = 0; j < i; j++)
 	{
 		item.key.userid = entries[j]->key.userid;
@@ -4668,7 +4670,6 @@ pgws_entry_dealloc(void)
 	for (j = 0; j < nvictims; j++)
 	{
 		hash_search(pgws_hash, &entries[j]->key, HASH_REMOVE, NULL);
-		elog(DEBUG2, "debug HASH_REMOVE under nvictims userid %d dbid %d queryid %ld usage %f", entries[j]->key.userid, entries[j]->key.dbid, entries[j]->key.queryid,  entries[j]->counters.usage);
 	}
 
 	usage_tie = entries[nvictims - 1]->counters.usage;
@@ -4678,11 +4679,10 @@ pgws_entry_dealloc(void)
 
 	for (j = nvictims; j < i; j++)
 	{
-		elog(DEBUG2, "debug HASH_REMOVE over nvictims userid %d dbid %d queryid %ld usage %f", entries[j]->key.userid, entries[j]->key.dbid, entries[j]->key.queryid,  entries[j]->counters.usage);
-		if (usage_tie >= entries[j]->counters.usage &&
-			queryid_tie >= entries[j]->key.queryid &&
-			userid_tie >= entries[j]->key.userid &&
-			dbid_tie >= entries[j]->key.dbid)
+		if (usage_tie == entries[j]->counters.usage &&
+			queryid_tie == entries[j]->key.queryid &&
+			userid_tie == entries[j]->key.userid &&
+			dbid_tie == entries[j]->key.dbid)
 			hash_search(pgws_hash, &entries[j]->key, HASH_REMOVE, NULL);
 		else
 			break;
