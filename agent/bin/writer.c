@@ -46,6 +46,7 @@ static void destroy_writer_queue(QueueItem *item);
 static void set_connect_privileges(void);
 static RepositoryState validate_repository(void);
 static bool check_repository(PGconn *conn);
+static bool check_schema(PGconn *conn, const char *schema);
 static bool update_hardwareinfo(PGconn *conn);
 static void set_writer_state(WriterState state);
 static void writer_delay(void);
@@ -512,7 +513,8 @@ validate_repository(void)
 		return REPOSITORY_INVALID_DATABASE;
 
 	/* update hardware information*/
-	update_hardwareinfo(writer_conn);
+	if (check_schema(writer_conn, "statsinfo"))
+		update_hardwareinfo(writer_conn);
 
 	/* update last used time of the connection */
 	writer_conn_last_used = time(NULL);
@@ -584,6 +586,30 @@ error:
 		 errdetail("query was: %s", query)));
 	PQclear(res);
 	return false;
+}
+
+static bool
+check_schema(PGconn *conn, const char *schema)
+{
+	PGresult	   *res;
+	bool			exist;
+
+	if (!schema || !schema[0])
+		return true;	/* no schema required */
+
+	/* check statsinfo schema exists */
+	res = pgut_execute(conn,
+			"SELECT nspname FROM pg_namespace WHERE nspname = $1",
+			1, &schema);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		PQclear(res);
+		return false;
+	}
+	exist = (PQntuples(res) > 0);
+	PQclear(res);
+
+	return exist;
 }
 
 static bool
