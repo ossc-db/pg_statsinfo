@@ -381,7 +381,6 @@ ORDER BY \
 #define SQL_SELECT_LOCK_CLIENT_HOSTNAME		"'(N/A)'"
 #endif
 
-#if PG_VERSION_NUM >= 90600
 #define SQL_SELECT_LOCK "\
 SELECT \
 	sa.datid, \
@@ -396,7 +395,7 @@ SELECT \
 	px.gid AS blocker_gid, \
 	sa.wait_event_type, \
 	sa.wait_event, \
-	(pg_catalog.statement_timestamp() - sa.query_start)::interval(0), \
+	(pg_catalog.statement_timestamp() - lo.waitstart)::interval(0), \
 	sa.query, \
 	CASE \
 		WHEN px.gid IS NOT NULL THEN '(xact is detached from session)' \
@@ -416,57 +415,13 @@ FROM \
 	) t \
 	LEFT JOIN pg_prepared_xacts px ON px.transaction = t.transactionid \
 	LEFT JOIN pg_stat_activity sa ON sa.pid = t.blockee_pid \
+	LEFT JOIN pg_locks lo ON lo.pid = t.blockee_pid \
 	LEFT JOIN statsinfo.last_xact_activity() lx ON lx.pid = t.blocker_pid \
 	LEFT JOIN pg_database db ON db.oid = sa.datid \
 	LEFT JOIN pg_class c ON c.oid = t.relation \
 	LEFT JOIN pg_namespace ns ON ns.oid = c.relnamespace \
 WHERE \
-	sa.query_start < pg_catalog.statement_timestamp() - pg_catalog.current_setting('" GUC_PREFIX ".long_lock_threshold')::interval"
-#else
-#define SQL_SELECT_LOCK "\
-SELECT \
-	db.datname, \
-	nb.nspname, \
-	lb.relation, \
-	" SQL_SELECT_LOCK_APPNAME ", \
-	sa.client_addr, \
-	" SQL_SELECT_LOCK_CLIENT_HOSTNAME ", \
-	sa.client_port, \
-	lb.pid AS blockee_pid, \
-	la.pid AS blocker_pid, \
-	la.gid AS blocker_gid, \
-	'(N/A)', \
-	'(N/A)', \
-	(pg_catalog.statement_timestamp() - sb.query_start)::interval(0), \
-	sb." PG_STAT_ACTIVITY_ATTNAME_QUERY ", \
-	CASE \
-		WHEN la.gid IS NOT NULL THEN '(xact is detached from session)' \
-		WHEN la.queries IS NULL THEN '(library might not have been loaded)' \
-		ELSE la.queries \
-	END \
-FROM \
-	(SELECT DISTINCT l0.pid, l0.relation, transactionid, la.gid, lx.queries \
-	 FROM pg_locks l0 \
-		LEFT JOIN \
-			(SELECT l1.virtualtransaction, pp.gid \
-			 FROM pg_prepared_xacts pp \
-				LEFT JOIN pg_locks l1 ON l1.transactionid = pp.transaction) la \
-			ON l0.virtualtransaction = la.virtualtransaction \
-		LEFT JOIN statsinfo.last_xact_activity() lx ON l0.pid = lx.pid \
-	 WHERE l0.granted = true AND \
-		(la.gid IS NULL OR l0.relation IS NOT NULL)) la \
-	 LEFT JOIN pg_stat_activity sa ON la.pid = sa." PG_STAT_ACTIVITY_ATTNAME_PID ", \
-	(SELECT DISTINCT pid, relation, transactionid \
-	 FROM pg_locks \
-	 WHERE granted = false) lb \
-	 LEFT JOIN pg_stat_activity sb ON lb.pid = sb." PG_STAT_ACTIVITY_ATTNAME_PID " \
-	 LEFT JOIN pg_database db ON sb.datid = db.oid \
-	 LEFT JOIN pg_class cb ON lb.relation = cb.oid \
-	 LEFT JOIN pg_namespace nb ON cb.relnamespace = nb.oid \
-WHERE \
-	(la.transactionid = lb.transactionid OR la.relation = lb.relation) AND \
-	sb.query_start < pg_catalog.statement_timestamp() - pg_catalog.current_setting('" GUC_PREFIX ".long_lock_threshold')::interval"
-#endif
+	lo.waitstart < pg_catalog.statement_timestamp() - pg_catalog.current_setting('" GUC_PREFIX ".long_lock_threshold')::interval"
 
 /* bgwriter */
 #define SQL_SELECT_BGWRITER "\
