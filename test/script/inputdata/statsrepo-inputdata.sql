@@ -422,4 +422,20 @@ $$
 	INSERT INTO statsrepo.meminfo VALUES ($1, '2012-11-01 00:01:00+09', 1904697344);
 	INSERT INTO statsrepo.meminfo VALUES ($1, '2012-11-01 00:02:00+09', 3917156352);
 
+	--
+	-- Data for Name: rusage; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
+	--
+	INSERT INTO statsrepo.rusage VALUES ($6, 12870, 10, 1067368138, 1, 1, 0.1, 0.1, 1, 1, 1, 1, 2, 2, 0.2, 0.2, 2, 2, 2, 2);
+	INSERT INTO statsrepo.rusage VALUES ($6, 12870, 10, 1899262118, 1, 1, 0.1, 0.1, 1, 1, 1, 1, 2, 2, 0.2, 0.2, 2, 2, 2, 2);
+	INSERT INTO statsrepo.rusage VALUES ($6, 12870, 10, 847103580,  1, 1, 0.1, 0.1, 1, 1, 1, 1, 2, 2, 0.2, 0.2, 2, 2, 2, 2);
+	INSERT INTO statsrepo.rusage VALUES ($6 + 1, 12870, 10, 1067368138, 2, 2, 0.2, 0.2, 2, 2, 2, 2, 4, 4, 0.4, 0.4, 4, 4, 4, 4);
+	INSERT INTO statsrepo.rusage VALUES ($6 + 1, 12870, 10, 1899262118, 2, 2, 0.2, 0.2, 2, 2, 2, 2, 4, 4, 0.4, 0.4, 4, 4, 4, 4);
+	INSERT INTO statsrepo.rusage VALUES ($6 + 1, 12870, 10, 847103580,  2, 2, 0.2, 0.2, 2, 2, 2, 2, 4, 4, 0.4, 0.4, 4, 4, 4, 4);
+	INSERT INTO statsrepo.rusage VALUES ($6 + 2, 12870, 10, 1067368138, 3, 3, 0.3, 0.3, 3, 3, 3, 3, 6, 6, 0.6, 0.6, 6, 6, 6, 6);
+	INSERT INTO statsrepo.rusage VALUES ($6 + 2, 12870, 10, 1899262118, 3, 3, 0.3, 0.3, 3, 3, 3, 3, 6, 6, 0.6, 0.6, 6, 6, 6, 6);
+	INSERT INTO statsrepo.rusage VALUES ($6 + 2, 12870, 10, 847103580,  3, 3, 0.3, 0.3, 3, 3, 3, 3, 6, 6, 0.6, 0.6, 6, 6, 6, 6);
+	INSERT INTO statsrepo.rusage VALUES ($6 + 3, 12870, 10, 1067368138, 4, 4, 0.4, 0.4, 4, 4, 4, 4, 8, 8, 0.8, 0.8, 8, 8, 8, 8);
+	INSERT INTO statsrepo.rusage VALUES ($6 + 3, 12870, 10, 1899262118, 4, 4, 0.4, 0.4, 4, 4, 4, 4, 8, 8, 0.8, 0.8, 8, 8, 8, 8);
+	INSERT INTO statsrepo.rusage VALUES ($6 + 3, 12870, 10, 847103580,  4, 4, 0.4, 0.4, 4, 4, 4, 4, 8, 8, 0.8, 0.8, 8, 8, 8, 8);
+
 $$ LANGUAGE sql;

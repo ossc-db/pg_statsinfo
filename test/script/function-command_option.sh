@@ -34,6 +34,8 @@ exec_command "exec_statsinfo -s"
 
 echo "/**--- Number of snapshots (1) ---**/"
 send_query << EOF > /dev/null
+	DELETE FROM statsrepo.snapshot;
+	DELETE FROM statsrepo.instance;
 	INSERT INTO statsrepo.instance VALUES (1, '5807946214009601530', 'statsinfo', '5432', '8.3.0');
 	INSERT INTO statsrepo.snapshot VALUES (1, 1, '2012-11-01 00:00:00+09', '1st', '00:00:01', 262144);
 EOF
