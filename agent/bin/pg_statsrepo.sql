@@ -1028,44 +1028,6 @@ LIMIT 1;
 $$
 LANGUAGE sql STABLE;
 
--- repository database setting parameters
-CREATE FUNCTION statsrepo.get_repositorydb_setting(
-	OUT name	text,
-	OUT setting	text,
-	OUT unit	text,
-	OUT source	text
-) RETURNS SETOF record AS
-$$
-	SELECT
-		name,
-		setting,
-		unit,
-		source
-	FROM
-		pg_catalog.pg_settings
-	WHERE
-		source NOT IN ('default', 'session', 'override')
-		AND setting <> boot_val
-	ORDER BY pg_catalog.lower(name);
-$$
-LANGUAGE sql;
-
--- table options
-CREATE FUNCTION statsrepo.get_table_option(
-	IN  name	text,
-	OUT option	text
-) RETURNS text AS
-$$
-	SELECT
-		pg_catalog.array_to_string(c.reloptions || array(SELECT 'toast.' || x FROM pg_catalog.unnest(tc.reloptions) x), ', ')
-	FROM
-		pg_catalog.pg_class c
-		LEFT JOIN pg_catalog.pg_class tc ON (c.reltoastrelid = tc.oid)
-	WHERE
-		c.oid = $1::regclass;
-$$
-LANGUAGE sql;
-
 -- get min snapshot id from date
 CREATE FUNCTION statsrepo.get_min_snapid(
 	IN  m_host text,
@@ -1246,54 +1208,6 @@ $$
 LANGUAGE sql;
 
 -- generate information that corresponds to 'Transaction Statistics'
-CREATE FUNCTION statsrepo.get_xact_tendency(
-	IN snapid_begin		bigint,
-	IN snapid_end		bigint,
-	OUT snapid			bigint,
-	OUT datname			name,
-	OUT commit_tps		numeric,
-	OUT rollback_tps	numeric
-) RETURNS SETOF record AS
-$$
-	SELECT
-		snapid,
-		name,
-		coalesce(statsrepo.tps(xact_commit, duration), 0)::numeric(1000,3),
-		coalesce(statsrepo.tps(xact_rollback, duration), 0)::numeric(1000,3)
-	FROM
-	(
-		SELECT
-			snapid,
-			name,
-			xact_commit - pg_catalog.lag(xact_commit) OVER w AS xact_commit,
-			xact_rollback - pg_catalog.lag(xact_rollback) OVER w AS xact_rollback,
-			time - pg_catalog.lag(time) OVER w AS duration
-		FROM
-			(SELECT
-				s.snapid,
-				s.time,
-				d.name,
-				pg_catalog.sum(xact_commit) AS xact_commit,
-				pg_catalog.sum(xact_rollback) AS xact_rollback
-			 FROM
-				statsrepo.database d,
-				statsrepo.snapshot s
-			 WHERE
-			 	d.snapid = s.snapid
-			 	AND d.snapid BETWEEN $1 AND $2
-				AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-			 GROUP BY
-			 	s.snapid, s.time, d.name) AS d
-		WINDOW w AS (PARTITION BY name ORDER BY snapid)
-		ORDER BY
-			snapid, name
-	) t
-	WHERE
-		snapid > $1;
-$$
-LANGUAGE sql;
-
--- generate information that corresponds to 'Transaction Statistics'
 CREATE FUNCTION statsrepo.get_xact_tendency_report(
 	IN snapid_begin		bigint,
 	IN snapid_end		bigint,
@@ -1347,33 +1261,6 @@ $$
 	) t1
 	WHERE
 		snapid > $1;
-$$
-LANGUAGE sql;
-
--- generate information that corresponds to 'Database Size'
-CREATE FUNCTION statsrepo.get_dbsize_tendency(
-	IN snapid_begin	bigint,
-	IN snapid_end	bigint,
-	OUT snapid		bigint,
-	OUT datname		name,
-	OUT size		numeric
-) RETURNS SETOF record AS
-$$
-	SELECT
-		d.snapid,
-		d.name,
-		(pg_catalog.sum(size) / 1024 / 1024)::numeric(1000, 3)
-	FROM
-		statsrepo.database d,
-		statsrepo.snapshot s
-	WHERE
-		d.snapid BETWEEN $1 AND $2
-		AND d.snapid = s.snapid
-		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-	GROUP BY
-		d.snapid, d.name
-	ORDER BY
-		d.snapid, d.name;
 $$
 LANGUAGE sql;
 
@@ -1856,63 +1743,6 @@ $$
 		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 	ORDER BY
 		snapid;
-$$
-LANGUAGE sql;
-
--- generate information that corresponds to 'CPU Usage'
-CREATE FUNCTION statsrepo.get_cpu_usage(
-	IN snapid_begin	bigint,
-	IN snapid_end	bigint,
-	OUT "user"		numeric,
-	OUT system		numeric,
-	OUT idle		numeric,
-	OUT iowait		numeric
-) RETURNS SETOF record AS
-$$
-	SELECT
-		(100 * statsrepo.sub(a.cpu_user + o.cpu_user_add, b.cpu_user)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,1),
-		(100 * statsrepo.sub(a.cpu_system + o.cpu_system_add, b.cpu_system)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,1),
-		(100 * statsrepo.sub(a.cpu_idle + o.cpu_idle_add, b.cpu_idle)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,1),
-		(100 * statsrepo.sub(a.cpu_iowait + o.cpu_iowait_add, b.cpu_iowait)::float / statsrepo.sub(a.total + o.total_add, b.total)::float)::numeric(5,1)
-	FROM
-		(SELECT
-			snapid,
-			cpu_user,
-			cpu_system,
-			cpu_idle,
-			cpu_iowait,
-			cpu_user + cpu_system + cpu_idle + cpu_iowait AS total
-		 FROM
-		 	statsrepo.cpu
-		 WHERE
-		 	snapid = $1) b,
-		(SELECT
-			snapid,
-			cpu_user,
-			cpu_system,
-			cpu_idle,
-			cpu_iowait,
-			cpu_user + cpu_system + cpu_idle + cpu_iowait AS total
-		 FROM
-		 	statsrepo.cpu
-		 WHERE
-		 	snapid = $2) a,
-		(SELECT
-			(pg_catalog.sum(overflow_user) * 4294967296)::bigint AS cpu_user_add,
-			(pg_catalog.sum(overflow_system) * 4294967296)::bigint AS cpu_system_add,
-			(pg_catalog.sum(overflow_idle) * 4294967296)::bigint AS cpu_idle_add,
-			(pg_catalog.sum(overflow_iowait) * 4294967296)::bigint AS cpu_iowait_add,
-			((pg_catalog.sum(overflow_user) + pg_catalog.sum(overflow_system) + pg_catalog.sum(overflow_idle) + pg_catalog.sum(overflow_iowait)) * 4294967296)::bigint AS total_add
-		 FROM
-			statsrepo.cpu c
-			LEFT JOIN statsrepo.snapshot s ON s.snapid = c.snapid
-		 WHERE
-			s.snapid > $1 AND s.snapid <= $2
-			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)) o,
-		statsrepo.snapshot s
-	WHERE
-		a.snapid = s.snapid
-		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2);
 $$
 LANGUAGE sql;
 
@@ -3309,81 +3139,6 @@ $$
 	ORDER BY
 		reg.total_exec_time DESC,
 		reg.calls DESC;
-$$
-LANGUAGE sql;
-
--- internal function for get_query_activity_statements()
-CREATE FUNCTION statsrepo.get_query_activity_statemets_body_legacy(
-	IN snapid_begin		bigint,
-	IN snapid_end		bigint,
-	OUT rolname			text,
-	OUT datname			name,
-	OUT query			text,
-	OUT plans			bigint,
-	OUT total_plan_time	numeric,
-	OUT time_per_plan	numeric,
-	OUT calls			bigint,
-	OUT total_exec_time	numeric,
-	OUT time_per_call	numeric,
-	OUT blk_read_time	numeric,
-	OUT blk_write_time	numeric
-) RETURNS SETOF record AS
-$$
-		SELECT
-		t1.rolname::text,
-		t1.dbname::name,
-		t1.query,
-		0::bigint,
-		0::numeric(1000, 3),
-		0::numeric(1000, 3),
-		t1.calls,
-		t1.total_time::numeric(1000, 3),
-		(t1.total_time / t1.calls)::numeric(1000, 3),
-		t1.blk_read_time::numeric(1000, 3),
-		t1.blk_write_time::numeric(1000, 3)
-	FROM
-		(SELECT
-			rol.name AS rolname,
-			db.name AS dbname,
-			reg.query,
-			statsrepo.sub(st2.calls, st1.calls) AS calls,
-			statsrepo.sub(st2.total_exec_time, st1.total_exec_time) AS total_time,
-			statsrepo.sub(st2.blk_read_time, st1.blk_read_time) AS blk_read_time,
-			statsrepo.sub(st2.blk_write_time, st1.blk_write_time) AS blk_write_time
-		 FROM
-		 	(SELECT
-		 		s.dbid,
-		 		s.userid,
-		 		s.query,
-				$1 AS first,
-				pg_catalog.max(s.snapid) AS last
-			 FROM
-			 	statsrepo.statement s
-				JOIN statsrepo.snapshot ss ON (ss.snapid = s.snapid)
-			 WHERE
-			 	s.snapid >= $1 AND s.snapid <= $2
-				AND ss.instid = (SELECT instid FROM statsrepo.snapshot ss1 WHERE ss1.snapid = $2)
-			 GROUP BY
-				s.dbid,
-				s.userid,
-				s.query
-			) AS reg
-		LEFT JOIN statsrepo.statement st1 ON
-			(st1.dbid = reg.dbid AND st1.userid = reg.userid AND
-			 st1.query = reg.query AND st1.snapid = reg.first)
-		JOIN statsrepo.statement st2 ON
-			(st2.dbid = reg.dbid AND st2.userid = reg.userid AND
-			 st2.query = reg.query AND st2.snapid = reg.last)
-		JOIN statsrepo.database db ON
-			(db.snapid = reg.first AND db.dbid = reg.dbid)
-		JOIN statsrepo.role rol ON
-			(rol.snapid = reg.first AND rol.userid = reg.userid)
-	) AS t1
-	WHERE
-		t1.calls > 0 and t1.total_time > 0
-	ORDER BY
-		8 DESC,
-		7 DESC;
 $$
 LANGUAGE sql;
 
