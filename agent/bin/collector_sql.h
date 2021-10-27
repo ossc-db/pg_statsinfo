@@ -395,7 +395,7 @@ SELECT \
 	px.gid AS blocker_gid, \
 	sa.wait_event_type, \
 	sa.wait_event, \
-	(pg_catalog.statement_timestamp() - lo.waitstart)::interval(0), \
+	(pg_catalog.statement_timestamp() - t.waitstart)::interval(0), \
 	sa.query, \
 	CASE \
 		WHEN px.gid IS NOT NULL THEN '(xact is detached from session)' \
@@ -407,7 +407,8 @@ FROM \
 		pid AS blockee_pid, \
 		pg_catalog.unnest(pg_catalog.pg_blocking_pids(pid)) AS blocker_pid, \
 		transactionid, \
-		relation \
+		relation, \
+		waitstart \
 	 FROM \
 		pg_locks \
 	 WHERE \
@@ -415,13 +416,12 @@ FROM \
 	) t \
 	LEFT JOIN pg_prepared_xacts px ON px.transaction = t.transactionid \
 	LEFT JOIN pg_stat_activity sa ON sa.pid = t.blockee_pid \
-	LEFT JOIN pg_locks lo ON lo.pid = t.blockee_pid \
 	LEFT JOIN statsinfo.last_xact_activity() lx ON lx.pid = t.blocker_pid \
 	LEFT JOIN pg_database db ON db.oid = sa.datid \
 	LEFT JOIN pg_class c ON c.oid = t.relation \
 	LEFT JOIN pg_namespace ns ON ns.oid = c.relnamespace \
 WHERE \
-	lo.waitstart < pg_catalog.statement_timestamp() - pg_catalog.current_setting('" GUC_PREFIX ".long_lock_threshold')::interval"
+	t.waitstart < pg_catalog.statement_timestamp() - pg_catalog.current_setting('" GUC_PREFIX ".long_lock_threshold')::interval"
 
 /* bgwriter */
 #define SQL_SELECT_BGWRITER "\
