@@ -27,6 +27,8 @@ echo "/*---- Initialize monitored instance ----*/"
 setup_dbcluster ${PGDATA} ${PGUSER} ${PGPORT} ${PGCONFIG} "" "" ""
 sleep 3
 
+send_query -c "DELETE FROM statsrepo.instance" > /dev/null
+
 echo "/*---- Show snapshot list / Show snapshot size ----*/"
 echo "/**--- Number of snapshots (0) ---**/"
 exec_command "exec_statsinfo -l"
