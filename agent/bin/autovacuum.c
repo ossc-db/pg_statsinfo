@@ -476,6 +476,12 @@ Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 
 	memset(params, 0, sizeof(params));
 
+	/*
+	 * Note: In PostgreSQL14, the output order of the automatic vacuum log
+	 * has changed and it no longer matches the column order of the
+	 * repository, so the values of the second argument of list_nth()
+	 * are not in order.
+	 */
 	params[0] = instid;
 	params[1] = av->finish;					/* finish */
 	params[2] = list_nth(av->params, 1);	/* database */
