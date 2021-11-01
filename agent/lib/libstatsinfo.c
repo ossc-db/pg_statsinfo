@@ -370,6 +370,7 @@ static const char *const RELOAD_PARAM_NAMES[] =
 	GUC_PREFIX ".target_server",
 	GUC_PREFIX ".profile_queries",
 	GUC_PREFIX ".profile_max",
+	GUC_PREFIX ".profile_save",
 	GUC_PREFIX ".collect_column",
 	GUC_PREFIX ".collect_index"
 };
@@ -412,6 +413,7 @@ static bool		enable_alert = true;
 static char	   *target_server = NULL;
 bool			profile_queries = DEFAULT_PROFILE_QUERIES;
 int				pgws_max = DEFAULT_PROFILE_MAX;
+bool			pgws_save = true;
 extern pgwsSharedState	*pgws;
 static bool		collect_column = true;
 static bool		collect_index = true;
@@ -597,6 +599,7 @@ uint32 pgws_hash_fn(const void *key, Size keysize);
 int pgws_match_fn(const void *key1, const void *key2, Size keysize);
 static uint32 pgws_sub_hash_fn(const void *key, Size keysize);
 static int pgws_sub_match_fn(const void *key1, const void *key2, Size keysize);
+void pgws_entry_alloc(pgwsEntry *key, bool direct);
 static void pgws_entry_dealloc(void);
 static int pgws_entry_cmp(const void *lhs, const void *rhs);
 
@@ -1870,6 +1873,17 @@ _PG_init(void)
 							1,
 							INT_MAX,
 							PGC_POSTMASTER,
+							0,
+							NULL,
+							NULL,
+							NULL);
+
+	DefineCustomBoolVariable(GUC_PREFIX ".profile_save",
+							"Save statsinfo wait sampling statistics across server shutdowns.",
+							NULL,
+							&pgws_save,
+							true,
+							PGC_SIGHUP,
 							0,
 							NULL,
 							NULL,
@@ -4892,6 +4906,44 @@ pgws_entry_cmp(const void *lhs, const void *rhs)
 		return 0;
 }
 
+/*
+ * pgws_entry_alloc - Enter the item into the hash table. 
+ * if direct == true, it store the specific item to hash table as-is.
+ * It use at reading saved stats file.
+ */
+void
+pgws_entry_alloc(pgwsEntry *item, bool direct)
+{
+	pgwsEntry	*entry;
+	bool		found;
+
+	/* Make space if needed */
+	while (hash_get_num_entries(pgws_hash) >= pgws_max)
+		pgws_entry_dealloc();
+
+	entry = (pgwsEntry *) hash_search(pgws_hash, &item->key, HASH_ENTER, &found);
+	if (found)
+	{
+		SpinLockAcquire(&entry->mutex);
+ 		entry->counters.count++;
+		entry->counters.usage += STATSINFO_USAGE_INCREASE; /* usage is raised by touching */
+		SpinLockRelease(&entry->mutex);
+ 	}
+	else if (direct)
+	{
+		memset(&entry->counters, 0, sizeof(pgwsCounters));
+		entry->counters = item->counters;
+		SpinLockInit(&entry->mutex);
+	}
+	else
+	{
+		memset(&entry->counters, 0, sizeof(pgwsCounters));
+		entry->counters.count = 1;
+		entry->counters.usage = STATSINFO_USAGE_INIT;
+		SpinLockInit(&entry->mutex);
+	}
+}
+
 static void
 probe_waits(void)
 {
@@ -4902,8 +4954,6 @@ probe_waits(void)
 		PgBackendStatus	*be;
 		pgwsEntry		item;
 		PGPROC			*proc;
-		pgwsEntry	   *entry;
-		bool			found;
 		int				procpid;
 
 		be = pgstat_fetch_stat_beentry(i);
@@ -4935,24 +4985,8 @@ probe_waits(void)
 
 		item.key.wait_event_info = proc->wait_event_info;
 
-		/* Make space if needed */
-		while (hash_get_num_entries(pgws_hash) >= pgws_max)
-			pgws_entry_dealloc();
-
-		entry = (pgwsEntry *) hash_search(pgws_hash, &item, HASH_ENTER, &found);
-		if (found)
-		{
-			SpinLockAcquire(&entry->mutex);
- 			entry->counters.count++;
-			entry->counters.usage += STATSINFO_USAGE_INCREASE; /* usage is raised by touching */
-			SpinLockRelease(&entry->mutex);
- 		}
-		else
-		{
-			entry->counters.count = 1;
-			entry->counters.usage = STATSINFO_USAGE_INIT;
-			SpinLockInit(&entry->mutex);
-		}
+		/* store this item */
+		pgws_entry_alloc(&item, false);
 	}
 }
 #endif

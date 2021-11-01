@@ -47,6 +47,7 @@
 #include "utils/builtins.h"
 #include "utils/guc.h"
 
+/* Location of permanent stats file (valid when database is shut down) */
 #define STATSINFO_RUSAGE_DUMP_FILE	PGSTAT_STAT_PERMANENT_DIRECTORY "/pg_statsinfo_rusage.stat"
 /* Magic number identifying the stats file format */
 static const uint32 STATSINFO_RUSAGE_FILE_HEADER = 0x20210930;
@@ -100,6 +101,7 @@ typedef struct ruCounters
 static int ru_max = 0;   /* max entries. TODO: Sould use same setting of pg_stat_statements.max */
 static struct   rusage exec_rusage_start[STATSINFO_RUSAGE_MAX_NESTED_LEVEL];
 static struct   rusage plan_rusage_start[STATSINFO_RUSAGE_MAX_NESTED_LEVEL];
+static bool		ru_save = true;
 
 /* Hashtable key that defines the identity of a hashtable entry. (same as pg_stat_statements) */
 typedef struct ruHashKey
@@ -411,7 +413,16 @@ init_last_xact_activity(void)
 							 NULL,
 							 NULL,
 							 NULL);
-
+    DefineCustomBoolVariable(GUC_PREFIX ".rusage_save",
+							 "Save statsinfo rusage statistics across server shutdowns.",
+							 NULL,
+							 &ru_save,
+							 true,
+							 PGC_SIGHUP,
+							 0,
+							 NULL,
+							 NULL,
+							 NULL);
 
 	RequestAddinShmemSpace(buffer_size(MaxBackends));
 
@@ -461,7 +472,6 @@ shmem_startup(void)
 	int		i;
 	uint32		header;
 	int32		num;
-	ruEntry		*buffer = NULL;
 
 	if (prev_shmem_startup_hook)
 		prev_shmem_startup_hook();
@@ -522,6 +532,9 @@ shmem_startup(void)
 	if (found)
 		return;
 
+	if (!ru_save)
+		return;
+
 	/* Load stat file, don't care about locking */
 	file = AllocateFile(STATSINFO_RUSAGE_DUMP_FILE, PG_BINARY_R);
 	if (file == NULL)
@@ -556,10 +569,14 @@ shmem_startup(void)
 		/* don't initialize spinlock, already done */
 	}
 
+	/* Read global statistics */
+	if (fread(&ru_ss->stats, sizeof(ruGlobalStats), 1, file) != 1)
+		goto error;
+
 	FreeFile(file);
 
 	/*
-	 * Remove the file so it's not included in backups/replication slaves,
+	 * Remove the file so it's not included in backups/replication standbys,
 	 * etc. A new file will be written on next shutdown.
 	 */
 	unlink(STATSINFO_RUSAGE_DUMP_FILE);
@@ -571,8 +588,6 @@ error:
 			(errcode_for_file_access(),
 			 errmsg("could not read pg_statsinfo rusage stat file \"%s\": %m",
 					STATSINFO_RUSAGE_DUMP_FILE)));
-	if (buffer)
-		pfree(buffer);
 	if (file)
 		FreeFile(file);
 	/* delete bogus file, don't care of errors in this case */
@@ -610,7 +625,11 @@ ru_shmem_shutdown(int code, Datum arg)
 	if (code)
 		return;
 
-	if (!ru_ss)
+	if (!ru_ss || !ru_hash)
+		return;
+
+	/* Don't dump if told not to. */
+	if (!ru_save)
 		return;
 
 	file = AllocateFile(STATSINFO_RUSAGE_DUMP_FILE ".tmp", PG_BINARY_W);
@@ -636,20 +655,18 @@ ru_shmem_shutdown(int code, Datum arg)
 		}
 	}
 
+	/* Dump global statistics */
+	if (fwrite(&ru_ss->stats, sizeof(ruGlobalStats), 1, file) != 1)
+		goto error;
+
 	if (FreeFile(file))
 	{
 		file = NULL;
 		goto error;
 	}
 
-	/*
-	 * Rename file inplace
-	 */
-	if (rename(STATSINFO_RUSAGE_DUMP_FILE ".tmp", STATSINFO_RUSAGE_DUMP_FILE) != 0)
-		ereport(LOG,
-				(errcode_for_file_access(),
-				 errmsg("could not rename pg_statsinfo rusage file \"%s\": %m",
-						STATSINFO_RUSAGE_DUMP_FILE ".tmp")));
+	/* Rename. If failed, a LOG message would be record. */
+	(void) durable_rename(STATSINFO_RUSAGE_DUMP_FILE ".tmp", STATSINFO_RUSAGE_DUMP_FILE, LOG);
 
 	return;
 
