@@ -665,7 +665,7 @@ ru_shmem_shutdown(int code, Datum arg)
 		goto error;
 	}
 
-	/* Rename. If failed, a LOG message would be record. */
+	/* Rename. If failed, a LOG message would be recorded. */
 	(void) durable_rename(STATSINFO_RUSAGE_DUMP_FILE ".tmp", STATSINFO_RUSAGE_DUMP_FILE, LOG);
 
 	return;
