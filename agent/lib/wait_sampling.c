@@ -155,7 +155,7 @@ pgws_shmem_shutdown(int code, Datum arg)
 		goto error;
 	}
 
-	/* Rename. If failed, a LOG message would be record. */
+	/* Rename. If failed, a LOG message would be recorded. */
 	(void) durable_rename(STATSINFO_WS_DUMP_FILE ".tmp", STATSINFO_WS_DUMP_FILE, LOG);
 
 	return;
@@ -245,7 +245,7 @@ attatch_shmem(void)
 	 * NOTE: read and store the old stats to hash-table.
 	 * It might be better to check profile_max and num(old stats number) before
 	 * issue entry_alloc. Because if num >> ptofile_max (change param between
-	 * PostgreSQL stop and start), it ehould cause high frequency dealloc()s.
+	 * PostgreSQL stop and start), it should cause high frequency dealloc()s.
 	 * TODO: optimization to avoid the high-frequency dealloc()s.
 	 */ 
 	for (i = 0; i < num; i++)
