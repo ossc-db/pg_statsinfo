@@ -738,6 +738,8 @@ CREATE TABLE statsrepo.log
 	location			text,
 	application_name	text,
 	backend_type		text,
+	leader_pid			integer,
+	query_id			bigint,
 	FOREIGN KEY (instid) REFERENCES statsrepo.instance (instid) ON DELETE CASCADE
 );
 
