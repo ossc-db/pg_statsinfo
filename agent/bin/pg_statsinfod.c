@@ -79,8 +79,10 @@ char		   *repolog_nologging_users;
 int				controlfile_fsync_interval;
 /*---- GUC variables (writer) ----------*/
 char		   *repository_server;
+/*---- GUC variables (wait sampling) ----------*/
 bool		   profile_queries;
 int			   profile_max;
+bool			pgws_save;
 /*---- message format ----*/
 char		   *msg_debug;
 char		   *msg_info;
@@ -195,6 +197,7 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".target_server", assign_string, &target_server},
 	{GUC_PREFIX ".profile_queries", assign_bool, &profile_queries},
 	{GUC_PREFIX ".profile_max", assign_int, &profile_max},
+	{GUC_PREFIX ".profile_save", assign_bool, &pgws_save},
 	{GUC_PREFIX ".collect_column", assign_bool, &collect_column},
 	{GUC_PREFIX ".collect_index", assign_bool, &collect_index},
 	{":debug", assign_string, &msg_debug},

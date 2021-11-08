@@ -6,6 +6,10 @@
  */
 
 #include "postgres.h"
+
+#include <unistd.h>
+
+
 #include "storage/proc.h"
 #include "funcapi.h"
 #include "miscadmin.h"
@@ -30,6 +34,7 @@ PG_MODULE_MAGIC;
 pgwsSharedState *pgws = NULL;
 extern bool profile_queries;
 extern int pgws_max;
+extern bool	pgws_save;
 extern HTAB			*pgws_hash;
 
 /* Module callbacks */
@@ -37,13 +42,13 @@ void		init_wait_sampling(void);
 void		fini_wait_sampling(void);
 
 /* Internal functions */
-static void backend_shutdown_hook(int code, Datum arg);
+static void pgws_shmem_shutdown(int code, Datum arg);
 void pgws_shmem_startup(void);
 static void attatch_shmem(void);
 static Size pgws_memsize(void);
 extern uint32 pgws_hash_fn(const void *key, Size keysize);
 extern int pgws_match_fn(const void *key1, const void *key2, Size keysize);
-
+extern void pgws_entry_alloc(pgwsEntry *item, bool direct);
 // static void errout(char* format, ...) {
 // 	va_list list;
 // 
@@ -78,51 +83,113 @@ fini_wait_sampling(void)
 /*
  * pgws_shmem_startup() - 
  *
- * Allocate or attach shared memory, and set up a process-exit hook function
- * for the buffer.
+ * Allocate or attach shared memory, and set up a process-exit hook function.
  */
 void
 pgws_shmem_startup(void)
 {
 	attatch_shmem();
 
-	/*
-	 * Invalidate entry for this backend on cleanup.
+    /*
+	 * If we're in the postmaster (or a standalone backend...), set up a shmem
+	 * exit hook to dump the statistics to disk.
 	 */
-	on_shmem_exit(backend_shutdown_hook, 0);
+	if (!IsUnderPostmaster)
+		on_shmem_exit(pgws_shmem_shutdown, 0);
 }
 
 /*
- * backend_shutdown_hook() -
- *
- * Invalidate status entry for this backend.
+ * pgws_shmem_shutdown() -
+ * Dump statistics into file.
  */
 static void
-backend_shutdown_hook(int code, Datum arg)
+pgws_shmem_shutdown(int code, Datum arg)
 {
-	/* do nothing */
+	FILE		*file;
+	HASH_SEQ_STATUS	hash_seq;
+	int32		num_entries;
+	pgwsEntry	*entry;
+
+	/* Don't try to dump during a crash. */
+	if (code)
+		return;
+
+	/* Safety check ... shouldn't get here unless shmem is set up. */
+	if (!pgws || !pgws_hash)
+		return;
+
+	/* Don't dump if told not to. */
+	if (!pgws_save)
+		return;
+
+	file = AllocateFile(STATSINFO_WS_DUMP_FILE ".tmp", PG_BINARY_W);
+	if (file == NULL)
+		goto error;
+
+	if (fwrite(&STATSINFO_WS_FILE_HEADER, sizeof(uint32), 1, file) != 1)
+		goto error;
+
+	num_entries = hash_get_num_entries(pgws_hash);
+	if (fwrite(&num_entries, sizeof(int32), 1, file) != 1)
+		goto error;
+
+	/* Serializing to disk. */
+	hash_seq_init(&hash_seq, pgws_hash);
+	while ((entry = hash_seq_search(&hash_seq)) != NULL)
+	{
+		if (fwrite(entry, sizeof(pgwsEntry), 1, file) != 1)
+		{
+			/* note: we assume hash_seq_term won't change errno */
+			hash_seq_term(&hash_seq);
+			goto error;
+		}
+	}
+
+	/* Dump global statistics */
+	if (fwrite(&pgws->stats, sizeof(pgwsGlobalStats), 1, file) != 1)
+		goto error;
+
+	if (FreeFile(file))
+	{
+		file = NULL;
+		goto error;
+	}
+
+	/* Rename. If failed, a LOG message would be recorded. */
+	(void) durable_rename(STATSINFO_WS_DUMP_FILE ".tmp", STATSINFO_WS_DUMP_FILE, LOG);
+
+	return;
+
+error:
+	ereport(LOG,
+		(errcode_for_file_access(),
+			errmsg("could not write pg_statsinfo wait sampling file \"%s\": %m",
+				STATSINFO_WS_DUMP_FILE ".tmp")));
+
+	if (file)
+		FreeFile(file);
+	unlink(STATSINFO_WS_DUMP_FILE ".tmp");
+
 }
 
 static void
 attatch_shmem(void)
 {
+	FILE	*file = NULL;
 	bool	found;
 	HASHCTL		info;
+	uint32		header;
+	int32		num;
+	int			i;
+
+	/* reset in case this is a restart within the postmaster */
+	pgws = NULL;
+	pgws_hash = NULL;
 
 	/*
 	 * Create or attach to the shared memory state, including hash table
 	 */
 	LWLockAcquire(AddinShmemInitLock, LW_EXCLUSIVE);
-
-	info.hash = pgws_hash_fn;
-	info.match = pgws_match_fn;
-	info.keysize = sizeof(pgwsHashKey);
-	info.entrysize = sizeof(pgwsEntry);
-
-	pgws_hash = ShmemInitHash("wait sampling hash",
-							  pgws_max, pgws_max,
-							  &info,
-							  HASH_FUNCTION | HASH_ELEM | HASH_COMPARE);
 
 	pgws = ShmemInitStruct("sample_wait_events", sizeof(pgwsSharedState), &found);
 
@@ -135,7 +202,84 @@ attatch_shmem(void)
 		pgws->stats.stats_reset = GetCurrentTimestamp();
 	}
 
+	info.keysize = sizeof(pgwsHashKey);
+	info.entrysize = sizeof(pgwsEntry);
+	info.hash = pgws_hash_fn;
+	info.match = pgws_match_fn;
+
+	pgws_hash = ShmemInitHash("wait sampling hash",
+							  pgws_max, pgws_max,
+							  &info,
+							  HASH_FUNCTION | HASH_ELEM | HASH_COMPARE);
+
 	LWLockRelease(AddinShmemInitLock);
+
+	/*
+	 * Done if some other process already completed our initialization.
+	 */
+	if (found)
+		return;
+
+	if (!pgws_save)
+		return;
+
+	file = AllocateFile(STATSINFO_WS_DUMP_FILE, PG_BINARY_R);	
+	if (file == NULL)
+	{
+		if (errno != ENOENT)
+			goto error;
+		return;
+	}
+
+	if (fread(&header, sizeof(uint32), 1, file) != 1)
+		goto error;
+
+	if (header != STATSINFO_WS_FILE_HEADER)
+		goto error;
+
+	if (fread(&num, sizeof(int32), 1, file) != 1)
+		goto error;
+
+
+	/*
+	 * NOTE: read and store the old stats to hash-table.
+	 * It might be better to check profile_max and num(old stats number) before
+	 * issue entry_alloc. Because if num >> ptofile_max (change param between
+	 * PostgreSQL stop and start), it should cause high frequency dealloc()s.
+	 * TODO: optimization to avoid the high-frequency dealloc()s.
+	 */ 
+	for (i = 0; i < num; i++)
+	{
+		pgwsEntry     temp;
+
+		if (fread(&temp, sizeof(pgwsEntry), 1, file) != 1)
+			goto error;
+
+		/* enter this item to hash-table directly */
+		pgws_entry_alloc(&temp, true);
+	}
+
+	/* Read global statistics. */
+	if (fread(&pgws->stats, sizeof(pgwsGlobalStats), 1, file) != 1)
+		goto error;
+
+	FreeFile(file);
+
+	unlink(STATSINFO_WS_DUMP_FILE);
+
+	return;
+
+error:
+	ereport(LOG,
+		(errcode_for_file_access(),
+			errmsg("could not read pg_statsinfo wait sampling stat file \"%s\": %m",
+				STATSINFO_WS_DUMP_FILE)));
+
+	if (file)
+		FreeFile(file);
+	/* delete bogus file, don't care of errors in this case */
+	unlink(STATSINFO_WS_DUMP_FILE);
+
 }
 
 /*
