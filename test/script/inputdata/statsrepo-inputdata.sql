@@ -438,4 +438,12 @@ $$
 	INSERT INTO statsrepo.rusage VALUES ($6 + 3, 12870, 10, 1899262118, 4, 4, 0.4, 0.4, 4, 4, 4, 4, 8, 8, 0.8, 0.8, 8, 8, 8, 8);
 	INSERT INTO statsrepo.rusage VALUES ($6 + 3, 12870, 10, 847103580,  4, 4, 0.4, 0.4, 4, 4, 4, 4, 8, 8, 0.8, 0.8, 8, 8, 8, 8);
 
+	--
+	-- Data for Name: ht_info; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
+	--
+	INSERT INTO statsrepo.ht_info VALUES ($6, 0, '2012-10-31 00:00:00+09', 0, '2012-10-31 00:00:00+09', 0, '2012-10-31 00:00:00+09');
+	INSERT INTO statsrepo.ht_info VALUES ($6 + 1, 10, '2012-11-01 01:00:00+09', 10, '2012-11-01 01:00:00+09', 10, '2012-11-01 01:00:00+09');
+	INSERT INTO statsrepo.ht_info VALUES ($6 + 2, 20, '2012-11-01 02:00:00+09', 20, '2012-11-01 02:00:00+09', 20, '2012-11-01 02:00:00+09');
+	INSERT INTO statsrepo.ht_info VALUES ($6 + 3, 30, '2012-11-01 03:00:00+09', 30, '2012-11-01 03:00:00+09', 30, '2012-11-01 03:00:00+09');
+
 $$ LANGUAGE sql;
