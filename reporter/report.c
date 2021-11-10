@@ -175,6 +175,8 @@ FROM \
 #define SQL_SELECT_SCHEMA_INFORMATION_INDEXES	"SELECT * FROM statsrepo.get_schema_info_indexes($1, $2)"
 #define SQL_SELECT_ALERT						"SELECT * FROM statsrepo.get_alert($1, $2)"
 #define SQL_SELECT_WAIT_SAMPLING				"SELECT * FROM statsrepo.get_wait_sampling($1, $2)"
+#define SQL_SELECT_WAIT_SAMPLING_BY_INSTID		"SELECT * FROM statsrepo.get_wait_sampling_by_instid($1, $2)"
+#define SQL_SELECT_WAIT_SAMPLING_BY_DBID		"SELECT * FROM statsrepo.get_wait_sampling_by_dbid($1, $2)"
 #define SQL_SELECT_PROFILES						"SELECT * FROM statsrepo.get_profiles($1, $2)"
 #define SQL_SELECT_CPU_INFO						"SELECT * FROM statsrepo.get_cpuinfo($1, $2)"
 #define SQL_SELECT_MEM_INFO						"SELECT * FROM statsrepo.get_meminfo($1, $2)"
@@ -1509,23 +1511,96 @@ report_wait_sampling(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/* Wait Sampling */\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-24s  %-16s  %-16s  %-32s  %-12s  %-32s  %8s  %32s  %32s\n",
-	"Query ID", "Database", "User Name", "Backend Type", "Event Type", "Event", "Count", "Rate", "Effective Rate");
-	fprintf(out, "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+
+	fprintf(out, "/** Wait Sampling per Instance **/\n");
+	fprintf(out, "-----------------------------------\n");
+
+	fprintf(out, "\n");
+	fprintf(out, "\tTop 10 Events:\n");
+	fprintf(out, "\t%-12s  %-32s  %8s  %12s\n",
+	"Event Type", "Event", "Count", "Ratio(%)");
+	fprintf(out, "\t-------------------------------------------------------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_WAIT_SAMPLING_BY_INSTID, lengthof(params), params);
+	for (i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "\t%-12s  %-32s  %8s  %12s\n",
+		PQgetvalue(res, i, 0),
+		PQgetvalue(res, i, 1),
+		PQgetvalue(res, i, 2),
+		PQgetvalue(res, i, 3));
+	}
+	fprintf(out, "\n");
+	PQclear(res);
+
+	fprintf(out, "/** Wait Sampling per Database **/\n");
+	fprintf(out, "-----------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_WAIT_SAMPLING_BY_DBID, lengthof(params), params);
+	for (i = 0; i < PQntuples(res); i++)
+	{
+		if (strcmp(PQgetvalue(res, i, 6), "1") == 0)
+		{
+			fprintf(out, "\n");
+			fprintf(out, "%-16s\n",
+			"Database");
+			fprintf(out, "---------------------------------------------------------------------------------------\n");
+			fprintf(out, "%-16s\n",
+			PQgetvalue(res, i, 1));
+
+			fprintf(out, "\n");
+			fprintf(out, "\tTop 10 Events:\n");
+			fprintf(out, "\t%-12s  %-32s  %8s  %12s\n",
+			"Event Type", "Event", "Count", "Ratio(%)");
+			fprintf(out, "\t-------------------------------------------------------------------------------\n");
+		}
+
+		fprintf(out, "\t%-12s  %-32s  %8s  %12s\n",
+		PQgetvalue(res, i, 2),
+		PQgetvalue(res, i, 3),
+		PQgetvalue(res, i, 4),
+		PQgetvalue(res, i, 5));
+	}
+	fprintf(out, "\n");
+	PQclear(res);
+
+	fprintf(out, "/** Wait Sampling per Query **/\n");
+	fprintf(out, "-----------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_WAIT_SAMPLING, lengthof(params), params);
 	for (i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-24s  %-16s  %-16s  %-32s  %-12s  %-32s  %8s  %32s  %32s\n",
-		PQgetvalue(res, i, 0),
-		PQgetvalue(res, i, 1),
-		PQgetvalue(res, i, 2),
-		PQgetvalue(res, i, 3),
-		PQgetvalue(res, i, 4),
-		PQgetvalue(res, i, 5),
+		if (strcmp(PQgetvalue(res, i, 11), "1") == 0)
+		{
+			fprintf(out, "\n");
+			fprintf(out, "%-32s  %-16s  %-16s  %-24s\n",
+			"Query ID", "Database", "User Name", "Backend Type");
+			fprintf(out, "---------------------------------------------------------------------------------------\n");
+			fprintf(out, "%-32s  %-16s  %-16s  %-24s\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 3),
+			PQgetvalue(res, i, 4),
+			PQgetvalue(res, i, 5));
+
+			fprintf(out, "\n");
+			fprintf(out, "%-s\n",
+			"Query");
+			fprintf(out, "---------------------------------------------------------------------------------------\n");
+			fprintf(out, "%-s\n",
+			PQgetvalue(res, i, 10));
+
+			fprintf(out, "\n");
+			fprintf(out, "\tTop 10 Events:\n");
+			fprintf(out, "\t%-12s  %-32s  %8s  %12s\n",
+			"Event Type", "Event", "Count", "Ratio(%)");
+			fprintf(out, "\t-------------------------------------------------------------------------------\n");
+		}
+
+		fprintf(out, "\t%-12s  %-32s  %8s  %12s\n",
 		PQgetvalue(res, i, 6),
 		PQgetvalue(res, i, 7),
-		PQgetvalue(res, i, 8));
+		PQgetvalue(res, i, 8),
+		PQgetvalue(res, i, 9));
 	}
 	fprintf(out, "\n");
 	PQclear(res);

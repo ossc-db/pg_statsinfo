@@ -3963,103 +3963,174 @@ $$
 LANGUAGE sql;
 
 -- generate information that corresponds to 'Wait Sampling'
-CREATE FUNCTION statsrepo.wait_sampling_view(
-	IN snapid_begin bigint,
-	IN snapid_end bigint,
-	OUT database text,
-	OUT role text,
-	OUT queryid bigint,
-	OUT backend_type text,
-	OUT event_type text,
-	OUT event text,
-	OUT count bigint
-) RETURNS SETOF record AS
-$$
-	SELECT
-		db.name,
-		ro.name,
-		we.queryid,
-		we.backend_type,
-		we.event_type,
-		we.event,
-		statsrepo.sub(we.count, wb.count) as count
-	FROM
-		(SELECT * FROM statsrepo.wait_sampling WHERE snapid = $2) we
-	LEFT JOIN
-		(SELECT * FROM statsrepo.wait_sampling WHERE snapid = $1) wb
-		ON wb.dbid = we.dbid 
-		AND wb.userid = we.userid
-		AND wb.queryid = we.queryid
-		AND wb.backend_type = we.backend_type
-		AND wb.event_type = we.event_type
-		AND wb.event = we.event
-	LEFT JOIN (SELECT * FROM statsrepo.database WHERE snapid = $2) db
-		ON we.dbid = db.dbid
-	LEFT JOIN (SELECT * FROM statsrepo.role WHERE snapid = $2) ro
-		ON we.userid = ro.userid
-$$
-LANGUAGE sql;
-
-CREATE FUNCTION statsrepo.wait_sampling_view_effective(
-	IN snapid_begin bigint,
-	IN snapid_end bigint,
-	OUT database text,
-	OUT role text,
-	OUT queryid bigint,
-	OUT backend_type text,
-	OUT event_type text,
-	OUT event text,
-	OUT count bigint
-) RETURNS SETOF record AS
-$$
-	SELECT
-		database,
-		role,
-		queryid,
-		backend_type,
-		event_type,
-		event,
-		count
-	FROM
-		statsrepo.wait_sampling_view($1, $2)
-	WHERE
-		backend_type NOT IN ('background worker')
-		AND event_type NOT IN ('Activity')
-$$
-LANGUAGE sql;
-
 CREATE FUNCTION statsrepo.get_wait_sampling(
 	IN snapid_begin bigint,
 	IN snapid_end bigint,
 	OUT queryid bigint,
+	OUT dbid bigint,
+	OUT userid bigint,
 	OUT database text,
 	OUT role text,
 	OUT backend_type text,
 	OUT event_type text,
 	OUT event text,
 	OUT count bigint,
-	OUT rate numeric,
-	OUT rate_effective numeric
+	OUT ratio numeric,
+	OUT query text,
+	OUT row_number integer
 ) RETURNS SETOF record AS
 $$
-	WITH
-	v AS ( SELECT pg_catalog.sum(count) AS sum FROM statsrepo.wait_sampling_view($1, $2) ),
-	ve AS ( SELECT pg_catalog.sum(count) AS sum FROM statsrepo.wait_sampling_view_effective($1, $2) )
-	SELECT
-		queryid,
-		database,
-		role,
-		backend_type,
-		event_type,
-		event,
-		count,
-		statsrepo.div(count, v.sum) * 100 AS rate,
-		statsrepo.div(count, ve.sum) * 100 AS rate_effective
+	SELECT *
 	FROM
-		statsrepo.wait_sampling_view_effective($1, $2),
-		v, ve
-	ORDER BY
-		queryid, database, role, backend_type, event_type, event;
+		(SELECT *,
+			ROW_NUMBER() OVER ww
+		FROM
+			(SELECT
+				we.queryid,
+				we.dbid,
+				we.userid,
+				db.name,
+				ro.name,
+				we.backend_type,
+				we.event_type,
+				we.event,
+				statsrepo.sub(we.count, wb.count),
+				statsrepo.sub(we.count, wb.count) * 100 / pg_catalog.sum(statsrepo.sub(we.count, wb.count)) OVER w,
+				st.query
+			FROM
+				statsrepo.wait_sampling we LEFT JOIN statsrepo.wait_sampling wb
+					ON wb.dbid = we.dbid
+					AND wb.userid = we.userid
+					AND wb.queryid = we.queryid
+					AND wb.backend_type = we.backend_type
+					AND wb.event_type = we.event_type
+					AND wb.event = we.event
+					AND wb.snapid = $1
+			LEFT JOIN statsrepo.database db
+				ON we.dbid = db.dbid
+				AND db.snapid = $1
+			LEFT JOIN statsrepo.role ro
+				ON we.userid = ro.userid
+				AND ro.snapid = $1
+			LEFT JOIN statsrepo.statement st
+				ON we.dbid = st.dbid
+				AND we.userid = st.userid
+				AND we.queryid = st.queryid
+				AND st.snapid = $1
+			WHERE
+				statsrepo.sub(we.count, wb.count) <> 0
+				AND we.snapid = $2
+			WINDOW w AS (PARTITION BY we.queryid, we.dbid, we.userid, we.backend_type) -- don't use order by to work partial summation properly
+			ORDER BY we.queryid, we.dbid, we.userid, we.backend_type, statsrepo.sub(we.count, wb.count) DESC
+			) t
+		WINDOW ww AS (PARTITION BY queryid, dbid, userid, backend_type)) tt
+	WHERE tt.row_number <= 10
+;
+$$
+LANGUAGE sql;
+
+CREATE FUNCTION statsrepo.get_wait_sampling_by_instid(
+	IN snapid_begin bigint,
+	IN snapid_end bigint,
+	OUT event_type text,
+	OUT event text,
+	OUT count bigint,
+	OUT ratio numeric,
+	OUT row_number integer
+) RETURNS SETOF record AS
+$$
+SELECT *
+FROM
+	(SELECT *,
+		ROW_NUMBER() OVER ww
+	FROM
+		(SELECT
+			event_type,
+			event,
+			cnt,
+			cnt * 100 / pg_catalog.sum(cnt) OVER w
+		FROM
+			(SELECT
+				we.event_type AS event_type,
+				we.event AS event,
+				pg_catalog.sum(statsrepo.sub(we.count, wb.count)) AS cnt
+			FROM
+				statsrepo.wait_sampling we LEFT JOIN statsrepo.wait_sampling wb
+					ON wb.dbid = we.dbid
+					AND wb.userid = we.userid
+					AND wb.queryid = we.queryid
+					AND wb.backend_type = we.backend_type
+					AND wb.event_type = we.event_type
+					AND wb.event = we.event
+					AND wb.snapid = $1
+			WHERE
+				statsrepo.sub(we.count, wb.count) <> 0
+				AND we.snapid = $2
+			GROUP BY we.event_type, we.event
+			) t
+		WINDOW w AS ()
+		)tt
+	WINDOW ww AS (ORDER BY cnt DESC)
+	) ttt
+WHERE ttt.row_number <= 10
+;
+$$
+LANGUAGE sql;
+
+CREATE FUNCTION statsrepo.get_wait_sampling_by_dbid(
+	IN snapid_begin bigint,
+	IN snapid_end bigint,
+	OUT dbid bigint,
+	OUT database text,
+	OUT event_type text,
+	OUT event text,
+	OUT count bigint,
+	OUT ratio numeric,
+	OUT row_number integer
+) RETURNS SETOF record AS
+$$
+SELECT *
+FROM
+	(SELECT *,
+		ROW_NUMBER() OVER ww
+	FROM
+		(SELECT
+			dbid,
+			database,
+			event_type,
+			event,
+			cnt,
+			cnt * 100 / pg_catalog.sum(cnt) OVER w
+		FROM
+			(SELECT
+				we.dbid AS dbid,
+				db.name AS database,
+				we.event_type AS event_type,
+				we.event AS event,
+				pg_catalog.sum(statsrepo.sub(we.count, wb.count)) AS cnt
+			FROM
+				statsrepo.wait_sampling we LEFT JOIN statsrepo.wait_sampling wb
+					ON wb.dbid = we.dbid
+					AND wb.userid = we.userid
+					AND wb.queryid = we.queryid
+					AND wb.backend_type = we.backend_type
+					AND wb.event_type = we.event_type
+					AND wb.event = we.event
+					AND wb.snapid = $1
+			LEFT JOIN statsrepo.database db
+				ON we.dbid = db.dbid
+				AND db.snapid = $1
+			WHERE
+				statsrepo.sub(we.count, wb.count) <> 0
+				AND we.snapid = $2
+			GROUP BY we.dbid, db.name, we.event_type, we.event
+			) t
+		WINDOW w AS (PARTITION BY t.dbid)
+		) tt
+	WINDOW ww AS (PARTITION BY tt.dbid ORDER BY cnt DESC)
+	) ttt
+WHERE ttt.row_number <= 10
+;
 $$
 LANGUAGE sql;
 
