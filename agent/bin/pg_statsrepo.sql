@@ -4023,7 +4023,8 @@ $$
 			WINDOW w AS (PARTITION BY we.queryid, we.dbid, we.userid, we.backend_type) -- don't use order by to work partial summation properly
 			ORDER BY we.queryid, we.dbid, we.userid, we.backend_type, statsrepo.sub(we.count, wb.count) DESC
 			) t
-		WINDOW ww AS (PARTITION BY queryid, dbid, userid, backend_type)) tt
+		WINDOW ww AS (PARTITION BY queryid, dbid, userid, backend_type)
+		) tt
 	WHERE tt.row_number <= 10
 ;
 $$
