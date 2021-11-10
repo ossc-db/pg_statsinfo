@@ -530,7 +530,7 @@ LogStore_exec(LogStore *log_store, PGconn *conn, const char *instid)
 	foreach(cell, log_buffer.logs)
 	{
 		LogData		*log = (LogData *) lfirst(cell);
-		const char	*params[25];
+		const char	*params[27];
 
 		params[0] = instid;
 		params[1] = GET_FIELD(log, 0);				/* timestamp */
@@ -555,16 +555,10 @@ LogStore_exec(LogStore *log_store, PGconn *conn, const char *instid)
 		params[20] = GET_FIELD(log, 19);			/* user_query */
 		params[21] = GET_FIELD(log, 20);			/* user_query_pos */
 		params[22] = GET_FIELD(log, 21);			/* error_location */
-#if PG_VERSION_NUM >= 90000
 		params[23] = GET_FIELD(log, 22);			/* application_name */
-#else
-		params[23] = NULL;							/* application_name */
-#endif
-#if PG_VERSION_NUM >= 130000
 		params[24] = GET_FIELD(log, 23);			/* backend_type */
-#else
-		params[24] = NULL;							/* backend_type */
-#endif
+		params[25] = GET_FIELD(log, 24);			/* leader_pid */
+		params[26] = GET_FIELD(log, 25);			/* query_id */
 
 		if (pgut_command(conn, SQL_INSERT_LOG, lengthof(params), params) != PGRES_COMMAND_OK)
 			goto error;

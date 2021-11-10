@@ -544,7 +544,7 @@ Snap_exec(Snap *snap, PGconn *conn, const char *instid)
 
 		if (snap->alert_logging)
 		{
-			const char *fields[25];
+			const char *fields[27];
 
 			memset(fields, 0, sizeof(fields));
 			fields[0] = instid;

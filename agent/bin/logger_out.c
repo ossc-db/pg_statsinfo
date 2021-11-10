@@ -429,6 +429,15 @@ appendLogLinePrefix(const Log *log, const char *prefix, StringInfo buf)
 			case 'e':
 				appendStringInfoString(buf, log->sqlstate);
 				break;
+			case 'b':
+				appendStringInfoString(buf, log->backend_type);
+				break;
+			case 'P':
+				appendStringInfoString(buf, log->leader_pid);
+				break;
+			case 'Q':
+				appendStringInfoString(buf, log->query_id);
+				break;
 			case '%':
 				appendStringInfoChar(buf, '%');
 				break;
