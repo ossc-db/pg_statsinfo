@@ -4023,11 +4023,10 @@ $$
 			LEFT JOIN statsrepo.role ro
 				ON we.userid = ro.userid
 				AND ro.snapid = $1
-			LEFT JOIN statsrepo.statement st
+			LEFT JOIN (SELECT * FROM statsrepo.get_query_activity_statements($1, $2)) st
 				ON we.dbid = st.dbid
 				AND we.userid = st.userid
 				AND we.queryid = st.queryid
-				AND st.snapid = $1
 			WHERE
 				statsrepo.sub(we.count, wb.count) <> 0
 				AND we.snapid = $2
