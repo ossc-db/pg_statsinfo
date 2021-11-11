@@ -3982,21 +3982,32 @@ CREATE FUNCTION statsrepo.get_wait_sampling(
 $$
 	SELECT *
 	FROM
-		(SELECT *,
+		(SELECT
+			queryid,
+			dbid,
+			userid,
+			database,
+			role,
+			backend_type,
+			event_type,
+			event,
+			cnt,
+			ratio::numeric(6,3),
+			query,
 			ROW_NUMBER() OVER ww
 		FROM
 			(SELECT
-				we.queryid,
-				we.dbid,
-				we.userid,
-				db.name,
-				ro.name,
-				we.backend_type,
-				we.event_type,
-				we.event,
-				statsrepo.sub(we.count, wb.count),
-				statsrepo.sub(we.count, wb.count) * 100 / pg_catalog.sum(statsrepo.sub(we.count, wb.count)) OVER w,
-				st.query
+				we.queryid AS queryid,
+				we.dbid AS dbid,
+				we.userid AS userid,
+				db.name AS database,
+				ro.name AS role,
+				we.backend_type AS backend_type,
+				we.event_type AS event_type,
+				we.event AS event,
+				statsrepo.sub(we.count, wb.count) AS cnt,
+				statsrepo.sub(we.count, wb.count) * 100 / pg_catalog.sum(statsrepo.sub(we.count, wb.count)) OVER w AS ratio,
+				st.query AS query
 			FROM
 				statsrepo.wait_sampling we LEFT JOIN statsrepo.wait_sampling wb
 					ON wb.dbid = we.dbid
@@ -4021,9 +4032,8 @@ $$
 				statsrepo.sub(we.count, wb.count) <> 0
 				AND we.snapid = $2
 			WINDOW w AS (PARTITION BY we.queryid, we.dbid, we.userid, we.backend_type) -- don't use order by to work partial summation properly
-			ORDER BY we.queryid, we.dbid, we.userid, we.backend_type, statsrepo.sub(we.count, wb.count) DESC
 			) t
-		WINDOW ww AS (PARTITION BY queryid, dbid, userid, backend_type)
+		WINDOW ww AS (PARTITION BY queryid, dbid, userid, backend_type ORDER BY cnt DESC)
 		) tt
 	WHERE tt.row_number <= 10
 ;
@@ -4042,14 +4052,18 @@ CREATE FUNCTION statsrepo.get_wait_sampling_by_instid(
 $$
 SELECT *
 FROM
-	(SELECT *,
+	(SELECT
+		event_type,
+		event,
+		cnt,
+		ratio::numeric(6,3),
 		ROW_NUMBER() OVER ww
 	FROM
 		(SELECT
 			event_type,
 			event,
 			cnt,
-			cnt * 100 / pg_catalog.sum(cnt) OVER w
+			cnt * 100 / pg_catalog.sum(cnt) OVER w AS ratio
 		FROM
 			(SELECT
 				we.event_type AS event_type,
@@ -4092,7 +4106,13 @@ CREATE FUNCTION statsrepo.get_wait_sampling_by_dbid(
 $$
 SELECT *
 FROM
-	(SELECT *,
+	(SELECT
+		dbid,
+		database,
+		event_type,
+		event,
+		cnt,
+		ratio::numeric(6,3),
 		ROW_NUMBER() OVER ww
 	FROM
 		(SELECT
@@ -4101,7 +4121,7 @@ FROM
 			event_type,
 			event,
 			cnt,
-			cnt * 100 / pg_catalog.sum(cnt) OVER w
+			cnt * 100 / pg_catalog.sum(cnt) OVER w AS ratio
 		FROM
 			(SELECT
 				we.dbid AS dbid,
