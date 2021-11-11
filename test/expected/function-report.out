@@ -472,6 +472,15 @@ DateTime          XID Increase
 2012-11-01 00:02            15
 2012-11-01 00:03             4
 
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
 ---------------------------------------------
@@ -521,6 +530,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -572,6 +590,15 @@ DateTime          XID Increase
 2012-11-01 00:02            15
 2012-11-01 00:03             4
 
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
 ---------------------------------------------
@@ -622,6 +649,15 @@ DateTime          XID Increase
 2012-11-01 00:02            15
 2012-11-01 00:03             4
 
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
 ---------------------------------------------
@@ -671,6 +707,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5437)
@@ -726,6 +771,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 exit: 0
 
@@ -3044,6 +3098,15 @@ DateTime          XID Increase
 2012-11-01 00:02            15
 2012-11-01 00:03             4
 
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
+
 ----------------------------------------
 /* OS Resource Usage */
 ----------------------------------------
@@ -3448,6 +3511,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -3854,6 +3926,15 @@ DateTime          XID Increase
 2012-11-01 00:02            15
 2012-11-01 00:03             4
 
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
+
 ----------------------------------------
 /* OS Resource Usage */
 ----------------------------------------
@@ -4259,6 +4340,15 @@ DateTime          XID Increase
 2012-11-01 00:02            15
 2012-11-01 00:03             4
 
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
+
 ----------------------------------------
 /* OS Resource Usage */
 ----------------------------------------
@@ -4663,6 +4753,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -5073,6 +5172,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -5700,6 +5808,15 @@ DateTime          XID Increase
 2012-11-01 00:00         21636
 2012-11-01 00:00            15
 2012-11-01 00:00             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ----------------------------------------
 /* OS Resource Usage */
