@@ -4009,24 +4009,25 @@ $$
 				statsrepo.sub(we.count, wb.count) * 100 / pg_catalog.sum(statsrepo.sub(we.count, wb.count)) OVER w AS ratio,
 				st.query AS query
 			FROM
-				statsrepo.wait_sampling we LEFT JOIN statsrepo.wait_sampling wb
-					ON wb.dbid = we.dbid
-					AND wb.userid = we.userid
-					AND wb.queryid = we.queryid
-					AND wb.backend_type = we.backend_type
-					AND wb.event_type = we.event_type
-					AND wb.event = we.event
-					AND wb.snapid = $1
+				statsrepo.get_query_activity_statements($1, $2) st
+			RIGHT JOIN statsrepo.wait_sampling we
+				ON we.dbid = st.dbid
+				AND we.userid = st.userid
+				AND we.queryid = st.queryid
+			LEFT JOIN statsrepo.wait_sampling wb
+				ON wb.dbid = we.dbid
+				AND wb.userid = we.userid
+				AND wb.queryid = we.queryid
+				AND wb.backend_type = we.backend_type
+				AND wb.event_type = we.event_type
+				AND wb.event = we.event
+				AND wb.snapid = $1
 			LEFT JOIN statsrepo.database db
 				ON we.dbid = db.dbid
 				AND db.snapid = $1
 			LEFT JOIN statsrepo.role ro
 				ON we.userid = ro.userid
 				AND ro.snapid = $1
-			LEFT JOIN (SELECT * FROM statsrepo.get_query_activity_statements($1, $2)) st
-				ON we.dbid = st.dbid
-				AND we.userid = st.userid
-				AND we.queryid = st.queryid
 			WHERE
 				statsrepo.sub(we.count, wb.count) <> 0
 				AND we.snapid = $2
