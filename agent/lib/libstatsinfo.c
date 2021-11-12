@@ -4727,11 +4727,16 @@ pgws_entry_dealloc(void)
 	pgwsEntry  *entry;
 	int		     nvictims;
 	int		     i;
+	int		     j;
 	HTAB		*hash_tmp;
 	HASHCTL		ctl_tmp;
 	pgwsSubEntry  *subentry;
 	pgwsSubEntry  item;
 	bool		  found;
+	double		  usage_tie;
+	uint64		  queryid_tie;
+	Oid			  userid_tie;
+	Oid			  dbid_tie;
 
 	/*
 	 * Sort entries by usage and deallocate USAGE_DEALLOC_PERCENT of them.
@@ -4744,6 +4749,14 @@ pgws_entry_dealloc(void)
 	ctl_tmp.match = pgws_sub_match_fn;
 	ctl_tmp.keysize = sizeof(pgwsSubHashKey);
 	ctl_tmp.entrysize = sizeof(pgwsSubEntry);
+	/*
+	 * hash_tmp is contraction of pgws_hash
+	 * to reduce the dimension
+	 * applied to fields (backend_type, wait_event_info)
+	 * Choosing victims in terms of each (userid, dbid, queryid)
+	 * is a election that should work something like limit .. with tie
+	 * because of consistency with pg_stat_statements.
+	 */
 	hash_tmp = hash_create("temporary table to find victims of pgws_hash",
 							pgws_max,
 							&ctl_tmp,
@@ -4766,30 +4779,45 @@ pgws_entry_dealloc(void)
 			subentry->usage = entry->counters.usage;
 	}
 
-	/*
-	 * replace usage by maximum value in each (userid, dbid, queryid)
-	 * in order to dealloc properly consistent with pg_stat_statements
-	 */
-	for (i = 0; entries[i]; i++)
+	Assert(hash_get_num_entries(pgws_hash) == i);
+
+	for (j = 0; j < i; j++)
 	{
-		item.key.userid = entries[i]->key.userid;
-		item.key.dbid = entries[i]->key.dbid;
-		item.key.queryid = entries[i]->key.queryid;
+		item.key.userid = entries[j]->key.userid;
+		item.key.dbid = entries[j]->key.dbid;
+		item.key.queryid = entries[j]->key.queryid;
 		subentry = (pgwsSubEntry *) hash_search(hash_tmp, &item, HASH_FIND, NULL);
 		if (!subentry)
 			elog(WARNING, "There is a missing item in hash_tmp");
-		else if (entries[i]->counters.usage < subentry->usage)
-			entries[i]->counters.usage = subentry->usage;
+		else if (entries[j]->counters.usage < subentry->usage)
+			entries[j]->counters.usage = subentry->usage;
 	}
 
+	/* order by usage, queryid, userid, dbid */
 	qsort(entries, i, sizeof(pgwsEntry *), pgws_entry_cmp);
 
 	nvictims = Max(10, i * STATSINFO_USAGE_DEALLOC_PERCENT / 100);
 	nvictims = Min(nvictims, i);
 
-	for (i = 0; i < nvictims; i++)
+	for (j = 0; j < nvictims; j++)
 	{
-		hash_search(pgws_hash, &entries[i]->key, HASH_REMOVE, NULL);
+		hash_search(pgws_hash, &entries[j]->key, HASH_REMOVE, NULL);
+	}
+
+	usage_tie = entries[nvictims - 1]->counters.usage;
+	queryid_tie = entries[nvictims - 1]->key.queryid;
+	userid_tie = entries[nvictims - 1]->key.userid;
+	dbid_tie = entries[nvictims - 1]->key.dbid;
+
+	for (j = nvictims; j < i; j++)
+	{
+		if (usage_tie == entries[j]->counters.usage &&
+			queryid_tie == entries[j]->key.queryid &&
+			userid_tie == entries[j]->key.userid &&
+			dbid_tie == entries[j]->key.dbid)
+			hash_search(pgws_hash, &entries[j]->key, HASH_REMOVE, NULL);
+		else
+			break;
 	}
 
 	/* Increment the number of times entries are deallocated */
@@ -4832,15 +4860,36 @@ pgws_sub_match_fn(const void *key1, const void *key2, Size keysize)
 static int
 pgws_entry_cmp(const void *lhs, const void *rhs)
 {
-	uint64		l_count = (*(pgwsEntry *const *) lhs)->counters.usage;
-	uint64		r_count = (*(pgwsEntry *const *) rhs)->counters.usage;
+	double		l_usage = (*(pgwsEntry *const *) lhs)->counters.usage;
+	double		r_usage = (*(pgwsEntry *const *) rhs)->counters.usage;
+	uint64		l_queryid = (*(pgwsEntry *const *) lhs)->key.queryid;
+	uint64		r_queryid = (*(pgwsEntry *const *) rhs)->key.queryid;
+	Oid			l_userid = (*(pgwsEntry *const *) lhs)->key.userid;
+	Oid			r_userid = (*(pgwsEntry *const *) rhs)->key.userid;
+	Oid			l_dbid = (*(pgwsEntry *const *) lhs)->key.dbid;
+	Oid			r_dbid = (*(pgwsEntry *const *) rhs)->key.dbid;
 
-	if (l_count < r_count)
+	if (l_usage < r_usage)
 		return -1;
-	else if (l_count > r_count)
+	else if (l_usage > r_usage)
 		return +1;
-	else
-		return 0;
+
+	if (l_queryid < r_queryid)
+		return -1;
+	else if (l_queryid > r_queryid)
+		return +1;
+
+	if (l_userid < r_userid)
+		return -1;
+	else if (l_userid > r_userid)
+		return +1;
+
+	if (l_dbid < r_dbid)
+		return -1;
+	else if (l_dbid > r_dbid)
+		return +1;
+	
+	return 0;
 }
 
 /*
