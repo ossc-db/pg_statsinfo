@@ -566,10 +566,11 @@ EOF
 pg_ctl restart -w -D ${PGDATA} -o "-p ${PGPORT}" > /dev/null
 sleep 3
 psql -c "CREATE EXTENSION pg_stat_statements"
-psql db01 -U user01 -At << EOF > /dev/null
-SELECT schema01.func01('yyy', 25);
-SELECT schema01.func01('zzz', 32);
-EOF
+for i in  {1..200}
+do
+	sql="SELECT schema01.func01('zzz${i}', ${i})"
+	psql db01 -U user01 -Atc "${sql}" > /dev/null
+done
 get_snapshot
 send_query << EOF
 SELECT
