@@ -145,8 +145,16 @@ extern char		   *repolog_nologging_users;
 extern int			controlfile_fsync_interval;
 /*---- GUC variables (writer) ----------*/
 extern char		   *repository_server;
+/*---- GUC variables (wait event sampling collector) ----------*/
 extern bool		   profile_queries;
 extern int		   profile_max;
+extern bool		   profile_save;
+/*---- GUC variables (rusage) ----------*/
+extern bool			rusage_save;
+extern int			rusage_max;
+extern int			rusage_track;
+extern bool			rusage_track_planning;
+extern bool			rusage_track_utility;
 /*---- message format ----*/
 extern char		   *msg_debug;
 extern char		   *msg_info;
@@ -234,6 +242,14 @@ typedef struct Log
 	const char *leader_pid;
 	const char *query_id;
 } Log;
+
+typedef enum
+{
+    STATSINFO_RUSAGE_TRACK_NONE,    /* track no statements */
+    STATSINFO_RUSAGE_TRACK_TOP,  /* only top level statements */
+    STATSINFO_RUSAGE_TRACK_ALL    /* all statements, including nested ones */
+}   STATSINFO_RUSAGE_TrackLevel;
+
 
 /* Contents of pg_statsinfo.control */
 typedef struct ControlFile

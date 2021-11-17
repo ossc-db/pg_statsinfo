@@ -34,7 +34,7 @@ PG_MODULE_MAGIC;
 pgwsSharedState *pgws = NULL;
 extern bool profile_queries;
 extern int pgws_max;
-extern bool	pgws_save;
+extern bool	profile_save;
 extern HTAB			*pgws_hash;
 
 /* Module callbacks */
@@ -119,7 +119,7 @@ pgws_shmem_shutdown(int code, Datum arg)
 		return;
 
 	/* Don't dump if told not to. */
-	if (!pgws_save)
+	if (!profile_save)
 		return;
 
 	file = AllocateFile(STATSINFO_WS_DUMP_FILE ".tmp", PG_BINARY_W);
@@ -220,7 +220,7 @@ attatch_shmem(void)
 	if (found)
 		return;
 
-	if (!pgws_save)
+	if (!profile_save)
 		return;
 
 	file = AllocateFile(STATSINFO_WS_DUMP_FILE, PG_BINARY_R);	

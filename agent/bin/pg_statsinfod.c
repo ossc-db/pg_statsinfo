@@ -79,10 +79,16 @@ char		   *repolog_nologging_users;
 int				controlfile_fsync_interval;
 /*---- GUC variables (writer) ----------*/
 char		   *repository_server;
-/*---- GUC variables (wait sampling) ----------*/
+/*---- GUC variables (wait event sampling collector) ----------*/
 bool		   profile_queries;
 int			   profile_max;
-bool			pgws_save;
+bool			profile_save;
+/*---- GUC variables (rusage) ----------*/
+bool			rusage_save;
+int				rusage_max;
+int				rusage_track;
+bool			rusage_track_planning;
+bool			rusage_track_utility;
 /*---- message format ----*/
 char		   *msg_debug;
 char		   *msg_info;
@@ -129,6 +135,7 @@ static bool assign_string(const char *value, void *var);
 static bool assign_bool(const char *value, void *var);
 static bool assign_time(const char *value, void *var);
 static bool assign_enable_maintenance(const char *value, void *var);
+static bool assign_ru_track(const char *value, void *var);
 static void readopt(void);
 static bool decode_time(const char *field, int *hour, int *min, int *sec);
 static int strtoi(const char *nptr, char **endptr, int base);
@@ -197,9 +204,14 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".target_server", assign_string, &target_server},
 	{GUC_PREFIX ".profile_queries", assign_bool, &profile_queries},
 	{GUC_PREFIX ".profile_max", assign_int, &profile_max},
-	{GUC_PREFIX ".profile_save", assign_bool, &pgws_save},
+	{GUC_PREFIX ".profile_save", assign_bool, &profile_save},
 	{GUC_PREFIX ".collect_column", assign_bool, &collect_column},
 	{GUC_PREFIX ".collect_index", assign_bool, &collect_index},
+	{GUC_PREFIX ".rusage_save", assign_bool, &rusage_save},
+	{GUC_PREFIX ".rusage_max", assign_int, &rusage_max},
+	{GUC_PREFIX ".rusage_track", assign_ru_track, &rusage_track},
+	{GUC_PREFIX ".rusage_track_planning", assign_bool, &rusage_track_planning},
+	{GUC_PREFIX ".rusage_track_utility", assign_bool, &rusage_track_utility},
 	{":debug", assign_string, &msg_debug},
 	{":info", assign_string, &msg_info},
 	{":notice", assign_string, &msg_notice},
@@ -675,6 +687,45 @@ assign_enable_maintenance(const char *value, void *var)
 			mode |= MAINTENANCE_MODE_LOG;
 		else if (pg_strcasecmp(tok, "repolog") == 0)
 			mode |= MAINTENANCE_MODE_REPOLOG;
+		else
+		{
+			free(rawstring);
+			return false;
+		}
+		tok = strtok(NULL, ",");
+	}
+
+	free(rawstring);
+	*(int *) var = mode;
+	return true;
+}
+
+static bool
+assign_ru_track(const char *value, void *var)
+{
+	char	*rawstring;
+	char	*tok;
+	int		 mode = STATSINFO_RUSAGE_TRACK_TOP;
+	int		 tok_len;
+
+	rawstring = pgut_strdup(value);
+	tok = strtok(rawstring, ",");
+	while (tok)
+	{
+		/* trim leading and trailing whitespace */
+		while (*tok && isspace((unsigned char) *tok))
+			tok++;
+		tok_len = strlen(tok);
+		while (tok_len > 0 && isspace((unsigned char) tok[tok_len - 1]))
+			tok_len--;
+		tok[tok_len] = '\0';
+
+		if (pg_strcasecmp(tok, "none") == 0)
+			mode = STATSINFO_RUSAGE_TRACK_NONE;
+		else if (pg_strcasecmp(tok, "top") == 0)
+			mode = STATSINFO_RUSAGE_TRACK_TOP;
+		else if (pg_strcasecmp(tok, "all") == 0)
+			mode = STATSINFO_RUSAGE_TRACK_ALL;
 		else
 		{
 			free(rawstring);
