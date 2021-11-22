@@ -482,13 +482,41 @@ do_connect(PGconn **conn, const char *info, const char *schema)
 /*
  * Connect to the database and install schema if not installed yet.
  * Returns the same value with *conn.
+ * TODO: currently, this function almost same as do_conect().
+ * We perform PQping() if PQstatus() return CONNECTION_BAD or others
+ * only do_wait_events_connect().
+ * But this might be  uselful for do_connect().
+ *
+ * The reason for performing PQping() is describe following.
+ * 1. The collector is performing sample_wait_events()
+ * 2. postgres had received shutdown request at the same time.
+ * 3. 1.is failed due to forced abort. (this generate fetal msg, but OK)
+ * 4. The collector try to do_wait_events_connect() again due to the high
+ *    frequency sampling.
+ *    We expect that collector see the SHUTDOWN_REQUESTED, but there is a 
+ *    high probability that it will slip through this check.
+ * 5. collector try to pgut_connect() again, and error happens.
+ * PQping() will avoid attempting to connect at 5.
  */
 PGconn *
 do_wait_events_connect(PGconn **conn, const char *info, const char *schema)
 {
 	/* skip reconnection if connected to the database already */
 	if (PQstatus(*conn) == CONNECTION_OK)
+	{
 		return *conn;
+	}
+	else
+	{
+		/* If we got failed previous sample_wait_events() because of shutdown 
+		 * or some troubles, we catch CONNECTION_BAD here.
+		 * Ping for connection at this point for avoiding useless connection
+		 * attempts after this.
+		 */
+		if (PQping(info) != PQPING_OK)
+			/* return NULL quickly. */
+			return NULL;	
+	}
 
 	pgut_disconnect(*conn);
 	*conn = pgut_connect(info, NO, ERROR);
