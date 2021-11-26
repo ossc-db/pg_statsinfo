@@ -21,12 +21,12 @@ send_query -qf "$(pg_config --sharedir)/contrib/pg_statsrepo.sql"
 send_query -c "SELECT statsrepo.create_snapshot_partition('2012-11-01')" > /dev/null
 send_query -qf ${INPUTDATA_REPOSITORY}
 send_query << EOF > /dev/null
-SELECT statsrepo.input_data(1, '5807946214009601530', 'statsinfo', 5432, '9.2.0', 1);
-SELECT statsrepo.input_data(2, '5807946214009601531', 'statsinfo', 5433, '9.3.0', 5);
-SELECT statsrepo.input_data(3, '5807946214009601532', 'statsinfo', 5434, '9.4.0', 9);
-SELECT statsrepo.input_data(4, '5807946214009601533', 'statsinfo', 5435, '9.5.0', 13);
-SELECT statsrepo.input_data(5, '5807946214009601534', 'statsinfo', 5436, '9.6.0', 17);
-SELECT statsrepo.input_data(6, '5807946214009601535', 'statsinfo', 5437, '140000', 21);
+SELECT statsrepo.input_data(1, '5807946214009601530', 'statsinfo', 5432, '14.0', 1);
+SELECT statsrepo.input_data(2, '5807946214009601531', 'statsinfo', 5433, '14.1', 5);
+SELECT statsrepo.input_data(3, '5807946214009601532', 'statsinfo', 5434, '14.2', 9);
+SELECT statsrepo.input_data(4, '5807946214009601533', 'statsinfo', 5435, '14.3', 13);
+SELECT statsrepo.input_data(5, '5807946214009601534', 'statsinfo', 5436, '14.4', 17);
+SELECT statsrepo.input_data(6, '5807946214009601535', 'statsinfo', 5437, '14.5', 21);
 EOF
 
 echo "/*---- Create report ----*/"

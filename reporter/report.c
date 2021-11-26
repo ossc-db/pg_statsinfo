@@ -426,22 +426,11 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 		fprintf(out, "Block Read/s (disk+cache)  : %s\n", PQgetvalue(res, i, 6));
 		fprintf(out, "Block Read/s (disk)        : %s\n", PQgetvalue(res, i, 7));
 		fprintf(out, "Rows Read/s                : %s\n", PQgetvalue(res, i, 8));
-		if (scope->version >= 90200)
-		{
-			fprintf(out, "Temporary Files            : %s\n", PQgetvalue(res, i, 9));
-			fprintf(out, "Temporary Bytes            : %s MiB\n", PQgetvalue(res, i, 10));
-			fprintf(out, "Deadlocks                  : %s\n", PQgetvalue(res, i, 11));
-			fprintf(out, "Block Read Time            : %s ms\n", PQgetvalue(res, i, 12));
-			fprintf(out, "Block Write Time           : %s ms\n\n", PQgetvalue(res, i, 13));
-		}
-		else
-		{
-			fprintf(out, "Temporary Files            : (N/A)\n");
-			fprintf(out, "Temporary Bytes            : (N/A)\n");
-			fprintf(out, "Deadlocks                  : (N/A)\n");
-			fprintf(out, "Block Read Time            : (N/A)\n");
-			fprintf(out, "Block Write Time           : (N/A)\n\n");
-		}
+		fprintf(out, "Temporary Files            : %s\n", PQgetvalue(res, i, 9));
+		fprintf(out, "Temporary Bytes            : %s MiB\n", PQgetvalue(res, i, 10));
+		fprintf(out, "Deadlocks                  : %s\n", PQgetvalue(res, i, 11));
+		fprintf(out, "Block Read Time            : %s ms\n", PQgetvalue(res, i, 12));
+		fprintf(out, "Block Write Time           : %s ms\n\n", PQgetvalue(res, i, 13));
 	}
 	PQclear(res);
 
@@ -512,21 +501,19 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 		"Conflict Snapshot", "Conflict Bufferpin", "Conflict Deadlock");
 	fprintf(out, "-----------------------------------------------------------------------------------------------------------------\n");
 
-	if (scope->version >= 90100)
+	res = pgut_execute(conn, SQL_SELECT_RECOVERY_CONFLICTS, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
 	{
-		res = pgut_execute(conn, SQL_SELECT_RECOVERY_CONFLICTS, lengthof(params), params);
-		for(i = 0; i < PQntuples(res); i++)
-		{
-			fprintf(out, "%-16s  %19s  %13s  %17s  %18s  %17s\n",
-				PQgetvalue(res, i, 0),
-				PQgetvalue(res, i, 1),
-				PQgetvalue(res, i, 2),
-				PQgetvalue(res, i, 3),
-				PQgetvalue(res, i, 4),
-				PQgetvalue(res, i, 5));
-		}
-		PQclear(res);
+		fprintf(out, "%-16s  %19s  %13s  %17s  %18s  %17s\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1),
+			PQgetvalue(res, i, 2),
+			PQgetvalue(res, i, 3),
+			PQgetvalue(res, i, 4),
+			PQgetvalue(res, i, 5));
 	}
+	PQclear(res);
+
 	fprintf(out, "\n");
 }
 
@@ -561,14 +548,14 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 		fprintf(out, "WAL Write Speed    : (N/A)\n");
 	else
 		fprintf(out, "WAL Write Speed    : %s MiB/s\n", PQgetvalue(res, 0, 1));
-	if (scope->version >= 90400 && !PQgetisnull(res, 0, 2))
-		fprintf(out, "WAL Archive Total  : %s file(s)\n", PQgetvalue(res, 0, 2));
-	else
+	if (PQgetisnull(res, 0, 2))
 		fprintf(out, "WAL Archive Total  : (N/A)\n");
-	if (scope->version >= 90400 && !PQgetisnull(res, 0, 3))
-		fprintf(out, "WAL Archive Failed : %s file(s)\n\n", PQgetvalue(res, 0, 3));
 	else
+		fprintf(out, "WAL Archive Total  : %s file(s)\n", PQgetvalue(res, 0, 2));
+	if (PQgetisnull(res, 0, 3))
 		fprintf(out, "WAL Archive Failed : (N/A)\n\n");
+	else
+		fprintf(out, "WAL Archive Failed : %s file(s)\n\n", PQgetvalue(res, 0, 3));
 	PQclear(res);
 
 	fprintf(out, "-----------------------------------\n");
@@ -585,35 +572,32 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 			PQgetvalue(res, i, 2),
 			PQgetvalue(res, i, 3),
 			PQgetvalue(res, i, 4),
-			scope->version >= 90400 ? PQgetvalue(res, i, 5) : "(N/A)");
+			PQgetvalue(res, i, 5));
 	}
 	fprintf(out, "\n");
 	PQclear(res);
 	
-	if (scope->version >= 140000 )
-	{
-		fprintf(out, "----------------------------------------\n");
-		fprintf(out, "%13s  %11s  %12s  %16s  %12s  %12s  %14s  %13s  %-20s\n",
-			"Wal Records", "Wal Fpi", "Wal Bytes", "Wal Buffers Full", "Wal write" , "Wal Sync" , "Wal write Time" , "Wal Sync Time" , "Wal Reset");
-		fprintf(out, "----------------------------------------------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "----------------------------------------\n");
+	fprintf(out, "%13s  %11s  %12s  %16s  %12s  %12s  %14s  %13s  %-20s\n",
+		"Wal Records", "Wal Fpi", "Wal Bytes", "Wal Buffers Full", "Wal write" , "Wal Sync" , "Wal write Time" , "Wal Sync Time" , "Wal Reset");
+	fprintf(out, "----------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
-		res = pgut_execute(conn, SQL_SELECT_STAT_WAL, lengthof(params), params);
-		for(i = 0; i < PQntuples(res); i++)
-		{
-			fprintf(out, "%13s  %11s  %12s  %16s  %12s  %12s  %11s ms  %10s ms  %-20s\n",
-				PQgetvalue(res, i, 0),
-				PQgetvalue(res, i, 1),
-				PQgetvalue(res, i, 2),
-				PQgetvalue(res, i, 3),
-				PQgetvalue(res, i, 4),
-				PQgetvalue(res, i, 5),
-				PQgetvalue(res, i, 6),
-				PQgetvalue(res, i, 7),
-				PQgetvalue(res, i, 8));
-		}
-		fprintf(out, "\n");
-		PQclear(res);
+	res = pgut_execute(conn, SQL_SELECT_STAT_WAL, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "%13s  %11s  %12s  %16s  %12s  %12s  %11s ms  %10s ms  %-20s\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1),
+			PQgetvalue(res, i, 2),
+			PQgetvalue(res, i, 3),
+			PQgetvalue(res, i, 4),
+			PQgetvalue(res, i, 5),
+			PQgetvalue(res, i, 6),
+			PQgetvalue(res, i, 7),
+			PQgetvalue(res, i, 8));
 	}
+	fprintf(out, "\n");
+	PQclear(res);
 
 	fprintf(out, "/** Instance Processes **/\n");
 	fprintf(out, "-----------------------------------\n");
@@ -1041,7 +1025,7 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 			PQgetvalue(res, i, 3),
 			PQgetvalue(res, i, 4),
 			PQgetvalue(res, i, 5),
-			scope->version >= 90400 ? PQgetvalue(res, i, 6) : "(N/A)",
+			PQgetvalue(res, i, 6),
 			PQgetvalue(res, i, 7),
 			PQgetvalue(res, i, 8),
 			PQgetvalue(res, i, 9),
@@ -1054,74 +1038,68 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-	if (scope->version >= 90200)
-	{
-		fprintf(out, "/** Vacuum I/O Statistics (Average) **/\n");
-		fprintf(out, "-----------------------------------\n");
-		fprintf(out, "%-40s  %10s  %10s  %10s  %13s  %13s  %14s  %14s\n",
-			"Table", "Page Hit", "Page Miss", "Page Dirty", "Read Rate", "Write Rate", "Read Duration", "Write Duration");
-		fprintf(out, "---------------------------------------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "/** Vacuum I/O Statistics (Average) **/\n");
+	fprintf(out, "-----------------------------------\n");
+	fprintf(out, "%-40s  %10s  %10s  %10s  %13s  %13s  %14s  %14s\n",
+		"Table", "Page Hit", "Page Miss", "Page Dirty", "Read Rate", "Write Rate", "Read Duration", "Write Duration");
+	fprintf(out, "---------------------------------------------------------------------------------------------------------------------------------------------\n");
 
-		res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_ACTIVITY2, lengthof(params), params);
-		for(i = 0; i < PQntuples(res); i++)
-		{
-			fprintf(out, "%-40s  %10s  %10s  %10s  %7s MiB/s  %7s MiB/s  %12s s  %12s s\n",
-				PQgetvalue(res, i, 0),
-				PQgetvalue(res, i, 1),
-				PQgetvalue(res, i, 2),
-				PQgetvalue(res, i, 3),
-				PQgetvalue(res, i, 4),
-				PQgetvalue(res, i, 5),
-				PQgetvalue(res, i, 6),
-				PQgetvalue(res, i, 7));
-		}
-		fprintf(out, "\n");
-		PQclear(res);
+	res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_ACTIVITY2, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "%-40s  %10s  %10s  %10s  %7s MiB/s  %7s MiB/s  %12s s  %12s s\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1),
+			PQgetvalue(res, i, 2),
+			PQgetvalue(res, i, 3),
+			PQgetvalue(res, i, 4),
+			PQgetvalue(res, i, 5),
+			PQgetvalue(res, i, 6),
+			PQgetvalue(res, i, 7));
 	}
+	fprintf(out, "\n");
+	PQclear(res);
 
-	if (scope->version >= 140000)
+	fprintf(out, "/** Vacuum WAL Statistics (Average) **/\n");
+	fprintf(out, "-----------------------------------\n");
+	fprintf(out, "%-40s  %8s %10s  %10s  %10s\n",
+		"Table", "Count", "WAL Records", "WAL FPIs", "WAL bytes" );
+	fprintf(out, "-----------------------------------------------------------------------------------------\n");
+	
+	res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_WAL_ACTIVITY, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "/** Vacuum WAL Statistics (Average) **/\n");
-		fprintf(out, "-----------------------------------\n");
-		fprintf(out, "%-40s  %8s %10s  %10s  %10s\n",
-			"Table", "Count", "WAL Records", "WAL FPIs", "WAL bytes" );
-		fprintf(out, "-----------------------------------------------------------------------------------------\n");
-		
-		res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_WAL_ACTIVITY, lengthof(params), params);
-		for(i = 0; i < PQntuples(res); i++)
-		{
-			fprintf(out, "%-40s  %8s  %10s  %10s  %10s\n",
-				PQgetvalue(res, i, 0),
-				PQgetvalue(res, i, 1),
-				PQgetvalue(res, i, 2),
-				PQgetvalue(res, i, 3),
-				PQgetvalue(res, i, 4));
-		}
-		fprintf(out, "\n");
-		PQclear(res);
+		fprintf(out, "%-40s  %8s  %10s  %10s  %10s\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1),
+			PQgetvalue(res, i, 2),
+			PQgetvalue(res, i, 3),
+			PQgetvalue(res, i, 4));
+	}
+	fprintf(out, "\n");
+	PQclear(res);
 
 
-		fprintf(out, "/** Vacuum Index Statistics (Average) **/\n");
-		fprintf(out, "-----------------------------------\n");
+	fprintf(out, "/** Vacuum Index Statistics (Average) **/\n");
+	fprintf(out, "-----------------------------------\n");
+	fprintf(out, "%-40s  %-32s  %8s  %13s  %13s  %13s  %13s\n",
+		"Table", "Index", "Count", "Page Total", "Page New Del", "Page Curr Del", "Page Reuse" );
+	fprintf(out, "---------------------------------------------------------------------------------------------------------------------------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_INDEX_ACTIVITY, lengthof(params), params);
+	for(i = 0; i < PQntuples(res); i++)
+	{
 		fprintf(out, "%-40s  %-32s  %8s  %13s  %13s  %13s  %13s\n",
-			"Table", "Index", "Count", "Page Total", "Page New Del", "Page Curr Del", "Page Reuse" );
-		fprintf(out, "---------------------------------------------------------------------------------------------------------------------------------------------------\n");
-
-		res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_INDEX_ACTIVITY, lengthof(params), params);
-		for(i = 0; i < PQntuples(res); i++)
-		{
-			fprintf(out, "%-40s  %-32s  %8s  %13s  %13s  %13s  %13s\n",
-				PQgetvalue(res, i, 0),
-				PQgetvalue(res, i, 1),
-				PQgetvalue(res, i, 2),
-				PQgetvalue(res, i, 3),
-				PQgetvalue(res, i, 4),
-				PQgetvalue(res, i, 5),
-				PQgetvalue(res, i, 6));
-		}
-		fprintf(out, "\n");
-		PQclear(res);
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 1),
+			PQgetvalue(res, i, 2),
+			PQgetvalue(res, i, 3),
+			PQgetvalue(res, i, 4),
+			PQgetvalue(res, i, 5),
+			PQgetvalue(res, i, 6));
 	}
+	fprintf(out, "\n");
+	PQclear(res);
 
 	fprintf(out, "/** Analyze Statistics **/\n");
 	fprintf(out, "-----------------------------------\n");
@@ -1141,7 +1119,7 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 			PQgetvalue(res, i, 4),
 			PQgetvalue(res, i, 5),
 			PQgetvalue(res, i, 6),
-			scope->version >= 90400 ? PQgetvalue(res, i, 7) : "(N/A)");
+			PQgetvalue(res, i, 7));
 	}
 	fprintf(out, "\n");
 	PQclear(res);
@@ -1199,16 +1177,8 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 		fprintf(out, "%8s  ", PQgetvalue(res, i, 6));
 		fprintf(out, "%10s sec  ", PQgetvalue(res, i, 7));
 		fprintf(out, "%9s sec  ", PQgetvalue(res, i, 8));
-		if (scope->version >= 90200)
-		{
-			fprintf(out, "%12s ms  ", PQgetvalue(res, i, 9));
-			fprintf(out, "%13s ms  ", PQgetvalue(res, i, 10));
-		}
-		else
-		{
-			fprintf(out, "%15s  ", "(N/A)");
-			fprintf(out, "%16s  ", "(N/A)");
-		}
+		fprintf(out, "%12s ms  ", PQgetvalue(res, i, 9));
+		fprintf(out, "%13s ms  ", PQgetvalue(res, i, 10));
 		fprintf(out, "%-s\n", PQgetvalue(res, i, 2));
 	}
 	fprintf(out, "\n");
