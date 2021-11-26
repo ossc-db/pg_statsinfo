@@ -80,11 +80,11 @@ pgut_init(int argc, char **argv)
 		pthread_mutex_init(&pgut_conn_mutex, NULL);
 #endif
 
-#if PG_VERSION_NUM >= 90000
+//(!)
 		/* application_name for 9.0 or newer versions */
 		if (getenv("PGAPPNAME") == NULL)
 			pgut_putenv("PGAPPNAME", PROGRAM_NAME);
-#endif
+//(!)
 
 		init_cancel_handler();
 		atexit(on_cleanup);
@@ -388,28 +388,28 @@ parse_time(const char *value, time_t *time)
 static char *
 prompt_for_password(void)
 {
-#if PG_VERSION_NUM >= 140000
+//(!)
 	char	*password;
 	password = simple_prompt("Password: ", false);
 	return password;
-#elif PG_VERSION_NUM >= 100000
-	char	*password;
 
-	password = pgut_malloc(100);
-	simple_prompt("Password: ", password, 100, false);
-	return password;
-#else
-	return simple_prompt("Password: ", 100, false);
-#endif
+//(!)
+
+
+
+
+
+
+
 }
 
-#if PG_VERSION_NUM < 80300
-static bool
-PQconnectionNeedsPassword(PGconn *conn)
-{
-	return strcmp(PQerrorMessage(conn), PQnoPasswordSupplied) == 0 && !feof(stdin);
-}
-#endif
+//(!)
+
+
+
+
+
+
 
 PGconn *
 pgut_connect(const char *info, YesNo prompt, int elevel)

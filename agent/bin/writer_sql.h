@@ -31,19 +31,19 @@ INSERT INTO statsrepo.activity VALUES \
 INSERT INTO statsrepo.xact VALUES \
 ($1, $2, $3, $4, $5, $6)"
 
-#if PG_VERSION_NUM >= 130000
+//(!)
 #define SQL_INSERT_STATEMENT "\
 INSERT INTO statsrepo.statement \
   SELECT (($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)::statsrepo.statement).* \
     FROM statsrepo.database d \
    WHERE d.snapid = $1 AND d.dbid = $2"
-#else
-#define SQL_INSERT_STATEMENT "\
-INSERT INTO statsrepo.statement \
-  SELECT (($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)::statsrepo.statement).* \
-    FROM statsrepo.database d \
-   WHERE d.snapid = $1 AND d.dbid = $2"
-#endif
+//(!)
+
+
+
+
+
+
 
 #define SQL_INSERT_PLAN "\
 INSERT INTO statsrepo.plan \

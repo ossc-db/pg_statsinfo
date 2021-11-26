@@ -52,16 +52,16 @@ init_log(Log *log, const char *buf, const size_t fields[])
 	log->user_query = buf + fields[i++];
 	log->user_query_pos = buf + fields[i++];
 	log->error_location = buf + fields[i++];
-#if PG_VERSION_NUM >= 90000
+//(!)
 	log->application_name = buf + fields[i++];
-#else
-	log->application_name = "";
-#endif
-#if PG_VERSION_NUM >= 130000
+//(!)
+
+
+
 	log->backend_type = buf + fields[i++];
-#else
-	log->backend_type = "";
-#endif
+//(!)
+
+
 	log->leader_pid = buf + fields[i++];
 	log->query_id = buf + fields[i++];
 	Assert(i == CSV_COLS);

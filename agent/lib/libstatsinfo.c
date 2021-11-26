@@ -38,34 +38,34 @@
 #include "utils/lsyscache.h"
 #include "utils/ps_status.h"
 
-#if PG_VERSION_NUM >= 90100
+//(!)
 #include "catalog/pg_collation.h"
-#endif
 
-#if PG_VERSION_NUM >= 90200
+//(!)
+
 #include "utils/timestamp.h"
 #include "utils/rel.h"
-#endif
 
-#if PG_VERSION_NUM >= 90300
+//(!)
+
 #include "access/htup_details.h"
 #include "postmaster/bgworker.h"
-#endif
 
-#if PG_VERSION_NUM >= 90400
+//(!)
+
 #include "postmaster/bgworker_internals.h"
-#endif
 
-#if PG_VERSION_NUM >= 100000
+//(!)
+
 #include "common/ip.h"
 #include "utils/varlena.h"
-#else
-#include "libpq/ip.h"
-#endif
 
-#if PG_VERSION_NUM >= 130000
+//(!)
+
+
+
 #include "access/table.h"
-#endif
+//(!)
 
 #include "pgut/pgut-be.h"
 #include "pgut/pgut-spi.h"
@@ -137,59 +137,59 @@
 	"%s starting: %s"
 
 /* log_checkpoint: complete */
-#if PG_VERSION_NUM >= 100000
+//(!)
 #define MSG_CHECKPOINT_COMPLETE \
 	"checkpoint complete: wrote %d buffers (%.1f%%); " \
 	"%d WAL file(s) added, %d removed, %d recycled; " \
 	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
 	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s; " \
 	"distance=%d kB, estimate=%d kB"
-#elif PG_VERSION_NUM >= 90500
-#define MSG_CHECKPOINT_COMPLETE \
-	"checkpoint complete: wrote %d buffers (%.1f%%); " \
-	"%d transaction log file(s) added, %d removed, %d recycled; " \
-	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
-	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s; " \
-	"distance=%d kB, estimate=%d kB"
-#elif PG_VERSION_NUM >= 90100
-#define MSG_CHECKPOINT_COMPLETE \
-	"checkpoint complete: wrote %d buffers (%.1f%%); " \
-	"%d transaction log file(s) added, %d removed, %d recycled; " \
-	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
-	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s"
-#else
-#define MSG_CHECKPOINT_COMPLETE \
-	"checkpoint complete: wrote %d buffers (%.1f%%); " \
-	"%d transaction log file(s) added, %d removed, %d recycled; " \
-	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s"
-#endif
+//(!)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* log_restartpoint: complete */
-#if PG_VERSION_NUM >= 100000
+//(!)
 #define MSG_RESTARTPOINT_COMPLETE \
 	"restartpoint complete: wrote %d buffers (%.1f%%); " \
 	"%d WAL file(s) added, %d removed, %d recycled; " \
 	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
 	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s; " \
 	"distance=%d kB, estimate=%d kB"
-#elif PG_VERSION_NUM >= 90500
-#define MSG_RESTARTPOINT_COMPLETE \
-	"restartpoint complete: wrote %d buffers (%.1f%%); " \
-	"%d transaction log file(s) added, %d removed, %d recycled; " \
-	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
-	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s; " \
-	"distance=%d kB, estimate=%d kB"
-#elif PG_VERSION_NUM >= 90100
-#define MSG_RESTARTPOINT_COMPLETE \
-	"restartpoint complete: wrote %d buffers (%.1f%%); " \
-	"%d transaction log file(s) added, %d removed, %d recycled; " \
-	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
-	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s"
-#else
-#define MSG_RESTARTPOINT_COMPLETE \
-	"restartpoint complete: wrote %d buffers (%.1f%%); " \
-	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s"
-#endif
+//(!)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 PG_MODULE_MAGIC;
 
@@ -491,11 +491,11 @@ typedef struct silSharedState
 } silSharedState;
 
 static void StartStatsinfoLauncher(void);
-#if PG_VERSION_NUM >= 90300
+//(!)
 void StatsinfoLauncherMain(Datum main_arg);
-#else
-static void StatsinfoLauncherMain(void);
-#endif
+//(!)
+
+
 static void StatsinfoLauncherMainLoop(void);
 static void sil_sigusr1_handler(SIGNAL_ARGS);
 static void sil_sigusr2_handler(SIGNAL_ARGS);
@@ -545,29 +545,29 @@ static int str_to_elevel(const char *name, const char *str,
 						 const struct config_enum_entry *options);
 #endif
 
-#if PG_VERSION_NUM >= 90100
+//(!)
 static bool check_textlog_filename(char **newval, void **extra, GucSource source);
 static bool check_enable_maintenance(char **newval, void **extra, GucSource source);
 static bool check_maintenance_time(char **newval, void **extra, GucSource source);
-#else
-static const char *assign_textlog_filename(const char *newval, bool doit, GucSource source);
-static const char *assign_enable_maintenance(const char *newval, bool doit, GucSource source);
-static const char *assign_maintenance_time(const char *newval, bool doit, GucSource source);
-#endif
 
-#if PG_VERSION_NUM >= 90200
+//(!)
+
+
+
+
+
 static void pg_statsinfo_emit_log_hook(ErrorData *edata);
 static bool is_log_level_output(int elevel, int log_min_level);
 static emit_log_hook_type	prev_emit_log_hook = NULL;
-#endif
 
-#if PG_VERSION_NUM >= 90300
+//(!)
+
 static void pg_statsinfo_shmem_startup_hook(void);
 static void silShmemInit(void);
 static Size silShmemSize(void);
 static void lookup_sil_state(void);
 static shmem_startup_hook_type	prev_shmem_startup_hook = NULL;
-#endif
+//(!)
 
 static Activity		 activity = { 0, 0, 0, 0, 0, 0 };
 static HTAB			*long_xacts = NULL;
@@ -730,33 +730,33 @@ sample_activity(void)
 		procpid = be->st_procpid;
 		if (procpid == 0)
 			continue;
-#if PG_VERSION_NUM >= 100000
+//(!)
 		/* ignore if not client backend */
 		if (be->st_backendType != B_BACKEND)
 			continue;
-#endif
+//(!)
 		/*
 		 * sample idle transactions
 		 */
 		if (procpid != MyProcPid)
 		{
-#if PG_VERSION_NUM >= 100000
+//(!)
 			uint32	classId;
-#endif
-#if PG_VERSION_NUM >= 90600
+//(!)
+
 			proc = BackendPidGetProc(procpid);
 			if (proc == NULL)
 				 continue;	/* This backend is dead */
-#if PG_VERSION_NUM >= 100000
+//(!)
 			classId = proc->wait_event_info & 0xFF000000;
 			if (classId == PG_WAIT_LWLOCK ||
 				classId == PG_WAIT_LOCK)
-#else
-			if (proc->wait_event_info != 0)
-#endif
-#else
-			if (be->st_waiting)
-#endif
+//(!)
+
+
+
+
+
 				waiting++;
 			else if (be->st_state == STATE_IDLE)
 				idle++;
@@ -780,19 +780,19 @@ sample_activity(void)
 			continue;
 
 		/* XXX: needs lock? */
-#if PG_VERSION_NUM >= 140000
+//(!)
 		if ((proc = BackendPidGetProc(be->st_procpid)) == NULL ||
 			(proc->statusFlags & PROC_IN_VACUUM))
 			continue;
-#elif PG_VERSION_NUM >= 90200
-		if ((proc = BackendPidGetProc(be->st_procpid)) == NULL ||
-			(ProcGlobal->allPgXact[proc->pgprocno].vacuumFlags & PROC_IN_VACUUM))
-			continue;
-#else
-		if ((proc = BackendPidGetProc(be->st_procpid)) == NULL ||
-			(proc->vacuumFlags & PROC_IN_VACUUM))
-			continue;
-#endif
+//(!)
+
+
+
+
+
+
+
+
 
 		/* set up key for hashtable search */
 		key.pid = be->st_procpid;
@@ -805,17 +805,17 @@ sample_activity(void)
 		if (!entry)
 			entry = lx_entry_alloc(&key, be);
 
-#if PG_VERSION_NUM >= 90200
+//(!)
 		if (be->st_state == STATE_IDLEINTRANSACTION)
 			strlcpy(entry->query,
 				"<IDLE> in transaction", pgstat_track_activity_query_size);
 		else
 			strlcpy(entry->query,
 				be->st_activity_raw, pgstat_track_activity_query_size);
-#else
-		strlcpy(entry->query,
-			be->st_activity, pgstat_track_activity_query_size);
-#endif
+//(!)
+
+
+
 		entry->duration = duration;
 	}
 
@@ -1304,9 +1304,9 @@ _PG_init(void)
 							 elevel_options,
 							 PGC_SIGHUP,
 							 0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							 NULL,
-#endif
+//(!)
 							 NULL,
 							 NULL);
 
@@ -1318,9 +1318,9 @@ _PG_init(void)
 							 elevel_options,
 							 PGC_SIGHUP,
 							 0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							 NULL,
-#endif
+//(!)
 							 NULL,
 							 NULL);
 
@@ -1332,9 +1332,9 @@ _PG_init(void)
 							 elevel_options,
 							 PGC_SIGHUP,
 							 0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							 NULL,
-#endif
+//(!)
 							 NULL,
 							 NULL);
 
@@ -1345,12 +1345,12 @@ _PG_init(void)
 							   "pg_statsinfo.log",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   check_textlog_filename,
 							   NULL,
-#else
-						       assign_textlog_filename,
-#endif
+//(!)
+
+
 							   NULL);
 
 	DefineCustomStringVariable(GUC_PREFIX ".textlog_line_prefix",
@@ -1360,9 +1360,9 @@ _PG_init(void)
 							   "%t %p ",
 							   PGC_SIGHUP,
 							   0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1373,9 +1373,9 @@ _PG_init(void)
 							   "%t %p ",
 							   PGC_SIGHUP,
 							   0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1388,9 +1388,9 @@ _PG_init(void)
 							0666,
 							PGC_SIGHUP,
 							0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							NULL,
-#endif
+//(!)
 							NULL,
 							NULL);
 
@@ -1401,9 +1401,9 @@ _PG_init(void)
 							   "template0, template1",
 							   PGC_SIGHUP,
 							   0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1414,9 +1414,9 @@ _PG_init(void)
 							   "pg_catalog,pg_toast,information_schema",
 							   PGC_SIGHUP,
 							   0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1429,9 +1429,9 @@ _PG_init(void)
 							INT_MAX,
 							PGC_SIGHUP,
 							GUC_UNIT_S,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							NULL,
-#endif
+//(!)
 							NULL,
 							NULL);
 
@@ -1457,9 +1457,9 @@ _PG_init(void)
 							INT_MAX,
 							PGC_SIGHUP,
 							GUC_UNIT_S,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							NULL,
-#endif
+//(!)
 							NULL,
 							NULL);
 
@@ -1470,9 +1470,9 @@ _PG_init(void)
 							   default_repository_server,
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1483,9 +1483,9 @@ _PG_init(void)
 							 false,
 							 PGC_SIGHUP,
 							 GUC_SUPERUSER_ONLY,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							 NULL,
-#endif
+//(!)
 							 NULL,
 							 NULL);
 
@@ -1496,9 +1496,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1509,9 +1509,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1522,9 +1522,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1535,9 +1535,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1548,9 +1548,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1561,9 +1561,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1574,9 +1574,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1587,9 +1587,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1600,12 +1600,12 @@ _PG_init(void)
 							   DEFAULT_ENABLE_MAINTENANCE,
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   check_enable_maintenance,
 							   NULL,
-#else
-						       assign_enable_maintenance,
-#endif
+//(!)
+
+
 							   NULL);
 
 	DefineCustomStringVariable(GUC_PREFIX ".maintenance_time",
@@ -1615,12 +1615,12 @@ _PG_init(void)
 							   DEFAULT_MAINTENANCE_TIME,
 							   PGC_SIGHUP,
 							   GUC_SUPERUSER_ONLY,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   check_maintenance_time,
 							   NULL,
-#else
-						       assign_maintenance_time,
-#endif
+//(!)
+
+
 							   NULL);
 
 	DefineCustomIntVariable(GUC_PREFIX ".repository_keepday",
@@ -1632,9 +1632,9 @@ _PG_init(void)
 							3650,
 							PGC_SIGHUP,
 							0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							NULL,
-#endif
+//(!)
 							NULL,
 							NULL);
 
@@ -1647,9 +1647,9 @@ _PG_init(void)
 							3650,
 							PGC_SIGHUP,
 							0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							NULL,
-#endif
+//(!)
 							NULL,
 							NULL);
 
@@ -1660,9 +1660,9 @@ _PG_init(void)
 							   DEFAULT_LOG_MAINTENANCE_COMMAND,
 							   PGC_SIGHUP,
 							   0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1675,9 +1675,9 @@ _PG_init(void)
 							INT_MAX,
 							PGC_SIGHUP,
 							0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							NULL,
-#endif
+//(!)
 							NULL,
 							NULL);
 
@@ -1690,9 +1690,9 @@ _PG_init(void)
 							INT_MAX,
 							PGC_SIGHUP,
 							0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							NULL,
-#endif
+//(!)
 							NULL,
 							NULL);
 
@@ -1703,9 +1703,9 @@ _PG_init(void)
 							   "",
 							   PGC_SIGHUP,
 							   0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							   NULL,
-#endif
+//(!)
 							   NULL,
 							   NULL);
 
@@ -1718,9 +1718,9 @@ _PG_init(void)
 							INT_MAX,
 							PGC_SIGHUP,
 							GUC_UNIT_S,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							NULL,
-#endif
+//(!)
 							NULL,
 							NULL);
 
@@ -1733,9 +1733,9 @@ _PG_init(void)
 							INT_MAX,
 							PGC_SIGHUP,
 							0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							NULL,
-#endif
+//(!)
 							NULL,
 							NULL);
 
@@ -1748,9 +1748,9 @@ _PG_init(void)
 							60,
 							PGC_SIGHUP,
 							GUC_UNIT_S,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							NULL,
-#endif
+//(!)
 							NULL,
 							NULL);
 
@@ -1763,9 +1763,9 @@ _PG_init(void)
 							INT_MAX,
 							PGC_POSTMASTER,
 							0,
-#if PG_VERSION_NUM >= 90100
+//(!)
 							NULL,
-#endif
+//(!)
 							NULL,
 							NULL);
 
@@ -1900,22 +1900,22 @@ _PG_init(void)
 	init_last_xact_activity();
 	/* Install wait_sampling */
 	init_wait_sampling();
-#if PG_VERSION_NUM >= 90200
+//(!)
 	/* Install emit_log_hook */
 	TAKE_HOOK(emit_log, pg_statsinfo_emit_log_hook);
-#endif
 
-#if PG_VERSION_NUM >= 90300
+//(!)
+
 	/* Request additional shared resources */
 	RequestAddinShmemSpace(silShmemSize());
-#if PG_VERSION_NUM >= 90600
+//(!)
 	RequestNamedLWLockTranche("pg_statsinfo", 1);
-#else
-	RequestAddinLWLocks(1);
-#endif
+//(!)
+
+
 	/* Install shmem_startup_hook */
 	TAKE_HOOK(shmem_startup, pg_statsinfo_shmem_startup_hook);
-#endif
+//(!)
 
 	/*
 	 * spawn pg_statsinfo launcher process if the first call
@@ -1934,14 +1934,14 @@ _PG_fini(void)
 	fini_last_xact_activity();
 	/* Uninstall wait_sampling */
 	fini_wait_sampling();
-#if PG_VERSION_NUM >= 90200
+//(!)
 	/* Uninstall emit_log_hook */
 	RESTORE_HOOK(emit_log);
-#endif
-#if PG_VERSION_NUM >= 90300
+//(!)
+
 	/* Uninstall shmem_startup_hook */
 	RESTORE_HOOK(shmem_startup);
-#endif
+//(!)
 }
 
 /*
@@ -1999,10 +1999,10 @@ statsinfo_start(PG_FUNCTION_ARGS)
 		}
 	}
 
-#if PG_VERSION_NUM >= 90300
+//(!)
 	/* lookup the pg_statsinfo launcher state */
 	lookup_sil_state();
-#endif
+//(!)
 
 	/* send signal that instruct start the statsinfo background process */
 	if (kill(sil_state->pid, SIGUSR2) != 0)
@@ -2079,10 +2079,10 @@ statsinfo_stop(PG_FUNCTION_ARGS)
 		goto done;
 	}
 
-#if PG_VERSION_NUM >= 90300
+//(!)
 	/* lookup the pg_statsinfo launcher state */
 	lookup_sil_state();
-#endif
+//(!)
 
 	/* send signal that instruct stop the statsinfo background process */
 	if (kill(sil_state->pid, SIGUSR1) != 0)
@@ -3009,7 +3009,7 @@ send_reload_params(int fd)
 static void
 StartStatsinfoLauncher(void)
 {
-#if PG_VERSION_NUM >= 90300
+//(!)
 	BackgroundWorker	worker;
 
 	/*
@@ -3021,58 +3021,58 @@ StartStatsinfoLauncher(void)
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS;
 	worker.bgw_start_time = BgWorkerStart_ConsistentState;
 	worker.bgw_restart_time = BGW_NEVER_RESTART;
-#if PG_VERSION_NUM < 90400
-	worker.bgw_main = StatsinfoLauncherMain;
-#else
-#if PG_VERSION_NUM < 100000
-	worker.bgw_main = NULL;
-#endif
+//(!)
+
+
+
+
+
 	snprintf(worker.bgw_library_name, BGW_MAXLEN, "pg_statsinfo");
 	snprintf(worker.bgw_function_name, BGW_MAXLEN, "StatsinfoLauncherMain");
-#endif
+//(!)
 	worker.bgw_main_arg = (Datum) NULL;
-#if PG_VERSION_NUM >= 90400
+//(!)
 	worker.bgw_notify_pid = 0;
-#endif
-#if PG_VERSION_NUM >= 90500
+//(!)
+
 	memset(&worker.bgw_extra, 0, BGW_EXTRALEN);
-#endif
+//(!)
 
 	RegisterBackgroundWorker(&worker);
-#else
-	pid_t	pid;
+//(!)
 
-	/*
-	 * invoke pg_statsinfo launcher processs
-	 */
-	switch ((pid = fork_process()))
-	{
-		case -1:
-			ereport(LOG,
-				(errmsg("could not fork pg_statsinfo launcher process: %m")));
-			break;
-		case 0:
-			/* in child process */
-			/* Lose the postmaster's on-exit routines */
-			on_exit_reset();
 
-			StatsinfoLauncherMain();
-			break;
-		default:
-			/* in parent process */
-			/* Initialize pg_statsinfo launcher state */
-			sil_state = malloc(sizeof(silSharedState));
-			sil_state->pid = pid;
-			break;
-	}
-#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	return;
 }
 
 /*
  * StatsinfoLauncherMain - Main entry point for pg_statsinfo launcher process.
  */
-#if PG_VERSION_NUM >= 90300
+//(!)
 void
 StatsinfoLauncherMain(Datum main_arg)
 {
@@ -3099,42 +3099,42 @@ StatsinfoLauncherMain(Datum main_arg)
 	/* main loop */
 	StatsinfoLauncherMainLoop();
 }
-#else
-static void
-StatsinfoLauncherMain(void)
-{
-	/* we are postmaster subprocess now */
-	IsUnderPostmaster = true;
+//(!)
 
-	/* Identify myself via ps */
-	init_ps_display("pg_statsinfo launcher process", "", "", "");
 
-	/* delay for the preparation of syslogger */
-	pg_usleep(1000000L);	/* 1s */
 
-	/* Set up signal handlers */
-	pqsignal(SIGUSR1, sil_sigusr1_handler);
-	pqsignal(SIGUSR2, sil_sigusr2_handler);
-	pqsignal(SIGHUP, sil_sighup_handler);
-	pqsignal(SIGCHLD, sil_sigchld_handler);
 
-	/* Reset some signals that are accepted by postmaster */
-	pqsignal(SIGINT, SIG_DFL);
-	pqsignal(SIGQUIT, SIG_DFL);
-	pqsignal(SIGTERM, SIG_DFL);
-	pqsignal(SIGALRM, SIG_DFL);
-	pqsignal(SIGPIPE, SIG_IGN);
-	pqsignal(SIGTTIN, SIG_DFL);
-	pqsignal(SIGTTOU, SIG_DFL);
 
-	/* Unblock signals (they were blocked when the postmaster forked us) */
-	sigemptyset(&UnBlockSig);
-	PG_SETMASK(&UnBlockSig);
 
-	/* main loop */
-	StatsinfoLauncherMainLoop();
-}
-#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #define LAUNCH_RETRY_PERIOD		300	/* sec */
 #define LAUNCH_RETRY_MAX		5
@@ -3479,16 +3479,16 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 
 	MemoryContextSwitchTo(oldcontext);
 
-#if PG_VERSION_NUM >= 130000
+//(!)
 	relation = table_open(TableSpaceRelationId, AccessShareLock);
-#else
-	relation = heap_open(TableSpaceRelationId, AccessShareLock);
-#endif
-#if PG_VERSION_NUM >= 90400
+//(!)
+
+
+
 	scan = table_beginscan_catalog(relation, 0, NULL);
-#else
-	scan = heap_beginscan(relation, SnapshotNow, 0, NULL);
-#endif
+//(!)
+
+
 	while ((tuple = heap_getnext(scan, ForwardScanDirection)) != NULL)
 	{
 		Form_pg_tablespace form = (Form_pg_tablespace) GETSTRUCT(tuple);
@@ -3510,21 +3510,21 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 			datum = CStringGetTextDatum(DataDir);
 		else
 		{
-#if PG_VERSION_NUM >= 90200
+//(!)
 			datum = DirectFunctionCall1(pg_tablespace_location,
 										ObjectIdGetDatum(form->oid));
-#else
-			bool isnull;
-			datum = fastgetattr(tuple, Anum_pg_tablespace_spclocation,
-								RelationGetDescr(relation), &isnull);
-			/* resolve symlink */
-			if ((len = readlink(TextDatumGetCString(datum),
-								location, lengthof(location))) > 0)
-			{
-				location[len] = '\0';
-				datum = CStringGetTextDatum(location);
-			}
-#endif
+//(!)
+
+
+
+
+
+
+
+
+
+
+
 		}
 		values[i++] = datum;
 
@@ -3532,31 +3532,31 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 		i += get_devinfo(TextDatumGetCString(datum), values + i, nulls + i);
 
 		/* spcoptions */
-#if PG_VERSION_NUM >= 90000
+//(!)
 		values[i] = fastgetattr(tuple, Anum_pg_tablespace_spcoptions,
 								  RelationGetDescr(relation), &nulls[i]);
 		i++;
-#else
-		nulls[i++] = true;
-#endif
+//(!)
+
+
 
 		Assert(i == TABLESPACES_COLS);
 		tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 	}
 	heap_endscan(scan);
 
-#if PG_VERSION_NUM >= 130000
+//(!)
 	table_close(relation, AccessShareLock);
-#else
-	heap_close(relation, AccessShareLock);
-#endif
+//(!)
+
+
 
 	/* append pg_xlog if symlink */
-#if PG_VERSION_NUM >= 100000
+//(!)
 	join_path_components(pg_xlog, DataDir, "pg_wal");
-#else
-	join_path_components(pg_xlog, DataDir, "pg_xlog");
-#endif
+//(!)
+
+
 	if ((len = readlink(pg_xlog, location, lengthof(location))) > 0)
 	{
 		location[len] = '\0';
@@ -3786,7 +3786,7 @@ verify_log_filename(const char *filename)
 	return true;	/* ok */
 }
 
-#if PG_VERSION_NUM >= 90100
+//(!)
 /* forbid empty filename and reserved characters */
 static bool
 check_textlog_filename(char **newval, void **extra, GucSource source)
@@ -3870,101 +3870,101 @@ check_maintenance_time(char **newval, void **extra, GucSource source)
 	}
 	return true;
 }
-#else
-/* forbid empty filename and reserved characters */
-static const char *
-assign_textlog_filename(const char *newval, bool doit, GucSource source)
-{
-	if (!newval[0])
-	{
-		ereport(GUC_complaint_elevel(source),
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg(GUC_PREFIX ".textlog_filename must not be emtpy")));
-		return NULL;
-	}
-	if (strpbrk(newval, "/\\?*:|\"<>"))
-	{
-		ereport(GUC_complaint_elevel(source),
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg(GUC_PREFIX ".textlog_filename must not contain reserved characters: %s", newval)));
-		return NULL;
-	}
+//(!)
 
-	return newval;
-}
 
-/* forbid unrecognized keyword for maintenance mode */
-static const char *
-assign_enable_maintenance(const char *newval, bool doit, GucSource source)
-{
-	char		*rawstring;
-	List		*elemlist;
-	ListCell	*cell;
-	bool		 bool_val;
 
-	if (parse_bool(newval, &bool_val))
-		return newval;
 
-	/* Need a modifiable copy of string */
-	rawstring = pstrdup(newval);
 
-	if (!SplitIdentifierString(rawstring, ',', &elemlist))
-	{
-		pfree(rawstring);
-		list_free(elemlist);
-		ereport(GUC_complaint_elevel(source),
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg(GUC_PREFIX ".enable_maintenance list syntax is invalid")));
-		return NULL;
-	}
 
-	foreach(cell, elemlist)
-	{
-		char *tok = (char *) lfirst(cell);
 
-		if (pg_strcasecmp(tok, "snapshot") != 0 &&
-			pg_strcasecmp(tok, "log") != 0 &&
-			pg_strcasecmp(tok, "repolog") != 0)
-		{
-			pfree(rawstring);
-			list_free(elemlist);
-			ereport(GUC_complaint_elevel(source),
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg(GUC_PREFIX ".enable_maintenance unrecognized keyword: \"%s\"", tok)));
-			return NULL;
-		}
-	}
 
-	pfree(rawstring);
-	list_free(elemlist);
-	return newval;
-}
 
-/* forbid empty and invalid time format */
-static const char *
-assign_maintenance_time(const char *newval, bool doit, GucSource source)
-{
-	if (!newval[0])
-	{
-		ereport(GUC_complaint_elevel(source),
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg(GUC_PREFIX ".maintenance_time must not be emtpy, use default (\"%s\")",
-				 	DEFAULT_MAINTENANCE_TIME)));
-		return NULL;
-	}
-	if (!verify_timestr(newval))
-	{
-		ereport(GUC_complaint_elevel(source),
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg(GUC_PREFIX ".maintenance_time invalid syntax for time: %s, use default (\"%s\")",
-				 	newval, DEFAULT_MAINTENANCE_TIME),
-				 errhint("format should be [hh:mm:ss]")));
-		return NULL;
-	}
 
-	return newval;
-}
-#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* verify time format string (HH:MM:SS) */
 static bool
@@ -4059,11 +4059,11 @@ exec_grep(const char *filename, const char *regex, List **records)
 	pattern = (pg_wchar *) palloc((strlen(regex) + 1) * sizeof(pg_wchar));
 	pattern_len = pg_mb2wchar_with_len(regex, pattern, strlen(regex));
 
-#if PG_VERSION_NUM >= 90100
+//(!)
 	ret = pg_regcomp(&reg_t, pattern, pattern_len, REG_ADVANCED, DEFAULT_COLLATION_OID);
-#else
-	ret = pg_regcomp(&reg_t, pattern, pattern_len, REG_ADVANCED);
-#endif
+//(!)
+
+
 	if (ret)
 	{
 		pg_regerror(ret, &reg_t, errstr, sizeof(errstr));
@@ -4154,11 +4154,11 @@ exec_split(const char *rawstring, const char *regex, List **fields)
 	pattern = (pg_wchar *) palloc((strlen(regex) + 1) * sizeof(pg_wchar));
 	pattern_len = pg_mb2wchar_with_len(regex, pattern, strlen(regex));
 
-#if PG_VERSION_NUM >= 90100
+//(!)
 	ret = pg_regcomp(&reg_t, pattern, pattern_len, REG_ADVANCED, DEFAULT_COLLATION_OID);
-#else
-	ret = pg_regcomp(&reg_t, pattern, pattern_len, REG_ADVANCED);
-#endif
+//(!)
+
+
 	if (ret)
 	{
 		pg_regerror(ret, &reg_t, errstr, sizeof(errstr));
@@ -4539,12 +4539,12 @@ ds_match_fn(const void *key1, const void *key2, Size keysize)
 		return 1;
 }
 
-#if PG_VERSION_NUM >= 90200
-#if PG_VERSION_NUM >= 90600
+//(!)
+
 #define EDATA_MSGID(e) ((e)->message_id)
-#else
-#define EDATA_MSGID(e) ((e)->message)
-#endif
+//(!)
+
+
 /*
  * pg_statsinfo_emit_log_hook - filtering by message level
  */
@@ -4612,9 +4612,9 @@ is_log_level_output(int elevel, int log_min_level)
 
 	return false;
 }
-#endif
+//(!)
 
-#if PG_VERSION_NUM >= 90300
+
 /*
  * pg_statsinfo_shmem_startup_hook - allocate or attach to shared memory
  */
@@ -4649,11 +4649,11 @@ silShmemInit(void)
 	if (!found)
 	{
 		/* First time through ... */
-#if PG_VERSION_NUM >= 90600
+//(!)
 		sil_state->lockid = &(GetNamedLWLockTranche("pg_statsinfo"))->lock;
-#else
-		sil_state->lockid = LWLockAssign();
-#endif
+//(!)
+
+
 		sil_state->pid = INVALID_PID;
 	}
 	else
@@ -4975,4 +4975,3 @@ probe_waits(void)
 		pgws_entry_alloc(&item, false);
 	}
 }
-#endif

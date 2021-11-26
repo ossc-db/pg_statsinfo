@@ -145,9 +145,9 @@ collector_wait_events_connect(const char *db)
 		switch (ctrl.state)
 		{
 			case DB_IN_PRODUCTION:
-#if PG_VERSION_NUM >= 90000
+//(!)
 			case DB_IN_ARCHIVE_RECOVERY:	/* hot-standby accepts connections */
-#endif
+//(!)
 				break;			/* ok, do connect */
 			default:
 				delay();

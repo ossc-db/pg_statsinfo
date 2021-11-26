@@ -246,10 +246,10 @@ main(int argc, char *argv[])
 
 	/* setup signal handler */
 	pqsignal(SIGHUP, sighup_handler);
-#if PG_VERSION_NUM >= 90300
+//(!)
 	pqsignal(SIGTERM, SIG_IGN);	/* for background worker */
 	pqsignal(SIGQUIT, SIG_IGN);	/* for background worker */
-#endif
+//(!)
 
 	/* read required parameters */
 	readopt();

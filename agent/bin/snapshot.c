@@ -62,17 +62,17 @@ static const char *instance_gets[] =
 	SQL_SELECT_PROFILE,
 	SQL_SELECT_LOCK,
 	SQL_SELECT_BGWRITER,
-#if PG_VERSION_NUM >= 90100
 	SQL_SELECT_REPLICATION,
-#endif
-#if PG_VERSION_NUM >= 140000
 	SQL_SELECT_STAT_REPLICATION_SLOTS,
 	SQL_SELECT_STAT_WAL,
-#endif
 	SQL_SELECT_XLOG,
-#if PG_VERSION_NUM >= 90400
 	SQL_SELECT_ARCHIVE,
-#endif
+//(!)
+
+
+
+
+
 	SQL_SELECT_REPLICATION_SLOTS,
 	SQL_SELECT_WAIT_SAMPLING_PROFILE,
 /*	SQL_SELECT_STATEMENT,	*/
@@ -95,17 +95,17 @@ static const char *instance_puts[] =
 	SQL_INSERT_PROFILE,
 	SQL_INSERT_LOCK,
 	SQL_INSERT_BGWRITER,
-#if PG_VERSION_NUM >= 90100
 	SQL_INSERT_REPLICATION,
-#endif
-#if PG_VERSION_NUM >= 140000
 	SQL_INSERT_STAT_REPLICATION_SLOTS,
 	SQL_INSERT_STAT_WAL,
-#endif
 	SQL_INSERT_XLOG,
-#if PG_VERSION_NUM >= 90400
 	SQL_INSERT_ARCHIVE,
-#endif
+//(!)
+
+
+
+
+
 	SQL_INSERT_REPLICATION_SLOTS,
 	SQL_INSERT_WAIT_SAMPLING_PROFILE,
 	SQL_INSERT_STATEMENT,
@@ -149,9 +149,9 @@ static bool do_put_copy(PGconn *conn, const char *sql, PGresult *src,
 				   const char *snapid, const char *dbid, const char *snap_date);
 static bool has_pg_stat_statements(PGconn *conn);
 static bool has_pg_store_plans(PGconn *conn);
-#if PG_VERSION_NUM < 90400
-static bool has_pg_store_plans_hash_query(PGconn *conn);
-#endif
+//(!)
+
+
 static bool has_statsrepo_alert(PGconn *conn);
 static bool is_rusage_enabled(PGconn *conn);
 static bool is_collect_column_enabled(PGconn *conn);
@@ -283,14 +283,14 @@ get_snapshot(char *comment)
 		const char		*params[] = {stat_statements_exclude_users, stat_statements_max};
 
 		initStringInfo(&query);
-#if PG_VERSION_NUM >= 90400
+//(!)		
 		appendStringInfo(&query, SQL_SELECT_STATEMENT);
-#else
-		if (has_pg_store_plans_hash_query(conn))
-			appendStringInfo(&query, SQL_SELECT_STATEMENT, "pg_store_plans_hash_query(s.query)");
-		else
-			appendStringInfo(&query, SQL_SELECT_STATEMENT, "NULL");
-#endif
+//(!)
+
+
+
+
+
 		stmt = pgut_execute(conn, query.data, 2, params);
 		if (PQresultStatus(stmt) == PGRES_TUPLES_OK)
 			snap->instance = lappend(snap->instance, stmt);
@@ -935,23 +935,23 @@ has_pg_store_plans(PGconn *conn)
 	return result;
 }
 
-#if PG_VERSION_NUM < 90400
-static bool
-has_pg_store_plans_hash_query(PGconn *conn)
-{
-	PGresult   *res;
-	bool		result;
+//(!)
 
-	/* check whether pg_store_plans is installed */
-	res = pgut_execute(conn,
-			"SELECT 1 FROM pg_proc WHERE proname = 'pg_store_plans_hash_query'",
-			0, NULL);
-	result = (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0);
-	PQclear(res);
 
-	return result;
-}
-#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 static bool
 has_statsrepo_alert(PGconn *conn)
