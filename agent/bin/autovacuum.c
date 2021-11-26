@@ -25,13 +25,8 @@ INSERT INTO statsrepo.autoanalyze_cancel VALUES \
 ($1, $2, $3, $4, $5, $6)"
 
 /* pg_rusage (rusage is not localized) */
-//(!)
 #define MSG_RUSAGE \
 	"CPU: user: %f s, system: %f s, elapsed: %f s"
-
-
-
-
 
 /* index scan (index scan is not localized) */
 #define MSG_INDEX_SCAN \
@@ -436,13 +431,8 @@ parse_autovacuum_cancel_request(const Log *log)
 	refresh_avc_request();
 
 	/* add a new entry of the cancel request */
-//(!)
 	if ((params = capture(log->hint,
 		MSG_AUTOVACUUM_CANCEL_REQUEST, 1)) == NIL)
-
-
-
-
 		return false;	/* should not happen */
 
 	new_entry = pgut_malloc(sizeof(AVCancelRequest));

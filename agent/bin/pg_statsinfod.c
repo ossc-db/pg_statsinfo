@@ -246,10 +246,8 @@ main(int argc, char *argv[])
 
 	/* setup signal handler */
 	pqsignal(SIGHUP, sighup_handler);
-//(!)
 	pqsignal(SIGTERM, SIG_IGN);	/* for background worker */
 	pqsignal(SIGQUIT, SIG_IGN);	/* for background worker */
-//(!)
 
 	/* read required parameters */
 	readopt();

@@ -572,7 +572,6 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 				}
 				continue;
 			}
-//(!)
 			/* autovacuum cancel request ? */
 			if (strcmp(log.message, LOGMSG_AUTOVACUUM_CANCEL_REQUEST) == 0)
 			{
@@ -580,7 +579,7 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 					parse_autovacuum_cancel_request(&log);
 				continue;
 			}
-//(!)
+
 #ifdef ADJUST_PERFORMANCE_MESSAGE_LEVEL
 			/* performance log? */
 			if ((my_textlog_min_messages > INFO ||
@@ -622,13 +621,6 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 					parse_autovacuum(log.message, log.timestamp);
 					continue;
 				}
-//(!)
-
-
-
-
-
-
 
 				/* shutdown ? */
 				if (strcmp(log.message, msg_shutdown) == 0)
@@ -646,13 +638,6 @@ logger_parse(Logger *logger, const char *pg_log, bool only_routing)
 					continue;
 				}
 			}
-//(!)
-
-
-
-
-
-
 
 			/* autovacuum cancel ? */
 			if (is_autovacuum_cancel(save_elevel, log.message))

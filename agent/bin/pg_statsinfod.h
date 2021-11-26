@@ -33,12 +33,6 @@
 
 /* number of columns of csvlog */
 #define CSV_COLS			26
-//(!)
-
-
-
-
-
 
 /* maintenance mode flag */
 #define MAINTENANCE_MODE_SNAPSHOT	(1 << 0)

@@ -67,12 +67,6 @@ static const char *instance_gets[] =
 	SQL_SELECT_STAT_WAL,
 	SQL_SELECT_XLOG,
 	SQL_SELECT_ARCHIVE,
-//(!)
-
-
-
-
-
 	SQL_SELECT_REPLICATION_SLOTS,
 	SQL_SELECT_WAIT_SAMPLING_PROFILE,
 /*	SQL_SELECT_STATEMENT,	*/
@@ -100,12 +94,6 @@ static const char *instance_puts[] =
 	SQL_INSERT_STAT_WAL,
 	SQL_INSERT_XLOG,
 	SQL_INSERT_ARCHIVE,
-//(!)
-
-
-
-
-
 	SQL_INSERT_REPLICATION_SLOTS,
 	SQL_INSERT_WAIT_SAMPLING_PROFILE,
 	SQL_INSERT_STATEMENT,
@@ -149,9 +137,6 @@ static bool do_put_copy(PGconn *conn, const char *sql, PGresult *src,
 				   const char *snapid, const char *dbid, const char *snap_date);
 static bool has_pg_stat_statements(PGconn *conn);
 static bool has_pg_store_plans(PGconn *conn);
-//(!)
-
-
 static bool has_statsrepo_alert(PGconn *conn);
 static bool is_rusage_enabled(PGconn *conn);
 static bool is_collect_column_enabled(PGconn *conn);
@@ -283,14 +268,7 @@ get_snapshot(char *comment)
 		const char		*params[] = {stat_statements_exclude_users, stat_statements_max};
 
 		initStringInfo(&query);
-//(!)		
 		appendStringInfo(&query, SQL_SELECT_STATEMENT);
-//(!)
-
-
-
-
-
 		stmt = pgut_execute(conn, query.data, 2, params);
 		if (PQresultStatus(stmt) == PGRES_TUPLES_OK)
 			snap->instance = lappend(snap->instance, stmt);
@@ -934,24 +912,6 @@ has_pg_store_plans(PGconn *conn)
 
 	return result;
 }
-
-//(!)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 static bool
 has_statsrepo_alert(PGconn *conn)

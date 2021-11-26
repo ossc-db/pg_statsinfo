@@ -145,9 +145,7 @@ collector_wait_events_connect(const char *db)
 		switch (ctrl.state)
 		{
 			case DB_IN_PRODUCTION:
-//(!)
 			case DB_IN_ARCHIVE_RECOVERY:	/* hot-standby accepts connections */
-//(!)
 				break;			/* ok, do connect */
 			default:
 				delay();

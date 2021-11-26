@@ -11,17 +11,8 @@ INSERT INTO statsrepo.checkpoint VALUES \
 ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
 
 #define NUM_CHECKPOINT_STARTING		2
-
-//(!)
 #define NUM_CHECKPOINT_COMPLETE		18
 #define NUM_RESTARTPOINT_COMPLETE	18
-//(!)
-
-
-
-
-
-
 
 typedef enum CheckpointType
 {
@@ -166,8 +157,6 @@ Checkpoint_exec(CheckpointLog *ckpt, PGconn *conn, const char *instid)
 	params[1] = ckpt->start;				/* start */
 	params[2] = ckpt->flags;				/* flags */
 	params[3] = list_nth(ckpt->params, 0);	/* num_buffers */
-
-//(!)
 	params[4] = list_nth(ckpt->params, 2);	/* xlog_added */
 	params[5] = list_nth(ckpt->params, 3);	/* xlog_removed */
 	params[6] = list_nth(ckpt->params, 4);	/* xlog_recycled */
@@ -181,40 +170,6 @@ Checkpoint_exec(CheckpointLog *ckpt, PGconn *conn, const char *instid)
 	snprintf(total_duration, lengthof(total_duration), "%s.%s",
 		(const char *) list_nth(ckpt->params, 9),
 		(const char *) list_nth(ckpt->params, 10));
-//(!)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	params[7] = write_duration;	/* write_duration */
 	params[8] = sync_duration;	/* sync_duration */

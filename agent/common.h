@@ -55,7 +55,6 @@
 #define STATSINFO_LOCK_FILE		"pg_statsinfo.pid"
 
 /* CRC calculation */
-//(!)
 #include "port/pg_crc32c.h"
 #define INIT_CRC32	INIT_CRC32C
 #define COMP_CRC32	COMP_CRC32C

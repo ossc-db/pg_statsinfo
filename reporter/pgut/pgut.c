@@ -80,11 +80,9 @@ pgut_init(int argc, char **argv)
 		pthread_mutex_init(&pgut_conn_mutex, NULL);
 #endif
 
-//(!)
 		/* application_name for 9.0 or newer versions */
 		if (getenv("PGAPPNAME") == NULL)
 			pgut_putenv("PGAPPNAME", PROGRAM_NAME);
-//(!)
 
 		init_cancel_handler();
 		atexit(on_cleanup);
@@ -388,28 +386,10 @@ parse_time(const char *value, time_t *time)
 static char *
 prompt_for_password(void)
 {
-//(!)
 	char	*password;
 	password = simple_prompt("Password: ", false);
 	return password;
-
-//(!)
-
-
-
-
-
-
-
 }
-
-//(!)
-
-
-
-
-
-
 
 PGconn *
 pgut_connect(const char *info, YesNo prompt, int elevel)
