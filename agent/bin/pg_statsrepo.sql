@@ -3986,14 +3986,14 @@ $$
 			queryid,
 			dbid,
 			userid,
-			database,
-			role,
+			CASE WHEN database IS NULL THEN '<global>' ELSE database END,
+			CASE WHEN role IS NULL THEN '(none)' ELSE role END,
 			backend_type,
 			event_type,
 			event,
 			cnt,
 			ratio::numeric(6,3),
-			query,
+			CASE WHEN query IS NULL THEN '(none)' ELSE query END,
 			ROW_NUMBER() OVER ww
 		FROM
 			(SELECT
@@ -4108,7 +4108,7 @@ SELECT *
 FROM
 	(SELECT
 		dbid,
-		database,
+		CASE WHEN database IS NULL THEN '<global>' ELSE database END,
 		event_type,
 		event,
 		cnt,
