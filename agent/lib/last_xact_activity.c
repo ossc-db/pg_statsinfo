@@ -7,22 +7,23 @@
 
 #include "postgres.h"
 #include "access/heapam.h"
-#include "storage/proc.h"
+#include "access/htup_details.h"
+#include "catalog/pg_type.h"
 #include "funcapi.h"
 #include "mb/pg_wchar.h"
 #include "miscadmin.h"
+#include "pgstat.h"
 #include "storage/ipc.h"
+#include "storage/proc.h"
 #include "tcop/utility.h"
 #include "utils/builtins.h"
-#include "catalog/pg_type.h"
-#include "pgstat.h"
 #include "utils/memutils.h"
-#include "access/htup_details.h"
 #include "utils/varlena.h"
 
 #include "../common.h"
 #include "pgut/pgut-be.h"
 #include "wait_sampling.h"
+#include "rusage.h"
 
 /* For rusage */
 #include <unistd.h>
@@ -68,7 +69,7 @@ static const uint32 STATSINFO_RUSAGE_FILE_HEADER = 0x20210930;
 #define STATSINFO_USAGE_INIT		(1.0)
 
 
-/* store kinds. (same as pg_stat_statements) */
+/* rusage store kinds. (same as pg_stat_statements) */
 typedef enum ruStoreKind
 {
 	STATSINFO_RUSAGE_PLAN = 0,
@@ -97,11 +98,6 @@ typedef struct ruCounters
 #endif
 } ruCounters;
 
-#define STATSINFO_RUSAGE_MAX_NESTED_LEVEL 64
-static int ru_max = 0;   /* max entries. TODO: Sould use same setting of pg_stat_statements.max */
-static struct   rusage exec_rusage_start[STATSINFO_RUSAGE_MAX_NESTED_LEVEL];
-static struct   rusage plan_rusage_start[STATSINFO_RUSAGE_MAX_NESTED_LEVEL];
-static bool		ru_save = true;
 
 /* Hashtable key that defines the identity of a hashtable entry. (same as pg_stat_statements) */
 typedef struct ruHashKey
@@ -151,33 +147,23 @@ static int	plan_nested_level = 0;
 static ruSharedState *ru_ss = NULL;
 static HTAB *ru_hash = NULL;
 
-/*---- GUC variables ----*/
+/*---- GUC variables for rusage (defined at listatsinfo.c) ----*/
 
-typedef enum
-{
-	STATSINFO_RUSAGE_TRACK_NONE,	/* track no statements */
-	STATSINFO_RUSAGE_TRACK_TOP,	/* only top level statements */
-	STATSINFO_RUSAGE_TRACK_ALL	/* all statements, including nested ones */
-}	STATSINFO_RUSAGE_TrackLevel;
+#define STATSINFO_RUSAGE_MAX_NESTED_LEVEL 64
+static struct   rusage exec_rusage_start[STATSINFO_RUSAGE_MAX_NESTED_LEVEL];
+static struct   rusage plan_rusage_start[STATSINFO_RUSAGE_MAX_NESTED_LEVEL];
 
-static const struct config_enum_entry ru_track_options[] =
-{
-	{"none", STATSINFO_RUSAGE_TRACK_NONE, false},
-	{"top", STATSINFO_RUSAGE_TRACK_TOP, false},
-	{"all", STATSINFO_RUSAGE_TRACK_ALL, false},
-	{NULL, 0, false}
-};
-
-static int	ru_track;		/* tracking level */
-static bool	ru_track_planning;	/* whether to track planning duration */
-static bool	ru_track_utility;	/* whether to track utility duration */
+extern int		rusage_max;   /* max entries. TODO: Sould use same setting of pg_stat_statements.max */
+extern bool		rusage_save;
+extern int		rusage_track;		/* tracking level */
+extern bool		rusage_track_planning;	/* whether to track planning duration */
+extern bool		rusage_track_utility;	/* whether to track utility duration */
 
 #define ru_enabled(level) \
-	((ru_track == STATSINFO_RUSAGE_TRACK_ALL && (level) < STATSINFO_RUSAGE_MAX_NESTED_LEVEL) || \
-	(ru_track == STATSINFO_RUSAGE_TRACK_TOP && (level) == 0))
+	((rusage_track == STATSINFO_RUSAGE_TRACK_ALL && (level) < STATSINFO_RUSAGE_MAX_NESTED_LEVEL) || \
+	(rusage_track == STATSINFO_RUSAGE_TRACK_TOP && (level) == 0))
 
 #define is_top(level) (level) == 0
-
 
 /* For decision retrieving rusage of utility statements (same as pg_stat_statements) */
 #define PGSS_HANDLED_UTILITY(n)		(!IsA(n, ExecuteStmt) && \
@@ -369,61 +355,6 @@ init_last_xact_activity(void)
 							 NULL,
 							 NULL);
 	
-	DefineCustomIntVariable(GUC_PREFIX ".rusage_max",
-							"Sets the maximum number of statements for rusage info..",
-							NULL,
-							&ru_max,
-							5000,
-							100,
-							INT_MAX,
-							PGC_POSTMASTER,
-							0,
-							NULL,
-							NULL,
-							NULL);
-
-	DefineCustomEnumVariable(GUC_PREFIX ".rusage_track",
-							 "Sets the tracking level for rusage info.",
-							 NULL,
-							 &ru_track,
-							 STATSINFO_RUSAGE_TRACK_TOP,
-							 ru_track_options,
-							 PGC_SUSET,
-							 0,
-							 NULL,
-							 NULL,
-							 NULL);
-	DefineCustomBoolVariable(GUC_PREFIX ".rusage_track_planning",
-							 "Enable tracking rusage info on planning phase.",
-							 NULL,
-							 &ru_track_planning,
-							 false,
-							 PGC_SUSET,
-							 0,
-							 NULL,
-							 NULL,
-							 NULL);
-	DefineCustomBoolVariable(GUC_PREFIX ".rusage_track_utility",
-							 "Enable tracking rusage info for Utility Statements.",
-							 NULL,
-							 &ru_track_utility,
-							 true,
-							 PGC_SUSET,
-							 0,
-							 NULL,
-							 NULL,
-							 NULL);
-    DefineCustomBoolVariable(GUC_PREFIX ".rusage_save",
-							 "Save statsinfo rusage statistics across server shutdowns.",
-							 NULL,
-							 &ru_save,
-							 true,
-							 PGC_SIGHUP,
-							 0,
-							 NULL,
-							 NULL,
-							 NULL);
-
 	RequestAddinShmemSpace(buffer_size(MaxBackends));
 
 
@@ -508,7 +439,7 @@ shmem_startup(void)
 
 	/* allocate stats shared memory hash */
 	ru_hash = ShmemInitHash("pg_statsinfo_rusage hash",
-							  ru_max, ru_max,
+							  rusage_max, rusage_max,
 							  &info,
 							  HASH_ELEM | HASH_FUNCTION | HASH_COMPARE);
 
@@ -532,7 +463,7 @@ shmem_startup(void)
 	if (found)
 		return;
 
-	if (!ru_save)
+	if (!rusage_save)
 		return;
 
 	/* Load stat file, don't care about locking */
@@ -629,7 +560,7 @@ ru_shmem_shutdown(int code, Datum arg)
 		return;
 
 	/* Don't dump if told not to. */
-	if (!ru_save)
+	if (!rusage_save)
 		return;
 
 	file = AllocateFile(STATSINFO_RUSAGE_DUMP_FILE ".tmp", PG_BINARY_W);
@@ -739,26 +670,26 @@ ru_check_stat_statements(void)
 		 * pg_stat_statements might not be loaded before statsinfo.
 		 * In this case, queryId might be set 0 at Utility-hook in pg_stat_statments,
 		 * so our Utility-hook could not handle those statements.
-		 * For this reason, set ru_track_utility to false.
+		 * For this reason, set rusage_track_utility to false.
 		 */
-		if (ru_track_utility)
+		if (rusage_track_utility)
 		{
-			ru_track_utility = false;
+			rusage_track_utility = false;
 			ereport(WARNING,
-					errmsg("pg_statsinfo.ru_track_utility is set to false."),
-					errhint("pg_statsinfo must be loaded after pg_stat_statements when enable ru_track_utility ."));
+					errmsg("pg_statsinfo.rusage_track_utility is set to false."),
+					errhint("pg_statsinfo must be loaded after pg_stat_statements when enable rusage_track_utility ."));
 		}
 	}
 	else
 	{
 		pgss_max = GetConfigOptionByName(name, NULL, true);
-		/* if ru_max is smaller than pgss_max, use pgss_max. */
-		if (ru_max < atoi(pgss_max))
+		/* if rusage_max is smaller than pgss_max, use pgss_max. */
+		if (rusage_max < atoi(pgss_max))
 		{
-			ru_max = atoi(pgss_max);
+			rusage_max = atoi(pgss_max);
 			ereport(LOG,
 					errmsg("pg_statsinfo.rusage.max is changed from %d to %d.",
-						ru_max, atoi(pgss_max)));
+						rusage_max, atoi(pgss_max)));
 		}
 	}
 }
@@ -884,7 +815,7 @@ static ruEntry
 	bool		found;
 
 	/* Make space if needed */
-	while (hash_get_num_entries(ru_hash) >= ru_max)
+	while (hash_get_num_entries(ru_hash) >= rusage_max)
 		ru_entry_dealloc();
 
 	/* Find or create an entry with desired hash code */
@@ -1011,7 +942,7 @@ myPlanner(Query *parse,
 	 * top level planner call.
 	 */
 	if (ru_enabled(plan_nested_level + exec_nested_level)
-		&& ru_track_planning
+		&& rusage_track_planning
 		&& parse->queryId != UINT64CONST(0))
 	{
 		struct rusage *rusage_start = &plan_rusage_start[plan_nested_level];
@@ -1357,11 +1288,7 @@ myProcessUtility(PlannedStmt *pstmt, const char *queryString,
 
 	/* Determine whether to get rusage next. */
 
-	/* set queryID to 0 as same as pg_stat_statements */
-	//if (ru_enabled(exec_nested_level) && ru_track_utility)
-	//	pstmt->queryId = UINT64CONST(0);
-
-	if (ru_track_utility && ru_enabled(exec_nested_level) &&
+	if (rusage_track_utility && ru_enabled(exec_nested_level) &&
 			PGSS_HANDLED_UTILITY(parsetree))
 	{
 		struct rusage *rusage_start = &exec_rusage_start[exec_nested_level];
@@ -1953,7 +1880,7 @@ ru_memsize(void)
 	Size	size;
 
 	size = MAXALIGN(sizeof(ruSharedState));
-	size = add_size(size, hash_estimate_size(ru_max, sizeof(ruEntry)));
+	size = add_size(size, hash_estimate_size(rusage_max, sizeof(ruEntry)));
 	size = add_size(size, MAXALIGN(ru_queryids_array_size()));
 
 	return size;

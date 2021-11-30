@@ -71,6 +71,7 @@
 #include "pgut/pgut-spi.h"
 #include "../common.h"
 #include "wait_sampling.h"
+#include "rusage.h"
 
 #define INVALID_PID			(-1)
 #define START_WAIT_MIN		(10)
@@ -306,10 +307,13 @@ static const char *const RELOAD_PARAM_NAMES[] =
 	GUC_PREFIX ".enable_alert",
 	GUC_PREFIX ".target_server",
 	GUC_PREFIX ".profile_queries",
-	GUC_PREFIX ".profile_max",
 	GUC_PREFIX ".profile_save",
 	GUC_PREFIX ".collect_column",
-	GUC_PREFIX ".collect_index"
+	GUC_PREFIX ".collect_index",
+	GUC_PREFIX ".rusage_save",
+	GUC_PREFIX ".rusage_track",
+	GUC_PREFIX ".rusage_track_planning",
+	GUC_PREFIX ".rusage_track_utility"
 };
 
 static char	   *excluded_dbnames = NULL;
@@ -350,11 +354,16 @@ static bool		enable_alert = true;
 static char	   *target_server = NULL;
 bool			profile_queries = DEFAULT_PROFILE_QUERIES;
 int				pgws_max = DEFAULT_PROFILE_MAX;
-bool			pgws_save = true;
+bool			profile_save = true;
 extern pgwsSharedState	*pgws;
 static bool		collect_column = true;
 static bool		collect_index = true;
 
+int		rusage_max = 0;
+bool	rusage_save = true;
+int		rusage_track = STATSINFO_RUSAGE_TRACK_TOP;
+bool	rusage_track_planning = true;
+bool	rusage_track_utility = true;
 /*---- Function declarations ----*/
 
 PG_FUNCTION_INFO_V1(statsinfo_sample);
@@ -1818,7 +1827,7 @@ _PG_init(void)
 	DefineCustomBoolVariable(GUC_PREFIX ".profile_save",
 							"Save statsinfo wait sampling statistics across server shutdowns.",
 							NULL,
-							&pgws_save,
+							&profile_save,
 							true,
 							PGC_SIGHUP,
 							0,
@@ -1844,6 +1853,64 @@ _PG_init(void)
 							true,
 							PGC_SIGHUP,
 							GUC_SUPERUSER_ONLY,
+							NULL,
+							NULL,
+							NULL);
+
+	DefineCustomIntVariable(GUC_PREFIX ".rusage_max",
+							"Sets the maximum number of statements for rusage info..",
+							NULL,
+							&rusage_max,
+							5000,
+							100,
+							INT_MAX,
+							PGC_POSTMASTER,
+							0,
+							NULL,
+							NULL,
+							NULL);
+
+	DefineCustomEnumVariable(GUC_PREFIX ".rusage_track",
+							"Sets the tracking level for rusage info.",
+							NULL,
+							&rusage_track,
+							STATSINFO_RUSAGE_TRACK_TOP,
+							rusage_track_options,
+							PGC_SUSET,
+							0,
+							NULL,
+							NULL,
+							NULL);
+
+    DefineCustomBoolVariable(GUC_PREFIX ".rusage_track_planning",
+							"Enable tracking rusage info on planning phase.",
+							NULL,
+							&rusage_track_planning,
+							false,
+							PGC_SUSET,
+							0,
+							NULL,
+							NULL,
+							NULL);
+
+    DefineCustomBoolVariable(GUC_PREFIX ".rusage_track_utility",
+							"Enable tracking rusage info for Utility Statements.",
+							NULL,
+							&rusage_track_utility,
+							true,
+							PGC_SUSET,
+							0,
+							NULL,
+							NULL,
+							NULL);
+
+	DefineCustomBoolVariable(GUC_PREFIX ".rusage_save",
+							"Save statsinfo rusage statistics across server shutdowns.",
+							NULL,
+							&rusage_save,
+							true,
+							PGC_SIGHUP,
+							0,
 							NULL,
 							NULL,
 							NULL);
