@@ -3986,22 +3986,22 @@ $$
 			queryid,
 			dbid,
 			userid,
-			CASE WHEN database IS NULL THEN '<global>' ELSE database END,
-			CASE WHEN role IS NULL THEN '(none)' ELSE role END,
+			database,
+			role,
 			backend_type,
 			event_type,
 			event,
 			cnt,
 			ratio::numeric(6,3),
-			CASE WHEN query IS NULL THEN '(none)' ELSE query END,
+			query,
 			ROW_NUMBER() OVER ww
 		FROM
 			(SELECT
 				we.queryid AS queryid,
 				we.dbid AS dbid,
 				we.userid AS userid,
-				db.name AS database,
-				ro.name AS role,
+				st.datname AS database,
+				st.rolname AS role,
 				we.backend_type AS backend_type,
 				we.event_type AS event_type,
 				we.event AS event,
@@ -4010,7 +4010,7 @@ $$
 				st.query AS query
 			FROM
 				statsrepo.get_query_activity_statements($1, $2) st
-			RIGHT JOIN statsrepo.wait_sampling we
+			LEFT JOIN statsrepo.wait_sampling we
 				ON we.dbid = st.dbid
 				AND we.userid = st.userid
 				AND we.queryid = st.queryid
@@ -4022,12 +4022,6 @@ $$
 				AND wb.event_type = we.event_type
 				AND wb.event = we.event
 				AND wb.snapid = $1
-			LEFT JOIN statsrepo.database db
-				ON we.dbid = db.dbid
-				AND db.snapid = $1
-			LEFT JOIN statsrepo.role ro
-				ON we.userid = ro.userid
-				AND ro.snapid = $1
 			WHERE
 				statsrepo.sub(we.count, wb.count) <> 0
 				AND we.snapid = $2

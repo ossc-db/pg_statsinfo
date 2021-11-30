@@ -529,7 +529,7 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 	}
 	fprintf(out, "\n");
 
-	fprintf(out, "/** Wait Events **/\n");
+	fprintf(out, "/** Wait Events per Database **/\n");
 	fprintf(out, "-----------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_WAIT_SAMPLING_BY_DBID, lengthof(params), params);
@@ -697,7 +697,7 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-	fprintf(out, "/** Wait Events **/\n");
+	fprintf(out, "/** Wait Events (Instance) **/\n");
 	fprintf(out, "-----------------------------------\n");
 
 	fprintf(out, "\n");
@@ -1312,6 +1312,7 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 		if (strcmp(PQgetvalue(res, i, 11), "1") == 0)
 		{
 			fprintf(out, "\n");
+			fprintf(out, "---------------------------------------------------------------------------------------\n");
 			fprintf(out, "%-32s  %-16s  %-16s  %-24s\n",
 			"Query ID", "Database", "User Name", "Backend Type");
 			fprintf(out, "---------------------------------------------------------------------------------------\n");
@@ -1322,20 +1323,19 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 			PQgetvalue(res, i, 5));
 
 			fprintf(out, "\n");
-			fprintf(out, "%-s\n",
+			fprintf(out, "\t%-s\n",
 			"Query");
-			fprintf(out, "---------------------------------------------------------------------------------------\n");
-			fprintf(out, "%-s\n",
+			fprintf(out, "\t---------------------------------------------------------------------------------------\n");
+			fprintf(out, "\t%-s\n",
 			PQgetvalue(res, i, 10));
 
 			fprintf(out, "\n");
-			fprintf(out, "\tTop 10 Events:\n");
-			fprintf(out, "\t%-12s  %-32s  %8s  %12s\n",
+			fprintf(out, "\t\tTop 10 Events:\n");
+			fprintf(out, "\t\t%-12s  %-32s  %8s  %12s\n",
 			"Event Type", "Event", "Count", "Ratio(%)");
-			fprintf(out, "\t-------------------------------------------------------------------------------\n");
+			fprintf(out, "\t\t-------------------------------------------------------------------------------\n");
 		}
-
-		fprintf(out, "\t%-12s  %-32s  %8s  %12s\n",
+		fprintf(out, "\t\t%-12s  %-32s  %8s  %12s\n",
 		PQgetvalue(res, i, 6),
 		PQgetvalue(res, i, 7),
 		PQgetvalue(res, i, 8),
