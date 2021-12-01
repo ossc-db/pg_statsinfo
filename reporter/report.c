@@ -719,7 +719,7 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-  fprintf(out, "/** Hash Table  Statistics **/\n");
+	fprintf(out, "/** Hash Table  Statistics **/\n");
 	fprintf(out, "----------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_HT_INFO, lengthof(params), params);
