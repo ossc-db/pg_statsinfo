@@ -427,7 +427,7 @@ SELECT
 	CASE WHEN idle_in_xact > 0 THEN 'OK' ELSE 'FAILED' END AS idle_in_xact,
 	CASE WHEN waiting > 0 THEN 'OK' ELSE 'FAILED' END AS waiting,
 	CASE WHEN running > 0 THEN 'OK' ELSE 'FAILED' END AS running,
-	CASE WHEN max_backends = 4 THEN 'OK' ELSE 'FAILED' END AS max_backends
+	CASE WHEN max_backends = 5 THEN 'OK' ELSE 'FAILED' END AS max_backends
 FROM
 	statsrepo.activity
 WHERE
@@ -566,10 +566,11 @@ EOF
 pg_ctl restart -w -D ${PGDATA} -o "-p ${PGPORT}" > /dev/null
 sleep 3
 psql -c "CREATE EXTENSION pg_stat_statements"
-psql db01 -U user01 -At << EOF > /dev/null
-SELECT schema01.func01('yyy', 25);
-SELECT schema01.func01('zzz', 32);
-EOF
+for i in  {1..200}
+do
+	sql="SELECT schema01.func01('zzz${i}', ${i})"
+	psql db01 -U user01 -Atc "${sql}" > /dev/null
+done
 get_snapshot
 send_query << EOF
 SELECT
@@ -623,6 +624,21 @@ WHERE
 	snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
 EOF
 
+echo "/**--- Statistics of rusage ---**/"
+send_query << EOF
+SELECT (COUNT(*) > 0) as cnt FROM statsrepo.rusage
+   WHERE snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
+EOF
+send_query << EOF
+SELECT 
+    CASE WHEN sum(exec_user_time) > 0 THEN 'xxx' ELSE 'yyy' END AS eut,
+    CASE WHEN sum(exec_system_time) > 0 THEN 'xxx' ELSE 'yyy' END AS est
+FROM
+    statsrepo.rusage
+WHERE
+    snapid = (SELECT max(snapid) FROM statsrepo.snapshot);
+EOF
+
 echo "/**--- Collect statistics after database crash recovery ---**/"
 psql -U user01 -d db01 -At << EOF
 INSERT INTO schema01.tbl01 (name, age) VALUES ('xxx', 30);
@@ -643,17 +659,6 @@ SELECT
 	CASE WHEN snapshot_increase_size IS NOT NULL THEN 'xxx' END AS snapshot_increase_size
 FROM
 	statsrepo.snapshot;
-EOF
-echo "/**--- Statistics of rusage ---**/"
-send_query << EOF
-SELECT (COUNT(*) > 1) as cnt FROM statsrepo.rusage;
-EOF
-send_query << EOF
-SELECT 
-    CASE WHEN sum(exec_user_time) > 0 THEN 'xxx' ELSE 'yyy' END AS eut,
-    CASE WHEN sum(exec_system_time) > 0 THEN 'xxx' ELSE 'yyy' END AS est
-FROM
-    statsrepo.rusage;
 EOF
 
 echo "/*---- do not collect column info and index info ----*/"

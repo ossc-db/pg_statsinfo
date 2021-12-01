@@ -381,7 +381,6 @@ ORDER BY \
 #define SQL_SELECT_LOCK_CLIENT_HOSTNAME		"'(N/A)'"
 #endif
 
-#if PG_VERSION_NUM >= 90600
 #define SQL_SELECT_LOCK "\
 SELECT \
 	sa.datid, \
@@ -396,7 +395,7 @@ SELECT \
 	px.gid AS blocker_gid, \
 	sa.wait_event_type, \
 	sa.wait_event, \
-	(pg_catalog.statement_timestamp() - sa.query_start)::interval(0), \
+	(pg_catalog.statement_timestamp() - t.waitstart)::interval(0), \
 	sa.query, \
 	CASE \
 		WHEN px.gid IS NOT NULL THEN '(xact is detached from session)' \
@@ -408,7 +407,8 @@ FROM \
 		pid AS blockee_pid, \
 		pg_catalog.unnest(pg_catalog.pg_blocking_pids(pid)) AS blocker_pid, \
 		transactionid, \
-		relation \
+		relation, \
+		waitstart \
 	 FROM \
 		pg_locks \
 	 WHERE \
@@ -421,52 +421,7 @@ FROM \
 	LEFT JOIN pg_class c ON c.oid = t.relation \
 	LEFT JOIN pg_namespace ns ON ns.oid = c.relnamespace \
 WHERE \
-	sa.query_start < pg_catalog.statement_timestamp() - pg_catalog.current_setting('" GUC_PREFIX ".long_lock_threshold')::interval"
-#else
-#define SQL_SELECT_LOCK "\
-SELECT \
-	db.datname, \
-	nb.nspname, \
-	lb.relation, \
-	" SQL_SELECT_LOCK_APPNAME ", \
-	sa.client_addr, \
-	" SQL_SELECT_LOCK_CLIENT_HOSTNAME ", \
-	sa.client_port, \
-	lb.pid AS blockee_pid, \
-	la.pid AS blocker_pid, \
-	la.gid AS blocker_gid, \
-	'(N/A)', \
-	'(N/A)', \
-	(pg_catalog.statement_timestamp() - sb.query_start)::interval(0), \
-	sb." PG_STAT_ACTIVITY_ATTNAME_QUERY ", \
-	CASE \
-		WHEN la.gid IS NOT NULL THEN '(xact is detached from session)' \
-		WHEN la.queries IS NULL THEN '(library might not have been loaded)' \
-		ELSE la.queries \
-	END \
-FROM \
-	(SELECT DISTINCT l0.pid, l0.relation, transactionid, la.gid, lx.queries \
-	 FROM pg_locks l0 \
-		LEFT JOIN \
-			(SELECT l1.virtualtransaction, pp.gid \
-			 FROM pg_prepared_xacts pp \
-				LEFT JOIN pg_locks l1 ON l1.transactionid = pp.transaction) la \
-			ON l0.virtualtransaction = la.virtualtransaction \
-		LEFT JOIN statsinfo.last_xact_activity() lx ON l0.pid = lx.pid \
-	 WHERE l0.granted = true AND \
-		(la.gid IS NULL OR l0.relation IS NOT NULL)) la \
-	 LEFT JOIN pg_stat_activity sa ON la.pid = sa." PG_STAT_ACTIVITY_ATTNAME_PID ", \
-	(SELECT DISTINCT pid, relation, transactionid \
-	 FROM pg_locks \
-	 WHERE granted = false) lb \
-	 LEFT JOIN pg_stat_activity sb ON lb.pid = sb." PG_STAT_ACTIVITY_ATTNAME_PID " \
-	 LEFT JOIN pg_database db ON sb.datid = db.oid \
-	 LEFT JOIN pg_class cb ON lb.relation = cb.oid \
-	 LEFT JOIN pg_namespace nb ON cb.relnamespace = nb.oid \
-WHERE \
-	(la.transactionid = lb.transactionid OR la.relation = lb.relation) AND \
-	sb.query_start < pg_catalog.statement_timestamp() - pg_catalog.current_setting('" GUC_PREFIX ".long_lock_threshold')::interval"
-#endif
+	t.waitstart < pg_catalog.statement_timestamp() - pg_catalog.current_setting('" GUC_PREFIX ".long_lock_threshold')::interval"
 
 /* bgwriter */
 #define SQL_SELECT_BGWRITER "\
@@ -883,9 +838,36 @@ SELECT \
         s.exec_nvcsws, \
         s.exec_nivcsws \
 FROM \
-        statsinfo.rusage_info() s \
+        statsinfo.rusage() s \
         LEFT JOIN pg_roles r ON r.oid = s.userid \
 WHERE \
         r.rolname <> ALL (('{' || $1 || '}')::text[]) \
 ORDER BY \
         s.exec_user_time DESC LIMIT $2"
+
+/* It does not have join key but ok, because each view and func have only one record. */
+#define SQL_SELECT_HT_INFO "\
+SELECT \
+	s.dealloc, \
+	s.stats_reset, \
+	w.dealloc, \
+	w.stats_reset, \
+	r.dealloc, \
+	r.stats_reset \
+FROM \
+	pg_stat_statements_info s, \
+	statsinfo.sample_wait_events_info() w, \
+	statsinfo.rusage_info() r"
+
+/* If pg_stat_statements is not installed, avoid referencing pg_stat_statements_info.*/
+#define SQL_SELECT_HT_INFO_EXCEPT_SS "\
+SELECT \
+	NULL, \
+	NULL, \
+	w.dealloc, \
+	w.stats_reset, \
+	r.dealloc, \
+	r.stats_reset \
+FROM \
+	statsinfo.sample_wait_events_info() w, \
+	statsinfo.rusage_info() r"

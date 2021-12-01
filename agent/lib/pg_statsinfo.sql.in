@@ -114,15 +114,6 @@ AS 'MODULE_PATHNAME', 'statsinfo_stop'
 LANGUAGE C;
 
 --
--- statsinfo.restart()
---
-/*
-CREATE FUNCTION statsinfo.restart() RETURNS text
-AS 'MODULE_PATHNAME', 'statsinfo_restart'
-LANGUAGE C;
-*/
-
---
 -- statsinfo.cpustats()
 --
 CREATE TYPE statsinfo.cpustats_type AS
@@ -248,7 +239,7 @@ RETURNS SETOF record
 AS 'MODULE_PATHNAME', 'statsinfo_last_xact_activity'
 LANGUAGE C STRICT;
 
-CREATE FUNCTION statsinfo.rusage_info(
+CREATE FUNCTION statsinfo.rusage(
     OUT queryid bigint,
     OUT top bool,
     OUT userid      oid,
@@ -273,6 +264,14 @@ CREATE FUNCTION statsinfo.rusage_info(
     OUT exec_nivcsws     bigint	      /* total involuntary context switches */
 )
 RETURNS SETOF record
+AS 'MODULE_PATHNAME', 'statsinfo_rusage'
+LANGUAGE C STRICT;
+
+CREATE FUNCTION statsinfo.rusage_info(
+    OUT dealloc bigint,
+    OUT stats_reset timestamp with time zone
+ )
+RETURNS record
 AS 'MODULE_PATHNAME', 'statsinfo_rusage_info'
 LANGUAGE C STRICT;
 

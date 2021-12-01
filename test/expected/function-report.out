@@ -152,6 +152,12 @@ DateTime          Database                    Size
 2012-11-01 00:02  postgres              24.841 MiB
 2012-11-01 00:03  postgres              26.099 MiB
 
+/** Database Resource Usage(rusage) **/
+-----------------------------------
+Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time
+----------------------------------------------------------------------------------------------------------------------------------------
+postgres                     9             9        0.900000       0.900000            18            18        1.800000       1.800000
+
 /** Recovery Conflicts **/
 -----------------------------------
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
@@ -196,6 +202,12 @@ DateTime          Database                    Size
 2012-11-01 00:01  postgres              23.646 MiB
 2012-11-01 00:02  postgres              24.841 MiB
 2012-11-01 00:03  postgres              26.099 MiB
+
+/** Database Resource Usage(rusage) **/
+-----------------------------------
+Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time
+----------------------------------------------------------------------------------------------------------------------------------------
+postgres                     9             9        0.900000       0.900000            18            18        1.800000       1.800000
 
 /** Recovery Conflicts **/
 -----------------------------------
@@ -242,6 +254,12 @@ DateTime          Database                    Size
 2012-11-01 00:02  postgres              24.841 MiB
 2012-11-01 00:03  postgres              26.099 MiB
 
+/** Database Resource Usage(rusage) **/
+-----------------------------------
+Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time
+----------------------------------------------------------------------------------------------------------------------------------------
+postgres                     9             9        0.900000       0.900000            18            18        1.800000       1.800000
+
 /** Recovery Conflicts **/
 -----------------------------------
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
@@ -286,6 +304,12 @@ DateTime          Database                    Size
 2012-11-01 00:01  postgres              23.646 MiB
 2012-11-01 00:02  postgres              24.841 MiB
 2012-11-01 00:03  postgres              26.099 MiB
+
+/** Database Resource Usage(rusage) **/
+-----------------------------------
+Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time
+----------------------------------------------------------------------------------------------------------------------------------------
+postgres                     9             9        0.900000       0.900000            18            18        1.800000       1.800000
 
 /** Recovery Conflicts **/
 -----------------------------------
@@ -332,6 +356,12 @@ DateTime          Database                    Size
 2012-11-01 00:02  postgres              24.841 MiB
 2012-11-01 00:03  postgres              26.099 MiB
 
+/** Database Resource Usage(rusage) **/
+-----------------------------------
+Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time
+----------------------------------------------------------------------------------------------------------------------------------------
+postgres                     9             9        0.900000       0.900000            18            18        1.800000       1.800000
+
 /** Recovery Conflicts **/
 -----------------------------------
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
@@ -376,6 +406,12 @@ DateTime          Database                    Size
 2012-11-01 00:01  postgres              23.646 MiB
 2012-11-01 00:02  postgres              24.841 MiB
 2012-11-01 00:03  postgres              26.099 MiB
+
+/** Database Resource Usage(rusage) **/
+-----------------------------------
+Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time
+----------------------------------------------------------------------------------------------------------------------------------------
+postgres                     9             9        0.900000       0.900000            18            18        1.800000       1.800000
 
 /** Recovery Conflicts **/
 -----------------------------------
@@ -436,6 +472,15 @@ DateTime          XID Increase
 2012-11-01 00:02            15
 2012-11-01 00:03             4
 
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
 ---------------------------------------------
@@ -485,6 +530,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -536,6 +590,15 @@ DateTime          XID Increase
 2012-11-01 00:02            15
 2012-11-01 00:03             4
 
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
 ---------------------------------------------
@@ -586,6 +649,15 @@ DateTime          XID Increase
 2012-11-01 00:02            15
 2012-11-01 00:03             4
 
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
 ---------------------------------------------
@@ -635,6 +707,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5437)
@@ -690,6 +771,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 exit: 0
 
@@ -1762,6 +1852,14 @@ postgres          postgres             66463     331.375 sec      0.005 sec     
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
+/** Statements (rusage) **/
+-----------------------------------
+User              Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
 /** Plans **/
 -----------------------------------
 Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
@@ -1791,6 +1889,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Statements (rusage) **/
+-----------------------------------
+User              Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Plans **/
 -----------------------------------
@@ -1822,6 +1928,14 @@ postgres          postgres             66463     331.375 sec      0.005 sec     
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
+/** Statements (rusage) **/
+-----------------------------------
+User              Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
 /** Plans **/
 -----------------------------------
 Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
@@ -1851,6 +1965,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Statements (rusage) **/
+-----------------------------------
+User              Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Plans **/
 -----------------------------------
@@ -1882,6 +2004,14 @@ postgres          postgres             66463     331.375 sec      0.005 sec     
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
+/** Statements (rusage) **/
+-----------------------------------
+User              Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
 /** Plans **/
 -----------------------------------
 Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
@@ -1911,6 +2041,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Statements (rusage) **/
+-----------------------------------
+User              Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Plans **/
 -----------------------------------
@@ -2902,6 +3040,12 @@ DateTime          Database                    Size
 2012-11-01 00:02  postgres              24.841 MiB
 2012-11-01 00:03  postgres              26.099 MiB
 
+/** Database Resource Usage(rusage) **/
+-----------------------------------
+Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time
+----------------------------------------------------------------------------------------------------------------------------------------
+postgres                     9             9        0.900000       0.900000            18            18        1.800000       1.800000
+
 /** Recovery Conflicts **/
 -----------------------------------
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
@@ -2953,6 +3097,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -3115,6 +3268,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Statements (rusage) **/
+-----------------------------------
+User              Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Plans **/
 -----------------------------------
@@ -3293,6 +3454,12 @@ DateTime          Database                    Size
 2012-11-01 00:02  postgres              24.841 MiB
 2012-11-01 00:03  postgres              26.099 MiB
 
+/** Database Resource Usage(rusage) **/
+-----------------------------------
+Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time
+----------------------------------------------------------------------------------------------------------------------------------------
+postgres                     9             9        0.900000       0.900000            18            18        1.800000       1.800000
+
 /** Recovery Conflicts **/
 -----------------------------------
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
@@ -3344,6 +3511,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -3506,6 +3682,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Statements (rusage) **/
+-----------------------------------
+User              Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Plans **/
 -----------------------------------
@@ -3684,6 +3868,12 @@ DateTime          Database                    Size
 2012-11-01 00:02  postgres              24.841 MiB
 2012-11-01 00:03  postgres              26.099 MiB
 
+/** Database Resource Usage(rusage) **/
+-----------------------------------
+Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time
+----------------------------------------------------------------------------------------------------------------------------------------
+postgres                     9             9        0.900000       0.900000            18            18        1.800000       1.800000
+
 /** Recovery Conflicts **/
 -----------------------------------
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
@@ -3735,6 +3925,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -3897,6 +4096,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Statements (rusage) **/
+-----------------------------------
+User              Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Plans **/
 -----------------------------------
@@ -4075,6 +4282,12 @@ DateTime          Database                    Size
 2012-11-01 00:02  postgres              24.841 MiB
 2012-11-01 00:03  postgres              26.099 MiB
 
+/** Database Resource Usage(rusage) **/
+-----------------------------------
+Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time
+----------------------------------------------------------------------------------------------------------------------------------------
+postgres                     9             9        0.900000       0.900000            18            18        1.800000       1.800000
+
 /** Recovery Conflicts **/
 -----------------------------------
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
@@ -4126,6 +4339,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -4288,6 +4510,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Statements (rusage) **/
+-----------------------------------
+User              Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Plans **/
 -----------------------------------
@@ -4466,6 +4696,12 @@ DateTime          Database                    Size
 2012-11-01 00:02  postgres              24.841 MiB
 2012-11-01 00:03  postgres              26.099 MiB
 
+/** Database Resource Usage(rusage) **/
+-----------------------------------
+Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time
+----------------------------------------------------------------------------------------------------------------------------------------
+postgres                     9             9        0.900000       0.900000            18            18        1.800000       1.800000
+
 /** Recovery Conflicts **/
 -----------------------------------
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
@@ -4517,6 +4753,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -4679,6 +4924,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Statements (rusage) **/
+-----------------------------------
+User              Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Plans **/
 -----------------------------------
@@ -4857,6 +5110,12 @@ DateTime          Database                    Size
 2012-11-01 00:02  postgres              24.841 MiB
 2012-11-01 00:03  postgres              26.099 MiB
 
+/** Database Resource Usage(rusage) **/
+-----------------------------------
+Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time
+----------------------------------------------------------------------------------------------------------------------------------------
+postgres                     9             9        0.900000       0.900000            18            18        1.800000       1.800000
+
 /** Recovery Conflicts **/
 -----------------------------------
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
@@ -4913,6 +5172,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -5095,6 +5363,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Statements (rusage) **/
+-----------------------------------
+User              Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Plans **/
 -----------------------------------
@@ -5470,6 +5746,12 @@ DateTime          Database                    Size
 2012-11-01 00:00  postgres              24.841 MiB
 2012-11-01 00:00  postgres              26.099 MiB
 
+/** Database Resource Usage(rusage) **/
+-----------------------------------
+Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time
+----------------------------------------------------------------------------------------------------------------------------------------
+postgres                     9             9        0.900000       0.900000            18            18        1.800000       1.800000
+
 /** Recovery Conflicts **/
 -----------------------------------
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
@@ -5526,6 +5808,15 @@ DateTime          XID Increase
 2012-11-01 00:00         21636
 2012-11-01 00:00            15
 2012-11-01 00:00             4
+
+/** Hash Table  Statistics **/
+----------------------------------------------------
+pg_stat_statements dealloc : 30
+pg_stat_statements reset   : 2012-11-01 03:00:00+09
+wait sampling dealloc      : 30
+wait sampling reset        : 2012-11-01 03:00:00+09
+rusage dealloc             : 30
+rusage reset               : 2012-11-01 03:00:00+09
 
 ----------------------------------------
 /* OS Resource Usage */
@@ -5708,6 +5999,14 @@ User              Database             Calls      Total Time      Time/Call  Blo
 postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
 postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
 postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+
+/** Statements (rusage) **/
+-----------------------------------
+User              Database            Plan Reads   Plan Writes  Plan User Time  Plan Sys Time    Exec Reads   Exec Writes  Exec User Time  Exec Sys Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres                     3             3        0.300000       0.300000             6             6        0.600000       0.600000  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Plans **/
 -----------------------------------

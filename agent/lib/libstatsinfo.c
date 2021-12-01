@@ -71,6 +71,7 @@
 #include "pgut/pgut-spi.h"
 #include "../common.h"
 #include "wait_sampling.h"
+#include "rusage.h"
 
 #define INVALID_PID			(-1)
 #define START_WAIT_MIN		(10)
@@ -114,86 +115,23 @@
 	"received SIGHUP, reloading configuration files"
 
 /* log_autovacuum_min_duration: vacuum */
-#if PG_VERSION_NUM >= 140000
 #define MSG_AUTOVACUUM \
 	"automatic %s of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain, %d skipped due to pins, %u skipped frozen\n" \
+	"pages: %u removed, %u remain, %u skipped due to pins, %u skipped frozen\n" \
 	"tuples: %lld removed, %lld remain, %lld are dead but not yet removable, oldest xmin: %u\n" \
-	"buffer usage: %lld hits, %lld misses, %lld dirtied\n" \
 	"%s" \
 	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
-	"%s" \
-	"system usage: %s\n" \
-	"WAL usage: %lld records, %lld full page images, %llu bytes"
-#elif PG_VERSION_NUM >= 130000
-#define MSG_AUTOVACUUM \
-	"automatic %s of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain, %d skipped due to pins, %u skipped frozen\n" \
-	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable, oldest xmin: %u\n" \
 	"buffer usage: %lld hits, %lld misses, %lld dirtied\n" \
-	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
-	"system usage: %s\n" \
-	"WAL usage: %ld records, %ld full page images, %llu bytes"
-#elif PG_VERSION_NUM >= 100000
-#define MSG_AUTOVACUUM \
-	"automatic %s of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain, %d skipped due to pins, %u skipped frozen\n" \
-	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable, oldest xmin: %u\n" \
-	"buffer usage: %d hits, %d misses, %d dirtied\n" \
-	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
+	"WAL usage: %lld records, %lld full page images, %llu bytes\n" \
 	"system usage: %s"
-#elif PG_VERSION_NUM >= 90600
-#define MSG_AUTOVACUUM \
-	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain, %d skipped due to pins, %u skipped frozen\n" \
-	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable\n" \
-	"buffer usage: %d hits, %d misses, %d dirtied\n" \
-	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
-	"system usage: %s"
-#elif PG_VERSION_NUM >= 90500
-#define MSG_AUTOVACUUM \
-	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain, %d skipped due to pins\n" \
-	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable\n" \
-	"buffer usage: %d hits, %d misses, %d dirtied\n" \
-	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
-	"system usage: %s"
-#elif PG_VERSION_NUM >= 90400
-#define MSG_AUTOVACUUM \
-	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain\n" \
-	"tuples: %.0f removed, %.0f remain, %.0f are dead but not yet removable\n" \
-	"buffer usage: %d hits, %d misses, %d dirtied\n" \
-	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
-	"system usage: %s"
-#elif PG_VERSION_NUM >= 90200
-#define MSG_AUTOVACUUM \
-	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain\n" \
-	"tuples: %.0f removed, %.0f remain\n" \
-	"buffer usage: %d hits, %d misses, %d dirtied\n" \
-	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
-	"system usage: %s"
-#else
-#define MSG_AUTOVACUUM \
-	"automatic vacuum of table \"%s.%s.%s\": index scans: %d\n" \
-	"pages: %d removed, %d remain\n" \
-	"tuples: %.0f removed, %.0f remain\n" \
-	"system usage: %s"
-#endif
 
 /* log_autovacuum_min_duration: analyze */
-#if PG_VERSION_NUM >= 140000
 #define MSG_AUTOANALYZE \
 	"automatic analyze of table \"%s.%s.%s\"\n" \
-	"buffer usage: %lld hits, %lld misses, %lld dirtied\n" \
-	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
 	"%s" \
+	"avg read rate: %.3f %s, avg write rate: %.3f %s\n" \
+	"buffer usage: %lld hits, %lld misses, %lld dirtied\n" \
 	"system usage: %s"
-#elif PG_VERSION_NUM >= 130000
-#define MSG_AUTOANALYZE \
-	"automatic analyze of table \"%s.%s.%s\" system usage: %s"
-#endif
 
 /* log_checkpoint: staring */
 #define MSG_CHECKPOINT_STARTING \
@@ -369,9 +307,13 @@ static const char *const RELOAD_PARAM_NAMES[] =
 	GUC_PREFIX ".enable_alert",
 	GUC_PREFIX ".target_server",
 	GUC_PREFIX ".profile_queries",
-	GUC_PREFIX ".profile_max",
+	GUC_PREFIX ".profile_save",
 	GUC_PREFIX ".collect_column",
-	GUC_PREFIX ".collect_index"
+	GUC_PREFIX ".collect_index",
+	GUC_PREFIX ".rusage_save",
+	GUC_PREFIX ".rusage_track",
+	GUC_PREFIX ".rusage_track_planning",
+	GUC_PREFIX ".rusage_track_utility"
 };
 
 static char	   *excluded_dbnames = NULL;
@@ -412,10 +354,16 @@ static bool		enable_alert = true;
 static char	   *target_server = NULL;
 bool			profile_queries = DEFAULT_PROFILE_QUERIES;
 int				pgws_max = DEFAULT_PROFILE_MAX;
+bool			profile_save = true;
 extern pgwsSharedState	*pgws;
 static bool		collect_column = true;
 static bool		collect_index = true;
 
+int		rusage_max = 0;
+bool	rusage_save = true;
+int		rusage_track = STATSINFO_RUSAGE_TRACK_TOP;
+bool	rusage_track_planning = true;
+bool	rusage_track_utility = true;
 /*---- Function declarations ----*/
 
 PG_FUNCTION_INFO_V1(statsinfo_sample);
@@ -430,7 +378,6 @@ PG_FUNCTION_INFO_V1(statsinfo_wait_sampling_profile);
 PG_FUNCTION_INFO_V1(statsinfo_tablespaces);
 PG_FUNCTION_INFO_V1(statsinfo_start);
 PG_FUNCTION_INFO_V1(statsinfo_stop);
-PG_FUNCTION_INFO_V1(statsinfo_restart);
 PG_FUNCTION_INFO_V1(statsinfo_cpustats);
 PG_FUNCTION_INFO_V1(statsinfo_cpustats_noarg);
 PG_FUNCTION_INFO_V1(statsinfo_devicestats);
@@ -452,7 +399,6 @@ extern Datum PGUT_EXPORT statsinfo_wait_sampling_profile(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_tablespaces(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_start(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_stop(PG_FUNCTION_ARGS);
-extern Datum PGUT_EXPORT statsinfo_restart(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_cpustats(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_cpustats_noarg(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_devicestats(PG_FUNCTION_ARGS);
@@ -599,6 +545,7 @@ uint32 pgws_hash_fn(const void *key, Size keysize);
 int pgws_match_fn(const void *key1, const void *key2, Size keysize);
 static uint32 pgws_sub_hash_fn(const void *key, Size keysize);
 static int pgws_sub_match_fn(const void *key1, const void *key2, Size keysize);
+void pgws_entry_alloc(pgwsEntry *key, bool direct);
 static void pgws_entry_dealloc(void);
 static int pgws_entry_cmp(const void *lhs, const void *rhs);
 
@@ -1877,6 +1824,17 @@ _PG_init(void)
 							NULL,
 							NULL);
 
+	DefineCustomBoolVariable(GUC_PREFIX ".profile_save",
+							"Save statsinfo wait sampling statistics across server shutdowns.",
+							NULL,
+							&profile_save,
+							true,
+							PGC_SIGHUP,
+							0,
+							NULL,
+							NULL,
+							NULL);
+
 	DefineCustomBoolVariable(GUC_PREFIX ".collect_column",
 							"Enable collect column information.",
 							NULL,
@@ -1895,6 +1853,64 @@ _PG_init(void)
 							true,
 							PGC_SIGHUP,
 							GUC_SUPERUSER_ONLY,
+							NULL,
+							NULL,
+							NULL);
+
+	DefineCustomIntVariable(GUC_PREFIX ".rusage_max",
+							"Sets the maximum number of statements for rusage info..",
+							NULL,
+							&rusage_max,
+							5000,
+							100,
+							INT_MAX,
+							PGC_POSTMASTER,
+							0,
+							NULL,
+							NULL,
+							NULL);
+
+	DefineCustomEnumVariable(GUC_PREFIX ".rusage_track",
+							"Sets the tracking level for rusage info.",
+							NULL,
+							&rusage_track,
+							STATSINFO_RUSAGE_TRACK_TOP,
+							rusage_track_options,
+							PGC_SUSET,
+							0,
+							NULL,
+							NULL,
+							NULL);
+
+    DefineCustomBoolVariable(GUC_PREFIX ".rusage_track_planning",
+							"Enable tracking rusage info on planning phase.",
+							NULL,
+							&rusage_track_planning,
+							false,
+							PGC_SUSET,
+							0,
+							NULL,
+							NULL,
+							NULL);
+
+    DefineCustomBoolVariable(GUC_PREFIX ".rusage_track_utility",
+							"Enable tracking rusage info for Utility Statements.",
+							NULL,
+							&rusage_track_utility,
+							true,
+							PGC_SUSET,
+							0,
+							NULL,
+							NULL,
+							NULL);
+
+	DefineCustomBoolVariable(GUC_PREFIX ".rusage_save",
+							"Save statsinfo rusage statistics across server shutdowns.",
+							NULL,
+							&rusage_save,
+							true,
+							PGC_SIGHUP,
+							0,
 							NULL,
 							NULL,
 							NULL);
@@ -2157,55 +2173,6 @@ done:
 	client_min_messages = save_client_min_messages;
 	log_min_messages = save_log_min_messages;
 	PG_RETURN_VOID();
-}
-
-/*
- * statsinfo_restart - Restart statsinfo background process.
- */
-Datum
-statsinfo_restart(PG_FUNCTION_ARGS)
-{
-	char	cmd[MAXPGPATH];
-	int		save_log_min_messages = 0;
-
-	must_be_superuser();
-
-	/* send log to terminate existing daemon. */
-	if (log_min_messages >= FATAL)
-	{
-		/* adjust elevel to LOG so that LOGMSG_RESTART must be written. */
-		save_log_min_messages = log_min_messages;
-		log_min_messages = LOG;
-	}
-	elog(LOG, LOGMSG_RESTART);
-	if (save_log_min_messages > 0)
-	{
-		log_min_messages = save_log_min_messages;
-	}
-
-	/* short sleep to ensure message is written */
-	pg_usleep(100 * 1000);
-	/*
-	 * FIXME: server logs written during the sleep might not be routed by
-	 * pg_statsinfo daemon, but I have no idea to ensure to place the
-	 * LOGMSG_RESTART message at the end of previous log file...
-	 */
-
-	/* force rotate the log file */
-	DirectFunctionCall1(pg_rotate_logfile, (Datum) 0);
-
-	/* wait for the previous daemon's exit and log rotation */
-	pg_usleep(500 * 1000);
-
-	/* spawn a new daemon process */
-	exec_background_process(cmd, NULL);
-
-	/*
-	 * return the command line for the new daemon; Note that we cannot
-	 * return the child pid because it is different from the pid of statsinfo
-	 * daemon because the child process will call daemon().
-	 */
-	PG_RETURN_TEXT_P(cstring_to_text(cmd));
 }
 
 #define FILE_CPUSTAT			"/proc/stat"
@@ -4827,11 +4794,16 @@ pgws_entry_dealloc(void)
 	pgwsEntry  *entry;
 	int		     nvictims;
 	int		     i;
+	int		     j;
 	HTAB		*hash_tmp;
 	HASHCTL		ctl_tmp;
 	pgwsSubEntry  *subentry;
 	pgwsSubEntry  item;
 	bool		  found;
+	double		  usage_tie;
+	uint64		  queryid_tie;
+	Oid			  userid_tie;
+	Oid			  dbid_tie;
 
 	/*
 	 * Sort entries by usage and deallocate USAGE_DEALLOC_PERCENT of them.
@@ -4844,6 +4816,14 @@ pgws_entry_dealloc(void)
 	ctl_tmp.match = pgws_sub_match_fn;
 	ctl_tmp.keysize = sizeof(pgwsSubHashKey);
 	ctl_tmp.entrysize = sizeof(pgwsSubEntry);
+	/*
+	 * hash_tmp is contraction of pgws_hash
+	 * to reduce the dimension
+	 * applied to fields (backend_type, wait_event_info)
+	 * Choosing victims in terms of each (userid, dbid, queryid)
+	 * is a election that should work something like limit .. with tie
+	 * because of consistency with pg_stat_statements.
+	 */
 	hash_tmp = hash_create("temporary table to find victims of pgws_hash",
 							pgws_max,
 							&ctl_tmp,
@@ -4866,30 +4846,45 @@ pgws_entry_dealloc(void)
 			subentry->usage = entry->counters.usage;
 	}
 
-	/*
-	 * replace usage by maximum value in each (userid, dbid, queryid)
-	 * in order to dealloc properly consistent with pg_stat_statements
-	 */
-	for (i = 0; entries[i]; i++)
+	Assert(hash_get_num_entries(pgws_hash) == i);
+
+	for (j = 0; j < i; j++)
 	{
-		item.key.userid = entries[i]->key.userid;
-		item.key.dbid = entries[i]->key.dbid;
-		item.key.queryid = entries[i]->key.queryid;
+		item.key.userid = entries[j]->key.userid;
+		item.key.dbid = entries[j]->key.dbid;
+		item.key.queryid = entries[j]->key.queryid;
 		subentry = (pgwsSubEntry *) hash_search(hash_tmp, &item, HASH_FIND, NULL);
 		if (!subentry)
 			elog(WARNING, "There is a missing item in hash_tmp");
-		else if (entries[i]->counters.usage < subentry->usage)
-			entries[i]->counters.usage = subentry->usage;
+		else if (entries[j]->counters.usage < subentry->usage)
+			entries[j]->counters.usage = subentry->usage;
 	}
 
+	/* order by usage, queryid, userid, dbid */
 	qsort(entries, i, sizeof(pgwsEntry *), pgws_entry_cmp);
 
 	nvictims = Max(10, i * STATSINFO_USAGE_DEALLOC_PERCENT / 100);
 	nvictims = Min(nvictims, i);
 
-	for (i = 0; i < nvictims; i++)
+	for (j = 0; j < nvictims; j++)
 	{
-		hash_search(pgws_hash, &entries[i]->key, HASH_REMOVE, NULL);
+		hash_search(pgws_hash, &entries[j]->key, HASH_REMOVE, NULL);
+	}
+
+	usage_tie = entries[nvictims - 1]->counters.usage;
+	queryid_tie = entries[nvictims - 1]->key.queryid;
+	userid_tie = entries[nvictims - 1]->key.userid;
+	dbid_tie = entries[nvictims - 1]->key.dbid;
+
+	for (j = nvictims; j < i; j++)
+	{
+		if (usage_tie == entries[j]->counters.usage &&
+			queryid_tie == entries[j]->key.queryid &&
+			userid_tie == entries[j]->key.userid &&
+			dbid_tie == entries[j]->key.dbid)
+			hash_search(pgws_hash, &entries[j]->key, HASH_REMOVE, NULL);
+		else
+			break;
 	}
 
 	/* Increment the number of times entries are deallocated */
@@ -4932,15 +4927,74 @@ pgws_sub_match_fn(const void *key1, const void *key2, Size keysize)
 static int
 pgws_entry_cmp(const void *lhs, const void *rhs)
 {
-	uint64		l_count = (*(pgwsEntry *const *) lhs)->counters.usage;
-	uint64		r_count = (*(pgwsEntry *const *) rhs)->counters.usage;
+	double		l_usage = (*(pgwsEntry *const *) lhs)->counters.usage;
+	double		r_usage = (*(pgwsEntry *const *) rhs)->counters.usage;
+	uint64		l_queryid = (*(pgwsEntry *const *) lhs)->key.queryid;
+	uint64		r_queryid = (*(pgwsEntry *const *) rhs)->key.queryid;
+	Oid			l_userid = (*(pgwsEntry *const *) lhs)->key.userid;
+	Oid			r_userid = (*(pgwsEntry *const *) rhs)->key.userid;
+	Oid			l_dbid = (*(pgwsEntry *const *) lhs)->key.dbid;
+	Oid			r_dbid = (*(pgwsEntry *const *) rhs)->key.dbid;
 
-	if (l_count < r_count)
+	if (l_usage < r_usage)
 		return -1;
-	else if (l_count > r_count)
+	else if (l_usage > r_usage)
 		return +1;
+
+	if (l_queryid < r_queryid)
+		return -1;
+	else if (l_queryid > r_queryid)
+		return +1;
+
+	if (l_userid < r_userid)
+		return -1;
+	else if (l_userid > r_userid)
+		return +1;
+
+	if (l_dbid < r_dbid)
+		return -1;
+	else if (l_dbid > r_dbid)
+		return +1;
+	
+	return 0;
+}
+
+/*
+ * pgws_entry_alloc - Enter the item into the hash table. 
+ * if direct == true, it store the specific item to hash table as-is.
+ * It use at reading saved stats file.
+ */
+void
+pgws_entry_alloc(pgwsEntry *item, bool direct)
+{
+	pgwsEntry	*entry;
+	bool		found;
+
+	/* Make space if needed */
+	while (hash_get_num_entries(pgws_hash) >= pgws_max)
+		pgws_entry_dealloc();
+
+	entry = (pgwsEntry *) hash_search(pgws_hash, &item->key, HASH_ENTER, &found);
+	if (found)
+	{
+		SpinLockAcquire(&entry->mutex);
+ 		entry->counters.count++;
+		entry->counters.usage += STATSINFO_USAGE_INCREASE; /* usage is raised by touching */
+		SpinLockRelease(&entry->mutex);
+ 	}
+	else if (direct)
+	{
+		memset(&entry->counters, 0, sizeof(pgwsCounters));
+		entry->counters = item->counters;
+		SpinLockInit(&entry->mutex);
+	}
 	else
-		return 0;
+	{
+		memset(&entry->counters, 0, sizeof(pgwsCounters));
+		entry->counters.count = 1;
+		entry->counters.usage = STATSINFO_USAGE_INIT;
+		SpinLockInit(&entry->mutex);
+	}
 }
 
 static void
@@ -4953,8 +5007,6 @@ probe_waits(void)
 		PgBackendStatus	*be;
 		pgwsEntry		item;
 		PGPROC			*proc;
-		pgwsEntry	   *entry;
-		bool			found;
 		int				procpid;
 
 		be = pgstat_fetch_stat_beentry(i);
@@ -4986,24 +5038,8 @@ probe_waits(void)
 
 		item.key.wait_event_info = proc->wait_event_info;
 
-		/* Make space if needed */
-		while (hash_get_num_entries(pgws_hash) >= pgws_max)
-			pgws_entry_dealloc();
-
-		entry = (pgwsEntry *) hash_search(pgws_hash, &item, HASH_ENTER, &found);
-		if (found)
-		{
-			SpinLockAcquire(&entry->mutex);
- 			entry->counters.count++;
-			entry->counters.usage += STATSINFO_USAGE_INCREASE; /* usage is raised by touching */
-			SpinLockRelease(&entry->mutex);
- 		}
-		else
-		{
-			entry->counters.count = 1;
-			entry->counters.usage = STATSINFO_USAGE_INIT;
-			SpinLockInit(&entry->mutex);
-		}
+		/* store this item */
+		pgws_entry_alloc(&item, false);
 	}
 }
 #endif

@@ -62,6 +62,8 @@ init_log(Log *log, const char *buf, const size_t fields[])
 #else
 	log->backend_type = "";
 #endif
+	log->leader_pid = buf + fields[i++];
+	log->query_id = buf + fields[i++];
 	Assert(i == CSV_COLS);
 }
 

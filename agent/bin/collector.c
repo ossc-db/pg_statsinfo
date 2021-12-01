@@ -25,10 +25,21 @@ static PGconn  *collector_conn = NULL;
 static void reload_params(void);
 static void do_sample(void);
 static void do_snapshot(char *comment);
+static bool update_hardware_info(void);
 static void get_server_encoding(void);
 static void collector_disconnect(void);
 bool extract_dbname(const char *conninfo, char *dbname, size_t size);
 static void get_postmaster_start_time(void);
+
+typedef struct HardWareInfo{
+	QueueItem	 base;
+
+	PGresult	*cpuinfo;
+	PGresult	*meminfo;
+} HardWareInfo;
+static PGresult *get_hardwareinfo(PGconn *conn, const char *sql);
+static void Update_HardwareInfo_free(HardWareInfo *hw);
+static bool Update_HardwareInfo_exec(HardWareInfo *hw, PGconn *conn, const char *instid);
 
 void
 collector_init(void)
@@ -50,6 +61,7 @@ collector_main(void *arg)
 	time_t		next_snapshot;
 	pid_t		log_maintenance_pid = 0;
 	int			fd_err;
+	bool		need_hw_update = true;
 
 	now = time(NULL);
 	next_sample = get_next_time(now, sampling_interval);
@@ -178,6 +190,12 @@ collector_main(void *arg)
 			log_maintenance_pid = 0;
 		}
 
+		if (need_hw_update)
+		{
+			if (update_hardware_info())
+				need_hw_update = false;
+		}
+
 		usleep(200 * 1000);	/* 200ms */
 	}
 
@@ -258,6 +276,158 @@ do_snapshot(char *comment)
 		free(comment);
 }
 
+static bool
+update_hardware_info(void)
+{
+	PGconn			*conn;
+	PGresult		*res_cpu;
+	PGresult		*res_mem;
+
+	/* connect to postgres database and ensure functions are installed */
+	if ((conn = collector_connect(NULL)) == NULL)
+		return false;
+
+	/* get hardware information */
+	res_cpu = get_hardwareinfo(conn,
+		"SELECT "
+		"  vendor_id, model_name, cpu_mhz, processors, "
+		"  threads_per_core, cores_per_socket, sockets "
+		"FROM statsinfo.cpuinfo()");
+
+	res_mem = get_hardwareinfo(conn,
+		"SELECT mem_total FROM statsinfo.meminfo()");
+
+	if ((res_cpu) && (res_mem))
+	{
+		/* request update of hardware information */
+		HardWareInfo	*hwinfo;
+
+		hwinfo = pgut_new(HardWareInfo);
+		hwinfo->base.type = QUEUE_HWINFO;
+		hwinfo->base.free = (QueueItemFree) Update_HardwareInfo_free;
+		hwinfo->base.exec = (QueueItemExec) Update_HardwareInfo_exec;
+		hwinfo->cpuinfo = res_cpu;
+		hwinfo->meminfo = res_mem;
+
+		writer_send((QueueItem *) hwinfo);
+		return true;
+	}
+	else
+	{
+		PQclear(res_cpu);
+		PQclear(res_mem);
+		return false;
+	}
+}
+
+static PGresult *
+get_hardwareinfo(PGconn *conn, const char *sql)
+{
+	PGresult	*res;
+
+	res = pgut_execute(conn, sql, 0, NULL);
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		PQclear(res);
+		return NULL;
+	}
+	return res;
+}
+
+static void
+Update_HardwareInfo_free(HardWareInfo *hwinfo)
+{
+	if (hwinfo)
+	{
+		PQclear(hwinfo->cpuinfo);
+		PQclear(hwinfo->meminfo);
+		free(hwinfo);
+	}
+}
+
+/*
+ * Update the repository only on the first boot or when the hardware information changes.
+ */
+static bool
+Update_HardwareInfo_exec(HardWareInfo *hwinfo, PGconn *conn, const char *instid)
+{
+	ExecStatusType	 res;
+
+	const char	*params[8];
+	const char	*sql;
+
+	if (pgut_command(conn, "BEGIN", 0, NULL) != PGRES_COMMAND_OK)
+		goto error;
+	
+	/* cpu information */
+	if (hwinfo->cpuinfo)
+	{
+		Assert( PQnfields(hwinfo->cpuinfo) == 7 );
+
+		params[0] = instid;
+		params[1] = PQgetvalue(hwinfo->cpuinfo, 0, 0); /* vendor_id */
+		params[2] = PQgetvalue(hwinfo->cpuinfo, 0, 1); /* model_name */
+		params[3] = PQgetvalue(hwinfo->cpuinfo, 0, 2); /* cpu_mhz */
+		params[4] = PQgetvalue(hwinfo->cpuinfo, 0, 3); /* processors */
+		params[5] = PQgetvalue(hwinfo->cpuinfo, 0, 4); /* threads_per_core */
+		params[6] = PQgetvalue(hwinfo->cpuinfo, 0, 5); /* cores_per_socket */
+		params[7] = PQgetvalue(hwinfo->cpuinfo, 0, 6); /* sockets */
+
+		sql = 
+			"WITH "
+			"  ic (vendor_id, model_name, cpu_mhz, processors, threads_per_core, cores_per_socket, sockets) "
+			"    AS (VALUES ($2::text, $3::text, $4::real, $5::integer, $6::integer, $7::integer, $8::integer)), "
+			"  r1 AS ("
+			"    SELECT ic.vendor_id, ic.model_name, ic.processors, ic.sockets FROM ic ),"
+			"  r2 AS ("
+			"    SELECT rc.vendor_id, rc.model_name, rc.processors, rc.sockets FROM statsrepo.cpuinfo rc"
+			"    WHERE instid = $1"
+			"      AND timestamp = (SELECT pg_catalog.max(timestamp) FROM statsrepo.cpuinfo WHERE instid = $1) ) "
+			"INSERT INTO statsrepo.cpuinfo"
+			"  (instid, timestamp, vendor_id, model_name, cpu_mhz, "
+			"   processors, threads_per_core, cores_per_socket, sockets) "
+			"SELECT $1, pg_catalog.transaction_timestamp(), t.vendor_id, t.model_name,"
+			"       ic.cpu_mhz, t.processors, ic.threads_per_core, ic.cores_per_socket, t.sockets "
+			"FROM (SELECT * FROM r1 EXCEPT SELECT * FROM r2) t, ic";
+
+		res = pgut_command(conn, sql, 8, params);
+		if (res != PGRES_COMMAND_OK)
+			goto error;
+	}
+
+	/* memory information */
+	if (hwinfo->cpuinfo)
+	{
+		Assert( PQnfields(hwinfo->meminfo) == 1 );
+
+		params[0] = instid;
+		params[1] = PQgetvalue(hwinfo->meminfo, 0, 0); /* mem_total */
+
+		sql = 
+			"WITH"
+			"  r1 (mem_total) AS (VALUES($2::bigint)),"
+			"  r2 AS ("
+			"    SELECT rm.mem_total FROM statsrepo.meminfo rm"
+			"    WHERE instid = $1"
+			"      AND timestamp = (SELECT pg_catalog.max(timestamp) FROM statsrepo.meminfo WHERE instid = $1) ) "
+			"INSERT INTO statsrepo.meminfo (instid, timestamp, mem_total) "
+			"SELECT $1, pg_catalog.transaction_timestamp(), t.mem_total "
+			"FROM (SELECT * FROM r1 EXCEPT SELECT * FROM r2) t";
+
+		res = pgut_command(conn, sql, 2, params);
+		if (res != PGRES_COMMAND_OK)
+			goto error;
+	}
+	
+	if (!pgut_commit(conn))
+		goto error;
+
+	return true;
+
+error:
+	pgut_rollback(conn);
+	return false;
+}
 /*
  * set server encoding
  */

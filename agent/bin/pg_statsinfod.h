@@ -27,9 +27,9 @@
 #define SECS_PER_DAY		86400	/* seconds per day */
 
 #define STATSINFO_CONTROL_FILE		"pg_statsinfo.control"
-#define STATSINFO_CONTROL_VERSION	130000
+#define STATSINFO_CONTROL_VERSION	140000
 
-#define STATSREPO_SCHEMA_VERSION	130000
+#define STATSREPO_SCHEMA_VERSION	140000
 
 /* number of columns of csvlog */
 #if PG_VERSION_NUM < 90000
@@ -37,7 +37,7 @@
 #elif PG_VERSION_NUM < 130000
 #define CSV_COLS			23
 #else
-#define CSV_COLS			24
+#define CSV_COLS			26
 #endif
 
 /* maintenance mode flag */
@@ -72,7 +72,8 @@ typedef enum WriterQueueType
 	QUEUE_CHECKPOINT,
 	QUEUE_AUTOVACUUM,
 	QUEUE_MAINTENANCE,
-	QUEUE_LOGSTORE
+	QUEUE_LOGSTORE,
+	QUEUE_HWINFO
 } WriterQueueType;
 
 /*
@@ -144,8 +145,16 @@ extern char		   *repolog_nologging_users;
 extern int			controlfile_fsync_interval;
 /*---- GUC variables (writer) ----------*/
 extern char		   *repository_server;
+/*---- GUC variables (wait event sampling collector) ----------*/
 extern bool		   profile_queries;
 extern int		   profile_max;
+extern bool		   profile_save;
+/*---- GUC variables (rusage) ----------*/
+extern bool			rusage_save;
+extern int			rusage_max;
+extern int			rusage_track;
+extern bool			rusage_track_planning;
+extern bool			rusage_track_utility;
 /*---- message format ----*/
 extern char		   *msg_debug;
 extern char		   *msg_info;
@@ -230,7 +239,17 @@ typedef struct Log
 	const char *error_location;
 	const char *application_name;
 	const char *backend_type;
+	const char *leader_pid;
+	const char *query_id;
 } Log;
+
+typedef enum
+{
+    STATSINFO_RUSAGE_TRACK_NONE,    /* track no statements */
+    STATSINFO_RUSAGE_TRACK_TOP,  /* only top level statements */
+    STATSINFO_RUSAGE_TRACK_ALL    /* all statements, including nested ones */
+}   STATSINFO_RUSAGE_TrackLevel;
+
 
 /* Contents of pg_statsinfo.control */
 typedef struct ControlFile

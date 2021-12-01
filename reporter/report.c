@@ -18,6 +18,7 @@
 #define SQL_SELECT_XACT_TENDENCY				"SELECT * FROM statsrepo.get_xact_tendency_report($1, $2)"
 #define SQL_SELECT_DBSIZE_TENDENCY				"SELECT * FROM statsrepo.get_dbsize_tendency_report($1, $2)"
 #define SQL_SELECT_DB_RUSAGE				"SELECT * FROM statsrepo.get_db_rusage_report($1, $2)"
+#define SQL_SELECT_HT_INFO						"SELECT * FROM statsrepo.get_ht_info($1, $2)"
 #define SQL_SELECT_STAT_REPLICATION_SLOTS		"SELECT * FROM statsrepo.get_stat_replication_slots_report($1, $2)"
 #define SQL_SELECT_RECOVERY_CONFLICTS 			"SELECT * FROM statsrepo.get_recovery_conflicts($1, $2)"
 #define SQL_SELECT_INSTANCE_PROC_TENDENCY "\
@@ -715,6 +716,19 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 		PQgetvalue(res, i, 2),
 		PQgetvalue(res, i, 3));
 	}
+	fprintf(out, "\n");
+	PQclear(res);
+
+  fprintf(out, "/** Hash Table  Statistics **/\n");
+	fprintf(out, "----------------------------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_HT_INFO, lengthof(params), params);
+	fprintf(out, "pg_stat_statements dealloc : %s\n", PQgetvalue(res, 0, 0));
+	fprintf(out, "pg_stat_statements reset   : %s\n", PQgetvalue(res, 0, 1));
+	fprintf(out, "wait sampling dealloc      : %s\n", PQgetvalue(res, 0, 2));
+	fprintf(out, "wait sampling reset        : %s\n", PQgetvalue(res, 0, 3));
+	fprintf(out, "rusage dealloc             : %s\n", PQgetvalue(res, 0, 4));
+	fprintf(out, "rusage reset               : %s\n", PQgetvalue(res, 0, 5));
 	fprintf(out, "\n");
 	PQclear(res);
 }

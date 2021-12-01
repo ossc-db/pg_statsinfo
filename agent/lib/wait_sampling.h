@@ -13,6 +13,12 @@
 #define STATSINFO_USAGE_DEALLOC_PERCENT	5
 #define STATSINFO_USAGE_INIT (1.0)
 
+/* Location of permanent stats file (valid when database is shut down) */
+#define STATSINFO_WS_DUMP_FILE  PGSTAT_STAT_PERMANENT_DIRECTORY "/pg_statsinfo_ws.stat"
+
+/* Magic number identifying the stats file format */
+static const uint32 STATSINFO_WS_FILE_HEADER = 0x20210930;
+
 typedef struct
 {
 	Oid				userid;			/* user OID */

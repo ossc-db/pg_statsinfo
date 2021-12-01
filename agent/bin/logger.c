@@ -369,6 +369,9 @@ pgut_error(int elevel, int code, const char *msg, const char *detail)
 	log->user_query_pos = "";
 	log->error_location = "";
 	log->application_name = PROGRAM_NAME;
+	log->backend_type = "";
+	log->leader_pid = "";
+	log->query_id = "";
 
 	pthread_mutex_lock(&log_lock);
 	log_queue = lappend(log_queue, log);

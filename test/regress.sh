@@ -38,6 +38,7 @@ function do_test()
 	do
 		local script="${SCRIPT_DIR}/${regress}.sh"
 		local result="${RESULTS_DIR}/${regress}.out"
+		local expect="${EXPECTED_DIR}/${regress}.out"
 		local diff="${RESULTS_DIR}/${regress}.diff"
 		local ret="FAILED"
 
@@ -45,16 +46,12 @@ function do_test()
 
 		( eval "${script}" > "${result}" 2>&1 )
 
-		for expect in $(find "${EXPECTED_DIR}" -type f -regex ".*${regress}\(_[0-9.-]+\)?\.out\$" | sort)
-		do
-			diff "${result}" "${expect}" > ${diff}
+		diff "${result}" "${expect}" > ${diff}
 
-			if [ ${?} -eq 0 ] ; then
-				ret="ok"
-				success=$(expr ${success} + 1)
-				break
-			fi
-		done
+		if [ ${?} -eq 0 ] ; then
+			ret="ok"
+			success=$(expr ${success} + 1)
+		fi
 		echo "${ret}"
 	done
 }
