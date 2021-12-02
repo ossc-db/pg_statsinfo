@@ -3752,65 +3752,89 @@ CREATE FUNCTION statsrepo.get_wait_sampling(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		ttt.queryid,
-		ttt.dbid,
-		ttt.userid,
-		st.datname,
-		st.rolname,
-		ttt.backend_type,
-		ttt.event_type,
-		ttt.event,
-		ttt.cnt,
-		ttt.ratio,
-		st.query,
-		ttt.row_number
+		queryid,
+		dbid,
+		userid,
+		datname,
+		rolname,
+		backend_type,
+		event_type,
+		event,
+		cnt,
+		ratio,
+		query,
+		row_number AS row_number
 	FROM
-		statsrepo.get_query_activity_statements($1, $2) st
-	JOIN
-		(SELECT *
+		(SELECT
+			ttt.queryid AS queryid,
+			ttt.dbid AS dbid,
+			ttt.userid AS userid,
+			st.datname AS datname,
+			st.rolname AS rolname,
+			ttt.backend_type AS backend_type,
+			ttt.event_type AS event_type,
+			ttt.event AS event,
+			ttt.cnt AS cnt,
+			ttt.ratio AS ratio,
+			st.query AS query,
+			st.total_exec_time AS total_exec_time,
+			st.calls AS calls,
+			ttt.row_number AS row_number
 		FROM
-			(SELECT
-				queryid,
-				dbid,
-				userid,
-				backend_type,
-				event_type,
-				event,
-				cnt,
-				ratio::numeric(6,3) AS ratio,
-				ROW_NUMBER() OVER ww
+			(SELECT * FROM statsrepo.get_query_activity_statements($1, $2) LIMIT 20) st
+		JOIN
+			(SELECT *
 			FROM
 				(SELECT
-					we.queryid AS queryid,
-					we.dbid AS dbid,
-					we.userid AS userid,
-					we.backend_type AS backend_type,
-					we.event_type AS event_type,
-					we.event AS event,
-					statsrepo.sub(we.count, wb.count) AS cnt,
-					statsrepo.sub(we.count, wb.count) * 100 / pg_catalog.sum(statsrepo.sub(we.count, wb.count)) OVER w AS ratio
+					queryid,
+					dbid,
+					userid,
+					backend_type,
+					event_type,
+					event,
+					cnt,
+					ratio::numeric(6,3) AS ratio,
+					ROW_NUMBER() OVER ww
 				FROM
-					statsrepo.wait_sampling we
-				LEFT JOIN statsrepo.wait_sampling wb
-					ON wb.dbid = we.dbid
-					AND wb.userid = we.userid
-					AND wb.queryid = we.queryid
-					AND wb.backend_type = we.backend_type
-					AND wb.event_type = we.event_type
-					AND wb.event = we.event
-					AND wb.snapid = $1
-				WHERE
-					statsrepo.sub(we.count, wb.count) <> 0
-					AND we.snapid = $2
-				WINDOW w AS (PARTITION BY we.queryid, we.dbid, we.userid, we.backend_type) -- don't use order by to work partial summation properly
-				) t
-			WINDOW ww AS (PARTITION BY queryid, dbid, userid, backend_type ORDER BY cnt DESC)
-			) tt
-		WHERE tt.row_number <= 10
-		) ttt
-	ON  ttt.dbid = st.dbid
-	AND ttt.userid = st.userid
-	AND ttt.queryid = st.queryid
+					(SELECT
+						we.queryid AS queryid,
+						we.dbid AS dbid,
+						we.userid AS userid,
+						we.backend_type AS backend_type,
+						we.event_type AS event_type,
+						we.event AS event,
+						statsrepo.sub(we.count, wb.count) AS cnt,
+						statsrepo.sub(we.count, wb.count) * 100 / pg_catalog.sum(statsrepo.sub(we.count, wb.count)) OVER w AS ratio
+					FROM
+						statsrepo.wait_sampling we
+					LEFT JOIN statsrepo.wait_sampling wb
+						ON wb.dbid = we.dbid
+						AND wb.userid = we.userid
+						AND wb.queryid = we.queryid
+						AND wb.backend_type = we.backend_type
+						AND wb.event_type = we.event_type
+						AND wb.event = we.event
+						AND wb.snapid = $1
+					WHERE
+						statsrepo.sub(we.count, wb.count) <> 0
+						AND we.snapid = $2
+					WINDOW w AS (PARTITION BY we.queryid, we.dbid, we.userid, we.backend_type) -- don't use order by to work partial summation properly
+					) t
+				WINDOW ww AS (PARTITION BY queryid, dbid, userid, backend_type ORDER BY cnt DESC)
+				) tt
+			WHERE tt.row_number <= 10
+			) ttt
+			ON  ttt.dbid = st.dbid
+			AND ttt.userid = st.userid
+			AND ttt.queryid = st.queryid
+		) tttt
+	ORDER BY
+		total_exec_time DESC,
+		calls DESC,
+		dbid,
+		userid,
+		queryid,
+		row_number
 ;
 $$
 LANGUAGE sql;
