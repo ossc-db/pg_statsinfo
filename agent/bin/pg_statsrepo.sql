@@ -3781,7 +3781,7 @@ $$
 			st.calls AS calls,
 			ttt.row_number AS row_number
 		FROM
-			(SELECT * FROM statsrepo.get_query_activity_statements($1, $2) LIMIT 20) st
+			(SELECT * FROM statsrepo.get_query_activity_statements($1, $2) ORDER BY total_exec_time DESC, calls DESC LIMIT 20) st
 		JOIN
 			(SELECT *
 			FROM
