@@ -3763,7 +3763,7 @@ $$
 		cnt,
 		ratio,
 		query,
-		row_number AS row_number
+		row_number
 	FROM
 		(SELECT
 			ttt.queryid AS queryid,
