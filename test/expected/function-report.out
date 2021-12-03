@@ -740,7 +740,7 @@ DateTime          Location           Segment File                  Write Size   
 2012-11-01 00:03  0/63614A8          000000010000000000000006      13.173 MiB       0.220 MiB  000000010000000000000005
 
 ----------------------------------------
-  Wal Records      Wal Fpi     Wal Bytes  Wal Buffers Full     Wal write      Wal Sync  Wal write Time  Wal Sync Time  Wal Reset           
+  WAL Records      WAL Fpi     WAL Bytes  WAL Buffers Full     WAL Write      WAL Sync  WAL Write Time  WAL Sync Time  WAL Reset           
 ----------------------------------------------------------------------------------------------------------------------------------------------------
        824540          479      64638470              1876          1950             0            0 ms           0 ms  2012-11-01 00:00:00+09
 
@@ -5141,7 +5141,7 @@ DateTime          Location           Segment File                  Write Size   
 2012-11-01 00:03  0/63614A8          000000010000000000000006      13.173 MiB       0.220 MiB  000000010000000000000005
 
 ----------------------------------------
-  Wal Records      Wal Fpi     Wal Bytes  Wal Buffers Full     Wal write      Wal Sync  Wal write Time  Wal Sync Time  Wal Reset           
+  WAL Records      WAL Fpi     WAL Bytes  WAL Buffers Full     WAL Write      WAL Sync  WAL Write Time  WAL Sync Time  WAL Reset           
 ----------------------------------------------------------------------------------------------------------------------------------------------------
        824540          479      64638470              1876          1950             0            0 ms           0 ms  2012-11-01 00:00:00+09
 
@@ -5777,7 +5777,7 @@ DateTime          Location           Segment File                  Write Size   
 2012-11-01 00:00  0/63614A8          000000010000000000000006      13.173 MiB       0.000 MiB  000000010000000000000005
 
 ----------------------------------------
-  Wal Records      Wal Fpi     Wal Bytes  Wal Buffers Full     Wal write      Wal Sync  Wal write Time  Wal Sync Time  Wal Reset           
+  WAL Records      WAL Fpi     WAL Bytes  WAL Buffers Full     WAL Write      WAL Sync  WAL Write Time  WAL Sync Time  WAL Reset           
 ----------------------------------------------------------------------------------------------------------------------------------------------------
        824540          479      64638470              1876          1950             0            0 ms           0 ms  2012-11-01 00:00:00+09
 
