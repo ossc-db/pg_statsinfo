@@ -399,14 +399,14 @@ $$
 	--
 	-- Data for Name: wait_sampling; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
- 	INSERT INTO statsrepo.wait_sampling VALUES ($6, 12870, 10, 1067368138, 'client backend', 'IO', 'DataFileRead', 2);
- 	INSERT INTO statsrepo.wait_sampling VALUES ($6, 12870, 10, 1067368138, 'client backend', 'Client', 'ClientRead', 1);
- 	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 1, 12870, 10, 1067368138, 'client backend', 'IO', 'DataFileRead', 4);
- 	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 1, 12870, 10, 1067368138, 'client backend', 'Client', 'ClientRead', 2);
- 	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 2, 12870, 10, 1067368138, 'client backend', 'IO', 'DataFileRead', 8);
- 	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 2, 12870, 10, 1067368138, 'client backend', 'Client', 'ClientRead', 4);
- 	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 3, 12870, 10, 1067368138, 'client backend', 'IO', 'DataFileRead', 16);
- 	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 3, 12870, 10, 1067368138, 'client backend', 'Client', 'ClientRead', 8);
+	INSERT INTO statsrepo.wait_sampling VALUES ($6, 12870, 10, 1067368138, 'client backend', 'IO', 'DataFileRead', 2);
+	INSERT INTO statsrepo.wait_sampling VALUES ($6, 12870, 10, 1067368138, 'client backend', 'Client', 'ClientRead', 1);
+	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 1, 12870, 10, 1067368138, 'client backend', 'IO', 'DataFileRead', 4);
+	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 1, 12870, 10, 1067368138, 'client backend', 'Client', 'ClientRead', 2);
+	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 2, 12870, 10, 1067368138, 'client backend', 'IO', 'DataFileRead', 8);
+	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 2, 12870, 10, 1067368138, 'client backend', 'Client', 'ClientRead', 4);
+	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 3, 12870, 10, 1067368138, 'client backend', 'IO', 'DataFileRead', 16);
+	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 3, 12870, 10, 1067368138, 'client backend', 'Client', 'ClientRead', 8);
 
 	--
 	-- Data for Name: cpuinfo; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
