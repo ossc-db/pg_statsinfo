@@ -212,7 +212,7 @@ default_log_maintenance_command(void)
 /*---- GUC variables ----*/
 
 #define DEFAULT_SAMPLING_INTERVAL			5		/* sec */
-#define DEFAULT_SAMPLING_WAIT_EVENTS_INTERVAL			10		/* msec */
+#define DEFAULT_SAMPLING_WAIT_SAMPLING_INTERVAL			10		/* msec */
 #define DEFAULT_SNAPSHOT_INTERVAL			600		/* sec */
 #define DEFAULT_SYSLOG_LEVEL				DISABLE
 #define DEFAULT_TEXTLOG_LEVEL				WARNING
@@ -278,7 +278,7 @@ static const char *const RELOAD_PARAM_NAMES[] =
 	GUC_PREFIX ".stat_statements_exclude_users",
 	GUC_PREFIX ".repository_server",
 	GUC_PREFIX ".sampling_interval",
-	GUC_PREFIX ".sampling_wait_events_interval",
+	GUC_PREFIX ".sampling_wait_sampling_interval",
 	GUC_PREFIX ".snapshot_interval",
 	GUC_PREFIX ".syslog_line_prefix",
 	GUC_PREFIX ".syslog_min_messages",
@@ -320,7 +320,7 @@ static char	   *excluded_dbnames = NULL;
 static char	   *excluded_schemas = NULL;
 static char	   *repository_server = NULL;
 static int		sampling_interval = DEFAULT_SAMPLING_INTERVAL;
-static int		sampling_wait_events_interval = DEFAULT_SAMPLING_WAIT_EVENTS_INTERVAL;
+static int		sampling_wait_sampling_interval = DEFAULT_SAMPLING_WAIT_SAMPLING_INTERVAL;
 static int		snapshot_interval = DEFAULT_SNAPSHOT_INTERVAL;
 static char	   *syslog_line_prefix = NULL;
 static int		syslog_min_messages = DEFAULT_SYSLOG_LEVEL;
@@ -353,9 +353,9 @@ static int		controlfile_fsync_interval = DEFAULT_CONTROLFILE_FSYNC_INTERVAL;
 static bool		enable_alert = true;
 static char	   *target_server = NULL;
 bool			profile_queries = DEFAULT_PROFILE_QUERIES;
-int				pgws_max = DEFAULT_PROFILE_MAX;
+int				wait_sampling_max = DEFAULT_PROFILE_MAX;
 bool			profile_save = true;
-extern pgwsSharedState	*pgws;
+extern wait_samplingSharedState	*wait_sampling;
 static bool		collect_column = true;
 static bool		collect_index = true;
 
@@ -367,9 +367,9 @@ bool	rusage_track_utility = true;
 /*---- Function declarations ----*/
 
 PG_FUNCTION_INFO_V1(statsinfo_sample);
-PG_FUNCTION_INFO_V1(statsinfo_sample_wait_events);
-PG_FUNCTION_INFO_V1(statsinfo_sample_wait_events_reset);
-PG_FUNCTION_INFO_V1(statsinfo_sample_wait_events_info);
+PG_FUNCTION_INFO_V1(statsinfo_sample_wait_sampling);
+PG_FUNCTION_INFO_V1(statsinfo_sample_wait_sampling_reset);
+PG_FUNCTION_INFO_V1(statsinfo_sample_wait_sampling_info);
 PG_FUNCTION_INFO_V1(statsinfo_activity);
 PG_FUNCTION_INFO_V1(statsinfo_long_xact);
 PG_FUNCTION_INFO_V1(statsinfo_snapshot);
@@ -388,9 +388,9 @@ PG_FUNCTION_INFO_V1(statsinfo_cpuinfo);
 PG_FUNCTION_INFO_V1(statsinfo_meminfo);
 
 extern Datum PGUT_EXPORT statsinfo_sample(PG_FUNCTION_ARGS);
-extern Datum PGUT_EXPORT statsinfo_sample_wait_events(PG_FUNCTION_ARGS);
-extern Datum PGUT_EXPORT statsinfo_sample_wait_events_reset(PG_FUNCTION_ARGS);
-extern Datum PGUT_EXPORT statsinfo_sample_wait_events_info(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_sample_wait_sampling(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_sample_wait_sampling_reset(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_sample_wait_sampling_info(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_activity(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_long_xact(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_snapshot(PG_FUNCTION_ARGS);
@@ -414,7 +414,7 @@ extern PGUT_EXPORT void	init_last_xact_activity(void);
 extern PGUT_EXPORT void	fini_last_xact_activity(void);
 extern PGUT_EXPORT void	init_wait_sampling(void);
 extern PGUT_EXPORT void	fini_wait_sampling(void);
-extern PGUT_EXPORT void	pgws_shmem_startup(void);
+extern PGUT_EXPORT void	wait_sampling_shmem_startup(void);
 
 /*----  Internal declarations ----*/
 
@@ -541,13 +541,13 @@ static uint32 ds_hash_fn(const void *key, Size keysize);
 static int ds_match_fn(const void *key1, const void *key2, Size keysize);
 static void sample_waits(void);
 static void probe_waits(void);
-uint32 pgws_hash_fn(const void *key, Size keysize);
-int pgws_match_fn(const void *key1, const void *key2, Size keysize);
-static uint32 pgws_sub_hash_fn(const void *key, Size keysize);
-static int pgws_sub_match_fn(const void *key1, const void *key2, Size keysize);
-void pgws_entry_alloc(pgwsEntry *key, bool direct);
-static void pgws_entry_dealloc(void);
-static int pgws_entry_cmp(const void *lhs, const void *rhs);
+uint32 wait_sampling_hash_fn(const void *key, Size keysize);
+int wait_sampling_match_fn(const void *key1, const void *key2, Size keysize);
+static uint32 wait_sampling_sub_hash_fn(const void *key, Size keysize);
+static int wait_sampling_sub_match_fn(const void *key1, const void *key2, Size keysize);
+void wait_sampling_entry_alloc(wait_samplingEntry *key, bool direct);
+static void wait_sampling_entry_dealloc(void);
+static int wait_sampling_entry_cmp(const void *lhs, const void *rhs);
 
 #if defined(WIN32)
 static int str_to_elevel(const char *name, const char *str,
@@ -581,7 +581,7 @@ static shmem_startup_hook_type	prev_shmem_startup_hook = NULL;
 static Activity		 activity = { 0, 0, 0, 0, 0, 0 };
 static HTAB			*long_xacts = NULL;
 static HTAB			*diskstats = NULL;
-HTAB				*pgws_hash = NULL;
+HTAB				*wait_sampling_hash = NULL;
 
 
 /* variables for pg_statsinfo launcher */
@@ -606,10 +606,10 @@ statsinfo_sample(PG_FUNCTION_ARGS)
 }
 
 /*
- * statsinfo_sample_wait_events - sample statistics of wait events for server instance.
+ * statsinfo_sample_wait_sampling - sample statistics of wait sampling for server instance.
  */
 Datum
-statsinfo_sample_wait_events(PG_FUNCTION_ARGS)
+statsinfo_sample_wait_sampling(PG_FUNCTION_ARGS)
 {
 	must_be_superuser();
 
@@ -619,33 +619,33 @@ statsinfo_sample_wait_events(PG_FUNCTION_ARGS)
 }
 
 /*
- * statsinfo_sample_wait_events_reset - reset sample statistics of wait events for server instance.
+ * statsinfo_sample_wait_sampling_reset - reset sample statistics of wait sampling for server instance.
  */
 Datum
-statsinfo_sample_wait_events_reset(PG_FUNCTION_ARGS)
+statsinfo_sample_wait_sampling_reset(PG_FUNCTION_ARGS)
 {
 	HASH_SEQ_STATUS hash_seq;
-	pgwsEntry  *entry;
+	wait_samplingEntry  *entry;
 
 	must_be_superuser();
 
-	LWLockAcquire(pgws->lock, LW_EXCLUSIVE);
+	LWLockAcquire(wait_sampling->lock, LW_EXCLUSIVE);
 
 	/* Remove all entries. */
-	hash_seq_init(&hash_seq, pgws_hash);
+	hash_seq_init(&hash_seq, wait_sampling_hash);
 	while ((entry = hash_seq_search(&hash_seq)) != NULL)
 	{
-		hash_search(pgws_hash, &entry->key, HASH_REMOVE, NULL);
+		hash_search(wait_sampling_hash, &entry->key, HASH_REMOVE, NULL);
 	}
 
-	LWLockRelease(pgws->lock);
+	LWLockRelease(wait_sampling->lock);
 
 	/*
-	 * Reset global statistics for sample_wait_events since all entries are
+	 * Reset global statistics for sample_wait_sampling since all entries are
 	 * removed.
 	 */
 	{
-		volatile pgwsSharedState *s = (volatile pgwsSharedState *) pgws;
+		volatile wait_samplingSharedState *s = (volatile wait_samplingSharedState *) wait_sampling;
 		TimestampTz stats_reset = GetCurrentTimestamp();
 
 		SpinLockAcquire(&s->mutex);
@@ -657,19 +657,19 @@ statsinfo_sample_wait_events_reset(PG_FUNCTION_ARGS)
 	PG_RETURN_VOID();
 }
 
-/* Number of output arguments (columns) for sample_wait_events_info */
-#define SAMPLE_WAIT_EVENTS_INFO_COLS	2
+/* Number of output arguments (columns) for sample_wait_sampling_info */
+#define SAMPLE_WAIT_SAMPLING_INFO_COLS	2
 
 /*
- * Return statistics of sample_wait_events.
+ * Return statistics of sample_wait_sampling.
  */
 Datum
-statsinfo_sample_wait_events_info(PG_FUNCTION_ARGS)
+statsinfo_sample_wait_sampling_info(PG_FUNCTION_ARGS)
 {
-	pgwsGlobalStats stats;
+	wait_samplingGlobalStats stats;
 	TupleDesc	tupdesc;
-	Datum		values[SAMPLE_WAIT_EVENTS_INFO_COLS];
-	bool		nulls[SAMPLE_WAIT_EVENTS_INFO_COLS];
+	Datum		values[SAMPLE_WAIT_SAMPLING_INFO_COLS];
+	bool		nulls[SAMPLE_WAIT_SAMPLING_INFO_COLS];
 
 	/* Build a tuple descriptor for our result type */
 	if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
@@ -678,9 +678,9 @@ statsinfo_sample_wait_events_info(PG_FUNCTION_ARGS)
 	MemSet(values, 0, sizeof(values));
 	MemSet(nulls, 0, sizeof(nulls));
 
-	/* Read global statistics for sample_wait_events_info */
+	/* Read global statistics for sample_wait_sampling_info */
 	{
-		volatile pgwsSharedState *s = (volatile pgwsSharedState *) pgws;
+		volatile wait_samplingSharedState *s = (volatile wait_samplingSharedState *) wait_sampling;
 
 		SpinLockAcquire(&s->mutex);
 		stats = s->stats;
@@ -1174,7 +1174,7 @@ statsinfo_wait_sampling_profile(PG_FUNCTION_ARGS)
 	MemoryContext		per_query_ctx;
 	MemoryContext		oldcontext;
 	HASH_SEQ_STATUS		hash_seq;
-	pgwsEntry		   *entry;
+	wait_samplingEntry		   *entry;
 	Datum				values[WAIT_SAMPLING_PROFILE_COLS];
 	bool				nulls[WAIT_SAMPLING_PROFILE_COLS];
 	int					i;
@@ -1207,9 +1207,9 @@ statsinfo_wait_sampling_profile(PG_FUNCTION_ARGS)
 
 	MemoryContextSwitchTo(oldcontext);
 
-	if (pgws_hash)
+	if (wait_sampling_hash)
 	{
-		hash_seq_init(&hash_seq, pgws_hash);
+		hash_seq_init(&hash_seq, wait_sampling_hash);
 		while ((entry = hash_seq_search(&hash_seq)) != NULL)
 		{
 			memset(values, 0, sizeof(values));
@@ -1444,11 +1444,11 @@ _PG_init(void)
 							NULL,
 							NULL);
 
-	DefineCustomIntVariable(GUC_PREFIX ".sampling_wait_events_interval",
-							"Sets the sampling wait events interval.",
+	DefineCustomIntVariable(GUC_PREFIX ".sampling_wait_sampling_interval",
+							"Sets the wait sampling interval.",
 							NULL,
-							&sampling_wait_events_interval,
-							DEFAULT_SAMPLING_WAIT_EVENTS_INTERVAL,
+							&sampling_wait_sampling_interval,
+							DEFAULT_SAMPLING_WAIT_SAMPLING_INTERVAL,
 							1,
 							INT_MAX,
 							PGC_SIGHUP,
@@ -1801,7 +1801,7 @@ _PG_init(void)
 							NULL);
 
 	DefineCustomBoolVariable(GUC_PREFIX ".profile_queries",
-							"Whether wait sampling profile should be collected per query or not.",
+							"Whether wait sampling should be collected per query or not.",
 							NULL,
 							&profile_queries,
 							DEFAULT_PROFILE_QUERIES,
@@ -1812,9 +1812,9 @@ _PG_init(void)
 							NULL);
 
 	DefineCustomIntVariable(GUC_PREFIX ".profile_max",
-							"Set maximum number of wait sampling profile records.",
+							"Set maximum number of wait sampling records.",
 							NULL,
-							&pgws_max,
+							&wait_sampling_max,
 							DEFAULT_PROFILE_MAX,
 							1,
 							INT_MAX,
@@ -4694,7 +4694,7 @@ pg_statsinfo_shmem_startup_hook(void)
 	/* create or attach to the shared memory state */
 	silShmemInit();
 
-	pgws_shmem_startup();
+	wait_sampling_shmem_startup();
 
 	return;
 }
@@ -4759,9 +4759,9 @@ sample_waits(void){
 }
 
 uint32
-pgws_hash_fn(const void *key, Size keysize)
+wait_sampling_hash_fn(const void *key, Size keysize)
 {
-	const pgwsHashKey	*k = (const pgwsHashKey *) key;
+	const wait_samplingHashKey	*k = (const wait_samplingHashKey *) key;
 
 	return hash_uint32((uint32) k->userid) ^
 			hash_uint32((uint32) k->dbid) ^
@@ -4771,10 +4771,10 @@ pgws_hash_fn(const void *key, Size keysize)
 }
 
 int
-pgws_match_fn(const void *key1, const void *key2, Size keysize)
+wait_sampling_match_fn(const void *key1, const void *key2, Size keysize)
 {
-	const pgwsHashKey	*k1 = (const pgwsHashKey *) key1;
-	const pgwsHashKey	*k2 = (const pgwsHashKey *) key2;
+	const wait_samplingHashKey	*k1 = (const wait_samplingHashKey *) key1;
+	const wait_samplingHashKey	*k2 = (const wait_samplingHashKey *) key2;
 
 	if (k1->userid == k2->userid &&
 		k1->dbid == k2->dbid &&
@@ -4787,18 +4787,18 @@ pgws_match_fn(const void *key1, const void *key2, Size keysize)
 }
 
 static void
-pgws_entry_dealloc(void)
+wait_sampling_entry_dealloc(void)
 {
 	HASH_SEQ_STATUS hash_seq;
-	pgwsEntry **entries;
-	pgwsEntry  *entry;
+	wait_samplingEntry **entries;
+	wait_samplingEntry  *entry;
 	int		     nvictims;
 	int		     i;
 	int		     j;
 	HTAB		*hash_tmp;
 	HASHCTL		ctl_tmp;
-	pgwsSubEntry  *subentry;
-	pgwsSubEntry  item;
+	wait_samplingSubEntry  *subentry;
+	wait_samplingSubEntry  item;
 	bool		  found;
 	double		  usage_tie;
 	uint64		  queryid_tie;
@@ -4810,27 +4810,27 @@ pgws_entry_dealloc(void)
 	 * While we're scanning the table, apply the decay factor to the usage
 	 * values.
 	 */
-	entries = palloc(hash_get_num_entries(pgws_hash) * sizeof(pgwsEntry *));
+	entries = palloc(hash_get_num_entries(wait_sampling_hash) * sizeof(wait_samplingEntry *));
 
-	ctl_tmp.hash = pgws_sub_hash_fn;
-	ctl_tmp.match = pgws_sub_match_fn;
-	ctl_tmp.keysize = sizeof(pgwsSubHashKey);
-	ctl_tmp.entrysize = sizeof(pgwsSubEntry);
+	ctl_tmp.hash = wait_sampling_sub_hash_fn;
+	ctl_tmp.match = wait_sampling_sub_match_fn;
+	ctl_tmp.keysize = sizeof(wait_samplingSubHashKey);
+	ctl_tmp.entrysize = sizeof(wait_samplingSubEntry);
 	/*
-	 * hash_tmp is contraction of pgws_hash
+	 * hash_tmp is contraction of wait_sampling_hash
 	 * to reduce the dimension
 	 * applied to fields (backend_type, wait_event_info)
 	 * Choosing victims in terms of each (userid, dbid, queryid)
 	 * is a election that should work something like limit .. with tie
 	 * because of consistency with pg_stat_statements.
 	 */
-	hash_tmp = hash_create("temporary table to find victims of pgws_hash",
-							pgws_max,
+	hash_tmp = hash_create("temporary table to find victims of wait_sampling_hash",
+							wait_sampling_max,
 							&ctl_tmp,
 							HASH_FUNCTION | HASH_ELEM);
 
 	i = 0;
-	hash_seq_init(&hash_seq, pgws_hash);
+	hash_seq_init(&hash_seq, wait_sampling_hash);
 	while ((entry = hash_seq_search(&hash_seq)) != NULL)
 	{
 		entries[i++] = entry;
@@ -4839,21 +4839,21 @@ pgws_entry_dealloc(void)
 		item.key.userid = entry->key.userid;
 		item.key.dbid = entry->key.dbid;
 		item.key.queryid = entry->key.queryid;
-		subentry = (pgwsSubEntry *) hash_search(hash_tmp, &item, HASH_ENTER, &found);
+		subentry = (wait_samplingSubEntry *) hash_search(hash_tmp, &item, HASH_ENTER, &found);
 		if (!found)
 			subentry->usage = entry->counters.usage;
 		else if (subentry->usage < entry->counters.usage)
 			subentry->usage = entry->counters.usage;
 	}
 
-	Assert(hash_get_num_entries(pgws_hash) == i);
+	Assert(hash_get_num_entries(wait_sampling_hash) == i);
 
 	for (j = 0; j < i; j++)
 	{
 		item.key.userid = entries[j]->key.userid;
 		item.key.dbid = entries[j]->key.dbid;
 		item.key.queryid = entries[j]->key.queryid;
-		subentry = (pgwsSubEntry *) hash_search(hash_tmp, &item, HASH_FIND, NULL);
+		subentry = (wait_samplingSubEntry *) hash_search(hash_tmp, &item, HASH_FIND, NULL);
 		if (!subentry)
 			elog(WARNING, "There is a missing item in hash_tmp");
 		else if (entries[j]->counters.usage < subentry->usage)
@@ -4861,14 +4861,14 @@ pgws_entry_dealloc(void)
 	}
 
 	/* order by usage, queryid, userid, dbid */
-	qsort(entries, i, sizeof(pgwsEntry *), pgws_entry_cmp);
+	qsort(entries, i, sizeof(wait_samplingEntry *), wait_sampling_entry_cmp);
 
 	nvictims = Max(10, i * STATSINFO_USAGE_DEALLOC_PERCENT / 100);
 	nvictims = Min(nvictims, i);
 
 	for (j = 0; j < nvictims; j++)
 	{
-		hash_search(pgws_hash, &entries[j]->key, HASH_REMOVE, NULL);
+		hash_search(wait_sampling_hash, &entries[j]->key, HASH_REMOVE, NULL);
 	}
 
 	usage_tie = entries[nvictims - 1]->counters.usage;
@@ -4882,14 +4882,14 @@ pgws_entry_dealloc(void)
 			queryid_tie == entries[j]->key.queryid &&
 			userid_tie == entries[j]->key.userid &&
 			dbid_tie == entries[j]->key.dbid)
-			hash_search(pgws_hash, &entries[j]->key, HASH_REMOVE, NULL);
+			hash_search(wait_sampling_hash, &entries[j]->key, HASH_REMOVE, NULL);
 		else
 			break;
 	}
 
 	/* Increment the number of times entries are deallocated */
 	{
-		volatile pgwsSharedState *s = (volatile pgwsSharedState *) pgws;
+		volatile wait_samplingSharedState *s = (volatile wait_samplingSharedState *) wait_sampling;
 
 		SpinLockAcquire(&s->mutex);
 		s->stats.dealloc += 1;
@@ -4901,9 +4901,9 @@ pgws_entry_dealloc(void)
 }
 
 static uint32
-pgws_sub_hash_fn(const void *key, Size keysize)
+wait_sampling_sub_hash_fn(const void *key, Size keysize)
 {
-	const pgwsSubHashKey	*k = (const pgwsSubHashKey *) key;
+	const wait_samplingSubHashKey	*k = (const wait_samplingSubHashKey *) key;
 
 	return hash_uint32((uint32) k->userid) ^
 		   hash_uint32((uint32) k->dbid) ^
@@ -4911,10 +4911,10 @@ pgws_sub_hash_fn(const void *key, Size keysize)
 }
 
 static int
-pgws_sub_match_fn(const void *key1, const void *key2, Size keysize)
+wait_sampling_sub_match_fn(const void *key1, const void *key2, Size keysize)
 {
-	const pgwsSubHashKey	*k1 = (const pgwsSubHashKey *) key1;
-	const pgwsSubHashKey	*k2 = (const pgwsSubHashKey *) key2;
+	const wait_samplingSubHashKey	*k1 = (const wait_samplingSubHashKey *) key1;
+	const wait_samplingSubHashKey	*k2 = (const wait_samplingSubHashKey *) key2;
 
 	if (k1->userid == k2->userid &&
 		k1->dbid == k2->dbid &&
@@ -4925,16 +4925,16 @@ pgws_sub_match_fn(const void *key1, const void *key2, Size keysize)
 }
 
 static int
-pgws_entry_cmp(const void *lhs, const void *rhs)
+wait_sampling_entry_cmp(const void *lhs, const void *rhs)
 {
-	double		l_usage = (*(pgwsEntry *const *) lhs)->counters.usage;
-	double		r_usage = (*(pgwsEntry *const *) rhs)->counters.usage;
-	uint64		l_queryid = (*(pgwsEntry *const *) lhs)->key.queryid;
-	uint64		r_queryid = (*(pgwsEntry *const *) rhs)->key.queryid;
-	Oid			l_userid = (*(pgwsEntry *const *) lhs)->key.userid;
-	Oid			r_userid = (*(pgwsEntry *const *) rhs)->key.userid;
-	Oid			l_dbid = (*(pgwsEntry *const *) lhs)->key.dbid;
-	Oid			r_dbid = (*(pgwsEntry *const *) rhs)->key.dbid;
+	double		l_usage = (*(wait_samplingEntry *const *) lhs)->counters.usage;
+	double		r_usage = (*(wait_samplingEntry *const *) rhs)->counters.usage;
+	uint64		l_queryid = (*(wait_samplingEntry *const *) lhs)->key.queryid;
+	uint64		r_queryid = (*(wait_samplingEntry *const *) rhs)->key.queryid;
+	Oid			l_userid = (*(wait_samplingEntry *const *) lhs)->key.userid;
+	Oid			r_userid = (*(wait_samplingEntry *const *) rhs)->key.userid;
+	Oid			l_dbid = (*(wait_samplingEntry *const *) lhs)->key.dbid;
+	Oid			r_dbid = (*(wait_samplingEntry *const *) rhs)->key.dbid;
 
 	if (l_usage < r_usage)
 		return -1;
@@ -4960,21 +4960,21 @@ pgws_entry_cmp(const void *lhs, const void *rhs)
 }
 
 /*
- * pgws_entry_alloc - Enter the item into the hash table. 
+ * wait_sampling_entry_alloc - Enter the item into the hash table. 
  * if direct == true, it store the specific item to hash table as-is.
  * It use at reading saved stats file.
  */
 void
-pgws_entry_alloc(pgwsEntry *item, bool direct)
+wait_sampling_entry_alloc(wait_samplingEntry *item, bool direct)
 {
-	pgwsEntry	*entry;
+	wait_samplingEntry	*entry;
 	bool		found;
 
 	/* Make space if needed */
-	while (hash_get_num_entries(pgws_hash) >= pgws_max)
-		pgws_entry_dealloc();
+	while (hash_get_num_entries(wait_sampling_hash) >= wait_sampling_max)
+		wait_sampling_entry_dealloc();
 
-	entry = (pgwsEntry *) hash_search(pgws_hash, &item->key, HASH_ENTER, &found);
+	entry = (wait_samplingEntry *) hash_search(wait_sampling_hash, &item->key, HASH_ENTER, &found);
 	if (found)
 	{
 		SpinLockAcquire(&entry->mutex);
@@ -4984,13 +4984,13 @@ pgws_entry_alloc(pgwsEntry *item, bool direct)
  	}
 	else if (direct)
 	{
-		memset(&entry->counters, 0, sizeof(pgwsCounters));
+		memset(&entry->counters, 0, sizeof(wait_samplingCounters));
 		entry->counters = item->counters;
 		SpinLockInit(&entry->mutex);
 	}
 	else
 	{
-		memset(&entry->counters, 0, sizeof(pgwsCounters));
+		memset(&entry->counters, 0, sizeof(wait_samplingCounters));
 		entry->counters.count = 1;
 		entry->counters.usage = STATSINFO_USAGE_INIT;
 		SpinLockInit(&entry->mutex);
@@ -5005,7 +5005,7 @@ probe_waits(void)
 	for (i = pgstat_fetch_stat_numbackends(); i > 0; i--)
 	{
 		PgBackendStatus	*be;
-		pgwsEntry		item;
+		wait_samplingEntry		item;
 		PGPROC			*proc;
 		int				procpid;
 
@@ -5039,7 +5039,7 @@ probe_waits(void)
 		item.key.wait_event_info = proc->wait_event_info;
 
 		/* store this item */
-		pgws_entry_alloc(&item, false);
+		wait_sampling_entry_alloc(&item, false);
 	}
 }
 #endif

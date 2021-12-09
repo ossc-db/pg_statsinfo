@@ -32,10 +32,10 @@ AS 'MODULE_PATHNAME', 'statsinfo_sample'
 LANGUAGE C STRICT;
 
 --
--- statsinfo.sample_wait_events()
+-- statsinfo.sample_wait_sampling()
 --
-CREATE FUNCTION statsinfo.sample_wait_events() RETURNS void
-AS 'MODULE_PATHNAME', 'statsinfo_sample_wait_events'
+CREATE FUNCTION statsinfo.sample_wait_sampling() RETURNS void
+AS 'MODULE_PATHNAME', 'statsinfo_sample_wait_sampling'
 LANGUAGE C STRICT;
 
 --
@@ -293,21 +293,21 @@ RETURNS SETOF record
 AS 'MODULE_PATHNAME', 'statsinfo_wait_sampling_profile'
 LANGUAGE C VOLATILE STRICT;
 
-CREATE FUNCTION statsinfo.sample_wait_events_reset() RETURNS void
-AS 'MODULE_PATHNAME', 'statsinfo_sample_wait_events_reset'
+CREATE FUNCTION statsinfo.sample_wait_sampling_reset() RETURNS void
+AS 'MODULE_PATHNAME', 'statsinfo_sample_wait_sampling_reset'
 LANGUAGE C VOLATILE STRICT;
 
---- Define statsinfo.sample_wait_events_info
-CREATE FUNCTION statsinfo.sample_wait_events_info(
+--- Define statsinfo.sample_wait_sampling_info
+CREATE FUNCTION statsinfo.sample_wait_sampling_info(
 	OUT dealloc bigint,
 	OUT stats_reset timestamp with time zone
 )
 RETURNS record
-AS 'MODULE_PATHNAME', 'statsinfo_sample_wait_events_info'
+AS 'MODULE_PATHNAME', 'statsinfo_sample_wait_sampling_info'
 LANGUAGE C STRICT VOLATILE PARALLEL SAFE;
 
-CREATE VIEW statsinfo.sample_wait_events_info AS
-	SELECT * FROM statsinfo.sample_wait_events_info();
+CREATE VIEW statsinfo.sample_wait_sampling_info AS
+	SELECT * FROM statsinfo.sample_wait_sampling_info();
 
 --
 -- statsinfo.cpuinfo()

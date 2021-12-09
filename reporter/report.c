@@ -530,7 +530,7 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 	}
 	fprintf(out, "\n");
 
-	fprintf(out, "/** Wait Events per Database **/\n");
+	fprintf(out, "/** Wait Sampling per Database **/\n");
 	fprintf(out, "-----------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_WAIT_SAMPLING_BY_DBID, lengthof(params), params);
@@ -698,7 +698,7 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-	fprintf(out, "/** Wait Events (Instance) **/\n");
+	fprintf(out, "/** Wait Sampling (Instance) **/\n");
 	fprintf(out, "-----------------------------------\n");
 
 	fprintf(out, "\n");
@@ -1317,7 +1317,7 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	fprintf(out, "\n");
 	PQclear(res);
 
-	fprintf(out, "/** Wait Events **/\n");
+	fprintf(out, "/** Wait Sampling **/\n");
 	fprintf(out, "-----------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_WAIT_SAMPLING, lengthof(params), params);
