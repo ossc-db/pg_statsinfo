@@ -61,7 +61,7 @@ static const uint32 STATSINFO_RUSAGE_FILE_HEADER = 0x20210930;
 
 /* 
  * For hash table dealloc factors. (same as pg_stat_statements)
- * TODO: should share for wait-events-hash-table 
+ * TODO: should share for wait-sampling-hash-table 
  */
 #define STATSINFO_USAGE_INCREASE		(1.0)
 #define STATSINFO_USAGE_DECREASE_FACTOR	(0.99) 
