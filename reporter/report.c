@@ -626,7 +626,7 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	{
 		fprintf(out, "----------------------------------------\n");
 		fprintf(out, "%13s  %11s  %12s  %16s  %12s  %12s  %14s  %13s  %-20s\n",
-			"Wal Records", "Wal Fpi", "Wal Bytes", "Wal Buffers Full", "Wal write" , "Wal Sync" , "Wal write Time" , "Wal Sync Time" , "Wal Reset");
+			"WAL Records", "WAL Fpi", "WAL Bytes", "WAL Buffers Full", "WAL Write" , "WAL Sync" , "WAL Write Time" , "WAL Sync Time" , "WAL Reset");
 		fprintf(out, "----------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 		res = pgut_execute(conn, SQL_SELECT_STAT_WAL, lengthof(params), params);
