@@ -164,6 +164,19 @@ Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflic
 -----------------------------------------------------------------------------------------------------------------
 postgres                            1              2                  3                   4                  5
 
+/** Wait Sampling per Database **/
+-----------------------------------
+
+Database        
+---------------------------------------------------------------------------------------
+postgres        
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
 ---------------------------------------------
@@ -214,6 +227,19 @@ postgres                     9             9        0.900000       0.900000     
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
 -----------------------------------------------------------------------------------------------------------------
 postgres                            1              2                  3                   4                  5
+
+/** Wait Sampling per Database **/
+-----------------------------------
+
+Database        
+---------------------------------------------------------------------------------------
+postgres        
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -266,6 +292,19 @@ Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflic
 -----------------------------------------------------------------------------------------------------------------
 postgres                            1              2                  3                   4                  5
 
+/** Wait Sampling per Database **/
+-----------------------------------
+
+Database        
+---------------------------------------------------------------------------------------
+postgres        
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
 ---------------------------------------------
@@ -316,6 +355,19 @@ postgres                     9             9        0.900000       0.900000     
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
 -----------------------------------------------------------------------------------------------------------------
 postgres                            1              2                  3                   4                  5
+
+/** Wait Sampling per Database **/
+-----------------------------------
+
+Database        
+---------------------------------------------------------------------------------------
+postgres        
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
@@ -368,6 +420,19 @@ Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflic
 -----------------------------------------------------------------------------------------------------------------
 postgres                            1              2                  3                   4                  5
 
+/** Wait Sampling per Database **/
+-----------------------------------
+
+Database        
+---------------------------------------------------------------------------------------
+postgres        
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5437)
 ---------------------------------------------
@@ -418,6 +483,19 @@ postgres                     9             9        0.900000       0.900000     
 Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflict Bufferpin  Conflict Deadlock
 -----------------------------------------------------------------------------------------------------------------
 postgres                            1              2                  3                   4                  5
+
+/** Wait Sampling per Database **/
+-----------------------------------
+
+Database        
+---------------------------------------------------------------------------------------
+postgres        
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
 
 exit: 0
 
@@ -472,6 +550,15 @@ DateTime          XID Increase
 2012-11-01 00:02            15
 2012-11-01 00:03             4
 
+/** Wait Sampling (Instance) **/
+-----------------------------------
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
+
 /** Hash Table  Statistics **/
 ----------------------------------------------------
 pg_stat_statements dealloc : 30
@@ -530,6 +617,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Wait Sampling (Instance) **/
+-----------------------------------
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
 
 /** Hash Table  Statistics **/
 ----------------------------------------------------
@@ -590,6 +686,15 @@ DateTime          XID Increase
 2012-11-01 00:02            15
 2012-11-01 00:03             4
 
+/** Wait Sampling (Instance) **/
+-----------------------------------
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
+
 /** Hash Table  Statistics **/
 ----------------------------------------------------
 pg_stat_statements dealloc : 30
@@ -649,6 +754,15 @@ DateTime          XID Increase
 2012-11-01 00:02            15
 2012-11-01 00:03             4
 
+/** Wait Sampling (Instance) **/
+-----------------------------------
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
+
 /** Hash Table  Statistics **/
 ----------------------------------------------------
 pg_stat_statements dealloc : 30
@@ -707,6 +821,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Wait Sampling (Instance) **/
+-----------------------------------
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
 
 /** Hash Table  Statistics **/
 ----------------------------------------------------
@@ -771,6 +894,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Wait Sampling (Instance) **/
+-----------------------------------
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
 
 /** Hash Table  Statistics **/
 ----------------------------------------------------
@@ -1868,6 +2000,24 @@ Query ID    Plan ID     User              Database             Calls      Total 
 1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
 1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
+/** Wait Sampling **/
+-----------------------------------
+
+---------------------------------------------------------------------------------------
+Query ID                          Database          User Name         Backend Type            
+---------------------------------------------------------------------------------------
+1067368138                        postgres          postgres          client backend          
+
+	Query
+	---------------------------------------------------------------------------------------
+	UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+
+		Top 10 Events:
+		Event Type    Event                                Count      Ratio(%)
+		-------------------------------------------------------------------------------
+		IO            DataFileRead                            14        66.667
+		Client        ClientRead                               7        33.333
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5433)
 ---------------------------------------------
@@ -1905,6 +2055,24 @@ Query ID    Plan ID     User              Database             Calls      Total 
  847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
 1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
 1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+
+/** Wait Sampling **/
+-----------------------------------
+
+---------------------------------------------------------------------------------------
+Query ID                          Database          User Name         Backend Type            
+---------------------------------------------------------------------------------------
+1067368138                        postgres          postgres          client backend          
+
+	Query
+	---------------------------------------------------------------------------------------
+	UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+
+		Top 10 Events:
+		Event Type    Event                                Count      Ratio(%)
+		-------------------------------------------------------------------------------
+		IO            DataFileRead                            14        66.667
+		Client        ClientRead                               7        33.333
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5434)
@@ -1944,6 +2112,24 @@ Query ID    Plan ID     User              Database             Calls      Total 
 1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
 1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
+/** Wait Sampling **/
+-----------------------------------
+
+---------------------------------------------------------------------------------------
+Query ID                          Database          User Name         Backend Type            
+---------------------------------------------------------------------------------------
+1067368138                        postgres          postgres          client backend          
+
+	Query
+	---------------------------------------------------------------------------------------
+	UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+
+		Top 10 Events:
+		Event Type    Event                                Count      Ratio(%)
+		-------------------------------------------------------------------------------
+		IO            DataFileRead                            14        66.667
+		Client        ClientRead                               7        33.333
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5435)
 ---------------------------------------------
@@ -1981,6 +2167,24 @@ Query ID    Plan ID     User              Database             Calls      Total 
  847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
 1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
 1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+
+/** Wait Sampling **/
+-----------------------------------
+
+---------------------------------------------------------------------------------------
+Query ID                          Database          User Name         Backend Type            
+---------------------------------------------------------------------------------------
+1067368138                        postgres          postgres          client backend          
+
+	Query
+	---------------------------------------------------------------------------------------
+	UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+
+		Top 10 Events:
+		Event Type    Event                                Count      Ratio(%)
+		-------------------------------------------------------------------------------
+		IO            DataFileRead                            14        66.667
+		Client        ClientRead                               7        33.333
 
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5436)
@@ -2020,6 +2224,24 @@ Query ID    Plan ID     User              Database             Calls      Total 
 1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
 1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
+/** Wait Sampling **/
+-----------------------------------
+
+---------------------------------------------------------------------------------------
+Query ID                          Database          User Name         Backend Type            
+---------------------------------------------------------------------------------------
+1067368138                        postgres          postgres          client backend          
+
+	Query
+	---------------------------------------------------------------------------------------
+	UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+
+		Top 10 Events:
+		Event Type    Event                                Count      Ratio(%)
+		-------------------------------------------------------------------------------
+		IO            DataFileRead                            14        66.667
+		Client        ClientRead                               7        33.333
+
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5437)
 ---------------------------------------------
@@ -2057,6 +2279,24 @@ Query ID    Plan ID     User              Database             Calls      Total 
  847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
 1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
 1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+
+/** Wait Sampling **/
+-----------------------------------
+
+---------------------------------------------------------------------------------------
+Query ID                          Database          User Name         Backend Type            
+---------------------------------------------------------------------------------------
+1067368138                        postgres          postgres          client backend          
+
+	Query
+	---------------------------------------------------------------------------------------
+	UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+
+		Top 10 Events:
+		Event Type    Event                                Count      Ratio(%)
+		-------------------------------------------------------------------------------
+		IO            DataFileRead                            14        66.667
+		Client        ClientRead                               7        33.333
 
 exit: 0
 
@@ -2699,75 +2939,6 @@ DateTime             Message
 
 exit: 0
 
-/**--- REPORTID: WaitSampling ---**/
----------------------------------------------
-STATSINFO Report (host: statsinfo, port: 5432)
----------------------------------------------
-
-/* Wait Sampling */
------------------------------------
-Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
------------------------------------------------------------------------------------------------------------------------------------------------------------
-                  postgres          0                         walsender                         IO            WALRead                                 14
-postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
-
----------------------------------------------
-STATSINFO Report (host: statsinfo, port: 5433)
----------------------------------------------
-
-/* Wait Sampling */
------------------------------------
-Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
------------------------------------------------------------------------------------------------------------------------------------------------------------
-                  postgres          0                         walsender                         IO            WALRead                                 14
-postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
-
----------------------------------------------
-STATSINFO Report (host: statsinfo, port: 5434)
----------------------------------------------
-
-/* Wait Sampling */
------------------------------------
-Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
------------------------------------------------------------------------------------------------------------------------------------------------------------
-                  postgres          0                         walsender                         IO            WALRead                                 14
-postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
-
----------------------------------------------
-STATSINFO Report (host: statsinfo, port: 5435)
----------------------------------------------
-
-/* Wait Sampling */
------------------------------------
-Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
------------------------------------------------------------------------------------------------------------------------------------------------------------
-                  postgres          0                         walsender                         IO            WALRead                                 14
-postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
-
----------------------------------------------
-STATSINFO Report (host: statsinfo, port: 5436)
----------------------------------------------
-
-/* Wait Sampling */
------------------------------------
-Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
------------------------------------------------------------------------------------------------------------------------------------------------------------
-                  postgres          0                         walsender                         IO            WALRead                                 14
-postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
-
----------------------------------------------
-STATSINFO Report (host: statsinfo, port: 5437)
----------------------------------------------
-
-/* Wait Sampling */
------------------------------------
-Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
------------------------------------------------------------------------------------------------------------------------------------------------------------
-                  postgres          0                         walsender                         IO            WALRead                                 14
-postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
-
-exit: 0
-
 /**--- REPORTID: Profiles ---**/
 ---------------------------------------------
 STATSINFO Report (host: statsinfo, port: 5432)
@@ -3052,6 +3223,19 @@ Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflic
 -----------------------------------------------------------------------------------------------------------------
 postgres                            1              2                  3                   4                  5
 
+/** Wait Sampling per Database **/
+-----------------------------------
+
+Database        
+---------------------------------------------------------------------------------------
+postgres        
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
+
 ----------------------------------------
 /* Instance Activity */
 ----------------------------------------
@@ -3097,6 +3281,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Wait Sampling (Instance) **/
+-----------------------------------
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
 
 /** Hash Table  Statistics **/
 ----------------------------------------------------
@@ -3285,6 +3478,24 @@ Query ID    Plan ID     User              Database             Calls      Total 
 1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
 1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
+/** Wait Sampling **/
+-----------------------------------
+
+---------------------------------------------------------------------------------------
+Query ID                          Database          User Name         Backend Type            
+---------------------------------------------------------------------------------------
+1067368138                        postgres          postgres          client backend          
+
+	Query
+	---------------------------------------------------------------------------------------
+	UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+
+		Top 10 Events:
+		Event Type    Event                                Count      Ratio(%)
+		-------------------------------------------------------------------------------
+		IO            DataFileRead                            14        66.667
+		Client        ClientRead                               7        33.333
+
 ----------------------------------------
 /* Lock Conflicts */
 ----------------------------------------
@@ -3359,13 +3570,6 @@ Database          Schema            Index             Table                   Si
 postgres          public            pgbench_accounts_pkey  pgbench_accounts       2 MiB       0 MiB       133066      1.000           0       269814  aid
 postgres          public            pgbench_branches_pkey  pgbench_branches       0 MiB       0 MiB            0      0.000           0           29  bid
 postgres          public            pgbench_tellers_pkey  pgbench_tellers        0 MiB       0 MiB            0      0.000           0            3  tid
-
-/* Wait Sampling */
------------------------------------
-Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
------------------------------------------------------------------------------------------------------------------------------------------------------------
-                  postgres          0                         walsender                         IO            WALRead                                 14
-postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
 
 ----------------------------------------
 /* Profiles */
@@ -3466,6 +3670,19 @@ Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflic
 -----------------------------------------------------------------------------------------------------------------
 postgres                            1              2                  3                   4                  5
 
+/** Wait Sampling per Database **/
+-----------------------------------
+
+Database        
+---------------------------------------------------------------------------------------
+postgres        
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
+
 ----------------------------------------
 /* Instance Activity */
 ----------------------------------------
@@ -3511,6 +3728,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Wait Sampling (Instance) **/
+-----------------------------------
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
 
 /** Hash Table  Statistics **/
 ----------------------------------------------------
@@ -3699,6 +3925,24 @@ Query ID    Plan ID     User              Database             Calls      Total 
 1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
 1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
+/** Wait Sampling **/
+-----------------------------------
+
+---------------------------------------------------------------------------------------
+Query ID                          Database          User Name         Backend Type            
+---------------------------------------------------------------------------------------
+1067368138                        postgres          postgres          client backend          
+
+	Query
+	---------------------------------------------------------------------------------------
+	UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+
+		Top 10 Events:
+		Event Type    Event                                Count      Ratio(%)
+		-------------------------------------------------------------------------------
+		IO            DataFileRead                            14        66.667
+		Client        ClientRead                               7        33.333
+
 ----------------------------------------
 /* Lock Conflicts */
 ----------------------------------------
@@ -3773,13 +4017,6 @@ Database          Schema            Index             Table                   Si
 postgres          public            pgbench_accounts_pkey  pgbench_accounts       2 MiB       0 MiB       133066      1.000           0       269814  aid
 postgres          public            pgbench_branches_pkey  pgbench_branches       0 MiB       0 MiB            0      0.000           0           29  bid
 postgres          public            pgbench_tellers_pkey  pgbench_tellers        0 MiB       0 MiB            0      0.000           0            3  tid
-
-/* Wait Sampling */
------------------------------------
-Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
------------------------------------------------------------------------------------------------------------------------------------------------------------
-                  postgres          0                         walsender                         IO            WALRead                                 14
-postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
 
 ----------------------------------------
 /* Profiles */
@@ -3880,6 +4117,19 @@ Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflic
 -----------------------------------------------------------------------------------------------------------------
 postgres                            1              2                  3                   4                  5
 
+/** Wait Sampling per Database **/
+-----------------------------------
+
+Database        
+---------------------------------------------------------------------------------------
+postgres        
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
+
 ----------------------------------------
 /* Instance Activity */
 ----------------------------------------
@@ -3925,6 +4175,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Wait Sampling (Instance) **/
+-----------------------------------
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
 
 /** Hash Table  Statistics **/
 ----------------------------------------------------
@@ -4113,6 +4372,24 @@ Query ID    Plan ID     User              Database             Calls      Total 
 1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
 1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
+/** Wait Sampling **/
+-----------------------------------
+
+---------------------------------------------------------------------------------------
+Query ID                          Database          User Name         Backend Type            
+---------------------------------------------------------------------------------------
+1067368138                        postgres          postgres          client backend          
+
+	Query
+	---------------------------------------------------------------------------------------
+	UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+
+		Top 10 Events:
+		Event Type    Event                                Count      Ratio(%)
+		-------------------------------------------------------------------------------
+		IO            DataFileRead                            14        66.667
+		Client        ClientRead                               7        33.333
+
 ----------------------------------------
 /* Lock Conflicts */
 ----------------------------------------
@@ -4187,13 +4464,6 @@ Database          Schema            Index             Table                   Si
 postgres          public            pgbench_accounts_pkey  pgbench_accounts       2 MiB       0 MiB       133066      1.000           0       269814  aid
 postgres          public            pgbench_branches_pkey  pgbench_branches       0 MiB       0 MiB            0      0.000           0           29  bid
 postgres          public            pgbench_tellers_pkey  pgbench_tellers        0 MiB       0 MiB            0      0.000           0            3  tid
-
-/* Wait Sampling */
------------------------------------
-Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
------------------------------------------------------------------------------------------------------------------------------------------------------------
-                  postgres          0                         walsender                         IO            WALRead                                 14
-postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
 
 ----------------------------------------
 /* Profiles */
@@ -4294,6 +4564,19 @@ Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflic
 -----------------------------------------------------------------------------------------------------------------
 postgres                            1              2                  3                   4                  5
 
+/** Wait Sampling per Database **/
+-----------------------------------
+
+Database        
+---------------------------------------------------------------------------------------
+postgres        
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
+
 ----------------------------------------
 /* Instance Activity */
 ----------------------------------------
@@ -4339,6 +4622,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Wait Sampling (Instance) **/
+-----------------------------------
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
 
 /** Hash Table  Statistics **/
 ----------------------------------------------------
@@ -4527,6 +4819,24 @@ Query ID    Plan ID     User              Database             Calls      Total 
 1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
 1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
+/** Wait Sampling **/
+-----------------------------------
+
+---------------------------------------------------------------------------------------
+Query ID                          Database          User Name         Backend Type            
+---------------------------------------------------------------------------------------
+1067368138                        postgres          postgres          client backend          
+
+	Query
+	---------------------------------------------------------------------------------------
+	UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+
+		Top 10 Events:
+		Event Type    Event                                Count      Ratio(%)
+		-------------------------------------------------------------------------------
+		IO            DataFileRead                            14        66.667
+		Client        ClientRead                               7        33.333
+
 ----------------------------------------
 /* Lock Conflicts */
 ----------------------------------------
@@ -4601,13 +4911,6 @@ Database          Schema            Index             Table                   Si
 postgres          public            pgbench_accounts_pkey  pgbench_accounts       2 MiB       0 MiB       133066      1.000           0       269814  aid
 postgres          public            pgbench_branches_pkey  pgbench_branches       0 MiB       0 MiB            0      0.000           0           29  bid
 postgres          public            pgbench_tellers_pkey  pgbench_tellers        0 MiB       0 MiB            0      0.000           0            3  tid
-
-/* Wait Sampling */
------------------------------------
-Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
------------------------------------------------------------------------------------------------------------------------------------------------------------
-                  postgres          0                         walsender                         IO            WALRead                                 14
-postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
 
 ----------------------------------------
 /* Profiles */
@@ -4708,6 +5011,19 @@ Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflic
 -----------------------------------------------------------------------------------------------------------------
 postgres                            1              2                  3                   4                  5
 
+/** Wait Sampling per Database **/
+-----------------------------------
+
+Database        
+---------------------------------------------------------------------------------------
+postgres        
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
+
 ----------------------------------------
 /* Instance Activity */
 ----------------------------------------
@@ -4753,6 +5069,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Wait Sampling (Instance) **/
+-----------------------------------
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
 
 /** Hash Table  Statistics **/
 ----------------------------------------------------
@@ -4941,6 +5266,24 @@ Query ID    Plan ID     User              Database             Calls      Total 
 1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
 1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
+/** Wait Sampling **/
+-----------------------------------
+
+---------------------------------------------------------------------------------------
+Query ID                          Database          User Name         Backend Type            
+---------------------------------------------------------------------------------------
+1067368138                        postgres          postgres          client backend          
+
+	Query
+	---------------------------------------------------------------------------------------
+	UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+
+		Top 10 Events:
+		Event Type    Event                                Count      Ratio(%)
+		-------------------------------------------------------------------------------
+		IO            DataFileRead                            14        66.667
+		Client        ClientRead                               7        33.333
+
 ----------------------------------------
 /* Lock Conflicts */
 ----------------------------------------
@@ -5015,13 +5358,6 @@ Database          Schema            Index             Table                   Si
 postgres          public            pgbench_accounts_pkey  pgbench_accounts       2 MiB       0 MiB       133066      1.000           0       269814  aid
 postgres          public            pgbench_branches_pkey  pgbench_branches       0 MiB       0 MiB            0      0.000           0           29  bid
 postgres          public            pgbench_tellers_pkey  pgbench_tellers        0 MiB       0 MiB            0      0.000           0            3  tid
-
-/* Wait Sampling */
------------------------------------
-Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
------------------------------------------------------------------------------------------------------------------------------------------------------------
-                  postgres          0                         walsender                         IO            WALRead                                 14
-postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
 
 ----------------------------------------
 /* Profiles */
@@ -5122,6 +5458,19 @@ Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflic
 -----------------------------------------------------------------------------------------------------------------
 postgres                            1              2                  3                   4                  5
 
+/** Wait Sampling per Database **/
+-----------------------------------
+
+Database        
+---------------------------------------------------------------------------------------
+postgres        
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
+
 ----------------------------------------
 /* Instance Activity */
 ----------------------------------------
@@ -5172,6 +5521,15 @@ DateTime          XID Increase
 2012-11-01 00:01         21636
 2012-11-01 00:02            15
 2012-11-01 00:03             4
+
+/** Wait Sampling (Instance) **/
+-----------------------------------
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
 
 /** Hash Table  Statistics **/
 ----------------------------------------------------
@@ -5380,6 +5738,24 @@ Query ID    Plan ID     User              Database             Calls      Total 
 1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
 1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
+/** Wait Sampling **/
+-----------------------------------
+
+---------------------------------------------------------------------------------------
+Query ID                          Database          User Name         Backend Type            
+---------------------------------------------------------------------------------------
+1067368138                        postgres          postgres          client backend          
+
+	Query
+	---------------------------------------------------------------------------------------
+	UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+
+		Top 10 Events:
+		Event Type    Event                                Count      Ratio(%)
+		-------------------------------------------------------------------------------
+		IO            DataFileRead                            14        66.667
+		Client        ClientRead                               7        33.333
+
 ----------------------------------------
 /* Lock Conflicts */
 ----------------------------------------
@@ -5454,13 +5830,6 @@ Database          Schema            Index             Table                   Si
 postgres          public            pgbench_accounts_pkey  pgbench_accounts       2 MiB       0 MiB       133066      1.000           0       269814  aid
 postgres          public            pgbench_branches_pkey  pgbench_branches       0 MiB       0 MiB            0      0.000           0           29  bid
 postgres          public            pgbench_tellers_pkey  pgbench_tellers        0 MiB       0 MiB            0      0.000           0            3  tid
-
-/* Wait Sampling */
------------------------------------
-Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
------------------------------------------------------------------------------------------------------------------------------------------------------------
-                  postgres          0                         walsender                         IO            WALRead                                 14
-postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
 
 ----------------------------------------
 /* Profiles */
@@ -5758,6 +6127,19 @@ Database          Conflict Tablespace  Conflict Lock  Conflict Snapshot  Conflic
 -----------------------------------------------------------------------------------------------------------------
 postgres                            1              2                  3                   4                  5
 
+/** Wait Sampling per Database **/
+-----------------------------------
+
+Database        
+---------------------------------------------------------------------------------------
+postgres        
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
+
 ----------------------------------------
 /* Instance Activity */
 ----------------------------------------
@@ -5808,6 +6190,15 @@ DateTime          XID Increase
 2012-11-01 00:00         21636
 2012-11-01 00:00            15
 2012-11-01 00:00             4
+
+/** Wait Sampling (Instance) **/
+-----------------------------------
+
+	Top 10 Events:
+	Event Type    Event                                Count      Ratio(%)
+	-------------------------------------------------------------------------------
+	IO            DataFileRead                            14        66.667
+	Client        ClientRead                               7        33.333
 
 /** Hash Table  Statistics **/
 ----------------------------------------------------
@@ -6016,6 +6407,24 @@ Query ID    Plan ID     User              Database             Calls      Total 
 1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
 1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
 
+/** Wait Sampling **/
+-----------------------------------
+
+---------------------------------------------------------------------------------------
+Query ID                          Database          User Name         Backend Type            
+---------------------------------------------------------------------------------------
+1067368138                        postgres          postgres          client backend          
+
+	Query
+	---------------------------------------------------------------------------------------
+	UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+
+		Top 10 Events:
+		Event Type    Event                                Count      Ratio(%)
+		-------------------------------------------------------------------------------
+		IO            DataFileRead                            14        66.667
+		Client        ClientRead                               7        33.333
+
 ----------------------------------------
 /* Lock Conflicts */
 ----------------------------------------
@@ -6090,13 +6499,6 @@ Database          Schema            Index             Table                   Si
 postgres          public            pgbench_accounts_pkey  pgbench_accounts       2 MiB       0 MiB       133066      1.000           0       269814  aid
 postgres          public            pgbench_branches_pkey  pgbench_branches       0 MiB       0 MiB            0      0.000           0           29  bid
 postgres          public            pgbench_tellers_pkey  pgbench_tellers        0 MiB       0 MiB            0      0.000           0            3  tid
-
-/* Wait Sampling */
------------------------------------
-Database          User Name         Query ID                  Backend Type                      Event Type    Event                                Count
------------------------------------------------------------------------------------------------------------------------------------------------------------
-                  postgres          0                         walsender                         IO            WALRead                                 14
-postgres          postgres          1067368138                client backend                    Client        ClientRead                               7
 
 ----------------------------------------
 /* Profiles */
