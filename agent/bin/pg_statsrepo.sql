@@ -863,6 +863,15 @@ CREATE or replace FUNCTION statsrepo.xid_sub(xid8, xid8) RETURNS numeric AS
 'SELECT $1::text::numeric - $2::text::numeric'
 LANGUAGE sql;
 
+-- np_sub() - Similar to sub(), but if result is a negative , return first arg.
+-- This is used by calculate "accumulate-val - lag(accumulate-val, 1)" on window function.
+-- The difference of cumulative values according to the time series will not be negative.
+-- If it becomes a negative number, it is treated as a positive number
+-- because it reappears in that time series.
+CREATE FUNCTION statsrepo.np_sub(anyelement, anyelement) RETURNS anyelement AS
+'SELECT CASE WHEN (coalesce($1, 0) - coalesce($2, 0)) < 0 THEN coalesce($1, 0) ELSE (coalesce($1, 0) - coalesce($2, 0)) END'
+LANGUAGE sql;
+
 -- convert_hex() - convert a hexadecimal string to a decimal number
 CREATE FUNCTION statsrepo.convert_hex(text)
 RETURNS bigint AS
@@ -1310,52 +1319,34 @@ CREATE FUNCTION statsrepo.get_db_rusage_report(
 $$
 	SELECT
 		d.name,
-		statsrepo.sub(e.plan_reads, b.plan_reads),
-		statsrepo.sub(e.plan_writes, b.plan_writes),
-		statsrepo.sub(e.plan_user_time, b.plan_user_time)::numeric(12,6),
-		statsrepo.sub(e.plan_system_time, b.plan_system_time)::numeric(12,6),
-		statsrepo.sub(e.exec_reads, b.exec_reads),
-		statsrepo.sub(e.exec_writes, b.exec_writes),
-		statsrepo.sub(e.exec_user_time, b.exec_user_time)::numeric(12,6),
-		statsrepo.sub(e.exec_system_time, b.exec_system_time)::numeric(12,6)
+		sum(plan_reads) as plan_reads,
+ 		sum(plan_writes) as plan_writes,
+		sum(plan_user_time)::numeric(12,6) as plan_user_time,
+		sum(plan_system_time)::numeric(12,6) as plan_system_time,
+		sum(exec_reads) as exec_reads,
+		sum(exec_writes) as exec_writes,
+		sum(exec_user_time)::numeric(12,6) as exec_user_time,
+		sum(exec_system_time)::numeric(12,6) as exec_system_time
 	FROM
 		(SELECT dbid, name FROM statsrepo.database WHERE snapid = $2) d
 		LEFT JOIN
-		(SELECT
-			dbid,
-			sum(plan_reads) as plan_reads,
-			sum(plan_writes) as plan_writes,
-			sum(plan_user_time) as plan_user_time,
-			sum(plan_system_time) as plan_system_time,
-			sum(exec_reads) as exec_reads,
-			sum(exec_writes) as exec_writes,
-			sum(exec_user_time) as exec_user_time,
-			sum(exec_system_time) as exec_system_time
+		(
+		SELECT  snapid, dbid, userid, queryid, 
+			statsrepo.np_sub(plan_reads, lag(plan_reads,  1) OVER w) AS plan_reads,
+			statsrepo.np_sub(plan_writes, lag(plan_writes, 1) OVER w) AS plan_writes,
+			statsrepo.np_sub(plan_user_time, lag(plan_user_time, 1) OVER w) AS plan_user_time ,
+			statsrepo.np_sub(plan_system_time, lag(plan_system_time, 1) OVER w) AS plan_system_time,
+			statsrepo.np_sub(exec_reads, lag(exec_reads,  1) OVER w) AS exec_reads,
+ 			statsrepo.np_sub(exec_writes, lag(exec_writes, 1) OVER w) AS exec_writes,
+			statsrepo.np_sub(exec_user_time, lag(exec_user_time, 1) OVER w) AS exec_user_time,
+			statsrepo.np_sub(exec_system_time, lag(exec_system_time, 1) OVER w) AS exec_system_time
 		FROM
-			statsrepo.rusage
-		WHERE
-			snapid = $2
-		GROUP BY dbid
-		) e
-		ON d.dbid = e.dbid
-		LEFT JOIN
-		(SELECT
-			dbid,
-			sum(plan_reads) as plan_reads,
-			sum(plan_writes) as plan_writes,
-			sum(plan_user_time) as plan_user_time,
-			sum(plan_system_time) as plan_system_time,
-			sum(exec_reads) as exec_reads,
-			sum(exec_writes) as exec_writes,
-			sum(exec_user_time) as exec_user_time,
-			sum(exec_system_time) as exec_system_time
-		FROM
-			statsrepo.rusage
-		WHERE
-			snapid = $1
-		GROUP BY dbid
-		) b
-		ON e.dbid = b.dbid;
+			statsrepo.rusage WHERE snapid BETWEEN $1 AND $2 WINDOW w AS (PARTITION BY dbid, userid, queryid ORDER BY snapid)
+		)r
+	ON d.dbid = r.dbid
+	-- Since calcluate cur-val - lag-val, we use "$1 + 1" snapid (which include diff $1 and $1 + 1)
+	WHERE snapid BETWEEN $1 + 1 AND $2
+	GROUP BY d.name;
 $$
 LANGUAGE sql;
 
