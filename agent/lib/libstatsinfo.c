@@ -350,7 +350,7 @@ static int		stat_statements_max = DEFAULT_STAT_STATEMENTS_MAX;
 static char	   *stat_statements_exclude_users = NULL;
 static int		long_transaction_max = DEFAULT_LONG_TRANSACTION_MAX;
 static int		controlfile_fsync_interval = DEFAULT_CONTROLFILE_FSYNC_INTERVAL;
-static bool		enable_alert = true;
+static bool		enable_alert = false;
 static char	   *target_server = NULL;
 bool			profile_queries = DEFAULT_PROFILE_QUERIES;
 int				wait_sampling_max = DEFAULT_PROFILE_MAX;
@@ -1782,7 +1782,7 @@ _PG_init(void)
 							"Enable the alert function.",
 							NULL,
 							&enable_alert,
-							true,
+							false,
 							PGC_SIGHUP,
 							GUC_SUPERUSER_ONLY,
 							NULL,
