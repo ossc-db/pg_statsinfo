@@ -1522,30 +1522,45 @@ CREATE FUNCTION statsrepo.get_proc_tendency_report(
 	OUT running_per			numeric
 ) RETURNS SETOF record AS
 $$
+SELECT
+	pg_catalog.to_char(time, 'YYYY-MM-DD HH24:MI'),
+	CASE WHEN (lag / interval) = 0 THEN idle ELSE idle / (lag / interval) END AS idle,
+	CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+		ELSE (100.0 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS idle_per,
+	CASE WHEN (lag / interval) = 0 THEN idle_in_xact ELSE idle_in_xact / (lag / interval) END AS idle_in_xact,
+	CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+		ELSE (100.0 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS idle_in_xact_per,
+	CASE WHEN (lag / interval) = 0 THEN waiting ELSE waiting / (lag / interval) END AS waiting,
+	CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+		ELSE (100.0 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS waiting_per,
+	CASE WHEN (lag / interval) = 0 THEN running ELSE running / (lag / interval) END AS running,
+	CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+		ELSE (100.0 * running / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS running_per
+FROM
+(
 	SELECT
-		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
-		idle,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100.0 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS idle_per,
-		idle_in_xact,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100.0 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS idle_in_xact_per,
-		waiting,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100.0 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS waiting_per,
-		running,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100.0 * running / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS running_per
+		a.snapid, s.time, a.idle, a.idle_in_xact, a.waiting, a.running,
+		CASE WHEN s.lag_t IS NULL THEN 600 ELSE lag_t END as lag,
+		CASE WHEN set.setting IS NULL THEN 5 ELSE setting::int END as interval
 	FROM
-		statsrepo.activity a,
-		statsrepo.snapshot s
+		statsrepo.activity a
+		JOIN
+		(SELECT snapid, instid, time,  EXTRACT(EPOCH FROM ((time - lag(time, 1) OVER (ORDER BY snapid))))::int as lag_t
+			FROM statsrepo.snapshot WHERE snapid BETWEEN $1 - 1 AND $2
+		) s
+		ON a.snapid = s.snapid
+		LEFT JOIN
+		(SELECT snapid, setting 
+			FROM statsrepo.setting WHERE name = 'pg_statsinfo.sampling_interval'
+		) set
+		ON a.snapid = set.snapid
 	WHERE
-		a.snapid BETWEEN $1 AND $2
-		AND a.snapid = s.snapid
-		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-		AND idle IS NOT NULL
-	ORDER BY
-		a.snapid;
+	a.snapid BETWEEN $1 AND $2
+	AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+	AND idle IS NOT NULL
+)t
+ORDER BY
+	snapid;
 $$
 LANGUAGE sql;
 
