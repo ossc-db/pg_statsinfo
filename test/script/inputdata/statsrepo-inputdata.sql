@@ -28,10 +28,10 @@ $$
 	--
 	-- Data for Name: activity; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
-	INSERT INTO statsrepo.activity VALUES ($6, 17, 2, 0, 19, 3);
-	INSERT INTO statsrepo.activity VALUES ($6 + 1, 1, 0, 9, 1, 4);
-	INSERT INTO statsrepo.activity VALUES ($6 + 2, 12, 22, 4, 83, 5);
-	INSERT INTO statsrepo.activity VALUES ($6 + 3, 24, 30, 0,69, 6);
+	INSERT INTO statsrepo.activity VALUES ($6,     240, 120,  60,  240,  55);
+	INSERT INTO statsrepo.activity VALUES ($6 + 1, 480, 240, 120,  480, 110);
+	INSERT INTO statsrepo.activity VALUES ($6 + 2, 240, 120,  60,  240,  55);
+	INSERT INTO statsrepo.activity VALUES ($6 + 3, 480, 240, 120,  480, 110);
 
 	--
 	-- Data for Name: alert_message; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
@@ -399,14 +399,14 @@ $$
 	--
 	-- Data for Name: wait_sampling; Type: TABLE DATA; Schema: statsrepo; Owner: postgres
 	--
+	INSERT INTO statsrepo.wait_sampling VALUES ($6, 12870, 10, 1067368138, 'client backend', 'IO', 'DataFileRead', 2);
 	INSERT INTO statsrepo.wait_sampling VALUES ($6, 12870, 10, 1067368138, 'client backend', 'Client', 'ClientRead', 1);
-	INSERT INTO statsrepo.wait_sampling VALUES ($6, 0, 10, 0, 'walsender', 'IO', 'WALRead', 2);
+	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 1, 12870, 10, 1067368138, 'client backend', 'IO', 'DataFileRead', 4);
 	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 1, 12870, 10, 1067368138, 'client backend', 'Client', 'ClientRead', 2);
-	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 1, 0, 10, 0, 'walsender', 'IO', 'WALRead', 4);
+	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 2, 12870, 10, 1067368138, 'client backend', 'IO', 'DataFileRead', 8);
 	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 2, 12870, 10, 1067368138, 'client backend', 'Client', 'ClientRead', 4);
-	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 2, 0, 10, 0, 'walsender', 'IO', 'WALRead', 8);
+	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 3, 12870, 10, 1067368138, 'client backend', 'IO', 'DataFileRead', 16);
 	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 3, 12870, 10, 1067368138, 'client backend', 'Client', 'ClientRead', 8);
-	INSERT INTO statsrepo.wait_sampling VALUES ($6 + 3, 0, 10, 0, 'walsender', 'IO', 'WALRead', 16);
 
 	--
 	-- Data for Name: cpuinfo; Type: TABLE DATA; Schema: statsrepo; Owner: postgres

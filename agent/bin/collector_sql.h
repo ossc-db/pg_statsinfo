@@ -557,7 +557,7 @@ SELECT \
 	r.stats_reset \
 FROM \
 	pg_stat_statements_info s, \
-	statsinfo.sample_wait_events_info() w, \
+	statsinfo.sample_wait_sampling_info() w, \
 	statsinfo.rusage_info() r"
 
 /* If pg_stat_statements is not installed, avoid referencing pg_stat_statements_info.*/
@@ -570,5 +570,5 @@ SELECT \
 	r.dealloc, \
 	r.stats_reset \
 FROM \
-	statsinfo.sample_wait_events_info() w, \
+	statsinfo.sample_wait_sampling_info() w, \
 	statsinfo.rusage_info() r"

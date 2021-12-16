@@ -21,9 +21,9 @@
     statsinfo_rusage_reset;
 	statsinfo_rusage_info;
     statsinfo_sample;
-    statsinfo_sample_wait_events;
-    statsinfo_sample_wait_events_reset;
-    statsinfo_sample_wait_events_info;
+    statsinfo_sample_wait_sampling;
+    statsinfo_sample_wait_sampling_reset;
+    statsinfo_sample_wait_sampling_info;
     statsinfo_snapshot;
     statsinfo_start;
     statsinfo_stop;

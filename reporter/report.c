@@ -176,6 +176,8 @@ FROM \
 #define SQL_SELECT_SCHEMA_INFORMATION_INDEXES	"SELECT * FROM statsrepo.get_schema_info_indexes($1, $2)"
 #define SQL_SELECT_ALERT						"SELECT * FROM statsrepo.get_alert($1, $2)"
 #define SQL_SELECT_WAIT_SAMPLING				"SELECT * FROM statsrepo.get_wait_sampling($1, $2)"
+#define SQL_SELECT_WAIT_SAMPLING_BY_INSTID		"SELECT * FROM statsrepo.get_wait_sampling_by_instid($1, $2)"
+#define SQL_SELECT_WAIT_SAMPLING_BY_DBID		"SELECT * FROM statsrepo.get_wait_sampling_by_dbid($1, $2)"
 #define SQL_SELECT_PROFILES						"SELECT * FROM statsrepo.get_profiles($1, $2)"
 #define SQL_SELECT_CPU_INFO						"SELECT * FROM statsrepo.get_cpuinfo($1, $2)"
 #define SQL_SELECT_MEM_INFO						"SELECT * FROM statsrepo.get_meminfo($1, $2)"
@@ -253,7 +255,6 @@ static void report_setting_parameters(PGconn *conn, ReportScope *scope, FILE *ou
 static void report_schema_information(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_alert(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_alert_section(PGconn *conn, ReportScope *scope, FILE *out);
-static void report_wait_sampling(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_profiles(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_hardware_info(PGconn *conn, ReportScope *scope, FILE *out);
 static void report_all(PGconn *conn, ReportScope *scope, FILE *out);
@@ -515,6 +516,37 @@ report_database_statistics(PGconn *conn, ReportScope *scope, FILE *out)
 	PQclear(res);
 
 	fprintf(out, "\n");
+
+	fprintf(out, "/** Wait Sampling per Database **/\n");
+	fprintf(out, "-----------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_WAIT_SAMPLING_BY_DBID, lengthof(params), params);
+	for (i = 0; i < PQntuples(res); i++)
+	{
+		if (strcmp(PQgetvalue(res, i, 6), "1") == 0)
+		{
+			fprintf(out, "\n");
+			fprintf(out, "%-16s\n",
+			"Database");
+			fprintf(out, "---------------------------------------------------------------------------------------\n");
+			fprintf(out, "%-16s\n",
+			PQgetvalue(res, i, 1));
+
+			fprintf(out, "\n");
+			fprintf(out, "\tTop 10 Events:\n");
+			fprintf(out, "\t%-12s  %-32s  %8s  %12s\n",
+			"Event Type", "Event", "Count", "Ratio(%)");
+			fprintf(out, "\t-------------------------------------------------------------------------------\n");
+		}
+
+		fprintf(out, "\t%-12s  %-32s  %8s  %12s\n",
+		PQgetvalue(res, i, 2),
+		PQgetvalue(res, i, 3),
+		PQgetvalue(res, i, 4),
+		PQgetvalue(res, i, 5));
+	}
+	fprintf(out, "\n");
+	PQclear(res);
 }
 
 /*
@@ -579,7 +611,7 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	
 	fprintf(out, "----------------------------------------\n");
 	fprintf(out, "%13s  %11s  %12s  %16s  %12s  %12s  %14s  %13s  %-20s\n",
-		"Wal Records", "Wal Fpi", "Wal Bytes", "Wal Buffers Full", "Wal write" , "Wal Sync" , "Wal write Time" , "Wal Sync Time" , "Wal Reset");
+		"WAL Records", "WAL Fpi", "WAL Bytes", "WAL Buffers Full", "WAL Write" , "WAL Sync" , "WAL Write Time" , "WAL Sync Time" , "WAL Reset");
 	fprintf(out, "----------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_STAT_WAL, lengthof(params), params);
@@ -646,6 +678,27 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 		fprintf(out, "%-16s  %12s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1));
+	}
+	fprintf(out, "\n");
+	PQclear(res);
+
+	fprintf(out, "/** Wait Sampling (Instance) **/\n");
+	fprintf(out, "-----------------------------------\n");
+
+	fprintf(out, "\n");
+	fprintf(out, "\tTop 10 Events:\n");
+	fprintf(out, "\t%-12s  %-32s  %8s  %12s\n",
+	"Event Type", "Event", "Count", "Ratio(%)");
+	fprintf(out, "\t-------------------------------------------------------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_WAIT_SAMPLING_BY_INSTID, lengthof(params), params);
+	for (i = 0; i < PQntuples(res); i++)
+	{
+		fprintf(out, "\t%-12s  %-32s  %8s  %12s\n",
+		PQgetvalue(res, i, 0),
+		PQgetvalue(res, i, 1),
+		PQgetvalue(res, i, 2),
+		PQgetvalue(res, i, 3));
 	}
 	fprintf(out, "\n");
 	PQclear(res);
@@ -1233,6 +1286,47 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	}
 	fprintf(out, "\n");
 	PQclear(res);
+
+	fprintf(out, "/** Wait Sampling **/\n");
+	fprintf(out, "-----------------------------------\n");
+
+	res = pgut_execute(conn, SQL_SELECT_WAIT_SAMPLING, lengthof(params), params);
+	for (i = 0; i < PQntuples(res); i++)
+	{
+		if (strcmp(PQgetvalue(res, i, 11), "1") == 0)
+		{
+			fprintf(out, "\n");
+			fprintf(out, "---------------------------------------------------------------------------------------\n");
+			fprintf(out, "%-32s  %-16s  %-16s  %-24s\n",
+			"Query ID", "Database", "User Name", "Backend Type");
+			fprintf(out, "---------------------------------------------------------------------------------------\n");
+			fprintf(out, "%-32s  %-16s  %-16s  %-24s\n",
+			PQgetvalue(res, i, 0),
+			PQgetvalue(res, i, 3),
+			PQgetvalue(res, i, 4),
+			PQgetvalue(res, i, 5));
+
+			fprintf(out, "\n");
+			fprintf(out, "\t%-s\n",
+			"Query");
+			fprintf(out, "\t---------------------------------------------------------------------------------------\n");
+			fprintf(out, "\t%-s\n",
+			PQgetvalue(res, i, 10));
+
+			fprintf(out, "\n");
+			fprintf(out, "\t\tTop 10 Events:\n");
+			fprintf(out, "\t\t%-12s  %-32s  %8s  %12s\n",
+			"Event Type", "Event", "Count", "Ratio(%)");
+			fprintf(out, "\t\t-------------------------------------------------------------------------------\n");
+		}
+		fprintf(out, "\t\t%-12s  %-32s  %8s  %12s\n",
+		PQgetvalue(res, i, 6),
+		PQgetvalue(res, i, 7),
+		PQgetvalue(res, i, 8),
+		PQgetvalue(res, i, 9));
+	}
+	fprintf(out, "\n");
+	PQclear(res);
 }
 
 /*
@@ -1482,38 +1576,6 @@ print_alert_data(PGconn *conn, ReportScope *scope, FILE *out)
 }
 
 /*
- * generate a report that corresponds to wait sampling
- */
-static void
-report_wait_sampling(PGconn *conn, ReportScope *scope, FILE *out)
-{
-	PGresult	*res;
-	const char	*params[] = { scope->beginid, scope->endid };
-	int			 i;
-
-	fprintf(out, "/* Wait Sampling */\n");
-	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %-24s  %-32s  %-12s  %-32s  %8s\n",
-	"Database", "User Name", "Query ID", "Backend Type", "Event Type", "Event", "Count");
-	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------------------------------\n");
-
-	res = pgut_execute(conn, SQL_SELECT_WAIT_SAMPLING, lengthof(params), params);
-	for (i = 0; i < PQntuples(res); i++)
-	{
-		fprintf(out, "%-16s  %-16s  %-24s  %-32s  %-12s  %-32s  %8s\n",
-		PQgetvalue(res, i, 0),
-		PQgetvalue(res, i, 1),
-		PQgetvalue(res, i, 2),
-		PQgetvalue(res, i, 3),
-		PQgetvalue(res, i, 4),
-		PQgetvalue(res, i, 5),
-		PQgetvalue(res, i, 6));
-	}
-	fprintf(out, "\n");
-	PQclear(res);
-}
-
-/*
  * generate a report that corresponds to 'Profiles'
  */
 static void
@@ -1616,7 +1678,6 @@ report_all(PGconn *conn, ReportScope *scope, FILE *out)
 	report_replication_activity(conn, scope, out);
 	report_setting_parameters(conn, scope, out);
 	report_schema_information(conn, scope, out);
-	report_wait_sampling(conn, scope, out);
 	report_profiles(conn, scope, out);
 	report_hardware_info(conn, scope, out);
 }
@@ -1672,8 +1733,6 @@ parse_reportid(const char *value)
 		return (ReportBuild) report_schema_information;
 	else if (pg_strncasecmp(REPORTID_ALERT, v, len) == 0)
 		return (ReportBuild) report_alert;
-	else if (pg_strncasecmp(REPORTID_WAIT_SAMPLING, v, len) == 0)
-		return (ReportBuild) report_wait_sampling;
 	else if (pg_strncasecmp(REPORTID_PROFILES, v, len) == 0)
 		return (ReportBuild) report_profiles;
 	else if (pg_strncasecmp(REPORTID_HARDWARE_INFO, v, len) == 0)

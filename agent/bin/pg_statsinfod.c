@@ -42,7 +42,7 @@ char		   *excluded_schemas;
 char		   *stat_statements_max;
 char		   *stat_statements_exclude_users;
 int				sampling_interval;
-int				sampling_wait_events_interval;
+int				sampling_wait_sampling_interval;
 int				snapshot_interval;
 int				enable_maintenance;
 time_t			maintenance_time;
@@ -79,10 +79,16 @@ char		   *repolog_nologging_users;
 int				controlfile_fsync_interval;
 /*---- GUC variables (writer) ----------*/
 char		   *repository_server;
-/*---- GUC variables (wait sampling) ----------*/
+/*---- GUC variables (wait sampling collector) ----------*/
 bool		   profile_queries;
 int			   profile_max;
-bool			pgws_save;
+bool			profile_save;
+/*---- GUC variables (rusage) ----------*/
+bool			rusage_save;
+int				rusage_max;
+int				rusage_track;
+bool			rusage_track_planning;
+bool			rusage_track_utility;
 /*---- message format ----*/
 char		   *msg_debug;
 char		   *msg_info;
@@ -113,7 +119,7 @@ volatile WriterState	writer_state;
 
 /* threads */
 pthread_t	th_collector;
-pthread_t	th_collector_wait_events;
+pthread_t	th_collector_wait_sampling;
 pthread_t	th_writer;
 pthread_t	th_logger;
 pthread_t	th_logger_send;
@@ -129,6 +135,7 @@ static bool assign_string(const char *value, void *var);
 static bool assign_bool(const char *value, void *var);
 static bool assign_time(const char *value, void *var);
 static bool assign_enable_maintenance(const char *value, void *var);
+static bool assign_ru_track(const char *value, void *var);
 static void readopt(void);
 static bool decode_time(const char *field, int *hour, int *min, int *sec);
 static int strtoi(const char *nptr, char **endptr, int base);
@@ -167,7 +174,7 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".stat_statements_exclude_users", assign_string, &stat_statements_exclude_users},
 	{GUC_PREFIX ".repository_server", assign_string, &repository_server},
 	{GUC_PREFIX ".sampling_interval", assign_int, &sampling_interval},
-	{GUC_PREFIX ".sampling_wait_events_interval", assign_int, &sampling_wait_events_interval},
+	{GUC_PREFIX ".sampling_wait_sampling_interval", assign_int, &sampling_wait_sampling_interval},
 	{GUC_PREFIX ".snapshot_interval", assign_int, &snapshot_interval},
 	{GUC_PREFIX ".syslog_line_prefix", assign_string, &syslog_line_prefix},
 	{GUC_PREFIX ".syslog_min_messages", assign_elevel, &syslog_min_messages},
@@ -197,9 +204,14 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".target_server", assign_string, &target_server},
 	{GUC_PREFIX ".profile_queries", assign_bool, &profile_queries},
 	{GUC_PREFIX ".profile_max", assign_int, &profile_max},
-	{GUC_PREFIX ".profile_save", assign_bool, &pgws_save},
+	{GUC_PREFIX ".profile_save", assign_bool, &profile_save},
 	{GUC_PREFIX ".collect_column", assign_bool, &collect_column},
 	{GUC_PREFIX ".collect_index", assign_bool, &collect_index},
+	{GUC_PREFIX ".rusage_save", assign_bool, &rusage_save},
+	{GUC_PREFIX ".rusage_max", assign_int, &rusage_max},
+	{GUC_PREFIX ".rusage_track", assign_ru_track, &rusage_track},
+	{GUC_PREFIX ".rusage_track_planning", assign_bool, &rusage_track_planning},
+	{GUC_PREFIX ".rusage_track_utility", assign_bool, &rusage_track_utility},
 	{":debug", assign_string, &msg_debug},
 	{":info", assign_string, &msg_info},
 	{":notice", assign_string, &msg_notice},
@@ -310,7 +322,7 @@ main(int argc, char *argv[])
 	/* init logger, collector, and writer module */
 	pthread_mutex_init(&shutdown_state_lock, NULL);
 	collector_init();
-	collector_wait_events_init();
+	collector_wait_sampling_init();
 	writer_init();
 	logger_init();
 
@@ -321,14 +333,14 @@ main(int argc, char *argv[])
 
 	/* run the modules in each thread */
 	pthread_create(&th_collector, NULL, collector_main, NULL);
-	pthread_create(&th_collector_wait_events, NULL, collector_wait_events_main, NULL);
+	pthread_create(&th_collector_wait_sampling, NULL, collector_wait_sampling_main, NULL);
 	pthread_create(&th_writer, NULL, writer_main, NULL);
 	pthread_create(&th_logger, NULL, logger_main, &ctrl);
 	pthread_create(&th_logger_send, NULL, logger_send_main, &ctrl);
 
 	/* join the threads */ 
 	pthread_join(th_collector, (void **) NULL);
-	pthread_join(th_collector_wait_events, (void **) NULL);
+	pthread_join(th_collector_wait_sampling, (void **) NULL);
 	pthread_join(th_writer, (void **) NULL);
 	pthread_join(th_logger, (void **) NULL);
 	pthread_join(th_logger_send, (void **) NULL);
@@ -480,13 +492,41 @@ do_connect(PGconn **conn, const char *info, const char *schema)
 /*
  * Connect to the database and install schema if not installed yet.
  * Returns the same value with *conn.
+ * TODO: currently, this function almost same as do_conect().
+ * We perform PQping() if PQstatus() return CONNECTION_BAD or others
+ * only do_wait_sampling_connect().
+ * But this might be  uselful for do_connect().
+ *
+ * The reason for performing PQping() is describe following.
+ * 1. The collector is performing sample_wait_sampling()
+ * 2. postgres had received shutdown request at the same time.
+ * 3. 1.is failed due to forced abort. (this generate fetal msg, but OK)
+ * 4. The collector try to do_wait_sampling_connect() again due to the high
+ *    frequency sampling.
+ *    We expect that collector see the SHUTDOWN_REQUESTED, but there is a 
+ *    high probability that it will slip through this check.
+ * 5. collector try to pgut_connect() again, and error happens.
+ * PQping() will avoid attempting to connect at 5.
  */
 PGconn *
-do_wait_events_connect(PGconn **conn, const char *info, const char *schema)
+do_wait_sampling_connect(PGconn **conn, const char *info, const char *schema)
 {
 	/* skip reconnection if connected to the database already */
 	if (PQstatus(*conn) == CONNECTION_OK)
+	{
 		return *conn;
+	}
+	else
+	{
+		/* If we got failed previous sample_wait_sampling() because of shutdown 
+		 * or some troubles, we catch CONNECTION_BAD here.
+		 * Ping for connection at this point for avoiding useless connection
+		 * attempts after this.
+		 */
+		if (PQping(info) != PQPING_OK)
+			/* return NULL quickly. */
+			return NULL;	
+	}
 
 	pgut_disconnect(*conn);
 	*conn = pgut_connect(info, NO, ERROR);
@@ -673,6 +713,45 @@ assign_enable_maintenance(const char *value, void *var)
 			mode |= MAINTENANCE_MODE_LOG;
 		else if (pg_strcasecmp(tok, "repolog") == 0)
 			mode |= MAINTENANCE_MODE_REPOLOG;
+		else
+		{
+			free(rawstring);
+			return false;
+		}
+		tok = strtok(NULL, ",");
+	}
+
+	free(rawstring);
+	*(int *) var = mode;
+	return true;
+}
+
+static bool
+assign_ru_track(const char *value, void *var)
+{
+	char	*rawstring;
+	char	*tok;
+	int		 mode = STATSINFO_RUSAGE_TRACK_TOP;
+	int		 tok_len;
+
+	rawstring = pgut_strdup(value);
+	tok = strtok(rawstring, ",");
+	while (tok)
+	{
+		/* trim leading and trailing whitespace */
+		while (*tok && isspace((unsigned char) *tok))
+			tok++;
+		tok_len = strlen(tok);
+		while (tok_len > 0 && isspace((unsigned char) tok[tok_len - 1]))
+			tok_len--;
+		tok[tok_len] = '\0';
+
+		if (pg_strcasecmp(tok, "none") == 0)
+			mode = STATSINFO_RUSAGE_TRACK_NONE;
+		else if (pg_strcasecmp(tok, "top") == 0)
+			mode = STATSINFO_RUSAGE_TRACK_TOP;
+		else if (pg_strcasecmp(tok, "all") == 0)
+			mode = STATSINFO_RUSAGE_TRACK_ALL;
 		else
 		{
 			free(rawstring);

@@ -840,7 +840,7 @@ LANGUAGE sql;
 
 -- get_version() - version of statsrepo schema
 CREATE FUNCTION statsrepo.get_version() RETURNS text AS
-'SELECT CAST(''130000'' AS TEXT)'
+'SELECT CAST(''140000'' AS TEXT)'
 LANGUAGE sql IMMUTABLE;
 
 -- tps() - transaction per seconds
@@ -1522,30 +1522,45 @@ CREATE FUNCTION statsrepo.get_proc_tendency_report(
 	OUT running_per			numeric
 ) RETURNS SETOF record AS
 $$
+SELECT
+	pg_catalog.to_char(time, 'YYYY-MM-DD HH24:MI'),
+	CASE WHEN (lag / interval) = 0 THEN idle ELSE idle / (lag / interval) END AS idle,
+	CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+		ELSE (100.0 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS idle_per,
+	CASE WHEN (lag / interval) = 0 THEN idle_in_xact ELSE idle_in_xact / (lag / interval) END AS idle_in_xact,
+	CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+		ELSE (100.0 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS idle_in_xact_per,
+	CASE WHEN (lag / interval) = 0 THEN waiting ELSE waiting / (lag / interval) END AS waiting,
+	CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+		ELSE (100.0 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS waiting_per,
+	CASE WHEN (lag / interval) = 0 THEN running ELSE running / (lag / interval) END AS running,
+	CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
+		ELSE (100.0 * running / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS running_per
+FROM
+(
 	SELECT
-		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
-		idle,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100.0 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS idle_per,
-		idle_in_xact,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100.0 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS idle_in_xact_per,
-		waiting,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100.0 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS waiting_per,
-		running,
-		CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-			ELSE (100.0 * running / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS running_per
+		a.snapid, s.time, a.idle, a.idle_in_xact, a.waiting, a.running,
+		CASE WHEN s.lag_t IS NULL THEN 600 ELSE lag_t END as lag,
+		CASE WHEN set.setting IS NULL THEN 5 ELSE setting::int END as interval
 	FROM
-		statsrepo.activity a,
-		statsrepo.snapshot s
+		statsrepo.activity a
+		JOIN
+		(SELECT snapid, instid, time,  EXTRACT(EPOCH FROM ((time - lag(time, 1) OVER (ORDER BY snapid))))::int as lag_t
+			FROM statsrepo.snapshot WHERE snapid BETWEEN $1 - 1 AND $2
+		) s
+		ON a.snapid = s.snapid
+		LEFT JOIN
+		(SELECT snapid, setting 
+			FROM statsrepo.setting WHERE name = 'pg_statsinfo.sampling_interval'
+		) set
+		ON a.snapid = set.snapid
 	WHERE
-		a.snapid BETWEEN $1 AND $2
-		AND a.snapid = s.snapid
-		AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
-		AND idle IS NOT NULL
-	ORDER BY
-		a.snapid;
+	a.snapid BETWEEN $1 AND $2
+	AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
+	AND idle IS NOT NULL
+)t
+ORDER BY
+	snapid;
 $$
 LANGUAGE sql;
 
@@ -3737,38 +3752,220 @@ LANGUAGE sql;
 CREATE FUNCTION statsrepo.get_wait_sampling(
 	IN snapid_begin bigint,
 	IN snapid_end bigint,
+	OUT queryid bigint,
+	OUT dbid bigint,
+	OUT userid bigint,
 	OUT database text,
 	OUT role text,
-	OUT queryid bigint,
 	OUT backend_type text,
 	OUT event_type text,
 	OUT event text,
-	OUT count bigint
+	OUT count bigint,
+	OUT ratio numeric,
+	OUT query text,
+	OUT row_number integer
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		db.name,
-		ro.name,
-		ws2.queryid,
-		ws2.backend_type,
-		ws2.event_type,
-		ws2.event,
-		statsrepo.sub(ws2.count, ws1.count) as count
+		queryid,
+		dbid,
+		userid,
+		datname,
+		rolname,
+		backend_type,
+		event_type,
+		event,
+		cnt,
+		ratio,
+		query,
+		row_number
 	FROM
-		(SELECT * FROM statsrepo.wait_sampling WHERE snapid = $2) ws2 
-		LEFT JOIN (SELECT * FROM statsrepo.wait_sampling WHERE snapid = $1) ws1
-		ON ws1.dbid = ws2.dbid AND ws1.userid = ws2.userid
-		AND ws1.queryid = ws2.queryid AND ws1.backend_type = ws2.backend_type
-		AND ws1.event_type = ws2.event_type AND ws1.event = ws2.event
-		LEFT JOIN (SELECT * FROM statsrepo.database WHERE snapid = $2) db
-		ON ws2.dbid = db.dbid
-		LEFT JOIN (SELECT * FROM statsrepo.role WHERE snapid = $2) ro
-		ON ws2.userid = ro.userid
-	WHERE
-		ws2.backend_type NOT IN ('background worker')
-		AND ws2.event_type NOT IN ('Activity')
+		(SELECT
+			ttt.queryid AS queryid,
+			ttt.dbid AS dbid,
+			ttt.userid AS userid,
+			st.datname AS datname,
+			st.rolname AS rolname,
+			ttt.backend_type AS backend_type,
+			ttt.event_type AS event_type,
+			ttt.event AS event,
+			ttt.cnt AS cnt,
+			ttt.ratio AS ratio,
+			st.query AS query,
+			st.total_exec_time AS total_exec_time,
+			st.calls AS calls,
+			ttt.row_number AS row_number
+		FROM
+			(SELECT * FROM statsrepo.get_query_activity_statements($1, $2) ORDER BY total_exec_time DESC, calls DESC LIMIT 20) st
+		JOIN
+			(SELECT *
+			FROM
+				(SELECT
+					queryid,
+					dbid,
+					userid,
+					backend_type,
+					event_type,
+					event,
+					cnt,
+					ratio::numeric(6,3) AS ratio,
+					ROW_NUMBER() OVER ww
+				FROM
+					(SELECT
+						we.queryid AS queryid,
+						we.dbid AS dbid,
+						we.userid AS userid,
+						we.backend_type AS backend_type,
+						we.event_type AS event_type,
+						we.event AS event,
+						statsrepo.sub(we.count, wb.count) AS cnt,
+						statsrepo.sub(we.count, wb.count) * 100 / pg_catalog.sum(statsrepo.sub(we.count, wb.count)) OVER w AS ratio
+					FROM
+						statsrepo.wait_sampling we
+					LEFT JOIN statsrepo.wait_sampling wb
+						ON wb.dbid = we.dbid
+						AND wb.userid = we.userid
+						AND wb.queryid = we.queryid
+						AND wb.backend_type = we.backend_type
+						AND wb.event_type = we.event_type
+						AND wb.event = we.event
+						AND wb.snapid = $1
+					WHERE
+						statsrepo.sub(we.count, wb.count) <> 0
+						AND we.snapid = $2
+					WINDOW w AS (PARTITION BY we.queryid, we.dbid, we.userid, we.backend_type) -- don't use order by to work partial summation properly
+					) t
+				WINDOW ww AS (PARTITION BY queryid, dbid, userid, backend_type ORDER BY cnt DESC)
+				) tt
+			WHERE tt.row_number <= 10
+			) ttt
+			ON  ttt.dbid = st.dbid
+			AND ttt.userid = st.userid
+			AND ttt.queryid = st.queryid
+		) tttt
 	ORDER BY
-		count DESC;
+		total_exec_time DESC,
+		calls DESC,
+		dbid,
+		userid,
+		queryid,
+		row_number
+;
+$$
+LANGUAGE sql;
+
+CREATE FUNCTION statsrepo.get_wait_sampling_by_instid(
+	IN snapid_begin bigint,
+	IN snapid_end bigint,
+	OUT event_type text,
+	OUT event text,
+	OUT count bigint,
+	OUT ratio numeric,
+	OUT row_number integer
+) RETURNS SETOF record AS
+$$
+SELECT *
+FROM
+	(SELECT
+		event_type,
+		event,
+		cnt,
+		ratio::numeric(6,3),
+		ROW_NUMBER() OVER ww
+	FROM
+		(SELECT
+			event_type,
+			event,
+			cnt,
+			cnt * 100 / pg_catalog.sum(cnt) OVER w AS ratio
+		FROM
+			(SELECT
+				we.event_type AS event_type,
+				we.event AS event,
+				pg_catalog.sum(statsrepo.sub(we.count, wb.count)) AS cnt
+			FROM
+				statsrepo.wait_sampling we LEFT JOIN statsrepo.wait_sampling wb
+					ON wb.dbid = we.dbid
+					AND wb.userid = we.userid
+					AND wb.queryid = we.queryid
+					AND wb.backend_type = we.backend_type
+					AND wb.event_type = we.event_type
+					AND wb.event = we.event
+					AND wb.snapid = $1
+			WHERE
+				statsrepo.sub(we.count, wb.count) <> 0
+				AND we.snapid = $2
+			GROUP BY we.event_type, we.event
+			) t
+		WINDOW w AS ()
+		)tt
+	WINDOW ww AS (ORDER BY cnt DESC)
+	) ttt
+WHERE ttt.row_number <= 10
+;
+$$
+LANGUAGE sql;
+
+CREATE FUNCTION statsrepo.get_wait_sampling_by_dbid(
+	IN snapid_begin bigint,
+	IN snapid_end bigint,
+	OUT dbid bigint,
+	OUT database text,
+	OUT event_type text,
+	OUT event text,
+	OUT count bigint,
+	OUT ratio numeric,
+	OUT row_number integer
+) RETURNS SETOF record AS
+$$
+SELECT *
+FROM
+	(SELECT
+		dbid,
+		CASE WHEN database IS NULL THEN '<global>' ELSE database END,
+		event_type,
+		event,
+		cnt,
+		ratio::numeric(6,3),
+		ROW_NUMBER() OVER ww
+	FROM
+		(SELECT
+			dbid,
+			database,
+			event_type,
+			event,
+			cnt,
+			cnt * 100 / pg_catalog.sum(cnt) OVER w AS ratio
+		FROM
+			(SELECT
+				we.dbid AS dbid,
+				db.name AS database,
+				we.event_type AS event_type,
+				we.event AS event,
+				pg_catalog.sum(statsrepo.sub(we.count, wb.count)) AS cnt
+			FROM
+				statsrepo.wait_sampling we LEFT JOIN statsrepo.wait_sampling wb
+					ON wb.dbid = we.dbid
+					AND wb.userid = we.userid
+					AND wb.queryid = we.queryid
+					AND wb.backend_type = we.backend_type
+					AND wb.event_type = we.event_type
+					AND wb.event = we.event
+					AND wb.snapid = $1
+			LEFT JOIN statsrepo.database db
+				ON we.dbid = db.dbid
+				AND db.snapid = $1
+			WHERE
+				statsrepo.sub(we.count, wb.count) <> 0
+				AND we.snapid = $2
+			GROUP BY we.dbid, db.name, we.event_type, we.event
+			) t
+		WINDOW w AS (PARTITION BY t.dbid)
+		) tt
+	WINDOW ww AS (PARTITION BY tt.dbid ORDER BY cnt DESC)
+	) ttt
+WHERE ttt.row_number <= 10
+;
 $$
 LANGUAGE sql;
 

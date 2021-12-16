@@ -6,7 +6,7 @@
 
 /*      
 * For hash table dealloc factors. (same as pg_stat_statements)
-* TODO: should share for wait-events-hash-table
+* TODO: should share for wait-sampling-hash-table
 */    
 #define STATSINFO_USAGE_INCREASE (1.0)
 #define STATSINFO_USAGE_DECREASE_FACTOR	(0.99)
@@ -25,49 +25,49 @@ typedef struct
 	Oid				dbid;			/* database OID */
 	uint64			queryid;		/* query identifier */
 	BackendType		backend_type;		/* Type of backends */
-	uint32			wait_event_info;	/* Wait event information */
-} pgwsHashKey;
+	uint32			wait_event_info;	/* Wait sampling information */
+} wait_samplingHashKey;
 
 /* wait sampling counters. */
-typedef struct pgwsCounters
+typedef struct wait_samplingCounters
 {
 	double			  usage;			/* usage factor */
 	uint64			  count;			/* number of samples */
-} pgwsCounters;
+} wait_samplingCounters;
 
 /* wait sampling entry per database (same as pg_stat_statements) */
-typedef struct pgwsEntry
+typedef struct wait_samplingEntry
 {
-	pgwsHashKey		key;				/* hash key of entry - MUST BE FIRST */
-	pgwsCounters	counters;			/* statistics for this event */
+	wait_samplingHashKey		key;				/* hash key of entry - MUST BE FIRST */
+	wait_samplingCounters	counters;			/* statistics for this event */
 	slock_t			mutex;				/* protects the counters only */
-} pgwsEntry;
+} wait_samplingEntry;
 
 typedef struct
 {
 	Oid				userid;			/* user OID */
 	Oid				dbid;			/* database OID */
 	uint64			queryid;		/* query identifier */
-} pgwsSubHashKey;
+} wait_samplingSubHashKey;
 
-typedef struct pgwsSubEntry
+typedef struct wait_samplingSubEntry
 {
-	pgwsSubHashKey		key;			/* hash key of entry - MUST BE FIRST */
+	wait_samplingSubHashKey		key;			/* hash key of entry - MUST BE FIRST */
 	double				usage;			/* usage factor */
-} pgwsSubEntry;
+} wait_samplingSubEntry;
 
 /*
- * Global statistics for sample_wait_events
+ * Global statistics for sample_wait_sampling
  */
-typedef struct pgwsGlobalStats
+typedef struct wait_samplingGlobalStats
 {
 	int64		dealloc;		/* # of times entries were deallocated */
 	TimestampTz stats_reset;	/* timestamp with all stats reset */
-} pgwsGlobalStats;
+} wait_samplingGlobalStats;
 
-typedef struct pgwsSharedState
+typedef struct wait_samplingSharedState
 {
 	LWLock	   *lock;			/* protects hashtable search/modification */
 	slock_t		mutex;			/* protects following fields only: */
-	pgwsGlobalStats stats;		/* global statistics for pgws */
-} pgwsSharedState;
+	wait_samplingGlobalStats stats;		/* global statistics for wait_sampling */
+} wait_samplingSharedState;

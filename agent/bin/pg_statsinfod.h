@@ -27,9 +27,9 @@
 #define SECS_PER_DAY		86400	/* seconds per day */
 
 #define STATSINFO_CONTROL_FILE		"pg_statsinfo.control"
-#define STATSINFO_CONTROL_VERSION	130000
+#define STATSINFO_CONTROL_VERSION	140000
 
-#define STATSREPO_SCHEMA_VERSION	130000
+#define STATSREPO_SCHEMA_VERSION	140000
 
 /* number of columns of csvlog */
 #define CSV_COLS			26
@@ -102,7 +102,7 @@ extern char		   *excluded_schemas;
 extern char		   *stat_statements_max;
 extern char		   *stat_statements_exclude_users;
 extern int			sampling_interval;
-extern int			sampling_wait_events_interval;
+extern int			sampling_wait_sampling_interval;
 extern int			snapshot_interval;
 extern int		    enable_maintenance;
 extern time_t		maintenance_time;
@@ -139,8 +139,16 @@ extern char		   *repolog_nologging_users;
 extern int			controlfile_fsync_interval;
 /*---- GUC variables (writer) ----------*/
 extern char		   *repository_server;
+/*---- GUC variables (wait sampling collector) ----------*/
 extern bool		   profile_queries;
 extern int		   profile_max;
+extern bool		   profile_save;
+/*---- GUC variables (rusage) ----------*/
+extern bool			rusage_save;
+extern int			rusage_max;
+extern int			rusage_track;
+extern bool			rusage_track_planning;
+extern bool			rusage_track_utility;
 /*---- message format ----*/
 extern char		   *msg_debug;
 extern char		   *msg_info;
@@ -181,7 +189,7 @@ extern volatile char   *snapshot_requested;
 extern volatile char   *maintenance_requested;
 extern volatile char   *postmaster_start_time;
 
-/* collector_wait_events.c */
+/* collector_wait_sampling.c */
 extern pthread_mutex_t	reset_lock;
 extern volatile char   *reset_requested;
 
@@ -229,6 +237,14 @@ typedef struct Log
 	const char *query_id;
 } Log;
 
+typedef enum
+{
+    STATSINFO_RUSAGE_TRACK_NONE,    /* track no statements */
+    STATSINFO_RUSAGE_TRACK_TOP,  /* only top level statements */
+    STATSINFO_RUSAGE_TRACK_ALL    /* all statements, including nested ones */
+}   STATSINFO_RUSAGE_TrackLevel;
+
+
 /* Contents of pg_statsinfo.control */
 typedef struct ControlFile
 {
@@ -250,10 +266,10 @@ typedef struct tim {
 extern void collector_init(void);
 extern void *collector_main(void *arg);
 extern PGconn *collector_connect(const char *db);
-/* collector_wait_events.c */
-extern void collector_wait_events_init(void);
-extern void *collector_wait_events_main(void *arg);
-extern PGconn *collector_wait_events_connect(const char *db);
+/* collector_wait_sampling.c */
+extern void collector_wait_sampling_init(void);
+extern void *collector_wait_sampling_main(void *arg);
+extern PGconn *collector_wait_sampling_connect(const char *db);
 /* snapshot.c */
 extern QueueItem *get_snapshot(char *comment);
 extern void readopt_from_file(FILE *fp);
@@ -316,7 +332,7 @@ bool check_maintenance_log(pid_t log_maintenance_pid, int fd_err);
 /* pg_statsinfod.c */
 extern bool postmaster_is_alive(void);
 extern PGconn *do_connect(PGconn **conn, const char *info, const char *schema);
-extern PGconn *do_wait_events_connect(PGconn **conn, const char *info, const char *schema);
+extern PGconn *do_wait_sampling_connect(PGconn **conn, const char *info, const char *schema);
 extern bool ensure_schema(PGconn *conn, const char *schema);
 extern int str_to_elevel(const char *value);
 extern const char *elevel_to_str(int elevel);

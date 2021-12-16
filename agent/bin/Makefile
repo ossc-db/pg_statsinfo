@@ -8,7 +8,7 @@ SRCS = \
 	autovacuum.c \
 	checkpoint.c \
 	collector.c \
-	collector_wait_events.c \
+	collector_wait_sampling.c \
 	logger.c \
 	logger_send.c \
 	logger_common.c \
