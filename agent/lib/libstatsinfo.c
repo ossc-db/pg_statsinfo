@@ -212,7 +212,7 @@ default_log_maintenance_command(void)
 /*---- GUC variables ----*/
 
 #define DEFAULT_SAMPLING_INTERVAL			5		/* sec */
-#define DEFAULT_SAMPLING_WAIT_SAMPLING_INTERVAL			10		/* msec */
+#define DEFAULT_WAIT_SAMPLING_INTERVAL			10		/* msec */
 #define DEFAULT_SNAPSHOT_INTERVAL			600		/* sec */
 #define DEFAULT_SYSLOG_LEVEL				DISABLE
 #define DEFAULT_TEXTLOG_LEVEL				WARNING
@@ -229,8 +229,8 @@ default_log_maintenance_command(void)
 #define DEFAULT_LONG_TRANSACTION_MAX		10
 #define LONG_TRANSACTION_THRESHOLD			1.0		/* sec */
 #define DEFAULT_ENABLE_MAINTENANCE			"on"	/* snapshot + log */
-#define DEFAULT_PROFILE_QUERIES				true
-#define DEFAULT_PROFILE_MAX					1024
+#define DEFAULT_WAIT_SAMPLING_QUERIES				true
+#define DEFAULT_WAIT_SAMPLING_MAX					25000
 
 static const struct config_enum_entry elevel_options[] =
 {
@@ -278,7 +278,7 @@ static const char *const RELOAD_PARAM_NAMES[] =
 	GUC_PREFIX ".stat_statements_exclude_users",
 	GUC_PREFIX ".repository_server",
 	GUC_PREFIX ".sampling_interval",
-	GUC_PREFIX ".sampling_wait_sampling_interval",
+	GUC_PREFIX ".wait_sampling_interval",
 	GUC_PREFIX ".snapshot_interval",
 	GUC_PREFIX ".syslog_line_prefix",
 	GUC_PREFIX ".syslog_min_messages",
@@ -306,8 +306,8 @@ static const char *const RELOAD_PARAM_NAMES[] =
 	GUC_PREFIX ".controlfile_fsync_interval",
 	GUC_PREFIX ".enable_alert",
 	GUC_PREFIX ".target_server",
-	GUC_PREFIX ".profile_queries",
-	GUC_PREFIX ".profile_save",
+	GUC_PREFIX ".wait_sampling_queries",
+	GUC_PREFIX ".wait_sampling_save",
 	GUC_PREFIX ".collect_column",
 	GUC_PREFIX ".collect_index",
 	GUC_PREFIX ".rusage_save",
@@ -320,7 +320,7 @@ static char	   *excluded_dbnames = NULL;
 static char	   *excluded_schemas = NULL;
 static char	   *repository_server = NULL;
 static int		sampling_interval = DEFAULT_SAMPLING_INTERVAL;
-static int		sampling_wait_sampling_interval = DEFAULT_SAMPLING_WAIT_SAMPLING_INTERVAL;
+static int		wait_sampling_interval = DEFAULT_WAIT_SAMPLING_INTERVAL;
 static int		snapshot_interval = DEFAULT_SNAPSHOT_INTERVAL;
 static char	   *syslog_line_prefix = NULL;
 static int		syslog_min_messages = DEFAULT_SYSLOG_LEVEL;
@@ -352,9 +352,9 @@ static int		long_transaction_max = DEFAULT_LONG_TRANSACTION_MAX;
 static int		controlfile_fsync_interval = DEFAULT_CONTROLFILE_FSYNC_INTERVAL;
 static bool		enable_alert = false;
 static char	   *target_server = NULL;
-bool			profile_queries = DEFAULT_PROFILE_QUERIES;
-int				wait_sampling_max = DEFAULT_PROFILE_MAX;
-bool			profile_save = true;
+bool			wait_sampling_queries = DEFAULT_WAIT_SAMPLING_QUERIES;
+int				wait_sampling_max = DEFAULT_WAIT_SAMPLING_MAX;
+bool			wait_sampling_save = true;
 extern wait_samplingSharedState	*wait_sampling;
 static bool		collect_column = true;
 static bool		collect_index = true;
@@ -1223,7 +1223,7 @@ statsinfo_wait_sampling_profile(PG_FUNCTION_ARGS)
 			values[i++] = Int32GetDatum(entry->key.dbid);
 			values[i++] = Int32GetDatum(entry->key.userid);
 
-			if (profile_queries)
+			if (wait_sampling_queries)
 				values[i++] = Int64GetDatumFast(entry->key.queryid);
 			else
 				values[i++] = (Datum) 0;
@@ -1444,11 +1444,11 @@ _PG_init(void)
 							NULL,
 							NULL);
 
-	DefineCustomIntVariable(GUC_PREFIX ".sampling_wait_sampling_interval",
+	DefineCustomIntVariable(GUC_PREFIX ".wait_sampling_interval",
 							"Sets the wait sampling interval.",
 							NULL,
-							&sampling_wait_sampling_interval,
-							DEFAULT_SAMPLING_WAIT_SAMPLING_INTERVAL,
+							&wait_sampling_interval,
+							DEFAULT_WAIT_SAMPLING_INTERVAL,
 							1,
 							INT_MAX,
 							PGC_SIGHUP,
@@ -1800,22 +1800,22 @@ _PG_init(void)
 							NULL,
 							NULL);
 
-	DefineCustomBoolVariable(GUC_PREFIX ".profile_queries",
+	DefineCustomBoolVariable(GUC_PREFIX ".wait_sampling_queries",
 							"Whether wait sampling should be collected per query or not.",
 							NULL,
-							&profile_queries,
-							DEFAULT_PROFILE_QUERIES,
+							&wait_sampling_queries,
+							DEFAULT_WAIT_SAMPLING_QUERIES,
 							PGC_SUSET,
 							0,
 							NULL,
 							NULL,
 							NULL);
 
-	DefineCustomIntVariable(GUC_PREFIX ".profile_max",
+	DefineCustomIntVariable(GUC_PREFIX ".wait_sampling_max",
 							"Set maximum number of wait sampling records.",
 							NULL,
 							&wait_sampling_max,
-							DEFAULT_PROFILE_MAX,
+							DEFAULT_WAIT_SAMPLING_MAX,
 							1,
 							INT_MAX,
 							PGC_POSTMASTER,
@@ -1824,10 +1824,10 @@ _PG_init(void)
 							NULL,
 							NULL);
 
-	DefineCustomBoolVariable(GUC_PREFIX ".profile_save",
+	DefineCustomBoolVariable(GUC_PREFIX ".wait_sampling_save",
 							"Save statsinfo wait sampling statistics across server shutdowns.",
 							NULL,
-							&profile_save,
+							&wait_sampling_save,
 							true,
 							PGC_SIGHUP,
 							0,
@@ -5029,7 +5029,7 @@ probe_waits(void)
 		item.key.userid = be->st_userid;
 		item.key.dbid = be->st_databaseid;
 
-		if (profile_queries)
+		if (wait_sampling_queries)
 			item.key.queryid = be->st_query_id;
 		else
 			item.key.queryid = 0;
