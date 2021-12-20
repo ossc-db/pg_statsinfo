@@ -244,7 +244,7 @@ attatch_shmem(void)
 	/*
 	 * NOTE: read and store the old stats to hash-table.
 	 * It might be better to check wait_sampling_max and num(old stats number) before
-	 * issue entry_alloc. Because if num >> ptofile_max (change param between
+	 * issue entry_alloc. Because if num >> wait_sampling_max (change param between
 	 * PostgreSQL stop and start), it should cause high frequency dealloc()s.
 	 * TODO: optimization to avoid the high-frequency dealloc()s.
 	 */ 
