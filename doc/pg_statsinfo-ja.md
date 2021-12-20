@@ -112,6 +112,7 @@ TODO: PostgreSQL14へのドキュメントリンクへの差し替え(日本語�
   - ロジカルレプリケーション情報 (walsenderの活動状況)
   - アラート機能で検出したアラートの内容
   - SystemTap を使用したプロファイリング情報 (実験的扱いの機能)。
+  - 待機イベント
 
 スナップショットのサイズは、DB内のオブジェクト数に依存しますが、概ね1回のスナップショットで1DBあたり 800 - 1000KBを消費します。
 デフォルトの取得間隔(10分間隔)の場合、監視対象インスタンス一つあたり1日で120 - 150MBを消費します。
@@ -987,10 +988,10 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
 | pg_statsinfo.rusage_track_utility         | off                                          | rusage_trackが有効な場合に、COPY処理などのユーティリティコマンドのリソース消費取得の有効/無効を設定します。[(*6)](#設定ファイル:rusage_track_utility) |
 | pg_statsinfo.rusage_track_planning         | off                                          | rusage_trackが有効な場合に、クエリ処理の実行計画作成時のリソース消費取得の有効/無効を設定します。 |
 | pg_statsinfo.rusage_save         | on                                          | クエリ単位のリソース情報をPostgreSQLの停止・起動をまたがって記録しておくかを設定します。 |
-| pg_statsinfo.profile_max         | 1024                                          | 待機イベントの情報数の上限。pg_stat_statements.max * 10 程度の値に設定することを推奨します。このパラメータ変更にはPostgreSQLの再起動が必要となります。  |
-| pg_statsinfo.profile_queries         | on                                          | 待機イベントの情報取得時のクエリID情報付与の有効/無効を設定します。 |
-| pg_statsinfo.profile_save         | on                                          | 待機イベントの情報をPostgreSQLの停止・起動をまたがって記録しておくかを設定します。 |
-| pg_statsinfo.sampling_wait_sampling_interval         | 10ms                                          | 待機イベント情報のサンプリング間隔。 |
+| pg_statsinfo.wait_sampling_max         | 25000                                          | 待機イベントの情報数の上限。pg_stat_statements.max * 10 程度の値に設定することを推奨します。このパラメータ変更にはPostgreSQLの再起動が必要となります。  |
+| pg_statsinfo.wait_sampling_queries         | on                                          | 待機イベントの情報取得時のクエリID情報付与の有効/無効を設定します。 |
+| pg_statsinfo.wait_sampling_save         | on                                          | 待機イベントの情報をPostgreSQLの停止・起動をまたがって記録しておくかを設定します。 |
+| pg_statsinfo.wait_sampling_interval         | 10ms                                          | 待機イベント情報のサンプリング間隔 [(*8)](#設定ファイル:時間指定ミリ秒) |
 | pg_statsinfo.collect_column         | on                                          | スナップショット取得時にテーブルの列情報の取得の有効/無効を設定します。offにすると列情報が収集されなくなり、スナップショットサイズの削減が可能ですが、一部の情報がレポートされなくなります。[(*7)](#設定ファイル:レポート不可となる項目)  |
 | pg_statsinfo.collect_index         | on                                          | スナップショット取得時にインデックス情報の取得の有効/無効を設定します。offにすると列情報が収集されなくなり、スナップショットサイズの削減が可能ですが、一部の情報がレポートされなくなります。[(*)](#設定ファイル:レポート不可となる項目)  |
 
@@ -1026,6 +1027,8 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
   - ##### 設定ファイル:レポート不可となる項目
     collect_columnをoffにした場合、「Notable TablesのCorrelation」全て、「Notable TablesのLow Density Tables」にあるLogical Pages および Logical Page Ratio(%)の2項目、および「Schema InformationのTable」にあるColumnsの項目がレポートできなくなります。
     collect_indexをoffにした場合、「Notable TablesのCorrelation」全て、および「Schema InformationのIndexes」全てがレポートできなくなります。
+  - ##### 設定ファイル:時間指定ミリ秒  
+    単位として d(日)、h(時)、min(分)、s(秒)、ms(ミリ秒) を指定できます。指定無しの場合はミリ秒単位とみなします。
 
 #### 設定値のリロード
 
