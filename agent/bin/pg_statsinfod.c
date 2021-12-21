@@ -42,7 +42,7 @@ char		   *excluded_schemas;
 char		   *stat_statements_max;
 char		   *stat_statements_exclude_users;
 int				sampling_interval;
-int				sampling_wait_sampling_interval;
+int				wait_sampling_interval;
 int				snapshot_interval;
 int				enable_maintenance;
 time_t			maintenance_time;
@@ -80,9 +80,9 @@ int				controlfile_fsync_interval;
 /*---- GUC variables (writer) ----------*/
 char		   *repository_server;
 /*---- GUC variables (wait sampling collector) ----------*/
-bool		   profile_queries;
-int			   profile_max;
-bool			profile_save;
+bool		   wait_sampling_queries;
+int			   wait_sampling_max;
+bool			wait_sampling_save;
 /*---- GUC variables (rusage) ----------*/
 bool			rusage_save;
 int				rusage_max;
@@ -174,7 +174,7 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".stat_statements_exclude_users", assign_string, &stat_statements_exclude_users},
 	{GUC_PREFIX ".repository_server", assign_string, &repository_server},
 	{GUC_PREFIX ".sampling_interval", assign_int, &sampling_interval},
-	{GUC_PREFIX ".sampling_wait_sampling_interval", assign_int, &sampling_wait_sampling_interval},
+	{GUC_PREFIX ".wait_sampling_interval", assign_int, &wait_sampling_interval},
 	{GUC_PREFIX ".snapshot_interval", assign_int, &snapshot_interval},
 	{GUC_PREFIX ".syslog_line_prefix", assign_string, &syslog_line_prefix},
 	{GUC_PREFIX ".syslog_min_messages", assign_elevel, &syslog_min_messages},
@@ -202,9 +202,9 @@ static struct ParamMap PARAM_MAP[] =
 	{GUC_PREFIX ".controlfile_fsync_interval", assign_int, &controlfile_fsync_interval},
 	{GUC_PREFIX ".enable_alert", assign_bool, &enable_alert},
 	{GUC_PREFIX ".target_server", assign_string, &target_server},
-	{GUC_PREFIX ".profile_queries", assign_bool, &profile_queries},
-	{GUC_PREFIX ".profile_max", assign_int, &profile_max},
-	{GUC_PREFIX ".profile_save", assign_bool, &profile_save},
+	{GUC_PREFIX ".wait_sampling_queries", assign_bool, &wait_sampling_queries},
+	{GUC_PREFIX ".wait_sampling_max", assign_int, &wait_sampling_max},
+	{GUC_PREFIX ".wait_sampling_save", assign_bool, &wait_sampling_save},
 	{GUC_PREFIX ".collect_column", assign_bool, &collect_column},
 	{GUC_PREFIX ".collect_index", assign_bool, &collect_index},
 	{GUC_PREFIX ".rusage_save", assign_bool, &rusage_save},
