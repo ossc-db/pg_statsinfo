@@ -377,15 +377,9 @@ get_instid(PGconn *conn)
 
 		snprintf(page_size_str,
 			sizeof(page_size_str), "%u", page_size);
-#if PG_VERSION_NUM >= 90300
 		snprintf(xlog_file_size_str,
 			sizeof(xlog_file_size_str), UINT64_FORMAT,
 			(UINT64CONST(0x100000000) / xlog_seg_size) * xlog_seg_size);
-#else
-		snprintf(xlog_file_size_str,
-			sizeof(xlog_file_size_str), "%u",
-			(((uint32) 0xffffffff) / xlog_seg_size) * xlog_seg_size);
-#endif
 		snprintf(page_header_size_str,
 			sizeof(page_header_size_str), "%d", page_header_size);
 		snprintf(htup_header_size_str,

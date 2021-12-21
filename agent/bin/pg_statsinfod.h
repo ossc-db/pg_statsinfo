@@ -32,13 +32,7 @@
 #define STATSREPO_SCHEMA_VERSION	140000
 
 /* number of columns of csvlog */
-#if PG_VERSION_NUM < 90000
-#define CSV_COLS			22
-#elif PG_VERSION_NUM < 130000
-#define CSV_COLS			23
-#else
 #define CSV_COLS			26
-#endif
 
 /* maintenance mode flag */
 #define MAINTENANCE_MODE_SNAPSHOT	(1 << 0)

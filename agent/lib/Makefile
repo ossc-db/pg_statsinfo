@@ -9,7 +9,6 @@ SRCS = \
 	wait_sampling.c \
 	pg_control.c \
 	port.c \
-	pgut/pgut-be.c \
 	pgut/pgut-spi.c
 OBJS = $(SRCS:.c=.o)
 DATA_built = pg_statsinfo.sql
