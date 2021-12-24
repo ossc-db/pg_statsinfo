@@ -19,7 +19,8 @@
     5.  [Alert Function](#Alert-Function)
     6.  [Getting Textual Reports by Command Line Operation](#Getting-Textual-Reports-by-Command-Line-Operation)
     7.  [Automatic Maintenance](#Automatic-Maintenance)
-    8.  [Configuration File](#Configuration-File)
+    8.  [Disable collect of column information and index information](#disable-collect-of-column-information-and-index-information)
+    9.  [Configuration File](#Configuration-File)
 5.  [Uninstallation](#Uninstallation)
 6.  [Restrictions](#restrictions)
 7.  [Q&A](#Q&A)
@@ -938,8 +939,7 @@ pg_statsinfo.collect_index. Both are specified as on / off or true / false,
 and the default is on for both.
 
 However, some report items will not be output. Only use this information if you
-determine that it is not needed. For details, see
-[Config:Items that cannot be reported](#Config:Items-that-cannot-be-reported).
+determine that it is not needed. For details, see [Config:Items that cannot be reported](#Config:Items-that-cannot-be-reported)
 
 #### Estimated reduction size
 
