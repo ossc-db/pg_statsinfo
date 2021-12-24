@@ -923,6 +923,41 @@ maintenance process of all instance is finished.
     pg_statsinfo.enable_maintenance = 'snapshot' 
     pg_statsinfo.repository_keepday = 3
 
+### Disable collect of column information and index information
+
+In an environment with a large number of tables and indexes, bloated snapshot
+sizes and delayed taking times can be a problem. By limiting the information
+collection target, it is possible to reduce the snapshot size and taking time.
+
+In pg_statsinfo, especially because the column information and index
+information of the table often occupy most of the snapshot size, it has
+a parameter to disable the collect of column information and 
+index information. enable / disable column information collect in
+pg_statsinfo.collect_column, and enable / disable index information collect in
+pg_statsinfo.collect_index. Both are specified as on / off or true / false, 
+and the default is on for both.
+
+However, some report items will not be output. Only use this information if you
+determine that it is not needed. For details, see
+[Config:Items that cannot be reported](#Config:Items-that-cannot-be-reported).
+
+#### Estimated reduction size
+
+Since one snapshot requires about 350 bytes for each index and about 150 bytes
+for each column, these can be reduced as they are if they are not collected. 
+
+However, if the index name or column name is very long, or if you have many
+reloptions set for the index, the size per one may be larger than this.
+
+As the number of columns is often larger than the number of tables and indexes,
+it tends to be a dominant factor in snapshot size. In the example below,
+more than 50% of the snapshot size is column information.
+
+| Schema conditions | Snapshot size | Snapshot size(index part) | Snapshot size(column part) |
+|-------------|----------------------|-------------------------------------|---------------------| 
+| 1000 tables、1000 indexes、100000 columns (10 columns per table) | 2.8MB | 0.34MB | 1.5MB |
+| 10000 tables、10000 indexes、1000000 columns (10 columns per table) | 26MB | 3.3MB | 14.2MB |
+
 ### Configuration File
 
 Configuration parameters and their meanings are described below.
