@@ -41,9 +41,9 @@ collector_wait_sampling_main(void *arg)
 		now = getlocaltime_ms();
 
 		/* sample wait sampling */
-		if (time_ms_diff(now, prev) >= sampling_wait_sampling_interval)
+		if (time_ms_diff(now, prev) >= wait_sampling_interval)
 		{
-			elog(DEBUG2, "collector_wait_sampling_main time_ms_diff %ld sampling_wait_sampling_interval %d", time_ms_diff(now, prev), sampling_wait_sampling_interval);
+			elog(DEBUG2, "collector_wait_sampling_main time_ms_diff %ld wait_sampling_interval %d", time_ms_diff(now, prev), wait_sampling_interval);
 			do_sample_wait_sampling();
 			prev = getlocaltime_ms();
 		}
@@ -145,9 +145,7 @@ collector_wait_sampling_connect(const char *db)
 		switch (ctrl.state)
 		{
 			case DB_IN_PRODUCTION:
-#if PG_VERSION_NUM >= 90000
 			case DB_IN_ARCHIVE_RECOVERY:	/* hot-standby accepts connections */
-#endif
 				break;			/* ok, do connect */
 			default:
 				delay();

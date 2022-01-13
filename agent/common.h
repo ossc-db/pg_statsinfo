@@ -55,14 +55,12 @@
 #define STATSINFO_LOCK_FILE		"pg_statsinfo.pid"
 
 /* CRC calculation */
-#if PG_VERSION_NUM >= 90500
 #include "port/pg_crc32c.h"
 #define INIT_CRC32	INIT_CRC32C
 #define COMP_CRC32	COMP_CRC32C
 #define FIN_CRC32	FIN_CRC32C
 #define EQ_CRC32	EQ_CRC32C
 typedef pg_crc32c pg_crc32;
-#endif
 
 extern bool readControlFile(ControlFileData *ctrl, const char *pgdata);
 

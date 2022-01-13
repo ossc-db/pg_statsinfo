@@ -32,9 +32,9 @@ PG_MODULE_MAGIC;
 
 /* Backend local variables */
 wait_samplingSharedState *wait_sampling = NULL;
-extern bool profile_queries;
+extern bool wait_sampling_queries;
 extern int wait_sampling_max;
-extern bool	profile_save;
+extern bool	wait_sampling_save;
 extern HTAB			*wait_sampling_hash;
 
 /* Module callbacks */
@@ -119,7 +119,7 @@ wait_sampling_shmem_shutdown(int code, Datum arg)
 		return;
 
 	/* Don't dump if told not to. */
-	if (!profile_save)
+	if (!wait_sampling_save)
 		return;
 
 	file = AllocateFile(STATSINFO_WS_DUMP_FILE ".tmp", PG_BINARY_W);
@@ -220,7 +220,7 @@ attatch_shmem(void)
 	if (found)
 		return;
 
-	if (!profile_save)
+	if (!wait_sampling_save)
 		return;
 
 	file = AllocateFile(STATSINFO_WS_DUMP_FILE, PG_BINARY_R);	
@@ -243,8 +243,8 @@ attatch_shmem(void)
 
 	/*
 	 * NOTE: read and store the old stats to hash-table.
-	 * It might be better to check profile_max and num(old stats number) before
-	 * issue entry_alloc. Because if num >> ptofile_max (change param between
+	 * It might be better to check wait_sampling_max and num(old stats number) before
+	 * issue entry_alloc. Because if num >> wait_sampling_max (change param between
 	 * PostgreSQL stop and start), it should cause high frequency dealloc()s.
 	 * TODO: optimization to avoid the high-frequency dealloc()s.
 	 */ 

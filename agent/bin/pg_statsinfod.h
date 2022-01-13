@@ -32,13 +32,7 @@
 #define STATSREPO_SCHEMA_VERSION	140000
 
 /* number of columns of csvlog */
-#if PG_VERSION_NUM < 90000
-#define CSV_COLS			22
-#elif PG_VERSION_NUM < 130000
-#define CSV_COLS			23
-#else
 #define CSV_COLS			26
-#endif
 
 /* maintenance mode flag */
 #define MAINTENANCE_MODE_SNAPSHOT	(1 << 0)
@@ -108,7 +102,7 @@ extern char		   *excluded_schemas;
 extern char		   *stat_statements_max;
 extern char		   *stat_statements_exclude_users;
 extern int			sampling_interval;
-extern int			sampling_wait_sampling_interval;
+extern int			wait_sampling_interval;
 extern int			snapshot_interval;
 extern int		    enable_maintenance;
 extern time_t		maintenance_time;
@@ -146,9 +140,9 @@ extern int			controlfile_fsync_interval;
 /*---- GUC variables (writer) ----------*/
 extern char		   *repository_server;
 /*---- GUC variables (wait sampling collector) ----------*/
-extern bool		   profile_queries;
-extern int		   profile_max;
-extern bool		   profile_save;
+extern bool		   wait_sampling_queries;
+extern int		   wait_sampling_max;
+extern bool		   wait_sampling_save;
 /*---- GUC variables (rusage) ----------*/
 extern bool			rusage_save;
 extern int			rusage_max;

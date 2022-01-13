@@ -11,17 +11,8 @@ INSERT INTO statsrepo.checkpoint VALUES \
 ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
 
 #define NUM_CHECKPOINT_STARTING		2
-
-#if PG_VERSION_NUM >= 90500
 #define NUM_CHECKPOINT_COMPLETE		18
 #define NUM_RESTARTPOINT_COMPLETE	18
-#elif PG_VERSION_NUM >= 90100
-#define NUM_CHECKPOINT_COMPLETE		16
-#define NUM_RESTARTPOINT_COMPLETE	16
-#else
-#define NUM_CHECKPOINT_COMPLETE		11
-#define NUM_RESTARTPOINT_COMPLETE	8
-#endif
 
 typedef enum CheckpointType
 {
@@ -166,8 +157,6 @@ Checkpoint_exec(CheckpointLog *ckpt, PGconn *conn, const char *instid)
 	params[1] = ckpt->start;				/* start */
 	params[2] = ckpt->flags;				/* flags */
 	params[3] = list_nth(ckpt->params, 0);	/* num_buffers */
-
-#if PG_VERSION_NUM >= 90100
 	params[4] = list_nth(ckpt->params, 2);	/* xlog_added */
 	params[5] = list_nth(ckpt->params, 3);	/* xlog_removed */
 	params[6] = list_nth(ckpt->params, 4);	/* xlog_recycled */
@@ -181,40 +170,6 @@ Checkpoint_exec(CheckpointLog *ckpt, PGconn *conn, const char *instid)
 	snprintf(total_duration, lengthof(total_duration), "%s.%s",
 		(const char *) list_nth(ckpt->params, 9),
 		(const char *) list_nth(ckpt->params, 10));
-#else
-	if (ckpt->type == CKPT_TYPE_RESTARTPOINT)
-	{
-		params[4] = NULL;	/* xlog_added */
-		params[5] = NULL;	/* xlog_removed */
-		params[6] = NULL;	/* xlog_recycled */
-
-		snprintf(write_duration, lengthof(write_duration), "%s.%s",
-			(const char *) list_nth(ckpt->params, 2),
-			(const char *) list_nth(ckpt->params, 3));
-		snprintf(sync_duration, lengthof(sync_duration), "%s.%s",
-			(const char *) list_nth(ckpt->params, 4),
-			(const char *) list_nth(ckpt->params, 5));
-		snprintf(total_duration, lengthof(total_duration), "%s.%s",
-			(const char *) list_nth(ckpt->params, 6),
-			(const char *) list_nth(ckpt->params, 7));
-	}
-	else
-	{
-		params[4] = list_nth(ckpt->params, 2);	/* xlog_added */
-		params[5] = list_nth(ckpt->params, 3);	/* xlog_removed */
-		params[6] = list_nth(ckpt->params, 4);	/* xlog_recycled */
-
-		snprintf(write_duration, lengthof(write_duration), "%s.%s",
-			(const char *) list_nth(ckpt->params, 5),
-			(const char *) list_nth(ckpt->params, 6));
-		snprintf(sync_duration, lengthof(sync_duration), "%s.%s",
-			(const char *) list_nth(ckpt->params, 7),
-			(const char *) list_nth(ckpt->params, 8));
-		snprintf(total_duration, lengthof(total_duration), "%s.%s",
-			(const char *) list_nth(ckpt->params, 9),
-			(const char *) list_nth(ckpt->params, 10));
-	}
-#endif
 
 	params[7] = write_duration;	/* write_duration */
 	params[8] = sync_duration;	/* sync_duration */

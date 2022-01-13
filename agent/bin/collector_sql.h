@@ -7,15 +7,9 @@
 #ifndef COLLECTOR_SQL_H
 #define COLLECTOR_SQL_H
 
-#if PG_VERSION_NUM >= 90200
 #define PG_STAT_ACTIVITY_ATTNAME_PID		"pid"
 #define PG_STAT_ACTIVITY_ATTNAME_QUERY		"query"
 #define PG_STAT_REPLICATION_ATTNAME_PID		"pid"
-#else
-#define PG_STAT_ACTIVITY_ATTNAME_PID		"procpid"
-#define PG_STAT_ACTIVITY_ATTNAME_QUERY		"current_query"
-#define PG_STAT_REPLICATION_ATTNAME_PID		"procpid"
-#endif
 
 /*----------------------------------------------------------------------------
  * snapshots per instance
@@ -23,7 +17,6 @@
  */
 
 /* database */
-#if PG_VERSION_NUM >= 90200
 #define SQL_SELECT_DATABASE "\
 SELECT \
 	d.oid AS dbid, \
@@ -54,100 +47,6 @@ FROM \
 WHERE datallowconn \
   AND datname <> ALL (('{' || $1 || '}')::text[]) \
 ORDER BY dbid"
-#elif PG_VERSION_NUM >= 90100
-#define SQL_SELECT_DATABASE "\
-SELECT \
-	d.oid AS dbid, \
-	d.datname, \
-	pg_catalog.pg_database_size(d.oid), \
-	CASE WHEN pg_catalog.pg_is_in_recovery() THEN 0 ELSE pg_catalog.age(d.datfrozenxid) END, \
-	pg_catalog.pg_stat_get_db_xact_commit(d.oid) AS xact_commit, \
-	pg_catalog.pg_stat_get_db_xact_rollback(d.oid) AS xact_rollback, \
-	pg_catalog.pg_stat_get_db_blocks_fetched(d.oid) - pg_catalog.pg_stat_get_db_blocks_hit(d.oid) AS blks_read, \
-	pg_catalog.pg_stat_get_db_blocks_hit(d.oid) AS blks_hit, \
-	pg_catalog.pg_stat_get_db_tuples_returned(d.oid) AS tup_returned, \
-	pg_catalog.pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
-	pg_catalog.pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
-	pg_catalog.pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
-	pg_catalog.pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
-	pg_catalog.pg_stat_get_db_conflict_tablespace(d.oid) AS confl_tablespace, \
-	pg_catalog.pg_stat_get_db_conflict_lock(d.oid) AS confl_lock, \
-	pg_catalog.pg_stat_get_db_conflict_snapshot(d.oid) AS confl_snapshot, \
-	pg_catalog.pg_stat_get_db_conflict_bufferpin(d.oid) AS confl_bufferpin, \
-	pg_catalog.pg_stat_get_db_conflict_startup_deadlock(d.oid) AS confl_deadlock, \
-	NULL AS temp_files, \
-	NULL AS temp_bytes, \
-	NULL AS deadlocks, \
-	NULL AS blk_read_time, \
-	NULL AS blk_write_time \
-FROM \
-	pg_database d \
-WHERE datallowconn \
-  AND datname <> ALL (('{' || $1 || '}')::text[]) \
-ORDER BY dbid"
-#elif PG_VERSION_NUM >= 90000
-#define SQL_SELECT_DATABASE "\
-SELECT \
-	d.oid AS dbid, \
-	d.datname, \
-	pg_catalog.pg_database_size(d.oid), \
-	CASE WHEN pg_catalog.pg_is_in_recovery() THEN 0 ELSE pg_catalog.age(d.datfrozenxid) END, \
-	pg_catalog.pg_stat_get_db_xact_commit(d.oid) AS xact_commit, \
-	pg_catalog.pg_stat_get_db_xact_rollback(d.oid) AS xact_rollback, \
-	pg_catalog.pg_stat_get_db_blocks_fetched(d.oid) - pg_catalog.pg_stat_get_db_blocks_hit(d.oid) AS blks_read, \
-	pg_catalog.pg_stat_get_db_blocks_hit(d.oid) AS blks_hit, \
-	pg_catalog.pg_stat_get_db_tuples_returned(d.oid) AS tup_returned, \
-	pg_catalog.pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
-	pg_catalog.pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
-	pg_catalog.pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
-	pg_catalog.pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
-	NULL AS confl_tablespace, \
-	NULL AS confl_lock, \
-	NULL AS confl_snapshot, \
-	NULL AS confl_bufferpin, \
-	NULL AS confl_deadlock, \
-	NULL AS temp_files, \
-	NULL AS temp_bytes, \
-	NULL AS deadlocks, \
-	NULL AS blk_read_time, \
-	NULL AS blk_write_time \
-FROM \
-	pg_database d \
-WHERE datallowconn \
-  AND datname <> ALL (('{' || $1 || '}')::text[]) \
-ORDER BY dbid"
-#else
-#define SQL_SELECT_DATABASE "\
-SELECT \
-	d.oid AS dbid, \
-	d.datname, \
-	pg_catalog.pg_database_size(d.oid), \
-	pg_catalog.age(d.datfrozenxid), \
-	pg_catalog.pg_stat_get_db_xact_commit(d.oid) AS xact_commit, \
-	pg_catalog.pg_stat_get_db_xact_rollback(d.oid) AS xact_rollback, \
-	pg_catalog.pg_stat_get_db_blocks_fetched(d.oid) - pg_catalog.pg_stat_get_db_blocks_hit(d.oid) AS blks_read, \
-	pg_catalog.pg_stat_get_db_blocks_hit(d.oid) AS blks_hit, \
-	pg_catalog.pg_stat_get_db_tuples_returned(d.oid) AS tup_returned, \
-	pg_catalog.pg_stat_get_db_tuples_fetched(d.oid) AS tup_fetched, \
-	pg_catalog.pg_stat_get_db_tuples_inserted(d.oid) AS tup_inserted, \
-	pg_catalog.pg_stat_get_db_tuples_updated(d.oid) AS tup_updated, \
-	pg_catalog.pg_stat_get_db_tuples_deleted(d.oid) AS tup_deleted, \
-	NULL AS confl_tablespace, \
-	NULL AS confl_lock, \
-	NULL AS confl_snapshot, \
-	NULL AS confl_bufferpin, \
-	NULL AS confl_deadlock, \
-	NULL AS temp_files, \
-	NULL AS temp_bytes, \
-	NULL AS deadlocks, \
-	NULL AS blk_read_time, \
-	NULL AS blk_write_time \
-FROM \
-	pg_database d \
-WHERE datallowconn \
-  AND datname <> ALL (('{' || $1 || '}')::text[]) \
-ORDER BY dbid"
-#endif
 
 /* activity */
 #define SQL_SELECT_ACTIVITY				"SELECT * FROM statsinfo.activity()"
@@ -181,7 +80,6 @@ FROM \
 	pg_roles"
 
 /* statement */
-#if PG_VERSION_NUM >= 130000
 #define SQL_SELECT_STATEMENT "\
 SELECT \
 	s.dbid, \
@@ -212,130 +110,9 @@ WHERE \
 	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
 ORDER BY \
 	s.total_exec_time DESC LIMIT $2"
-#elif PG_VERSION_NUM >= 90400
-#define SQL_SELECT_STATEMENT "\
-SELECT \
-	s.dbid, \
-	s.userid, \
-	s.queryid, \
-	s.query, \
-	s.calls, \
-	s.total_time / 1000, \
-	s.rows, \
-	s.shared_blks_hit, \
-	s.shared_blks_read, \
-	s.shared_blks_dirtied, \
-	s.shared_blks_written, \
-	s.local_blks_hit, \
-	s.local_blks_read, \
-	s.local_blks_dirtied, \
-	s.local_blks_written, \
-	s.temp_blks_read, \
-	s.temp_blks_written, \
-	s.blk_read_time, \
-	s.blk_write_time \
-FROM \
-	pg_stat_statements s \
-	LEFT JOIN pg_roles r ON r.oid = s.userid \
-WHERE \
-	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
-ORDER BY \
-	s.total_time DESC LIMIT $2"
-#elif PG_VERSION_NUM >= 90200
-#define SQL_SELECT_STATEMENT "\
-SELECT \
-	s.dbid, \
-	s.userid, \
-	%s, \
-	s.query, \
-	s.calls, \
-	s.total_time / 1000, \
-	s.rows, \
-	s.shared_blks_hit, \
-	s.shared_blks_read, \
-	s.shared_blks_dirtied, \
-	s.shared_blks_written, \
-	s.local_blks_hit, \
-	s.local_blks_read, \
-	s.local_blks_dirtied, \
-	s.local_blks_written, \
-	s.temp_blks_read, \
-	s.temp_blks_written, \
-	s.blk_read_time, \
-	s.blk_write_time \
-FROM \
-	pg_stat_statements s \
-	LEFT JOIN pg_roles r ON r.oid = s.userid \
-WHERE \
-	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
-ORDER BY \
-	s.total_time DESC LIMIT $2"
-#elif PG_VERSION_NUM >= 90000
-#define SQL_SELECT_STATEMENT "\
-SELECT \
-	s.dbid, \
-	s.userid, \
-	%s, \
-	s.query, \
-	s.calls, \
-	s.total_time, \
-	s.rows, \
-	s.shared_blks_hit, \
-	s.shared_blks_read, \
-	NULL AS shared_blks_dirtied, \
-	s.shared_blks_written, \
-	s.local_blks_hit, \
-	s.local_blks_read, \
-	NULL AS local_blks_dirtied, \
-	s.local_blks_written, \
-	s.temp_blks_read, \
-	s.temp_blks_written, \
-	NULL AS blk_read_time, \
-	NULL AS blk_write_time \
-FROM \
-	pg_stat_statements s \
-	LEFT JOIN pg_roles r ON r.oid = s.userid \
-WHERE \
-	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
-ORDER BY \
-	s.total_time DESC LIMIT $2"
-#else
-#define SQL_SELECT_STATEMENT "\
-SELECT \
-	s.dbid, \
-	s.userid, \
-	%s, \
-	s.query, \
-	s.calls, \
-	s.total_time, \
-	s.rows, \
-	NULL AS shared_blks_hit, \
-	NULL AS shared_blks_read, \
-	NULL AS shared_blks_dirtied, \
-	NULL AS shared_blks_written, \
-	NULL AS local_blks_hit, \
-	NULL AS local_blks_read, \
-	NULL AS local_blks_dirtied, \
-	NULL AS local_blks_written, \
-	NULL AS temp_blks_read, \
-	NULL AS temp_blks_written, \
-	NULL AS blk_read_time, \
-	NULL AS blk_write_time \
-FROM \
-	pg_stat_statements s \
-	LEFT JOIN pg_roles r ON r.oid = s.userid \
-WHERE \
-	r.rolname <> ALL (('{' || $1 || '}')::text[]) \
-ORDER BY \
-	s.total_time DESC LIMIT $2"
-#endif
 
 /* plan */
-#if PG_VERSION_NUM >= 90400
 #define SQL_SELECT_PLAN_QUERYID		"p.queryid_stat_statements"
-#else
-#define SQL_SELECT_PLAN_QUERYID		"p.queryid"
-#endif
 
 #define SQL_SELECT_PLAN "\
 SELECT \
@@ -370,16 +147,8 @@ ORDER BY \
 	p.total_time DESC LIMIT $2"
 
 /* lock */
-#if PG_VERSION_NUM >= 90000
 #define SQL_SELECT_LOCK_APPNAME				"sa.application_name"
-#else
-#define SQL_SELECT_LOCK_APPNAME				"'(N/A)'"
-#endif
-#if PG_VERSION_NUM >= 90100
 #define SQL_SELECT_LOCK_CLIENT_HOSTNAME		"sa.client_hostname"
-#else
-#define SQL_SELECT_LOCK_CLIENT_HOSTNAME		"'(N/A)'"
-#endif
 
 #define SQL_SELECT_LOCK "\
 SELECT \
@@ -435,13 +204,8 @@ FROM \
 	pg_stat_bgwriter"
 
 /* replication */
-#if PG_VERSION_NUM >= 90400
 #define SQL_SELECT_REPLICATION_BACKEND_XMIN		"backend_xmin"
-#else
-#define SQL_SELECT_REPLICATION_BACKEND_XMIN		"NULL"
-#endif
 
-#if PG_VERSION_NUM >= 100000
 #define SQL_SELECT_REPLICATION "\
 SELECT \
 	pid, \
@@ -476,42 +240,6 @@ SELECT \
 	sync_state \
 FROM \
 	pg_stat_replication"
-#else
-#define SQL_SELECT_REPLICATION "\
-SELECT \
-	" PG_STAT_REPLICATION_ATTNAME_PID ", \
-	usesysid, \
-	usename, \
-	application_name, \
-	client_addr, \
-	client_hostname, \
-	client_port, \
-	backend_start, \
-	" SQL_SELECT_REPLICATION_BACKEND_XMIN ", \
-	state, \
-	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
-		pg_catalog.pg_last_xlog_receive_location() || ' (N/A)' ELSE \
-		pg_catalog.pg_current_xlog_location() || ' (' || pg_catalog.pg_xlogfile_name(pg_catalog.pg_current_xlog_location()) || ')' END, \
-	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
-		sent_location || ' (N/A)' ELSE \
-		sent_location || ' (' || pg_catalog.pg_xlogfile_name(sent_location) || ')' END, \
-	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
-		write_location || ' (N/A)' ELSE \
-		write_location || ' (' || pg_catalog.pg_xlogfile_name(write_location) || ')' END, \
-	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
-		flush_location || ' (N/A)' ELSE \
-		flush_location || ' (' || pg_catalog.pg_xlogfile_name(flush_location) || ')' END, \
-	CASE WHEN pg_catalog.pg_is_in_recovery() THEN \
-		replay_location || ' (N/A)' ELSE \
-		replay_location || ' (' || pg_catalog.pg_xlogfile_name(replay_location) || ')' END, \
-	NULL, \
-	NULL, \
-	NULL, \
-	sync_priority, \
-	sync_state \
-FROM \
-	pg_stat_replication"
-#endif
 
 /* replication slot */
 #define SQL_SELECT_REPLICATION_SLOTS "\
@@ -531,7 +259,6 @@ FROM \
 	pg_replication_slots"
 
 /* stat replication slots*/
-#if PG_VERSION_NUM >= 140000
 #define SQL_SELECT_STAT_REPLICATION_SLOTS "\
 SELECT \
 	slot_name, \
@@ -546,10 +273,8 @@ SELECT \
 	stats_reset \
 FROM \
 	pg_stat_replication_slots"
-#endif
 
 /* stat wal */
-#if PG_VERSION_NUM >= 140000
 #define SQL_SELECT_STAT_WAL "\
 SELECT \
 	wal_records, \
@@ -563,29 +288,14 @@ SELECT \
 	stats_reset \
 FROM \
 	pg_stat_wal"
-#endif
 
 /* xlog */
-#if PG_VERSION_NUM >= 100000
 #define SQL_SELECT_XLOG "\
 SELECT \
 	pg_catalog.pg_current_wal_lsn(), \
 	pg_catalog.pg_walfile_name(pg_catalog.pg_current_wal_lsn()) \
 WHERE \
 	NOT pg_catalog.pg_is_in_recovery()"
-#elif PG_VERSION_NUM >= 90000
-#define SQL_SELECT_XLOG "\
-SELECT \
-	pg_catalog.pg_current_xlog_location(), \
-	pg_catalog.pg_xlogfile_name(pg_catalog.pg_current_xlog_location()) \
-WHERE \
-	NOT pg_catalog.pg_is_in_recovery()"
-#else
-#define SQL_SELECT_XLOG "\
-SELECT \
-	pg_catalog.pg_current_xlog_location(), \
-	pg_catalog.pg_xlogfile_name(pg_catalog.pg_current_xlog_location())"
-#endif
 
 /* archive */
 #define SQL_SELECT_ARCHIVE "\
@@ -635,11 +345,7 @@ WHERE \
 	nspname <> ALL (('{' || $1 || '}')::text[])"
 
 /* table */
-#if PG_VERSION_NUM >= 90400
 #define SQL_SELECT_TABLE_N_MOD_SINCE_ANALYZE	"pg_catalog.pg_stat_get_mod_since_analyze(c.oid)"
-#else
-#define SQL_SELECT_TABLE_N_MOD_SINCE_ANALYZE	"NULL"
-#endif
 
 #define SQL_SELECT_TABLE "\
 SELECT \
@@ -705,11 +411,6 @@ GROUP BY \
 	x.indexrelid"
 
 /* column */
-#if PG_VERSION_NUM >= 90000
-#define SQL_SELECT_COLUMN_WHERE		"AND NOT s.stainherit "
-#else
-#define SQL_SELECT_COLUMN_WHERE
-#endif
 
 #define SQL_SELECT_COLUMN "\
 SELECT \
@@ -737,7 +438,7 @@ FROM \
 	LEFT JOIN pg_statistic s ON \
 		a.attnum = s.staattnum \
 	AND \
-		a.attrelid = s.starelid " SQL_SELECT_COLUMN_WHERE "\
+		a.attrelid = s.starelid AND NOT s.stainherit \
 	LEFT JOIN pg_namespace n ON \
 		c.relnamespace = n.oid \
 WHERE \
