@@ -112,13 +112,11 @@ ORDER BY \
 	s.total_exec_time DESC LIMIT $2"
 
 /* plan */
-#define SQL_SELECT_PLAN_QUERYID		"p.queryid_stat_statements"
-
 #define SQL_SELECT_PLAN "\
 SELECT \
 	p.dbid, \
 	p.userid, \
-	" SQL_SELECT_PLAN_QUERYID ", \
+	p.queryid, \
 	p.planid, \
 	p.plan, \
 	p.calls, \
