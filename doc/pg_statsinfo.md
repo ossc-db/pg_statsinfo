@@ -1242,7 +1242,7 @@ There are still some restrictions and limitations in pg_statsinfo.
 
   - Put modules in shared_preload_libraries in specific order
     Put pg_stat_statements preceding (left to) pg_statsinfo if using
-    both pg_statsinfo and pg_statements, like
+    both pg_stat_statements and pg_statsinfo, like
     shared_preload_librarites = 'pg_stat_statements, pg_statsinfo'.
     Otherwise, WARNING message like below is emited, 
     and rusage_track_utility is enforced to be off.
@@ -1409,7 +1409,7 @@ Following changes have been made after pg_statsinfo 13.
     - Collect the information about WAL generation and
       detailed information about vacuum on indexes.
       Report the amount of WAL write while vacuuming,
-      the number of scanned, removed, and recycled pages while vacuuming on indexes,
+      the number of scanned, removed, and recycled pages while vacuuming on indexes.
     - Collect the information of pg_stat_replication_slots.
       Report the amount of transfered data when logical replication is used
       and disk I/O which wal_sender consume temporalily.
