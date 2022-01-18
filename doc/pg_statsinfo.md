@@ -1542,7 +1542,7 @@ Catalogs](http://www.postgresql.org/docs/14/static/catalogs.html),
 
 <div>
 
-Copyright (c) 2009-2020, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+Copyright (c) 2009-2022, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
 
 </div>
 
