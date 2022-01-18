@@ -42,7 +42,7 @@
 pg_statsinfo is a monitoring tool to record activities and statistics
 of PostgreSQL server in the form of time series of snapshots. You can
 examine the snapshots on graphical representations by using
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter.html).
+[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/pg_stats_reporter.html).
 
 ## Description
 
@@ -57,13 +57,13 @@ Two or more PostgreSQL *instances* can share single repository database.
 
 You can check for server health and activities in easy-to-grasp
 graphical representation by using
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter.html).
+[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/pg_stats_reporter.html).
 It shows various information as interactive tables and graphs.
 
 Components of pg_statsinfo are typically placed as the picture below.
 Each pg_statsinfo collects the information of the *Database Server*
 where it resides on and sends snapshots to the *Repository Server*.
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter.html)
+[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/pg_stats_reporter.html)
 runs behind web server so that the Users can get graphical reports on
 web browser on the *Client*.
 
@@ -103,29 +103,30 @@ Every snapshots holds the following information:
   - Disk usage per tablespace, WAL, and archive log directory.
   - Long transactions and their query strings.
   - Session state statistics.
-  - WAL write rate.
+  - WAL write rate and time required to write.
   - Number of CHECKPOINTs ,VACUUMs, and their execution time and buffer
     access statistics.
-  - Long queries and execution statistics on queries, functions and
-    planning time.
+  - Long queries and execution statistics on queries, functions, OS resource information, wait events (top 10), and planning time.
   - PostgreSQL configuration parameters.
   - OS resource information. (CPU usage, memory usage, disk I/O, load
     average)
   - Long lock conflicts.
   - Number of query cancellations caused by conflict with recovery.
-  - Replication status.
+  - Streaming replication status.
+  - Logical replication status.
   - Alert messages emitted by user-defined alert function.
   - Profiling information using SystemTap (experimental).
+  - Wait events per instance.
 
 The required storage for every snapshot depends on the numbers of
-objects in the monitored database. It occupies about 600 - 800kB in
+objects in the monitored database. It occupies about 800 - 1000kB in
 typical cases. pg_statsinfo takes snapshots for every 10 minutes by
 default, so the required storage for all snapshots in a day from every
-monitored database is roughly estimated to be 90 - 120MB.
+monitored database is roughly estimated to be 120 - 150MB.
 
 You can see the structure of the tables in pg_statsinfo's repository
 database in
-[this](http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_repository_infomation.xls)
+[this](http://pgstatsinfo.sourceforge.net/documents/statsinfo14/files/pg_statsinfo_v14_repository_infomation.xls)
 document. (MS Excel document in Japanese).
 
 ### Server Log Filter
@@ -183,7 +184,7 @@ are the tables having clustering index.
 
 The contents of alert message of each alert item is shown in ["report
 item list of pg_statsinfo
-v13".](http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_report_infomation.xls)
+v14".](http://pgstatsinfo.sourceforge.net/documents/statsinfo14/files/pg_statsinfo_v14_report_infomation.xls)
 (.xls in Japanese).
 
 You can see setup instructions [here](#Alert-Function).
@@ -204,12 +205,12 @@ format. Following kinds of information are available.
 
 The comprehensive list of report items is shown in ["report item list of
 pg_statsinfo
-v13".](http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_report_infomation.xls)
+v14".](http://pgstatsinfo.sourceforge.net/documents/statsinfo14/files/pg_statsinfo_v14_report_infomation.xls)
 (.xls in Japanese)  
 Report items are equivalent with
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter.html).  
+[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/pg_stats_reporter.html).  
 If you would like to see graphical reports, please try
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter.html).
+[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/pg_stats_reporter.html).
 
 #### Administrative operations
 
@@ -247,7 +248,7 @@ Setup reference of this feature is [here](#Automatic-Maintenance).
 ### Requirement
 
   - PostgreSQL versions  
-    PostgreSQL 13
+    PostgreSQL 14
   - OS  
     RHEL 7.x (x86_64), CentOS 7.x (x86_64)
     RHEL 8.x (x86_64), CentOS 8.x (x86_64)
@@ -261,14 +262,14 @@ Setup reference of this feature is [here](#Automatic-Maintenance).
 The following steps install pg_statsinfo using rpm.
 
     $ su
-    # yum install pg_statsinfo-13.0-1.pg13.rhel7.x86_64.rpm
+    # yum install pg_statsinfo-14.0-1.pg14.rhel7.x86_64.rpm
 
 ##### RHEL 8
 
 The following steps install pg_statsinfo using rpm.
 
     $ su
-    # dnf install pg_statsinfo-13.0-1.pg13.rhel8.x86_64.rpm
+    # dnf install pg_statsinfo-14.0-1.pg14.rhel8.x86_64.rpm
 
 #### Installing from source
 
@@ -277,8 +278,8 @@ Setting up of repository database will be done automatically at first
 run.
 
     $ cd pg_statsinfo
-    $ tar xzvf pg_statsinfo-13.0.tar.gz 
-    $ cd pg_statsinfo-13.0
+    $ tar xzvf pg_statsinfo-14.0.tar.gz 
+    $ cd pg_statsinfo-14.0
     $ make USE_PGXS=1
     $ su
     # make USE_PGXS=1 install
@@ -667,11 +668,11 @@ interval.
 Deleting a row disables all alerts on the corresponding observed
 instance. Re-enabling requires inserting a new tuple in the case.
 
-#### Turning off the alert function altogether
+#### Turning on the alert function altogether
 
-The whole alert function is disabled by setting the [GUC
+The whole alert function is enabled by setting the [GUC
 parameter](#Configuration-File) pg_statsinfo.enable_alert. Setting
-enable_alert column in the alert configuration table to false silences
+enable_alert column in the alert configuration table to true allow to get
 alerts for the corresponding
     instances.
 
@@ -700,7 +701,7 @@ Available options are described below,
     Generates a report of the type specified by REPORTID.
     The following REPORTID are available.
     More details are shown in [Items of a report in pg_statsinfo
-    v13](http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_report_infomation.xls)(Both
+    v14](http://pgstatsinfo.sourceforge.net/documents/statsinfo14/files/pg_statsinfo_v14_report_infomation.xls)(Both
     filename and contents are only in Japanese).
       - Summary
       - Alert
@@ -981,7 +982,9 @@ Required parameters
 
 Following are PostgreSQL parameters affect the behavior of pg_statsinfo
 and pg_statsinfo's dedicated parameters. Changes will be in effect
-after reloading configuration file.
+after reloading configuration file
+or restarting the instance (pg_ctl restart).
+Notes are added in Description column of table below if restart is necessary.
 
 optional parameters
 
@@ -1029,6 +1032,7 @@ optional parameters
 | pg_statsinfo.long_lock_threshold           | 30s                                        | Time to wait before record prolonged locks.                                                                                                                                                                                                                                                                                                     |
 | pg_statsinfo.stat_statements_max           | 30                                         | Maximum number of entries for both of pg_stat_statements and pg_store_plans to be recorded on every snapshot.                                                                                                                                                                                                                                   |
 | pg_statsinfo.stat_statements_exclude_users | -                                          | Name of users in comma-separated list whose queries in pg_stat_statements and pg_store_plans are not recorded.                                                                                                                                                                                                                                  |
+| pg_statsinfo.long_transaction_max | 10                                          | Maximum number of collected records of long transaction information. Restarting PostgreSQL is needed if this parameter has been changed.  |
 | pg_statsinfo.controlfile_fsync_interval    | 1min                                       | Interval to sync pg_statsinfo's control file.                                                                                                                                                                                                                                                                                                   |
 | pg_statsinfo.enable_alert                  | off                                         | Off disables all alerts for this instance.                                                                                                                                                                                                                                                                                                      |
 | pg_statsinfo.target_server                 | -                                          | Connection string for the observed instance. [(*4)](# Config:Connection-String) pg_statsinfo requires a connection to the observed instance to collect status values. By default, the connection is made to the default database using OS username. This parameter offers more flexible connection settings. Make sure to use a superuser of the database for the connection. |
@@ -1037,10 +1041,10 @@ optional parameters
 | pg_statsinfo.rusage_track_utility         | off                                          | Enable or disable track resource usage of utility commands such like COPY.This paramter works when rusage_track is set to on.[(*6)](#configrusage_track_utility) |
 | pg_statsinfo.rusage_track_planning         | off                                          | Enable or disable track resource usage of planning phase of each queries.This paramter works when rusage_track is set to on. |
 | pg_statsinfo.rusage_save         | on                                          | Enable or disable save resource usage of each queries. When it's set to on, resource info could be kept across PostgreSQL stops and starts. |
-| pg_statsinfo.profile_max         | 25000                                          | Maximum number of entries for wait events. It's recommended to set the same value as pg_stat_statements.max * 10. Restart of PostgreSQL is required to change this parameter.  |
-| pg_statsinfo.profile_queries         | on                                          | Enable or disable add queryid to each wait events. |
-| pg_statsinfo.profile_save         | on                                          | Enable or disable save wait events. When it's set to on, wait events info could be kept across PostgreSQL stops and starts. |
-| pg_statsinfo.sampling_wait_sampling_interval         | 10ms                                          | Period for collecting wat events. (milliseconds) |
+| pg_statsinfo.wait_sampling_max         | 25000                                          | Maximum number of entries for wait events. It's recommended to set the same value as pg_stat_statements.max * 10. Restart of PostgreSQL is required to change this parameter.  |
+| pg_statsinfo.wait_sampling_queries         | on                                          | Enable or disable add queryid to each wait events. |
+| pg_statsinfo.wait_sampling_save         | on                                          | Enable or disable save wait events. When it's set to on, wait events info could be kept across PostgreSQL stops and starts. |
+| pg_statsinfo.wait_sampling_interval         | 10ms                                          | Period for collecting wat events. (milliseconds) [(*8)](#configTime-Format-Millisecond) |
 | pg_statsinfo.collect_column         | on                                          | Enable or disable collect column info at retrieving a snapshot. When it's set to off, column information will not be collected and the snapshot size can be reduced, but some information will not be reported.[(*7)](#configitems-that-cannot-be-reported)  |
 | pg_statsinfo.collect_index         | on                                          | Enable or disable collect index info at retrieving a snapshot. When it's set to off, index information will not be collected and the snapshot size can be reduced, but some information will not be reported.[(*7)](#configitems-that-cannot-be-reported)  |
 
@@ -1087,6 +1091,10 @@ optional parameters
   - ##### Config:Items that cannot be reported
     If collect_column is turned off, all items in "Correlation" in "Notable Tables", "Logical Pages" and "Logical Page Ratio (%)" in "Low Density Tables" in "Notable Tables", and "Columns" in "Tables" in "Schema Information" are not able to be reported.
     If collect_index is turned off, all items in "Correlation" in "Notable Tables" and all items in "Indexes" in "Schema Information" will not be able to be reported.
+  - ##### Config:Time Format Millisecond
+    Available units are d (day), h (hour), min (minute), s (second), and ms (millisecond).
+    If not suffixed by any unit, the value will be interpreted in
+    milliseconds.
 
 Translated with www.DeepL.com/Translator (free version)
 
@@ -1232,6 +1240,17 @@ There are still some restrictions and limitations in pg_statsinfo.
     collect the causal query string of autovacuum/autoanalyze
     cancellation.
 
+  - Put modules in shared_preload_libraries in specific order
+    Put pg_stat_statements preceding (left to) pg_statsinfo if using
+    both pg_statsinfo and pg_statements, like
+    shared_preload_librarites = 'pg_stat_statements, pg_statsinfo'.
+    Otherwise, WARNING message like below is emited, 
+    and rusage_track_utility is enforced to be off.
+     ```
+    WARNING:  pg_statsinfo.rusage_track_utility is set to false.
+    HINT:  pg_statsinfo must be loaded after pg_stat_statements when enable rusage_track_utility .
+    ```
+
   
 
 ## Q\&A
@@ -1250,10 +1269,10 @@ The snapshots in repository can be of course inspected using sql queries
 but it needs too much labor for most cases. You can use pg_statsinfo's
 command line reporting feature to see them as simple reports in text
 format. For those who wants to see them in graphical interface,
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter.html)
+[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/pg_stats_reporter.html)
 provides sortable tables with pager and manipulative graphs. An operable
 sample is available
-[here](http://pgstatsinfo.sourceforge.net/documents/reporter13/html/files/report_sample.html).
+[here](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/files/report_sample.html).
 
 #### Q3. Auto maintenance seems not cleaning up snapshots.
 
@@ -1326,8 +1345,10 @@ restrictions.
     Make sure the settings so that all target instances can be connected
     without prompting for password. See
     [here](http://www.postgresql.org/docs/14/static/client-authentication.html)
-    for
-details.
+    for details.
+    And make sure that pg_statsinfo.collect_column, pg_statsinfo.collect_index
+    are not disabled if some portion of the information (Column of Tables, Indexes)
+    are not able to be acquired.
 
 #### Q8. There's no plan statistics in a textual report although pg_store_plans has been installed.
 
@@ -1364,10 +1385,44 @@ Currently there is no available means of preventing this occurring.
 
 Following changes have been made after pg_statsinfo 13.
 
-  - Supports PostgreSQL 13 (pg_statsinfo 13 supports only PostgreSQL
-    13).
+  - Supports PostgreSQL 14 (pg_statsinfo 14 supports only PostgreSQL
+    14).
+  - Default setting of alert function become disabled.
+    Default value of pg_statsinfo.enable_alert is off.
+    Change to on or true explicitly if use this alert function.
+  - Launch a thread for collecting wait events.
+    This thread always collect samples at postgres database of the instance that is monitored.
+    And added brand new parameters to control it.
+  - Added a feature of acquiring OS resource information by each query.
+    Using Hook function same as pg_stat_statements,
+    collect CPU time, and actual I/O information.
+    And added brand new parameters to control them.
+  - Allow parameters to disable collecting column information, and
+    index information.
+    The parameters help to reduce the size of snapshot if these information
+    are not so useful.
+  - More performance information
+    - Collect information of pg_stat_wal. Report the amount of WAL read/write,
+      required time to read/write, and so on.
+    - Collect the number of consuming transaction IDs.
+      Report the number of consuming transaction IDs within unit time period.
+    - Collect the information about WAL generation and
+      detailed information about vacuum on indexes.
+      Report the amount of WAL write while vacuuming,
+      the number of scanned, removed, and recycled pages while vacuuming on indexes,
+    - Collect the information of pg_stat_replication_slots.
+      Report the amount of transfered data when logical replication is used
+      and disk I/O which wal_sender consume temporalily.
+    - Collect CPU and memory information.
+      Report the number of CPU cores, clock frequency, memory usage
+      which OS taught us.
+    - Collect wait event information.
+      Report the dominant factor of wait events in three fields:
+      by instance, by database, and by each query.
+    - Collect OS resource information the query consume.
+      Report actual I/O (read, write) and CPU time (user, sys)
+      by database, or by each query.
 
-  
 
 ## Detailed information
 
@@ -1532,7 +1587,7 @@ Collector](http://www.postgresql.org/docs/14/static/monitoring-stats.html),
 [System
 Catalogs](http://www.postgresql.org/docs/14/static/catalogs.html),
 [pg_stat_statements](http://www.postgresql.org/docs/14/static/pgstatstatements.html),
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter.html)
+[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/pg_stats_reporter.html)
 
 -----
 
