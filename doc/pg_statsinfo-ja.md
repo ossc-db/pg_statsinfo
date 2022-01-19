@@ -13,7 +13,7 @@
     2.  [インストール手順](#インストール手順)
 4.  [使い方](#使い方)
     1.  [起動と終了](#起動と終了)
-    2.  [スナップショットの取得・削除](#スナップショットの取得・削除)
+    2.  [スナップショットの取得・削除](#スナップショットの取得削除)
     3.  [サーバログの分配](#サーバログの分配)
     4.  [サーバログの蓄積](#サーバログの蓄積)
     5.  [アラート機能の設定方法](#アラート機能の設定方法)
@@ -24,13 +24,13 @@
    10.  [運用上必要となる作業](#運用上必要となる作業)
 5.  [アンインストール](#アンインストール)
 6.  [使用上の注意と制約](#使用上の注意と制約)
-7.  [よくあるQ&A](#よくあるQ&A)
+7.  [よくあるQ&A](#よくあるqa)
 8.  [pg_statsinfo13からの変更点](#pg_statsinfo13からの変更点)
 9.  [詳細情報](#詳細情報)
     1.  [複数の監視対象インスタンス](#複数の監視対象インスタンス)
     2.  [ウォームスタンバイ](#ウォームスタンバイ)
     3.  [フォールバックモード](#フォールバックモード)
-    4.  [内部構成](#internal)
+    4.  [内部構成](#内部構成)
     5.  [サーバログ分配機能内部](#サーバログ分配機能内部)
 10. [関連項目](#関連項目)
 
@@ -44,18 +44,18 @@ PostgreSQL サーバの利用統計情報を定期的に収集・蓄積するこ
 性能劣化などの兆候や問題発生時の原因の把握等)に役立つツールです。  
 起動や終了、パラメータの設定は PostgreSQL と密に連携しており、手間をかけずに導入可能です。
 
-pg_statsinfo 14 からの変更点は[こちら](#pg_statsinfo13からの変更点)をご覧ください。
+pg_statsinfo 14 の変更点は[こちら](#pg_statsinfo13からの変更点)をご覧ください。
+
+pg_statsinfo 14 以降は GitHub にて公開しています。pg_statsinfo 13 以前の情報については、[SourceForge](http://pgstatsinfo.sourceforge.net/index_ja.html)をご覧ください。
 
 ## 機能概要
-
-TODO: リンクをsourceforgeから変更
 
 pg_statsinfo は、PostgreSQL サーバの統計情報や活動状況を一定の時間間隔毎に定期的に収集し蓄積する機能と、
 PostgreSQL の出力するサーバログを解析することでSQLの性能情報を取得する機能やログ出力を加工する機能があります。
 また、蓄積した情報を元にテキスト形式のレポートを出力するコマンドを提供します。
 
 また、pg_statsinfo で収集した情報は
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter-ja.html)
+[pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter)
 を用いることでグラフィカルな形で解析・出力することがきます。
 
 pg_statsinfo のシステム構成例と動作概要のイメージ図を以下に示します。
@@ -93,11 +93,9 @@ pg_statsinfo のシステム構成例と動作概要のイメージ図を以下�
 
 #### 取得できる統計情報一覧
 
-TODO: PostgreSQL14へのドキュメントリンクへの差し替え(日本語版はまだ無し)
-
 スナップショットとして以下の統計情報を収集します。
 
-  - [統計情報コレクタ](http://www.postgresql.jp/document/13/html/monitoring-stats.html)が収集する全ての情報。挿入
+  - [統計情報コレクタ](https://www.postgresql.jp/document/14/html/monitoring-stats.html)が収集する全ての情報。挿入
     / 更新 / 削除行数やバッファアクセス回数。
   - テーブルスペース、WAL領域、アーカイブログ領域のディスク使用量。
   - ロングトランザクション化しているクエリ。
@@ -120,10 +118,8 @@ TODO: PostgreSQL14へのドキュメントリンクへの差し替え(日本語�
 
 #### リポジトリDBのテーブル構成
 
-TODO: リンクをsourceforgeから変更
-
 リポジトリDBのテーブル構成に関しては、「[pg_statsinfo v14
-リポジトリDB構成](http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_repository_infomation.xls)」を参照してください。
+リポジトリDB構成](https://github.com/ossc-db/pg_statsinfo/blob/14.0/doc/files/pg_statsinfo_v14_report_infomation.xls)」を参照してください。
 
 ### サーバログ分配機能
 
@@ -170,11 +166,8 @@ PostgreSQL が出力するサーバログを収集し、リポジトリDBに蓄�
 
 (*1) テーブルの相関係数は、クラスタ化テーブル(クラスタインデックスが存在するテーブル)を対象に判定が行われます。
 
-TODO: リンクをsourceforgeから変更
-
-
 各アラート項目のアラートメッセージの内容については「[pg_statsinfo v14
-レポート項目一覧](http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_report_infomation.xls)」をご覧ください。
+レポート項目一覧](https://github.com/ossc-db/pg_statsinfo/blob/14.0/doc/files/pg_statsinfo_v14_report_infomation.xls)」をご覧ください。
 
 アラート機能の設定方法は[こちら](#アラート機能の設定方法)をご覧ください。
 
@@ -191,15 +184,14 @@ TODO: リンクをsourceforgeから変更
   - スナップショットの一覧の表示
   - スナップショットの合計サイズの表示
 
-TODO: リンクをsourceforgeから変更
 
 簡易レポート機能が出力するレポートの項目については「[pg_statsinfo v14
-レポート項目一覧](http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_report_infomation.xls)」をご覧ください。  
+レポート項目一覧](https://github.com/ossc-db/pg_statsinfo/blob/14.0/doc/files/pg_statsinfo_v14_report_infomation.xls)」をご覧ください。  
 なお、簡易レポート機能が出力するレポートの項目は
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter-ja.html)
+[pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter)
 と同等です。  
 グラフを用いたグラフィカルなレポートを出力したい場合は
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter-ja.html)
+[pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter)
 を使用してください。
 
 #### 運用管理機能
@@ -232,10 +224,8 @@ pg_statsinfo の運用管理向けの操作を行うコマンドを提供しま�
 
 ## インストール
 
-TODO: リンクをsourceforgeから変更
-
 pg_statsinfo
-のインストール方法について説明します。各インストールパッケージは[こちら](http://sourceforge.net/projects/pgstatsinfo/files/pg_statsinfo)からダウンロードして下さい。
+のインストール方法について説明します。各インストールパッケージは[こちら](https://github.com/ossc-db/pg_statsinfo/releases)からダウンロードして下さい。
 
 ### 動作環境
 
@@ -326,11 +316,9 @@ pg_statsinfo は以下の設定を強制的に上書きすることに注意し�
 
 #### pg_hba.confの設定
 
-TODO: PostgreSQL14へのドキュメントリンクへの差し替え(日本語版はまだ無し)
-
 PostgreSQL 起動ユーザでの localhost からのアクセスではパスワードの入力が不要になるよう設定します。 この際の認証には
 ident 方式を推奨します。 一般的によく利用される「OSユーザ名 = DB管理者名 =
-postgres」の場合には、[pg_hba.conf](http://www.postgresql.jp/document/13/html/auth-pg-hba-conf.html)
+postgres」の場合には、[pg_hba.conf](https://www.postgresql.jp/document/14/html/auth-pg-hba-conf.html)
 に以下を追加します。 他の認証方式よりも優先するため、ファイルの最初のほうに書く必要があることに注意してください。 UNIX 環境では
 TYPE=local の ident
     認証を使うのが手軽です。
@@ -341,7 +329,7 @@ TYPE=local の ident
 #### クエリの統計情報の取得設定
 
 監視対象インスタンスの postgres データベースに
-[pg_stat_statements](http://www.postgresql.jp/document/13/html/pgstatstatements.html)
+[pg_stat_statements](https://www.postgresql.jp/document/14/html/pgstatstatements.html)
 をインストールすることで、クエリの統計情報もスナップショットとして収集できるようになります。  
 利用する場合には、postgresql.conf の shared_preload_libraries に
 pg_stat_statements を追加し、初回起動時に以下の手順で登録してください。
@@ -455,7 +443,7 @@ pg_statsinfo には PostgreSQL のサーバログをフィルタリングによ�
 
   - CSVログ (*.csv) (例: postgresql-2013-10-01_000000.csv)  
     CSVログとは、PostgreSQL
-    が出力する生のログとなります。(CSVログの詳細は[こちら](http://www.postgresql.jp/document/13/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG)をご覧ください)
+    が出力する生のログとなります。(CSVログの詳細は[こちら](https://www.postgresql.jp/document/14/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG)をご覧ください)
     pg_statsinfo は本ログの情報を元に加工したログの出力を行いますが、本ログに関しては全く加工を行いません。
   - テキストログ (pg_statsinfo.log)  
     テキストログとは、PostgreSQL が出力したログ(CSVログ)の情報を元に pg_statsinfo
@@ -649,8 +637,8 @@ enable_alert カラムで行います。デフォルト値はpg_statsinfo.enable
   - -r, --report=REPORTID  
     レポート種別IDを指定します。
     レポート種別IDに指定できる値は以下のとおりです。
-    レポート種別IDとレポートの内容についての対応は「[pg_statsinfo v13
-    レポート項目一覧](http://pgstatsinfo.sourceforge.net/documents/statsinfo13/files/pg_statsinfo_v13_report_infomation.xls)」をご覧ください。
+    レポート種別IDとレポートの内容についての対応は「[pg_statsinfo v14
+    レポート項目一覧](https://github.com/ossc-db/pg_statsinfo/blob/14.0/doc/files/pg_statsinfo_v14_report_infomation.xls)」をご覧ください。
       - Summary
       - Alert
       - DatabaseStatistics
@@ -1001,26 +989,26 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
   - ##### 設定ファイル_メッセージレベル
     以下の値が指定でき、そのレベルと、それより上位のレベルのメッセージが記録されます。 全く記録しない場合には disable
     を指定します。 独自に disable, alert レベルが追加されていることと、debug
-    を区別しないことを除き、[log_min_messages](http://www.postgresql.jp/document/13/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-WHEN)
+    を区別しないことを除き、[log_min_messages](https://www.postgresql.jp/document/14/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-WHEN)
     と同じ優先順位です。
     disable \> alert \> panic \> fatal \> log \> error \> warning \>
     notice \> info \> debug
   - ##### 設定ファイル_書式指定  
     設定パラメータ
-    [log_line_prefix](http://www.postgresql.jp/document/13/html/runtime-config-logging.html#GUC-LOG-LINE-PREFIX)
+    [log_line_prefix](https://www.postgresql.jp/document/14/html/runtime-config-logging.html#GUC-LOG-LINE-PREFIX)
     と同じ形式で指定します。 log_line_prefix の値そのものは無視されることに注意して下さい。
   - ##### 設定ファイル_時間指定  
     単位として d(日)、h(時)、min(分)、s(秒) を指定できます。指定無しの場合は秒単位とみなします。
   - ##### 設定ファイル_接続文字列  
     例えば 'host=127.0.0.1 port=5432 dbname=mydb user=postgres'
     といったlibpq形式の接続情報文字列です。
-    詳細は[データベース接続制御関数](http://www.postgresql.jp/document/13/html/libpq-connect.html)のPQconnectdbを参照して下さい。
+    詳細は[データベース接続制御関数](https://www.postgresql.jp/document/14/html/libpq-connect.html)のPQconnectdbを参照して下さい。
     この他、libpq
-    が使用する環境変数の影響を受けますので、「[環境変数](http://www.postgresql.jp/document/13/html/libpq-envars.html)」も参照して下さい。
+    が使用する環境変数の影響を受けますので、「[環境変数](https://www.postgresql.jp/document/14/html/libpq-envars.html)」も参照して下さい。
     パスワードの入力待ちにならないようにする必要があります。 パスワード認証が必要な場合には、PostgreSQL インスタンス起動ユーザに
-    [.pgpass](http://www.postgresql.jp/document/13/html/libpq-pgpass.html)
+    [.pgpass](https://www.postgresql.jp/document/14/html/libpq-pgpass.html)
     を設定し、パスワードの入力を自動化してください。 この際には、host を指定しない場合は hostaddr
-    がホスト名として参照されます。詳細は「[パラメータキーワード](https://www.postgresql.jp/document/13/html/libpq-connect.html#LIBPQ-PARAMKEYWORDS)」を参照してください。
+    がホスト名として参照されます。詳細は「[パラメータキーワード](https://www.postgresql.jp/document/14/html/libpq-connect.html#LIBPQ-PARAMKEYWORDS)」を参照してください。
   - ##### 設定ファイル_SQLSTATE指定  
     SQLSTATE はSQL標準で規定される5文字の記号で、"42P01"
     のような形式の文字列です。複数のSQLSTATEを指定したい場合には、カンマ区切りで指定します。
@@ -1170,7 +1158,7 @@ pg_statsinfo を使用する際には、以下の使用上の注意と制約が�
     CST は3つの時間帯に関連付けられておりデフォルトではUS/Central(CST-6)
     となっているため、この関連付けの設定を変更せずに運用するとlog_timezone
     を
-    中国(PRC=CST+8)に設定したサーバーからのログの時刻がリポジトリDBでは14時間進んで解釈されることになります。リポジトリDBで以下のように入力と異なる時刻が表示された場合には設定が必要です。設定方法は[こちら](http://www.postgresql.jp/document/13/html/datetime-config-files.html)を参照してください。
+    中国(PRC=CST+8)に設定したサーバーからのログの時刻がリポジトリDBでは14時間進んで解釈されることになります。リポジトリDBで以下のように入力と異なる時刻が表示された場合には設定が必要です。設定方法は[こちら](https://www.postgresql.jp/document/14/html/datetime-config-files.html)を参照してください。
     
         repository=$ SET TIME ZONE 'PRC'; select '2014/1/1 0:0:0 CST'::timestamptz;
               timestamptz       
@@ -1205,7 +1193,7 @@ pg_statsinfo が取得した情報は、statsrepo スキーマに格納されて
 
 pg_statsinfo の統計情報の取得機能は、その時点の統計情報をスナップショットとして定期的に取得する機能のみになります。
 取得した統計情報から、有益な情報を見たい場合は [簡易レポート機能](#コマンドライン機能)
-を利用するか、[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter-ja.html)
+を利用するか、[pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter)
 をお使いください。
 
 #### Q3. 自動メンテナンス機能のスナップショット削除が動作しません。
@@ -1278,7 +1266,7 @@ pg_statsinfo の統計情報の取得機能は、その時点の統計情報を�
     レポート対象となる情報がスナップショットに存在しない可能性があります。
   - Schema Information  
     一部のデータベースのスキーマ情報が含まれてない場合は、該当のデータベースに接続できる設定になっているか
-    [クライアント認証](http://www.postgresql.jp/document/13/html/client-authentication.html)
+    [クライアント認証](https://www.postgresql.jp/document/14/html/client-authentication.html)
     などを確認してください。また一部の情報(TablesのColumnやIndexes)が取得されていない場合、pg_statsinfo.collect_column、pg_statsinfo.collect_indexが無効にされていないかを確認してください。
 
 #### Q8. pg_store_plans をインストールしているのにレポートでプランの統計情報が出てきません。
@@ -1311,8 +1299,7 @@ pg_statsinfo
 
 pg_statsinfo 13 からの変更点は以下の通りです。
 
-  - PostgreSQL 14に対応 (pg_statsinfo 14は PostgreSQL
-13のみをサポートします)
+  - PostgreSQL 14に対応 (pg_statsinfo 14は PostgreSQL 14のみをサポートします)
   - デフォルトでアラート機能を無効にしました。pg_statsinfo.enable_alertオプションはデフォルトでoffになりました。アラート機能を使う場合、このオプションを明示的にonまたはtrueへ変更してください。
   - 待機イベント情報取得用の専用コレクタースレッドが稼働するようになりました。このスレッドは監視対象のインスタンスのpostgresデータベースで常時サンプリングを実施しています。またこのコレクターの制御用に新規パラメータが追加されました。
   - クエリ単位のOSリソース情報を取得できるようになりました。pg_stat_statementsと同様にHook機能を使い、クエリ処理中のCPU時間や実IOの情報を収集します。また収集対象の制御用に新規パラメータが追加されました。
@@ -1325,9 +1312,6 @@ pg_statsinfo 13 からの変更点は以下の通りです。
     - CPUとメモリの情報を収集します。OSから見えるCPU数やクロック数、メモリサイズをレポートします。
     - 待機イベント情報を収集します。インスタンス毎、DB毎、クエリ毎の3つで支配要因となっている待機イベントをレポートします。
     - クエリが消費したOSリソース情報を収集します。DB毎、クエリ毎に実IO(read, write)やCPU時間(user, sys)をレポートします。
-
-
-  
 
 ## 詳細情報
 
@@ -1347,7 +1331,7 @@ pg_statsinfo 13 からの変更点は以下の通りです。
 
 リポジトリDBは各監視対象インスタンスから上記で設定したデータベースにパスワード入力なしに接続できる必要があります。  
 各監視対象インスタンスからリポジトリDBにパスワード入力なしに接続できるよう
-[クライアント認証](http://www.postgresql.jp/document/13/html/client-authentication.html)
+[クライアント認証](https://www.postgresql.jp/document/14/html/client-authentication.html)
 を設定してください。
 
 #### 注意事項
@@ -1356,7 +1340,7 @@ pg_statsinfo 13 からの変更点は以下の通りです。
 
 ### ウォームスタンバイ
 
-構成例として、[ウォームスタンバイ](http://www.postgresql.jp/document/13/html/warm-standby.html)での構成を説明します。
+構成例として、[ウォームスタンバイ](https://www.postgresql.jp/document/14/html/warm-standby.html)での構成を説明します。
 ウォームスタンバイ構成で pg_statsinfo を利用する場合、大きく分けて2つの構成があります。 詳細は
 "[pg_statsinfo:
 warm-standby](http://pgstatsinfo.sourceforge.net/documents/statsinfo_old/pg_statsinfo-warm-standby-ja.html)"
@@ -1479,25 +1463,23 @@ internal](http://pgstatsinfo.sourceforge.net/documents/statsinfo_old/pg_statsinf
 ### 外部サイト
 
 [PGcon 2010:
-pg_statsinfo](http://www.pgcon.org/2010/schedule/events/216.en.html)  
+pg_statsinfo](https://www.pgcon.org/2010/schedule/events/216.en.html)  
   
-
 ### PostgreSQLドキュメント
 
-[pg_ctl](http://www.postgresql.jp/document/13/html/app-pg-ctl.html),
-[psql](http://www.postgresql.jp/document/13/html/app-psql.html),
-[サーバの構成](http://www.postgresql.jp/document/13/html/runtime-config.html),
-[統計情報コレクタ](http://www.postgresql.jp/document/13/html/monitoring-stats.html),
-[システムカタログ](http://www.postgresql.jp/document/13/html/catalogs.html),
-[pg_stat_statements](http://www.postgresql.jp/document/13/html/pgstatstatements.html),
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter13/html/pg_stats_reporter-ja.html)
+[pg_ctl](https://www.postgresql.jp/document/14/html/app-pg-ctl.html),
+[psql](https://www.postgresql.jp/document/14/html/app-psql.html),
+[サーバの構成](https://www.postgresql.jp/document/14/html/runtime-config.html),
+[統計情報コレクタ](https://www.postgresql.jp/document/14/html/monitoring-stats.html),
+[システムカタログ](https://www.postgresql.jp/document/14/html/catalogs.html),
+[pg_stat_statements](https://www.postgresql.jp/document/14/html/pgstatstatements.html),
+[pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter)
 
 -----
 
 <div class="navigation">
 
-[Top](http://pgstatsinfo.sourceforge.net/index_ja.html) \>
-[pg_statsinfo](http://pgstatsinfo.sourceforge.net/documents/statsinfo13/pg_statsinfo-ja.html)
+[Top](https://github.com/ossc-db/pg_statsinfo)
 
 <div>
 
