@@ -1,6 +1,6 @@
 <div class="index">
 
-1.  [What is pg_statsinfo?](#What-is-pg_statsinfo?)
+1.  [What is pg_statsinfo?](#What-is-pg_statsinfo)
 2.  [Description](#Description)
     1.  [Statistics Snapshot](#Statistics-Snapshot)
     2.  [Server Log Filter](#Server-Log-Filter)
@@ -37,12 +37,14 @@
 
 # pg_statsinfo 14
 
-## What is pg_statsinfo?
+## What is pg_statsinfo
 
 pg_statsinfo is a monitoring tool to record activities and statistics
 of PostgreSQL server in the form of time series of snapshots. You can
 examine the snapshots on graphical representations by using
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/pg_stats_reporter.html).
+[pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter).
+
+pg_statsinfo 14 and later are available on GitHub. pg_statsinfo 13 and earlier can be found at [SourceForge](http://pgstatsinfo.sourceforge.net/index.html).
 
 ## Description
 
@@ -63,7 +65,7 @@ It shows various information as interactive tables and graphs.
 Components of pg_statsinfo are typically placed as the picture below.
 Each pg_statsinfo collects the information of the *Database Server*
 where it resides on and sends snapshots to the *Repository Server*.
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/pg_stats_reporter.html)
+[pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter)
 runs behind web server so that the Users can get graphical reports on
 web browser on the *Client*.
 
@@ -184,7 +186,7 @@ are the tables having clustering index.
 
 The contents of alert message of each alert item is shown in ["report
 item list of pg_statsinfo
-v14".](http://pgstatsinfo.sourceforge.net/documents/statsinfo14/files/pg_statsinfo_v14_report_infomation.xls)
+v14".](/doc/files/pg_statsinfo_v14_report_infomation.xls)
 (.xls in Japanese).
 
 You can see setup instructions [here](#Alert-Function).
@@ -205,12 +207,12 @@ format. Following kinds of information are available.
 
 The comprehensive list of report items is shown in ["report item list of
 pg_statsinfo
-v14".](http://pgstatsinfo.sourceforge.net/documents/statsinfo14/files/pg_statsinfo_v14_report_infomation.xls)
+v14".](/doc/files/pg_statsinfo_v14_report_infomation.xls)
 (.xls in Japanese)  
 Report items are equivalent with
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/pg_stats_reporter.html).  
+[pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter).  
 If you would like to see graphical reports, please try
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/pg_stats_reporter.html).
+[pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporterl).
 
 #### Administrative operations
 
@@ -701,7 +703,7 @@ Available options are described below,
     Generates a report of the type specified by REPORTID.
     The following REPORTID are available.
     More details are shown in [Items of a report in pg_statsinfo
-    v14](http://pgstatsinfo.sourceforge.net/documents/statsinfo14/files/pg_statsinfo_v14_report_infomation.xls)(Both
+    v14](/doc/files/pg_statsinfo_v14_report_infomation.xls)(Both
     filename and contents are only in Japanese).
       - Summary
       - Alert
@@ -1096,8 +1098,6 @@ optional parameters
     If not suffixed by any unit, the value will be interpreted in
     milliseconds.
 
-Translated with www.DeepL.com/Translator (free version)
-
 #### Reloading configuration for pg_statsinfo
 
 pg_statsinfo shares the PostgreSQL's postgresql.conf as its
@@ -1269,7 +1269,7 @@ The snapshots in repository can be of course inspected using sql queries
 but it needs too much labor for most cases. You can use pg_statsinfo's
 command line reporting feature to see them as simple reports in text
 format. For those who wants to see them in graphical interface,
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/pg_stats_reporter.html)
+[pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter)
 provides sortable tables with pager and manipulative graphs. An operable
 sample is available
 [here](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/files/report_sample.html).
@@ -1587,13 +1587,13 @@ Collector](http://www.postgresql.org/docs/14/static/monitoring-stats.html),
 [System
 Catalogs](http://www.postgresql.org/docs/14/static/catalogs.html),
 [pg_stat_statements](http://www.postgresql.org/docs/14/static/pgstatstatements.html),
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/pg_stats_reporter.html)
+[pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter)
 
 -----
 
 <div class="navigation">
 
-[Top](index.html) \> [pg_statsinfo](pg_statsinfo.html)
+[Top](https://github.com/ossc-db/pg_statsinfo)
 
 <div>
 
