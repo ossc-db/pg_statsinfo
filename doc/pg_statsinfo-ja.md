@@ -28,10 +28,9 @@
 8.  [pg_statsinfo13からの変更点](#pg_statsinfo13からの変更点)
 9.  [詳細情報](#詳細情報)
     1.  [複数の監視対象インスタンス](#複数の監視対象インスタンス)
-    2.  [ウォームスタンバイ](#ウォームスタンバイ)
-    3.  [フォールバックモード](#フォールバックモード)
-    4.  [内部構成](#内部構成)
-    5.  [サーバログ分配機能内部](#サーバログ分配機能内部)
+    2.  [フォールバックモード](#フォールバックモード)
+    3.  [内部構成](#内部構成)
+    4.  [サーバログ分配機能内部](#サーバログ分配機能内部)
 10. [関連項目](#関連項目)
 
 </div>
@@ -1338,16 +1337,6 @@ pg_statsinfo 13 からの変更点は以下の通りです。
 
   - 複数の監視対象インスタンスで自動メンテナンスのスナップショット削除が設定されている場合、監視対象インスタンスの中で最も期間の短いスナップショット保持期間が有効となります。
 
-### ウォームスタンバイ
-
-構成例として、[ウォームスタンバイ](https://www.postgresql.jp/document/14/html/warm-standby.html)での構成を説明します。
-ウォームスタンバイ構成で pg_statsinfo を利用する場合、大きく分けて2つの構成があります。 詳細は
-"[pg_statsinfo:
-warm-standby](http://pgstatsinfo.sourceforge.net/documents/statsinfo_old/pg_statsinfo-warm-standby-ja.html)"
-を参照してください。
-
-1.  稼動系、待機系と独立したインスタンスにリポジトリDBを配置
-2.  稼動系、待機系それぞれのインスタンスにリポジトリDBを配置
 
 ### フォールバックモード
 
@@ -1395,52 +1384,12 @@ warm-standby](http://pgstatsinfo.sourceforge.net/documents/statsinfo_old/pg_stat
     statsrepo スキーマのバージョンが合わない場合  
     (正しいバージョンの statsrepo スキーマは設定リロード時に自動的に登録されます)
 
-### SystemTap 連携(非推奨かつ無保証)
-
-Linux 系 OS には、様々なトレーシング／プロファイリングツールが備わっています。 その内の1つである SystemTap
-は、Solaris や FreeBSD などで利用可能な Dtrace
-に類似したプロダクトであり、カーネル内部のトレーシングやプロファイリングのほかに、
-ユーザアプリケーションの情報取得 (プローブ定義) も可能なツールです。 PostgreSQL
-には、多くの標準的なプローブがソースコード内で提供されており、SystemTap
-を利用してこれらのプローブから収集されるプロファイリング情報を取得することができます。 pg_statsinfo は、この SystemTap
-が収集するプロファイリング情報をスナップショットとしてリポジトリDBに蓄積します。
-
-#### 前提環境
-
-1.  動作確認は RHEL6 でのみ行っています。
-2.  systemtap、systemtap-runtime、systemtap-sdt-devel パッケージ(RPM)
-    がインストール済みである必要があります。
-3.  PostgreSQL は、--enable-debug、--enable-dtrace の configure
-    オプションを有効にしてビルドされている必要があります。
-
-#### 実行手順
-
-SystemTap を実行するユーザは、postgres を起動するユーザ(典型的には postgres ユーザ)である必要があります。
-まず、このユーザを stapdev グループに所属させる必要があります。
-
-    $ usermod -g stapdev <username>
-
-PostgreSQL のプロファイリング情報収集を行うには、専用のスクリプトを使用します。スクリプトを
-[pg_statsinfo_profile.stp](http://pgstatsinfo.sourceforge.net/documents/statsinfo_old/pg_statsinfo_profile.stp)
-に示します。 スクリプトを監視対象インスタンスの任意の場所に配置し、SystemTap で実行して下さい。
-
-    $ stap -m statsinfo_prof pg_statsinfo_profile.stp
-
-SystemTap が収集するプロファイリング情報は、スナップショット取得と同じタイミングで取得され、リポジトリDBに蓄積されます。
-
-#### 制約
-
-本機能は、性能への影響、プロダクトの成熟度合いなどを加味し、Experimental (実験的扱いの機能) の位置づけとなります。
-つまり、商用などでは使用をまだ推奨せず、あくまで検証環境などでの使用を前提としています。
 
 ### 内部構成
 
 pg_statsinfo はPostgreSQLのサーバサイドで動作する pg_statsinfo
 ライブラリと、エージェントとして動作する実行プログラムの2つのモジュールで構成されています。
-ライブラリはロード直後に呼ばれるフック関数からエージェントを起動するため、ユーザがエージェントを明示的に起動することはありません。 詳細は
-"[pg_statsinfo:
-internal](http://pgstatsinfo.sourceforge.net/documents/statsinfo_old/pg_statsinfo-internal-ja.html)"
-を参照してください。
+ライブラリはロード直後に呼ばれるフック関数からエージェントを起動するため、ユーザがエージェントを明示的に起動することはありません。 
 
 ### サーバログ分配機能内部
 
