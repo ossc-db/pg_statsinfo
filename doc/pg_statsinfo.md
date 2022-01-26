@@ -27,10 +27,9 @@
 8.  [Changes From pg_statsinfo13](#changes-from-pg_statsinfo13)
 9.  [Detailed Information](#Detailed-Information)
     1.  [Sharing Repository Database](#Sharing-Repository-Database)
-    2.  [Warm Standby](#Warm-Standby)
-    3.  [Fall-Back Mode](#Fall-Back-Mode)
-    4.  [Internals](#Internals)
-    5.  [Distributing server log](#Distributing-server-log)
+    2.  [Fall-Back Mode](#Fall-Back-Mode)
+    3.  [Internals](#Internals)
+    4.  [Distributing server log](#Distributing-server-log)
 10. [See Also](#see-also)
 
 </div>
@@ -59,7 +58,7 @@ Two or more PostgreSQL *instances* can share single repository database.
 
 You can check for server health and activities in easy-to-grasp
 graphical representation by using
-[pg_stats_reporter](http://pgstatsinfo.sourceforge.net/documents/reporter14/html/pg_stats_reporter.html).
+[pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter).
 It shows various information as interactive tables and graphs.
 
 Components of pg_statsinfo are typically placed as the picture below.
@@ -128,7 +127,7 @@ monitored database is roughly estimated to be 120 - 150MB.
 
 You can see the structure of the tables in pg_statsinfo's repository
 database in
-[this](http://pgstatsinfo.sourceforge.net/documents/statsinfo14/files/pg_statsinfo_v14_repository_infomation.xls)
+[this](/doc/files/pg_statsinfo_v14_report_infomation.xls)
 document. (MS Excel document in Japanese).
 
 ### Server Log Filter
@@ -1433,17 +1432,6 @@ section.
 
 As described above, multiple monitored instances can share single repository database. In order to build such configuration, the repository server should accept connections from the monitored instances without password prompts and the combination of PostgreSQL's system identifier, node name given by uname(2) and PostgreSQL's listen port number should be different from any other monitored instance.
 
-### Warm Standby
-
-pg_statsinfo can work good with [warm
-standby](http://www.postgresql.org/docs/14/static/warm-standby.html).
-There are two typical configuration that can work with warm standby
-mode. See "[pg_statsinfo:
-warm-standby](pg_statsinfo-warm-standby.html)" for details for each
-configuration.
-
-1.  Two servers having common repositories outside the cluster.
-2.  Two servers having their own repositories.
 
 ### Fall-Back Mode
 
@@ -1509,48 +1497,12 @@ Missing XML feature
 
   - Rebuild PostgreSQL with --with-libxml option and install it.
 
-### Monitoring with SystemTap (Experimental)
-
-The feature has been checked only on RHEL6.
-
-#### Prerequisites
-
-  - RHEL6, Fedora13 and later.
-  - systemtap, systemtap-runtime and systemtap-sdt-devel packages are
-    installed using RPM.
-  - PostgreSQL is built with --enable-debug and --enable-dtrace
-    configure options.
-
-#### Preparation
-
-  - Systemtap should run as the user postgresql (or the user to run
-    PostgreSQL if different from that), and the user should be a member
-    of the group stapdev.
-    
-        $ usermod -g stapdev postgres
-
-  - Prepare a systemtap script. pg_statsinfo provides that. Place it
-    anywhere appropriate and deploy it using stap command.
-    
-        $ stap -m statsinfo_prof pg_statsinfo_profile.stp
-
-After the above steps done, pg_statsinfo takes snapshots including
-Systemtap information.
-
-#### Note
-
-This is an experimental feature requires --enable-debug and puts some
-burden on running server so please refrain from using this on commercial
-systems.
-
 ### Internals
 
 pg_statsinfo consists of a library loaded on PostgreSQL and a daemon
 process. Since the daemon is executed implicitly by the library at
 server startup, users don't have to execute the daemon explicitly.
 
-See also "[pg_statsinfo: internal](pg_statsinfo-internal.html)" for
-details.
 
 ### Distributing server log
 
