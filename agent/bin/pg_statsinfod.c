@@ -10,7 +10,7 @@
 #include <sys/stat.h> 
 
 const char *PROGRAM_VERSION	= "14.0";
-const char *PROGRAM_URL		= "http://pgstatsinfo.sourceforge.net/";
+const char *PROGRAM_URL		= "https://github.com/ossc-db/pg_statsinfo/";
 const char *PROGRAM_EMAIL   = NULL;
 
 typedef struct ParamMap
