@@ -3,14 +3,14 @@
 
 # Original declaration for pg_statsinfo rpmbuild #
 
-%define _pgdir   /usr/pgsql-13
+%define _pgdir   /usr/pgsql-14
 %define _bindir  %{_pgdir}/bin
 %define _libdir  %{_pgdir}/lib
 %define _datadir %{_pgdir}/share
 
 ## Set general information for pg_statsinfo.
 Name:       pg_statsinfo
-Version:    13.0
+Version:    14.0
 Release:    1%{?dist}
 Summary:    Performance monitoring tool for PostgreSQL
 Group:      Applications/Databases
@@ -20,7 +20,7 @@ Source0:    %{name}-%{version}.tar.gz
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 
 ## We use postgresql-devel package
-BuildRequires:  postgresql13-devel
+BuildRequires:  postgresql14-devel
 %if %{rhel} == 7
 BuildRequires:  llvm-toolset-7 llvm5.0
 %endif
@@ -33,7 +33,7 @@ pg_statsinfo monitors an instance of PostgreSQL server and gather
 the statistics and activities of the server as snapshots.
 
 %package llvmjit
-Requires: postgresql12-llvmjit
+Requires: postgresql14-llvmjit
 Requires: pg_statsinfo = %{version}
 Summary:  Just-in-time compilation support for pg_statsinfo
 
@@ -68,9 +68,6 @@ rm -rf %{buildroot}
 %{_datadir}/contrib/uninstall_pg_statsrepo.sql
 %{_datadir}/contrib/pg_statsinfo.sql
 %{_datadir}/contrib/uninstall_pg_statsinfo.sql
-%doc doc/pg_statsinfo-ja.html
-%doc doc/pg_statsinfo.html
-%doc doc/image/
 
 %files llvmjit
 %defattr(-,root,root)
@@ -79,7 +76,7 @@ rm -rf %{buildroot}
 %{_libdir}/bitcode/pg_statsinfo/last_xact_activity.bc
 %{_libdir}/bitcode/pg_statsinfo/pg_control.bc
 %{_libdir}/bitcode/pg_statsinfo/port.bc
-%{_libdir}/bitcode/pg_statsinfo/pgut/pgut-be.bc
+%{_libdir}/bitcode/pg_statsinfo/wait_sampling.bc
 %{_libdir}/bitcode/pg_statsinfo/pgut/pgut-spi.bc
 
 ## Script to run just before installing the package
@@ -124,8 +121,10 @@ EOF
 	fi
 fi
 
-# History of pg_statsinfo-v12 RPM.
+# History of pg_statsinfo-v14 RPM.
 %changelog
+* Tue Feb  1 2022 - NTT OSS Center 14.0-1
+- pg_statsinfo 14.0 released
 * Mon Dec  14 2020 - NTT OSS Center 13.0-1
 - pg_statsinfo 13.0 released
 * Fri Feb  28 2020 - NTT OSS Center 12.1-1
