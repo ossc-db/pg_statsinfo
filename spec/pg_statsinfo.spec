@@ -15,7 +15,7 @@ Release:    1%{?dist}
 Summary:    Performance monitoring tool for PostgreSQL
 Group:      Applications/Databases
 License:    BSD
-URL:        http://sourceforge.net/projects/pgstatsinfo/
+URL:        https://github.com/ossc-db/pg_statsinfo
 Source0:    %{name}-%{version}.tar.gz
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 
