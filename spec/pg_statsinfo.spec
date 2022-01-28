@@ -124,7 +124,7 @@ fi
 # History of pg_statsinfo-v14 RPM.
 %changelog
 * Tue Feb  1 2022 - NTT OSS Center 14.0-1
-- pg_statsinfo 13.0 released
+- pg_statsinfo 14.0 released
 * Mon Dec  14 2020 - NTT OSS Center 13.0-1
 - pg_statsinfo 13.0 released
 * Fri Feb  28 2020 - NTT OSS Center 12.1-1
