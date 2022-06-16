@@ -838,8 +838,8 @@ enable_alert カラムで行います。デフォルト値はpg_statsinfo.enable
 
     pg_statsinfo.enable_maintenance = 'log'    # 自動メンテナンス設定
     pg_statsinfo.maintenance_time = '00:02:00' # 自動メンテナンス実行時刻設定
-    pg_statsinfo.log_maintenance_command = '&ltPGHOME>/bin/archive_pglog.sh %l' # ログファイル整理コマンド設定 (*1)
-    ※&ltPGHOME&gt: PostgreSQL インストールディレクトリ
+    pg_statsinfo.log_maintenance_command = '<PGHOME>/bin/archive_pglog.sh %l' # ログファイル整理コマンド設定 (*1)
+    ※<PGHOME>: PostgreSQL インストールディレクトリ
     
     (*1) archive_pglog.sh
     archive_pglog.sh は同梱されるシェルスクリプトです。
@@ -852,7 +852,7 @@ enable_alert カラムで行います。デフォルト値はpg_statsinfo.enable
     pg_statsinfo.maintenance_time = '00:02:00' # 自動メンテナンス実行時刻設定
     pg_statsinfo.repository_keepday = 7        # スナップショットの保持期間設定
     pg_statsinfo.repolog_keepday = 7           # 蓄積ログの保持期間設定
-    pg_statsinfo.log_maintenance_command = '&ltPGHOME>/bin/archive_pglog.sh %l' # ログファイル整理コマンド設定
+    pg_statsinfo.log_maintenance_command = '<PGHOME>/bin/archive_pglog.sh %l' # ログファイル整理コマンド設定
 
 (注1) 自動メンテナンス設定のデフォルトは、全ての操作を実行する設定('on')です。
 
@@ -936,24 +936,24 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
 | syslog_facility                              | 'LOCAL0'                                   | syslog の facility 指定。                                                                                                                                                                           |
 | syslog_ident                                 | 'postgres'                                 | syslog の indent文字列指定。                                                                                                                                                                           |
 | pg_stat_statements.track_planning            | off                                        | クエリの統計情報で"実行計画生成時間"を取得する場合は on を設定します。                                                                                                                                                          |
-| pg_statsinfo.textlog_min_messages            | warning                                    | テキストログへ出力する最小メッセージレベル [(*1)](#設定ファイル_メッセージレベル)                                                                                                                                                                     |
-| pg_statsinfo.syslog_min_messages             | disable                                    | syslog へ出力する最小メッセージレベル [(*1)](#設定ファイル_メッセージレベル)                                                                                                                                                                    |
+| pg_statsinfo.textlog_min_messages            | warning                                    | テキストログへ出力する最小メッセージレベル [(*1)](#1_設定ファイル_メッセージレベル)                                                                                                                                                                     |
+| pg_statsinfo.syslog_min_messages             | disable                                    | syslog へ出力する最小メッセージレベル [(*1)](#1_設定ファイル_メッセージレベル)                                                                                                                                                                    |
 | pg_statsinfo.textlog_filename                | 'pg_statsinfo.log'                         | テキストログファイル名。空文字はエラー。                                                                                                                                                                            |
-| pg_statsinfo.textlog_line_prefix             | '%t %p '                                   | テキストログの各行の先頭に追加される書式 [(*2)](#設定ファイル_書式指定)                                                                                                                                                                       |
-| pg_statsinfo.syslog_line_prefix              | '%t %p '                                   | syslog の各行の先頭に追加される書式 [(*2)](#設定ファイル_書式指定). syslog がデフォルトで付与する時刻とプロセスIDは、エージェントのものに置き換わってしまうため、元の値を記録するために %t や %p が必要なことに注意してください。                                                                             |
+| pg_statsinfo.textlog_line_prefix             | '%t %p '                                   | テキストログの各行の先頭に追加される書式 [(*2)](#2_設定ファイル_書式指定)                                                                                                                                                                       |
+| pg_statsinfo.syslog_line_prefix              | '%t %p '                                   | syslog の各行の先頭に追加される書式 [(*2)](#2_設定ファイル_書式指定). syslog がデフォルトで付与する時刻とプロセスIDは、エージェントのものに置き換わってしまうため、元の値を記録するために %t や %p が必要なことに注意してください。                                                                             |
 | pg_statsinfo.textlog_permission              | 600                                        | テキストログファイルのパーミッション指定。                                                                                                                                                                           |
 | pg_statsinfo.textlog_nologging_users         | -                                          | テキストログのフィルタリング設定。テキストログへの出力を除外するユーザを設定します。複数のユーザを設定する場合はカンマ区切りで指定します。                                                                                                                           |
-| pg_statsinfo.repolog_min_messages            | warning                                    | リポジトリDBに蓄積するサーバログの最小メッセージレベル。[(*1)](#設定ファイル_メッセージレベル) <br> 監視対象DBとリポジトリDBが同一インスタンスの場合には disable (無効)にすることを推奨します |
+| pg_statsinfo.repolog_min_messages            | warning                                    | リポジトリDBに蓄積するサーバログの最小メッセージレベル。[(*1)](#1_設定ファイル_メッセージレベル) <br> 監視対象DBとリポジトリDBが同一インスタンスの場合には disable (無効)にすることを推奨します |
 | pg_statsinfo.repolog_nologging_users         | -                                          | サーバログ蓄積のフィルタリング設定。リポジトリDBへの蓄積を除外するユーザを設定します。複数のユーザを設定する場合はカンマ区切りで指定します。                                                                                                                         |
 | pg_statsinfo.repolog_buffer                  | 10000                                      | サーバログ蓄積機能のチューニング設定。バッファリングするログレコード数を指定します。                                                                                                                                                      |
-| pg_statsinfo.repolog_interval                | 10s                                        | サーバログ蓄積機能のチューニング設定。バッファ内のログをリポジトリDBへ格納する間隔を指定します。[(*3)](#設定ファイル_時間指定)                                                                                                                                           |
-| pg_statsinfo.sampling_interval               | 5s                                         | サンプリングの実行間隔 [(*3)](#設定ファイル_時間指定)                                                                                                                                                                                |
-| pg_statsinfo.snapshot_interval               | 10min                                      | スナップショットの取得間隔 [(*3)](#設定ファイル_時間指定)                                                                                                                                                                              |
+| pg_statsinfo.repolog_interval                | 10s                                        | サーバログ蓄積機能のチューニング設定。バッファ内のログをリポジトリDBへ格納する間隔を指定します。[(*3)](#3_設定ファイル_時間指定)                                                                                                                                           |
+| pg_statsinfo.sampling_interval               | 5s                                         | サンプリングの実行間隔 [(*3)](#3_設定ファイル_時間指定)                                                                                                                                                                                |
+| pg_statsinfo.snapshot_interval               | 10min                                      | スナップショットの取得間隔 [(*3)](#3_設定ファイル_時間指定)                                                                                                                                                                              |
 | pg_statsinfo.excluded_dbnames                | 'template0, template1'                     | 監視対象から除外するデータベース名。                                                                                                                                                                              |
 | pg_statsinfo.excluded_schemas                | 'pg_catalog, pg_toast, information_schema' | 監視対象から除外するスキーマ名。                                                                                                                                                                                |
-| pg_statsinfo.repository_server               | 'dbname=postgres'                          | リポジトリDBへの接続文字列 [(*4)](#設定ファイル_接続文字列)。パスワードの入力待ちは避ける。一般ユーザを使用して接続する場合は、 こちら の注意点をご覧ください。                                                                                                                          |
+| pg_statsinfo.repository_server               | 'dbname=postgres'                          | リポジトリDBへの接続文字列 [(*4)](#4_設定ファイル_接続文字列)。パスワードの入力待ちは避ける。一般ユーザを使用して接続する場合は、 こちら の注意点をご覧ください。                                                                                                                          |
 | pg_statsinfo.adjust_log_level                | off                                        | サーバログのメッセージレベル変更設定。                                                                                                                                                                             |
-| pg_statsinfo.adjust_log_info                 | -                                          | メッセージレベルを INFO に変更したい SQLSTATE をカンマ区切りで指定 [(*5)](#設定ファイル_SQLSTATE指定)                                                                                                                                                  |
+| pg_statsinfo.adjust_log_info                 | -                                          | メッセージレベルを INFO に変更したい SQLSTATE をカンマ区切りで指定 [(*5)](#5_設定ファイル_sqlstate指定)                                                                                                                                                  |
 | pg_statsinfo.adjust_log_notice               | -                                          | adjust_log_info と同様でメッセージレベルを NOTICE に変更                                                                                                                                                        |
 | pg_statsinfo.adjust_log_warning              | -                                          | adjust_log_info と同様でメッセージレベルを WARNING に変更                                                                                                                                                       |
 | pg_statsinfo.adjust_log_error                | -                                          | adjust_log_info と同様でメッセージレベルを ERROR に変更                                                                                                                                                         |
@@ -970,35 +970,35 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
 | pg_statsinfo.long_transaction_max            | 10                                         | ロングトランザクション情報の最大収集件数。 このパラメータ変更にはPostgreSQLの再起動が必要となります。                                                                                                                                                                          |
 | pg_statsinfo.controlfile_fsync_interval      | 1min                                       | pg_statsinfoの制御ファイルの更新をストレージデバイスに同期書き出し(fsync)する間隔を設定します。                                                                                                                                       |
 | pg_statsinfo.enable_alert                    | off                                         | アラート機能の有効／無効を設定します。                                                                                                                                                                             |
-| pg_statsinfo.target_server                   | -                                          | 監視対象DBへの接続文字列 [(*4)](#設定ファイル_接続文字列)。pg_statsinfoは統計情報収集などのために監視対象DBへ接続します。 デフォルトではこの接続にDBクラスタ作成時の初期ユーザおよび初期データベース(postgres)が使用されます。 この接続設定を変更する必要がある場合には当該パラメータを設定します。なお、ユーザを指定する場合はスーパユーザを指定する必要があることに注意してください。 |
+| pg_statsinfo.target_server                   | -                                          | 監視対象DBへの接続文字列 [(*4)](#4_設定ファイル_接続文字列)。pg_statsinfoは統計情報収集などのために監視対象DBへ接続します。 デフォルトではこの接続にDBクラスタ作成時の初期ユーザおよび初期データベース(postgres)が使用されます。 この接続設定を変更する必要がある場合には当該パラメータを設定します。なお、ユーザを指定する場合はスーパユーザを指定する必要があることに注意してください。 |
 | pg_statsinfo.rusage_max                   | 5000                                          | クエリ単位でのリソース消費量を取得するための情報数の上限。pg_stat_statements.maxと同値を設定することを推奨します。このパラメータ変更にはPostgreSQLの再起動が必要となります。 |
 | pg_statsinfo.rusage_track                 | on                                          | クエリ単位のリソース消費取得の有効/無効を設定します。 |
-| pg_statsinfo.rusage_track_utility         | off                                          | rusage_trackが有効な場合に、COPY処理などのユーティリティコマンドのリソース消費取得の有効/無効を設定します。[(*6)](#設定ファイル_rusage_track_utility) |
+| pg_statsinfo.rusage_track_utility         | off                                          | rusage_trackが有効な場合に、COPY処理などのユーティリティコマンドのリソース消費取得の有効/無効を設定します。[(*6)](#6_設定ファイル_rusage_track_utility) |
 | pg_statsinfo.rusage_track_planning         | off                                          | rusage_trackが有効な場合に、クエリ処理の実行計画作成時のリソース消費取得の有効/無効を設定します。 |
 | pg_statsinfo.rusage_save         | on                                          | クエリ単位のリソース情報をPostgreSQLの停止・起動をまたがって記録しておくかを設定します。 |
 | pg_statsinfo.wait_sampling_max         | 25000                                          | 待機イベントの情報数の上限。pg_stat_statements.max * 10 程度の値に設定することを推奨します。このパラメータ変更にはPostgreSQLの再起動が必要となります。  |
 | pg_statsinfo.wait_sampling_queries         | on                                          | 待機イベントの情報取得時のクエリID情報付与の有効/無効を設定します。 |
 | pg_statsinfo.wait_sampling_save         | on                                          | 待機イベントの情報をPostgreSQLの停止・起動をまたがって記録しておくかを設定します。 |
-| pg_statsinfo.wait_sampling_interval         | 10ms                                          | 待機イベント情報のサンプリング間隔 [(*8)](#設定ファイル:時間指定ミリ秒) |
-| pg_statsinfo.collect_column         | on                                          | スナップショット取得時にテーブルの列情報の取得の有効/無効を設定します。offにすると列情報が収集されなくなり、スナップショットサイズの削減が可能ですが、一部の情報がレポートされなくなります。[(*7)](#設定ファイル:レポート不可となる項目)  |
-| pg_statsinfo.collect_index         | on                                          | スナップショット取得時にインデックス情報の取得の有効/無効を設定します。offにすると列情報が収集されなくなり、スナップショットサイズの削減が可能ですが、一部の情報がレポートされなくなります。[(*)](#設定ファイル:レポート不可となる項目)  |
+| pg_statsinfo.wait_sampling_interval         | 10ms                                          | 待機イベント情報のサンプリング間隔 [(*7)](#7_設定ファイル_時間指定ミリ秒) |
+| pg_statsinfo.collect_column         | on                                          | スナップショット取得時にテーブルの列情報の取得の有効/無効を設定します。offにすると列情報が収集されなくなり、スナップショットサイズの削減が可能ですが、一部の情報がレポートされなくなります。[(*8)](#8_設定ファイル_レポート不可となる項目)  |
+| pg_statsinfo.collect_index         | on                                          | スナップショット取得時にインデックス情報の取得の有効/無効を設定します。offにすると列情報が収集されなくなり、スナップショットサイズの削減が可能ですが、一部の情報がレポートされなくなります。[(*8)](#8_設定ファイル_レポート不可となる項目)  |
 
 
 
-  - ##### 設定ファイル_メッセージレベル
+  - ##### 1_設定ファイル_メッセージレベル
     以下の値が指定でき、そのレベルと、それより上位のレベルのメッセージが記録されます。 全く記録しない場合には disable
     を指定します。 独自に disable, alert レベルが追加されていることと、debug
     を区別しないことを除き、[log_min_messages](https://www.postgresql.jp/document/14/html/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-WHEN)
     と同じ優先順位です。
     disable \> alert \> panic \> fatal \> log \> error \> warning \>
     notice \> info \> debug
-  - ##### 設定ファイル_書式指定  
+  - ##### 2_設定ファイル_書式指定  
     設定パラメータ
     [log_line_prefix](https://www.postgresql.jp/document/14/html/runtime-config-logging.html#GUC-LOG-LINE-PREFIX)
     と同じ形式で指定します。 log_line_prefix の値そのものは無視されることに注意して下さい。
-  - ##### 設定ファイル_時間指定  
+  - ##### 3_設定ファイル_時間指定  
     単位として d(日)、h(時)、min(分)、s(秒) を指定できます。指定無しの場合は秒単位とみなします。
-  - ##### 設定ファイル_接続文字列  
+  - ##### 4_設定ファイル_接続文字列  
     例えば 'host=127.0.0.1 port=5432 dbname=mydb user=postgres'
     といったlibpq形式の接続情報文字列です。
     詳細は[データベース接続制御関数](https://www.postgresql.jp/document/14/html/libpq-connect.html)のPQconnectdbを参照して下さい。
@@ -1008,16 +1008,17 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
     [.pgpass](https://www.postgresql.jp/document/14/html/libpq-pgpass.html)
     を設定し、パスワードの入力を自動化してください。 この際には、host を指定しない場合は hostaddr
     がホスト名として参照されます。詳細は「[パラメータキーワード](https://www.postgresql.jp/document/14/html/libpq-connect.html#LIBPQ-PARAMKEYWORDS)」を参照してください。
-  - ##### 設定ファイル_SQLSTATE指定  
+  - ##### 5_設定ファイル_SQLSTATE指定  
     SQLSTATE はSQL標準で規定される5文字の記号で、"42P01"
     のような形式の文字列です。複数のSQLSTATEを指定したい場合には、カンマ区切りで指定します。
-  - ##### 設定ファイル_rusage_track_utility
+  - ##### 6_設定ファイル_rusage_track_utility
     pg_stat_statementsをshared_preload_librariesに設定して有効にし、かつこのパラメータを有効にする場合、shared_preload_librariesには'pg_stat_statements, pg_statsinfo'のように先に(左側に)pg_stat_statementsを記述するようにしてください。そのような指定がされない場合、WARININGログが出力され、rusage_track_utilityは強制的にoffに設定されます。
-  - ##### 設定ファイル_レポート不可となる項目
+  - ##### 7_設定ファイル_時間指定ミリ秒  
+    単位として d(日)、h(時)、min(分)、s(秒)、ms(ミリ秒) を指定できます。指定無しの場合はミリ秒単位とみなします。
+  - ##### 8_設定ファイル_レポート不可となる項目
     collect_columnをoffにした場合、「Notable TablesのCorrelation」全て、「Notable TablesのLow Density Tables」にあるLogical Pages および Logical Page Ratio(%)の2項目、および「Schema InformationのTable」にあるColumnsの項目がレポートできなくなります。
     collect_indexをoffにした場合、「Notable TablesのCorrelation」全て、および「Schema InformationのIndexes」全てがレポートできなくなります。
-  - ##### 設定ファイル:時間指定ミリ秒  
-    単位として d(日)、h(時)、min(分)、s(秒)、ms(ミリ秒) を指定できます。指定無しの場合はミリ秒単位とみなします。
+
 
 #### 設定値のリロード
 
