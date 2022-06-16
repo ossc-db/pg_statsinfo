@@ -892,15 +892,13 @@ ex 2: Removing logs on the repository aged more than 7 days at every
     pg_statsinfo.maintenance_time = '00:02:00'
     pg_statsinfo.repository_keepday = 7
 
-ex 3: Archiving and remove CSV logs before the day before at every 0:02
+ex 3: Archiving CSV logs before the day before at every 0:02
 am.
 
     pg_statsinfo.enable_maintenance = 'log'
     pg_statsinfo.maintenance_time = '00:02:00'
-    pg_statsinfo.log_maintenance_command = '/archive_remove_pglog.sh %l'
-
-Where archive_remove_pglog.sh does, as the name suggests, will archive
-and remove a log file.
+    pg_statsinfo.log_maintenance_command = '<PGHOME>/bin/archive_pglog.sh %l'
+    ※<PGHOME>: PostgreSQL install directory
 
 ex 4: Removing both snapshots and logs on the repository aged more than
 7 days and archiving and deleting CSV logs before 7 days before.
@@ -909,7 +907,7 @@ ex 4: Removing both snapshots and logs on the repository aged more than
     pg_statsinfo.maintenance_time = '00:02:00'
     pg_statsinfo.repository_keepday = 7
     pg_statsinfo.repolog_keepday = 7
-    pg_statsinfo.log_maintenance_command = '/archive_pglog.sh %l'
+    pg_statsinfo.log_maintenance_command = '<PGHOME>/bin/archive_pglog.sh %l'
 
 Note: All monitored instance sharing one repository database execute
 this maintenance for the same repository so the following setting
@@ -1002,24 +1000,24 @@ optional parameters
 | syslog_facility                            | 'LOCAL0'                                   | syslog facility when syslog is enabled.                                                                                                                                                                                                                                                                                                         |
 | syslog_ident                               | 'postgres'                                 | syslog indent when syslog is enabled                                                                                                                                                                                                                                                                                                            |
 | pg_stat_statements.track_planning          | off                                        | Set 'on' to get the plan-generation time in the query statistics (pg_stat_statements).                                                                                                                                                                                                                                                          |
-| pg_statsinfo.textlog_min_messages          | warning                                    | Minimum message level for textlog [(*1)](#configMessage-Levels).                                                                                                                                                                                                                                                                                                         |
-| pg_statsinfo.syslog_min_messages           | disable                                    | Minimum message level for syslog [(*1)](#configMessage-Levels).                                                                                                                                                                                                                                                                                                          |
+| pg_statsinfo.textlog_min_messages          | warning                                    | Minimum message level for textlog [(*1)](#1_configmessage-levels).                                                                                                                                                                                                                                                                                                         |
+| pg_statsinfo.syslog_min_messages           | disable                                    | Minimum message level for syslog [(*1)](#1_configmessage-levels).                                                                                                                                                                                                                                                                                                          |
 | pg_statsinfo.textlog_filename              | 'pg_statsinfo.log'                         | Textlog filename. Should not be empty.                                                                                                                                                                                                                                                                                                          |
-| pg_statsinfo.textlog_line_prefix           | '%t %p '                                   | A printf-style string that is output at the beginning of each textlog line. [(*2)](#configPrefix-Format)                                                                                                                                                                                                                                                                |
-| pg_statsinfo.syslog_line_prefix            | '%t %p '                                   | A printf-style string that is output at the beginning of each syslog line. [(*2)](#configPrefix-Format) Note that timestamp and process ID in syslog are them of pg_statsinfo daemon, not of original ones. You need to add %t and %p to preserve the original values.                                                                                                  |
+| pg_statsinfo.textlog_line_prefix           | '%t %p '                                   | A printf-style string that is output at the beginning of each textlog line. [(*2)](#2_configprefix-format)                                                                                                                                                                                                                                                                |
+| pg_statsinfo.syslog_line_prefix            | '%t %p '                                   | A printf-style string that is output at the beginning of each syslog line. [(*2)](#2_configprefix-format) Note that timestamp and process ID in syslog are them of pg_statsinfo daemon, not of original ones. You need to add %t and %p to preserve the original values.                                                                                                  |
 | pg_statsinfo.textlog_permission            | 600                                        | Permission mode for textlog file.                                                                                                                                                                                                                                                                                                               |
 | pg_statsinfo.textlog_nologging_users       | -                                          | Exclude log lines of these users separated by commas from text log .                                                                                                                                                                                                                                                                            |
-| pg_statsinfo.repolog_min_messages          | warning                                    | Minimum message levels for repository log [(*1)](#configMessage-Levels). <br> Log accumulation is recommended to be disabled when the repository is located on the same instance as observed database.                                                                                                                                                                   |
+| pg_statsinfo.repolog_min_messages          | warning                                    | Minimum message levels for repository log [(*1)](#1_configmessage-levels). <br> Log accumulation is recommended to be disabled when the repository is located on the same instance as observed database.                                                                                                                                                                   |
 | pg_statsinfo.repolog_nologging_users       | -                                          | Exclude log lines of these users separated by commas from repository log.                                                                                                                                                                                                                                                                       |
 | pg_statsinfo.repolog_buffer                | 10000                                      | Since repository logs are sent to repository every 10 seconds by default, pg_statsinfo needs to buffer logs for the intervals. Additionally, this buffer is expected to absorb a transient burst of log entries which might retard storing them. Log entries which are run over this buffer are simply dropped off.                             |
 | pg_statsinfo.repolog_interval              | 10s                                        | Repository logs are written at intervals of this value.                                                                                                                                                                                                                                                                                         |
-| pg_statsinfo.sampling_interval             | 5s                                         | Sampling is a process collecting some additional information such like session states that is performed several times for a snapshot interval. This value should be far smaller than the snapshot interval [(*3)](#configTime-Format)                                                                                                                                 |
-| pg_statsinfo.snapshot_interval             | 10min                                      | snapshot interval [(*3)](#configTime-Format)                                                                                                                                                                                                                                                                                                                          |
+| pg_statsinfo.sampling_interval             | 5s                                         | Sampling is a process collecting some additional information such like session states that is performed several times for a snapshot interval. This value should be far smaller than the snapshot interval [(*3)](#3_configtime-format)                                                                                                                                 |
+| pg_statsinfo.snapshot_interval             | 10min                                      | snapshot interval [(*3)](#3_configtime-format)                                                                                                                                                                                                                                                                                                                          |
 | pg_statsinfo.excluded_dbnames              | 'template0, template1'                     | Exclude databases listed here from monitoring.                                                                                                                                                                                                                                                                                                  |
 | pg_statsinfo.excluded_schemas              | 'pg_catalog, pg_toast, information_schema' | Exclude schemas listed here from monitoring.                                                                                                                                                                                                                                                                                                    |
-| pg_statsinfo.repository_server             | 'dbname=postgres'                          | Connection string to connect the repository [(*4)](#configConnection-String). Password prompt must be avoided.                                                                                                                                                                                                                                                              |
+| pg_statsinfo.repository_server             | 'dbname=postgres'                          | Connection string to connect the repository [(*4)](#4_configconnection-string). Password prompt must be avoided.                                                                                                                                                                                                                                                              |
 | pg_statsinfo.adjust_log_level              | off                                        | Enables or disables log level altering feature.                                                                                                                                                                                                                                                                                                 |
-| pg_statsinfo.adjust_log_info               | -                                          | A comma-separated list of SQLSTATE codes[(*5)](#configSQLSTATE) specifying messages to change loglevel to INFO.                                                                                                                                                                                                                                                |
+| pg_statsinfo.adjust_log_info               | -                                          | A comma-separated list of SQLSTATE codes[(*5)](#5_configsqlstate) specifying messages to change loglevel to INFO.                                                                                                                                                                                                                                                |
 | pg_statsinfo.adjust_log_notice             | -                                          | Ditto but changes to NOTICE.                                                                                                                                                                                                                                                                                                                    |
 | pg_statsinfo.adjust_log_warning            | -                                          | Ditto but changes to WARNING.                                                                                                                                                                                                                                                                                                                   |
 | pg_statsinfo.adjust_log_error              | -                                          | Ditto but changes to ERROR.                                                                                                                                                                                                                                                                                                                     |
@@ -1036,20 +1034,20 @@ optional parameters
 | pg_statsinfo.long_transaction_max | 10                                          | Maximum number of collected records of long transaction information. Restarting PostgreSQL is needed if this parameter has been changed.  |
 | pg_statsinfo.controlfile_fsync_interval    | 1min                                       | Interval to sync pg_statsinfo's control file.                                                                                                                                                                                                                                                                                                   |
 | pg_statsinfo.enable_alert                  | off                                         | Off disables all alerts for this instance.                                                                                                                                                                                                                                                                                                      |
-| pg_statsinfo.target_server                 | -                                          | Connection string for the observed instance. [(*4)](# Config:Connection-String) pg_statsinfo requires a connection to the observed instance to collect status values. By default, the connection is made to the default database using OS username. This parameter offers more flexible connection settings. Make sure to use a superuser of the database for the connection. |
+| pg_statsinfo.target_server                 | -                                          | Connection string for the observed instance. [(*4)](#4_configconnection-string) pg_statsinfo requires a connection to the observed instance to collect status values. By default, the connection is made to the default database using OS username. This parameter offers more flexible connection settings. Make sure to use a superuser of the database for the connection. |
 | pg_statsinfo.rusage_max                   | 5000                                          | Maximum number of entries for resource usage of each queries. It's recommended to set the same value as pg_stat_statements.max. Restart of PostgreSQL is required to change this parameter. |
 | pg_statsinfo.rusage_track                 | on                                          | Enable or disable track resource usage of each queries. |
-| pg_statsinfo.rusage_track_utility         | off                                          | Enable or disable track resource usage of utility commands such like COPY.This paramter works when rusage_track is set to on.[(*6)](#configrusage_track_utility) |
+| pg_statsinfo.rusage_track_utility         | off                                          | Enable or disable track resource usage of utility commands such like COPY.This paramter works when rusage_track is set to on.[(*6)](#6_configrusage_track_utility) |
 | pg_statsinfo.rusage_track_planning         | off                                          | Enable or disable track resource usage of planning phase of each queries.This paramter works when rusage_track is set to on. |
 | pg_statsinfo.rusage_save         | on                                          | Enable or disable save resource usage of each queries. When it's set to on, resource info could be kept across PostgreSQL stops and starts. |
 | pg_statsinfo.wait_sampling_max         | 25000                                          | Maximum number of entries for wait events. It's recommended to set the same value as pg_stat_statements.max * 10. Restart of PostgreSQL is required to change this parameter.  |
 | pg_statsinfo.wait_sampling_queries         | on                                          | Enable or disable add queryid to each wait events. |
 | pg_statsinfo.wait_sampling_save         | on                                          | Enable or disable save wait events. When it's set to on, wait events info could be kept across PostgreSQL stops and starts. |
-| pg_statsinfo.wait_sampling_interval         | 10ms                                          | Period for collecting wat events. (milliseconds) [(*8)](#configTime-Format-Millisecond) |
-| pg_statsinfo.collect_column         | on                                          | Enable or disable collect column info at retrieving a snapshot. When it's set to off, column information will not be collected and the snapshot size can be reduced, but some information will not be reported.[(*7)](#configitems-that-cannot-be-reported)  |
-| pg_statsinfo.collect_index         | on                                          | Enable or disable collect index info at retrieving a snapshot. When it's set to off, index information will not be collected and the snapshot size can be reduced, but some information will not be reported.[(*7)](#configitems-that-cannot-be-reported)  |
+| pg_statsinfo.wait_sampling_interval         | 10ms                                          | Period for collecting wat events. (milliseconds) [(*7)](#7_configtime-format-millisecond) |
+| pg_statsinfo.collect_column         | on                                          | Enable or disable collect column info at retrieving a snapshot. When it's set to off, column information will not be collected and the snapshot size can be reduced, but some information will not be reported.[(*8)](#8_configitems-that-cannot-be-reported)  |
+| pg_statsinfo.collect_index         | on                                          | Enable or disable collect index info at retrieving a snapshot. When it's set to off, index information will not be collected and the snapshot size can be reduced, but some information will not be reported.[(*8)](#8_configitems-that-cannot-be-reported)  |
 
-  - ##### Config:Message Levels  
+  - ##### 1_Config:Message Levels  
     The following values are available for a message level. Messages
     with the specified level or more severe level are recorded in the
     logs. "disable" discards all log entries. Severity order is the same
@@ -1058,16 +1056,16 @@ optional parameters
     except additional levels "disable", "alert" and "debug". That is,
     disable \> alert \> panic \> fatal \> log \> error \> warning \>
     notice \> info \> debug
-  - ##### Config:Prefix Format  
+  - ##### 2_Config:Prefix Format  
     Same format with configuration parameter
     [log_line_prefix](http://www.postgresql.org/docs/14/static/runtime-config-logging.html#GUC-LOG-LINE-PREFIX).
     Note that log_line_prefix itself is ignored when pg_statsinfo is
     enabled.
-  - ##### Config:Time Format  
+  - ##### 3_Config:Time Format  
     Available units are d (day), h (hour), min (minute), and s (second).
     If not suffixed by any unit, the value will be interpreted in
     seconds.
-  - ##### Config:Connection String  
+  - ##### 4_Config:Connection String  
     A keyword/value style connection string. For example,
     'hostaddr=127.0.0.1 port=5432 dbname=mydb user=postgres'. See also
     PQconnectdb in "[Database Connection Control
@@ -1083,19 +1081,19 @@ optional parameters
     ["Parameter
     Keywords"](https://www.postgresql.org/docs/14/static/libpq-connect.html#LIBPQ-PARAMKEYWORDS)
     for the details.
-  - ##### Config:SQLSTATE  
+  - ##### 5_Config:SQLSTATE  
     An SQLSTATE is a five-digit code looks like '42P01' defined in the
     SQL standard. Multiple SQLSTATE codes can be specified here by
     separating with commas like '42P01,42P02'.
-  - ##### Config:rusage_track_utility
+  - ##### 6_Config:rusage_track_utility
     If enable pg_stat_statements by setting it in shared_preload_libraries and want to enable this parameter, please specify pg_stat_statements first (on the left side), as 'pg_stat_statements, pg_statsinfo'. Otherwise, the WARINING log will be recorded and rusage_track_utility will be forced to be set to off.
-  - ##### Config:Items that cannot be reported
-    If collect_column is turned off, all items in "Correlation" in "Notable Tables", "Logical Pages" and "Logical Page Ratio (%)" in "Low Density Tables" in "Notable Tables", and "Columns" in "Tables" in "Schema Information" are not able to be reported.
-    If collect_index is turned off, all items in "Correlation" in "Notable Tables" and all items in "Indexes" in "Schema Information" will not be able to be reported.
-  - ##### Config:Time Format Millisecond
+  - ##### 7_Config:Time Format Millisecond
     Available units are d (day), h (hour), min (minute), s (second), and ms (millisecond).
     If not suffixed by any unit, the value will be interpreted in
     milliseconds.
+  - ##### 8_Config:Items that cannot be reported
+    If collect_column is turned off, all items in "Correlation" in "Notable Tables", "Logical Pages" and "Logical Page Ratio (%)" in "Low Density Tables" in "Notable Tables", and "Columns" in "Tables" in "Schema Information" are not able to be reported.
+    If collect_index is turned off, all items in "Correlation" in "Notable Tables" and all items in "Indexes" in "Schema Information" will not be able to be reported.
 
 #### Reloading configuration for pg_statsinfo
 
