@@ -167,6 +167,9 @@ parse_autovacuum(const char *message, const char *timestamp)
 		}
 		else
 		{
+			/* Buffer size for temporarily saving the index information list */
+			long len_index_buf = strlen(str_optional);
+
 			char *tok = strtok(str_optional, "\n");
 			char *str_index_scan_ptn;
 			
@@ -200,11 +203,11 @@ parse_autovacuum(const char *message, const char *timestamp)
 			}
 
 			/* Re-parse indexes output separatedly. */
-			index_names             = pgut_malloc( strlen(str_optional) / 2 );
-			index_pages_total       = pgut_malloc( strlen(str_optional) / 4 );
-			index_pages_new_del     = pgut_malloc( strlen(str_optional) / 4 );
-			index_pgaes_current_del = pgut_malloc( strlen(str_optional) / 4 );
-			index_pages_reusable    = pgut_malloc( strlen(str_optional) / 4 );
+			index_names             = pgut_malloc( len_index_buf );
+			index_pages_total       = pgut_malloc( len_index_buf );
+			index_pages_new_del     = pgut_malloc( len_index_buf );
+			index_pgaes_current_del = pgut_malloc( len_index_buf );
+			index_pages_reusable    = pgut_malloc( len_index_buf );
 			strcpy(index_names,            "{");
 			strcpy(index_pages_total,      "{");
 			strcpy(index_pages_new_del,    "{");
