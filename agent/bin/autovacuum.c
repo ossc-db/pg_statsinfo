@@ -167,8 +167,12 @@ parse_autovacuum(const char *message, const char *timestamp)
 		}
 		else
 		{
-			/* Buffer size for temporarily saving the index information list */
-			long len_index_buf = strlen(str_optional);
+			/*
+			 * Buffer size for temporarily saving the index information list.
+			 * We need to know the total length of the log lines before splitting up.
+			 * This is used to allocate temporary buffers.
+			 */
+			long buf_len = strlen(str_optional);
 
 			char *tok = strtok(str_optional, "\n");
 			char *str_index_scan_ptn;
@@ -202,12 +206,17 @@ parse_autovacuum(const char *message, const char *timestamp)
 					index_scan = lappend( index_scan, NULL );
 			}
 
-			/* Re-parse indexes output separatedly. */
-			index_names             = pgut_malloc( len_index_buf );
-			index_pages_total       = pgut_malloc( len_index_buf );
-			index_pages_new_del     = pgut_malloc( len_index_buf );
-			index_pgaes_current_del = pgut_malloc( len_index_buf );
-			index_pages_reusable    = pgut_malloc( len_index_buf );
+			/*
+			 * Re-parse indexes output separatedly. 
+			 *
+			 * These buffers are apparently over-sized, but we don't bother reducing them. 
+			 * They are at most 1kB or so and have very short life times.
+			 */
+			index_names             = pgut_malloc( buf_len );
+			index_pages_total       = pgut_malloc( buf_len );
+			index_pages_new_del     = pgut_malloc( buf_len );
+			index_pgaes_current_del = pgut_malloc( buf_len );
+			index_pages_reusable    = pgut_malloc( buf_len );
 			strcpy(index_names,            "{");
 			strcpy(index_pages_total,      "{");
 			strcpy(index_pages_new_del,    "{");
