@@ -350,6 +350,7 @@ extern Datum PGUT_EXPORT statsinfo_meminfo(PG_FUNCTION_ARGS);
 
 extern PGUT_EXPORT void	_PG_init(void);
 extern PGUT_EXPORT void	_PG_fini(void);
+extern PGUT_EXPORT void	request_last_xact_activity(void);
 extern PGUT_EXPORT void	init_last_xact_activity(void);
 extern PGUT_EXPORT void	fini_last_xact_activity(void);
 extern PGUT_EXPORT void	init_wait_sampling(void);
@@ -496,10 +497,12 @@ static bool check_maintenance_time(char **newval, void **extra, GucSource source
 static void pg_statsinfo_emit_log_hook(ErrorData *edata);
 static bool is_log_level_output(int elevel, int log_min_level);
 static emit_log_hook_type	prev_emit_log_hook = NULL;
+static void pg_statsinfo_shmem_request_hook(void);
 static void pg_statsinfo_shmem_startup_hook(void);
 static void silShmemInit(void);
 static Size silShmemSize(void);
 static void lookup_sil_state(void);
+static shmem_request_hook_type	prev_shmem_request_hook = NULL;
 static shmem_startup_hook_type	prev_shmem_startup_hook = NULL;
 
 static Activity		 activity = { 0, 0, 0, 0, 0, 0 };
@@ -1793,20 +1796,17 @@ _PG_init(void)
 						PGC_POSTMASTER, PGC_S_OVERRIDE);
 #endif /* ADJUST_NON_CRITICAL_SETTINGS */
 
-	/* Install xact_last_activity */
-	init_last_xact_activity();
-	/* Install wait_sampling */
-	init_wait_sampling();
-
 	/* Install emit_log_hook */
 	TAKE_HOOK(emit_log, pg_statsinfo_emit_log_hook);
 
 	/* Request additional shared resources */
-	RequestAddinShmemSpace(silShmemSize());
-	RequestNamedLWLockTranche("pg_statsinfo", 1);
+	TAKE_HOOK(shmem_request, pg_statsinfo_shmem_request_hook);
 
 	/* Install shmem_startup_hook */
 	TAKE_HOOK(shmem_startup, pg_statsinfo_shmem_startup_hook);
+
+	/* Install xact_last_activity */
+	init_last_xact_activity();
 
 	/*
 	 * spawn pg_statsinfo launcher process if the first call
@@ -1829,6 +1829,8 @@ _PG_fini(void)
 	RESTORE_HOOK(emit_log);
 	/* Uninstall shmem_startup_hook */
 	RESTORE_HOOK(shmem_startup);
+	/* Uninstall shmem_request_hook */
+	RESTORE_HOOK(shmem_request);
 }
 
 /*
@@ -4280,6 +4282,27 @@ is_log_level_output(int elevel, int log_min_level)
 		return true;
 
 	return false;
+}
+
+/*
+ * pg_statsinfo_shmem_request_hook - allocate or attach to shared memory
+ */
+static void
+pg_statsinfo_shmem_request_hook(void)
+{
+	if (prev_shmem_request_hook)
+		prev_shmem_request_hook();
+
+	/* Install wait_sampling */
+	init_wait_sampling();
+
+	/* Install last_xact_activity */
+	request_last_xact_activity();
+
+	RequestAddinShmemSpace(silShmemSize());
+	RequestNamedLWLockTranche("pg_statsinfo", 1);
+
+	return;
 }
 
 /*
