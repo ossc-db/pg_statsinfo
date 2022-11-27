@@ -348,15 +348,14 @@ CREATE TABLE statsrepo.autovacuum
 	index_scans				integer,
 	page_removed			bigint,
 	page_remain				bigint,
-	frozen_skipped_pages	bigint,
 	tup_removed				bigint,
 	tup_remain				bigint,
 	tup_dead				bigint,
+	read_rate				double precision,
+	write_rate				double precision,
 	page_hit				bigint,
 	page_miss				bigint,
 	page_dirty				bigint,
-	read_rate				double precision,
-	write_rate				double precision,
 	wal_records				bigint,
 	wal_page_images			bigint,
 	wal_bytes				bigint,
@@ -840,7 +839,7 @@ LANGUAGE sql;
 
 -- get_version() - version of statsrepo schema
 CREATE FUNCTION statsrepo.get_version() RETURNS text AS
-'SELECT CAST(''140000'' AS TEXT)'
+'SELECT CAST(''150000'' AS TEXT)'
 LANGUAGE sql IMMUTABLE;
 
 -- tps() - transaction per seconds
