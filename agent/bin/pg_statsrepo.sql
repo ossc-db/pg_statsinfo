@@ -287,6 +287,8 @@ CREATE TABLE statsrepo.statement
 	temp_blks_written	bigint,
 	blk_read_time		double precision,
 	blk_write_time		double precision,
+	temp_blk_read_time	double precision,
+	temp_blk_write_time	double precision,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE,
 	FOREIGN KEY (snapid, dbid) REFERENCES statsrepo.database (snapid, dbid)
 );

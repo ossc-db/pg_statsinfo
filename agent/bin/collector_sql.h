@@ -102,7 +102,9 @@ SELECT \
 	s.temp_blks_read, \
 	s.temp_blks_written, \
 	s.blk_read_time, \
-	s.blk_write_time \
+	s.blk_write_time, \
+	s.temp_blk_read_time, \
+	s.temp_blk_write_time \
 FROM \
 	pg_stat_statements s \
 	LEFT JOIN pg_roles r ON r.oid = s.userid \
