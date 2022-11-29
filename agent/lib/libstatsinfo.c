@@ -1750,7 +1750,7 @@ _PG_init(void)
 							NULL,
 							NULL);
 
-	EmitWarningsOnPlaceholders("pg_statsinfo");
+	MarkGUCPrefixReserved("pg_statsinfo");
 
 	if (IsUnderPostmaster)
 		return;
