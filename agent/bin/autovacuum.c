@@ -8,9 +8,9 @@
 
 #define SQL_INSERT_AUTOVACUUM "\
 INSERT INTO statsrepo.autovacuum VALUES \
-($1, $2::timestamptz - interval '1sec' * $21, \
+($1, $2::timestamptz - interval '1sec' * $23, \
  $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, \
- $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)" 
+ $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38)" 
 
 #define SQL_INSERT_AUTOANALYZE "\
 INSERT INTO statsrepo.autoanalyze VALUES \
@@ -535,7 +535,7 @@ Autovacuum_free(AutovacuumLog *av)
 static bool
 Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 {
-	const char	   *params[31];
+	const char	   *params[38];
 	int				idx_offset = 0;
 
 	elog(DEBUG2, "write (autovacuum)");
@@ -552,59 +552,57 @@ Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 	params[5] = list_nth(av->params, 5);	/* index_scans */
 	params[6] = list_nth(av->params, 6);	/* page_removed */
 	params[7] = list_nth(av->params, 7);	/* page_remain */
-	params[8] = list_nth(av->params, 10);	/* tup_removed */
-	params[9] = list_nth(av->params, 11);	/* tup_remain */
-	params[10] = list_nth(av->params, 12);	/* tup_dead */
-	params[11] = list_nth(av->params, 17);	/* read_rate */
-	params[12] = list_nth(av->params, 19);	/* write_rate */
-	params[13] = list_nth(av->params, 21);	/* page_hit */
-	params[14] = list_nth(av->params, 22);	/* page_miss */
-	params[15] = list_nth(av->params, 23);	/* page_dirty */
-	params[16] = list_nth(av->params, 24);	/* wal_records */
-	params[17] = list_nth(av->params, 25);	/* wal_page_images */
-	params[18] = list_nth(av->params, 26);	/* wal_bytes */
+	params[8] = list_nth(av->params, 8);	/* tbL_scan_page */
+	params[9] = list_nth(av->params, 9);	/* tbL_scan_page_ratio */
+	params[10] = list_nth(av->params, 10);	/* tup_removed */
+	params[11] = list_nth(av->params, 11);	/* tup_remain */
+	params[12] = list_nth(av->params, 12);	/* tup_dead */
+	params[13] = list_nth(av->params, 14);	/* removable_cutoff */
+	params[14] = list_nth(av->params, 17);	/* read_rate */
+	params[15] = list_nth(av->params, 19);	/* write_rate */
+	params[16] = list_nth(av->params, 21);	/* page_hit */
+	params[17] = list_nth(av->params, 22);	/* page_miss */
+	params[18] = list_nth(av->params, 23);	/* page_dirty */
+	params[19] = list_nth(av->params, 24);	/* wal_records */
+	params[20] = list_nth(av->params, 25);	/* wal_page_images */
+	params[21] = list_nth(av->params, 26);	/* wal_bytes */
 
 	/* Index offset in params : rusage */
 	idx_offset = NUM_AUTOVACUUM;
-	params[19] = list_nth(av->params, idx_offset + 2);	/* duration */
+	params[22] = list_nth(av->params, idx_offset + 2);	/* duration */
 
 	/* Index offset in params : tuples missed */
-	/*
-	 * idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE;
-	 * TODO: does not write anything yet.
-	 */
+	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE;
+	params[23] = list_nth(av->params, idx_offset + 0);	/* tup_miss_dead */
+	params[24] = list_nth(av->params, idx_offset + 1);	/* tup_miss_dead_pages */
 
 	/* Index offset in params : relfrozenxid */
-	/*
-	 * idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS;
-	 * TODO: does not write anything yet.
-	 */
+	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS;
+	params[25] = list_nth(av->params, idx_offset + 0);	/* new_relfrozenxid */
 
 	/* Index offset in params : relminmxid */
-	/*
-	 * idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID;
-	 * TODO: does not write anything yet.
-	 */
+	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID;
+	params[26] = list_nth(av->params, idx_offset + 1);	/* new_relminmxid */
 
 	/* Index offset in params : index scan */
 	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID + NUM_MINMXID;
-	params[20] = list_nth(av->params, idx_offset + 0);	/* index_scan_ptn */
-	params[21] = list_nth(av->params, idx_offset + 1);	/* tbl_scan_pages */
-	params[22] = list_nth(av->params, idx_offset + 2);	/* tbl_scan_pages_ratio */
-	params[23] = list_nth(av->params, idx_offset + 4);	/* dead_lp */
+	params[27] = list_nth(av->params, idx_offset + 0);	/* index_scan_ptn */
+	params[28] = list_nth(av->params, idx_offset + 1);	/* index_scan_pages */
+	params[29] = list_nth(av->params, idx_offset + 2);	/* index_scan_pages_ratio */
+	params[30] = list_nth(av->params, idx_offset + 4);	/* dead_lp */
 
 	/* Index offset in params : indexes */
 	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID + NUM_MINMXID + NUM_INDEX_SCAN;
-	params[24] = list_nth(av->params, idx_offset + 0);	/* index_names */
-	params[25] = list_nth(av->params, idx_offset + 1);	/* index_pages_total */
-	params[26] = list_nth(av->params, idx_offset + 2);	/* index_pages_new_del */
-	params[27] = list_nth(av->params, idx_offset + 3);	/* index_pgaes_current_del */
-	params[28] = list_nth(av->params, idx_offset + 4);	/* index_pages_reusable */
+	params[31] = list_nth(av->params, idx_offset + 0);	/* index_names */
+	params[32] = list_nth(av->params, idx_offset + 1);	/* index_pages_total */
+	params[33] = list_nth(av->params, idx_offset + 2);	/* index_pages_new_del */
+	params[34] = list_nth(av->params, idx_offset + 3);	/* index_pgaes_current_del */
+	params[35] = list_nth(av->params, idx_offset + 4);	/* index_pages_reusable */
 
 	/* Index offset in params : I/O timings */
 	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID + NUM_MINMXID + NUM_INDEX_SCAN + NUM_INDEXES;
-	params[29] = list_nth(av->params, idx_offset + 0);	/* io_timings_read */
-	params[30] = list_nth(av->params, idx_offset + 1);	/* io_timings_write */
+	params[36] = list_nth(av->params, idx_offset + 0);	/* io_timings_read */
+	params[37] = list_nth(av->params, idx_offset + 1);	/* io_timings_write */
 
 	return pgut_command(conn, SQL_INSERT_AUTOVACUUM,
 						lengthof(params), params) == PGRES_COMMAND_OK;

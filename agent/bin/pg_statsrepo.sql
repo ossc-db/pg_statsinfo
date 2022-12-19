@@ -350,9 +350,12 @@ CREATE TABLE statsrepo.autovacuum
 	index_scans				integer,
 	page_removed			bigint,
 	page_remain				bigint,
+	tbL_scan_pages			bigint,
+	tbL_scan_pages_ratio	double precision,
 	tup_removed				bigint,
 	tup_remain				bigint,
 	tup_dead				bigint,
+	removable_cutoff		xid8,
 	read_rate				double precision,
 	write_rate				double precision,
 	page_hit				bigint,
@@ -362,9 +365,13 @@ CREATE TABLE statsrepo.autovacuum
 	wal_page_images			bigint,
 	wal_bytes				bigint,
 	duration				real,
+	tup_miss_dead			bigint,
+	tup_miss_dead_pages		bigint,
+	new_relfrozenxid		xid8,
+	new_relminmxid			xid8,
 	index_scan_ptn			integer,
-	tbl_scan_pages			bigint,
-	tbl_scan_pages_ratio	double precision,
+	index_scan_pages		bigint,
+	index_scan_pages_ratio	double precision,
 	dead_lp					bigint,
 	index_names             text[],
 	index_pages_total       bigint[],
@@ -2386,25 +2393,32 @@ LANGUAGE sql;
 
 -- generate information that corresponds to 'Autovacuum Activity'
 CREATE FUNCTION statsrepo.get_autovacuum_activity(
-	IN snapid_begin			bigint,
-	IN snapid_end			bigint,
-	OUT datname				text,
-	OUT nspname				text,
-	OUT relname				text,
-	OUT "count"				bigint,
-	OUT index_scanned		bigint,
-	OUT index_skipped		bigint,
-	OUT avg_tup_removed		numeric,
-	OUT avg_tup_remain		numeric,
-	OUT avg_tup_dead		numeric,
-	OUT scan_pages			numeric,
-	OUT scan_pages_ratio	numeric,
-	OUT removed_lp			numeric,
-	OUT dead_lp				numeric,
-	OUT avg_index_scans		numeric,
-	OUT avg_duration		numeric,
-	OUT max_duration		numeric,
-	OUT cancel				bigint
+	IN snapid_begin				bigint,
+	IN snapid_end				bigint,
+	OUT datname					text,
+	OUT nspname					text,
+	OUT relname					text,
+	OUT "count"					bigint,
+	OUT index_scanned			bigint,
+	OUT index_skipped			bigint,
+	OUT avg_tup_removed			numeric,
+	OUT avg_tup_remain			numeric,
+	OUT avg_tup_dead			numeric,
+	OUT avg_tup_miss_dead		numeric,
+	OUT avg_tup_miss_dead_pages	numeric,
+	OUT tbl_scan_pages			numeric,
+	OUT tbL_scan_pages_ratio	numeric,
+	OUT index_scan_pages		numeric,
+	OUT index_scan_pages_ratio	numeric,
+	OUT removed_lp				numeric,
+	OUT dead_lp					numeric,
+	OUT avg_index_scans			numeric,
+	OUT avg_duration			numeric,
+	OUT max_duration			numeric,
+	OUT cancel					bigint,
+	OUT max_cutoff_xid			bigint,
+	OUT max_frozen_xid			bigint,
+	OUT max_relmin_mxid			bigint
 ) RETURNS SETOF record AS
 $$
 	WITH
@@ -2420,12 +2434,19 @@ $$
 			v.tup_removed,
 			v.tup_remain,
 			v.tup_dead,
+			v.tup_miss_dead,
+			v.tup_miss_dead_pages,
 			v.index_scans,
 			v.duration,
 			v.index_scan_ptn,
 			v.tbl_scan_pages,
 			v.tbl_scan_pages_ratio,
-			v.dead_lp
+			v.index_scan_pages,
+			v.index_scan_pages_ratio,
+			v.dead_lp,
+			v.removable_cutoff::text::numeric,
+			v.new_relfrozenxid::text::numeric,
+			v.new_relminmxid::text::numeric
 		 FROM
 			statsrepo.autovacuum v,
 			b, e, i
@@ -2459,9 +2480,16 @@ $$
 			pg_catalog.avg(v.tup_removed) AS avg_tup_removed,
 			pg_catalog.avg(v.tup_remain) AS avg_tup_remain,
 			pg_catalog.avg(v.tup_dead) AS avg_tup_dead,
+			pg_catalog.avg(v.tup_miss_dead) AS avg_tup_miss_dead,
+			pg_catalog.avg(v.tup_miss_dead_pages) AS avg_tup_miss_dead_pages,
+			pg_catalog.avg(v.tbl_scan_pages) AS tbl_scan_pages,
+			pg_catalog.avg(v.tbl_scan_pages_ratio) AS tbl_scan_pages_ratio,
 			pg_catalog.avg(v.index_scans) AS avg_index_scans,
 			pg_catalog.avg(v.duration) AS avg_duration,
-			pg_catalog.max(v.duration) AS max_duration
+			pg_catalog.max(v.duration) AS max_duration,
+			pg_catalog.max(v.removable_cutoff) AS max_cutoff_xid,
+			pg_catalog.max(v.new_relfrozenxid) AS max_frozen_xid,
+			pg_catalog.max(v.new_relminmxid) AS max_relmin_mxid
 		FROM
 			vall v
 		GROUP BY
@@ -2474,13 +2502,13 @@ $$
 			v.schema,
 			v.table,
 			pg_catalog.count(*) AS index_scan,
-			pg_catalog.avg(v.tbl_scan_pages)       AS tbl_scan_pages,
-			pg_catalog.avg(v.tbl_scan_pages_ratio) AS tbl_scan_pages_ratio,
-			pg_catalog.avg(v.dead_lp) AS remain_lp
+			pg_catalog.avg(v.index_scan_pages)       AS index_scan_pages,
+			pg_catalog.avg(v.index_scan_pages_ratio) AS index_scan_pages_ratio,
+			pg_catalog.avg(v.dead_lp) AS removed_lp
 		FROM
 			vall v
 		WHERE
-			v.index_scan_ptn in (2)  --(TBD)
+			v.index_scan_ptn in (2)
 		GROUP BY
 			v.database, v.schema, v.table
 	),
@@ -2495,7 +2523,7 @@ $$
 		FROM
 			vall v
 		WHERE
-			v.index_scan_ptn in (1,3,4)  --(TBD)
+			v.index_scan_ptn in (1,3,4)
 		GROUP BY
 			v.database, v.schema, v.table
 	)
@@ -2506,17 +2534,24 @@ $$
 		COALESCE(tv.count, 0),
 		COALESCE(va.index_scan, 0),
 		COALESCE(vb.index_skip, 0),
-		pg_catalog.round(COALESCE(tv.avg_tup_removed,      0)::numeric, 3),
-		pg_catalog.round(COALESCE(tv.avg_tup_remain,       0)::numeric, 3),
-		pg_catalog.round(COALESCE(tv.avg_tup_dead,         0)::numeric, 3),
-		pg_catalog.round(COALESCE(va.tbl_scan_pages,       0)::numeric, 3),
-		pg_catalog.round(COALESCE(va.tbl_scan_pages_ratio, 0)::numeric, 3),
-		pg_catalog.round(COALESCE(va.remain_lp,            0)::numeric, 3),
-		pg_catalog.round(COALESCE(vb.dead_lp,              0)::numeric, 3),
-		pg_catalog.round(COALESCE(tv.avg_index_scans,      0)::numeric, 3),
-		pg_catalog.round(COALESCE(tv.avg_duration,         0)::numeric, 3),
-		pg_catalog.round(COALESCE(tv.max_duration,         0)::numeric, 3),
-		COALESCE(tc.count, 0)
+		pg_catalog.round(COALESCE(tv.avg_tup_removed,         0)::numeric, 1),
+		pg_catalog.round(COALESCE(tv.avg_tup_remain,          0)::numeric, 1),
+		pg_catalog.round(COALESCE(tv.avg_tup_dead,            0)::numeric, 1),
+		pg_catalog.round(COALESCE(tv.avg_tup_miss_dead,       0)::numeric, 1),
+		pg_catalog.round(COALESCE(tv.avg_tup_miss_dead_pages, 0)::numeric, 1),
+		pg_catalog.round(COALESCE(tv.tbl_scan_pages,          0)::numeric, 1),
+		pg_catalog.round(COALESCE(tv.tbl_scan_pages_ratio,    0)::numeric, 1),
+		pg_catalog.round(COALESCE(va.index_scan_pages,        0)::numeric, 1),
+		pg_catalog.round(COALESCE(va.index_scan_pages_ratio,  0)::numeric, 1),
+		pg_catalog.round(COALESCE(va.removed_lp,              0)::numeric, 1),
+		pg_catalog.round(COALESCE(vb.dead_lp,                 0)::numeric, 1),
+		pg_catalog.round(COALESCE(tv.avg_index_scans,         0)::numeric, 1),
+		pg_catalog.round(COALESCE(tv.avg_duration,            0)::numeric, 1),
+		pg_catalog.round(COALESCE(tv.max_duration,            0)::numeric, 1),
+		COALESCE(tc.count, 0),
+		tv.max_cutoff_xid,
+		tv.max_frozen_xid,
+		tv.max_relmin_mxid
 	FROM
 		tv
 	LEFT JOIN
@@ -2985,6 +3020,8 @@ CREATE FUNCTION statsrepo.get_query_activity_statements(
 	OUT time_per_call	numeric,
 	OUT blk_read_time	numeric,
 	OUT blk_write_time	numeric,
+	OUT tmp_blk_read_time	numeric,
+	OUT tmp_blk_write_time	numeric,
 	OUT dbid	oid,
 	OUT userid	oid,
 	OUT queryid	bigint,
@@ -3017,19 +3054,21 @@ $$ LANGUAGE plpgsql;
 
 -- internal function for get_query_activity_statements()
 CREATE FUNCTION statsrepo.get_query_activity_statemets_body(
-	IN snapid_begin		bigint,
-	IN snapid_end		bigint,
-	OUT rolname			text,
-	OUT datname			name,
-	OUT query			text,
-	OUT plans			bigint,
-	OUT total_plan_time	numeric,
-	OUT time_per_plan	numeric,
-	OUT calls			bigint,
-	OUT total_exec_time	numeric,
-	OUT time_per_call	numeric,
-	OUT blk_read_time	numeric,
-	OUT blk_write_time	numeric,
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT rolname				text,
+	OUT datname				name,
+	OUT query				text,
+	OUT plans				bigint,
+	OUT total_plan_time		numeric,
+	OUT time_per_plan		numeric,
+	OUT calls				bigint,
+	OUT total_exec_time		numeric,
+	OUT time_per_call		numeric,
+	OUT blk_read_time		numeric,
+	OUT blk_write_time		numeric,
+	OUT tmp_blk_read_time	numeric,
+	OUT tmp_blk_write_time	numeric,
 	OUT dbid	oid,
 	OUT userid	oid,
 	OUT queryid	bigint,
@@ -3050,6 +3089,8 @@ $$
 			WHEN 0 THEN 0 ELSE (t1.total_exec_time / t1.calls)::numeric(1000, 3) END,
 		t1.blk_read_time::numeric(1000, 3),
 		t1.blk_write_time::numeric(1000, 3),
+		t1.tmp_blk_read_time::numeric(1000, 3),
+		t1.tmp_blk_write_time::numeric(1000, 3),
 		t1.dbid,
 		t1.userid,
 		t1.queryid,
@@ -3068,7 +3109,9 @@ $$
 			statsrepo.sub(st2.calls, st1.calls) AS calls,
 			statsrepo.sub(st2.total_exec_time, st1.total_exec_time) AS total_exec_time,
 			statsrepo.sub(st2.blk_read_time, st1.blk_read_time) AS blk_read_time,
-			statsrepo.sub(st2.blk_write_time, st1.blk_write_time) AS blk_write_time
+			statsrepo.sub(st2.blk_write_time, st1.blk_write_time) AS blk_write_time,
+			statsrepo.sub(st2.temp_blk_read_time, st1.temp_blk_read_time) AS tmp_blk_read_time,
+			statsrepo.sub(st2.temp_blk_write_time, st1.temp_blk_write_time) AS tmp_blk_write_time
 		 FROM
 		 	(SELECT
 		 		s.dbid,
