@@ -136,6 +136,8 @@ SELECT \
 	p.temp_blks_written, \
 	p.blk_read_time, \
 	p.blk_write_time, \
+	p.temp_blk_read_time, \
+	p.temp_blk_write_time, \
 	p.first_call, \
 	p.last_call \
 FROM \

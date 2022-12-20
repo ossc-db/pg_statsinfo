@@ -317,6 +317,8 @@ CREATE TABLE statsrepo.plan
 	temp_blks_written		bigint,
 	blk_read_time			double precision,
 	blk_write_time			double precision,
+	temp_blk_read_time		double precision,
+	temp_blk_write_time		double precision,
 	first_call				timestamptz,
 	last_call				timestamptz,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE,
@@ -3196,17 +3198,19 @@ LANGUAGE sql;
 
 -- generate information that corresponds to 'Query Activity (Plans)'
 CREATE FUNCTION statsrepo.get_query_activity_plans(
-	IN snapid_begin		bigint,
-	IN snapid_end		bigint,
-	OUT queryid			bigint,
-	OUT planid			bigint,
-	OUT rolname			text,
-	OUT datname			name,
-	OUT calls			bigint,
-	OUT total_time		numeric,
-	OUT time_per_call	numeric,
-	OUT blk_read_time	numeric,
-	OUT blk_write_time	numeric
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT queryid				bigint,
+	OUT planid				bigint,
+	OUT rolname				text,
+	OUT datname				name,
+	OUT calls				bigint,
+	OUT total_time			numeric,
+	OUT time_per_call		numeric,
+	OUT blk_read_time		numeric,
+	OUT blk_write_time		numeric,
+	OUT temp_blk_read_time	numeric,
+	OUT temp_blk_write_time	numeric
 ) RETURNS SETOF record AS
 $$
 	SELECT
@@ -3218,7 +3222,9 @@ $$
 		t1.total_time::Numeric(1000, 3),
 		(t1.total_time / t1.calls)::numeric(1000, 3),
 		t1.blk_read_time::numeric(1000, 3),
-		t1.blk_write_time::numeric(1000, 3)
+		t1.blk_write_time::numeric(1000, 3),
+		t1.temp_blk_read_time::numeric(1000, 3),
+		t1.temp_blk_write_time::numeric(1000, 3)
 	FROM
 		(SELECT
 			reg.queryid,
@@ -3228,7 +3234,9 @@ $$
 			statsrepo.sub(pl2.calls, pl1.calls) AS calls,
 			statsrepo.sub(pl2.total_time, pl1.total_time) AS total_time,
 			statsrepo.sub(pl2.blk_read_time, pl1.blk_read_time) AS blk_read_time,
-			statsrepo.sub(pl2.blk_write_time, pl1.blk_write_time) AS blk_write_time
+			statsrepo.sub(pl2.blk_write_time, pl1.blk_write_time) AS blk_write_time,
+			statsrepo.sub(pl2.temp_blk_read_time, pl1.temp_blk_read_time) AS temp_blk_read_time,
+			statsrepo.sub(pl2.temp_blk_write_time, pl1.temp_blk_write_time) AS temp_blk_write_time
 		 FROM
 			(SELECT
 				p.queryid,
@@ -3272,23 +3280,25 @@ LANGUAGE sql;
 
 -- generate information that corresponds to 'Query Activity (Plans)' for pg_stats_reporter
 CREATE FUNCTION statsrepo.get_query_activity_plans_report(
-	IN snapid_begin		bigint,
-	IN snapid_end		bigint,
-	OUT queryid			bigint,
-	OUT planid			bigint,
-	OUT rolname			text,
-	OUT datname			name,
-	OUT calls			bigint,
-	OUT total_time		numeric,
-	OUT time_per_call	numeric,
-	OUT blk_read_time	numeric,
-	OUT blk_write_time	numeric,
-	OUT first_call		timestamp,
-	OUT last_call		timestamp,
-	OUT query			text,
-	OUT snapid			bigint,
-	OUT dbid			oid,
-	OUT userid			oid
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT queryid				bigint,
+	OUT planid				bigint,
+	OUT rolname				text,
+	OUT datname				name,
+	OUT calls				bigint,
+	OUT total_time			numeric,
+	OUT time_per_call		numeric,
+	OUT blk_read_time		numeric,
+	OUT blk_write_time		numeric,
+	OUT temp_blk_read_time	numeric,
+	OUT temp_blk_write_time	numeric,
+	OUT first_call			timestamp,
+	OUT last_call			timestamp,
+	OUT query				text,
+	OUT snapid				bigint,
+	OUT dbid				oid,
+	OUT userid				oid
 ) RETURNS SETOF record AS
 $$
 	SELECT
@@ -3301,6 +3311,8 @@ $$
 		(t1.total_time / t1.calls)::numeric(1000, 3),
 		t1.blk_read_time::numeric(1000, 3),
 		t1.blk_write_time::numeric(1000, 3),
+		t1.temp_blk_read_time::numeric(1000, 3),
+		t1.temp_blk_write_time::numeric(1000, 3),
 		t1.first_call::timestamp(0),
 		t1.last_call::timestamp(0),
 		t1.query,
@@ -3317,6 +3329,8 @@ $$
 			statsrepo.sub(pl2.total_time, pl1.total_time) AS total_time,
 			statsrepo.sub(pl2.blk_read_time, pl1.blk_read_time) AS blk_read_time,
 			statsrepo.sub(pl2.blk_write_time, pl1.blk_write_time) AS blk_write_time,
+			statsrepo.sub(pl2.temp_blk_read_time, pl1.temp_blk_read_time) AS temp_blk_read_time,
+			statsrepo.sub(pl2.temp_blk_write_time, pl1.temp_blk_write_time) AS temp_blk_write_time,
 			pl2.first_call,
 			pl2.last_call,
 			st.query,
