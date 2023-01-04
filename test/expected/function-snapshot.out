@@ -105,6 +105,7 @@ vacuumdb: vacuuming database "template1"
 /**--- Role information ---**/
  snapid |           role            | userid 
 --------+---------------------------+--------
+      1 | pg_checkpoint             | xxx
       1 | pg_database_owner         | xxx
       1 | pg_execute_server_program | xxx
       1 | pg_monitor                | xxx
@@ -118,7 +119,7 @@ vacuumdb: vacuuming database "template1"
       1 | pg_write_server_files     | xxx
       1 | postgres                  | xxx
       1 | user01                    | xxx
-(13 rows)
+(14 rows)
 
 /**--- GUC setting ---**/
  snapid |       name        | setting | unit |       source       
@@ -186,15 +187,15 @@ DROP TABLE
 
 /**--- Statistics of query ---**/
 /***-- pg_stat_statements is not installed --***/
- snapid | dbid | userid | queryid | query | plans | total_plan_time | calls | total_exec_time | rows | shared_blks_hit | shared_blks_read | shared_blks_dirtied | shared_blks_written | local_blks_hit | local_blks_read | local_blks_dirtied | local_blks_written | temp_blks_read | temp_blks_written | blk_read_time | blk_write_time 
---------+------+--------+---------+-------+-------+-----------------+-------+-----------------+------+-----------------+------------------+---------------------+---------------------+----------------+-----------------+--------------------+--------------------+----------------+-------------------+---------------+----------------
+ snapid | dbid | userid | queryid | query | plans | total_plan_time | calls | total_exec_time | rows | shared_blks_hit | shared_blks_read | shared_blks_dirtied | shared_blks_written | local_blks_hit | local_blks_read | local_blks_dirtied | local_blks_written | temp_blks_read | temp_blks_written | blk_read_time | blk_write_time | temp_blk_read_time | temp_blk_write_time 
+--------+------+--------+---------+-------+-------+-----------------+-------+-----------------+------+-----------------+------------------+---------------------+---------------------+----------------+-----------------+--------------------+--------------------+----------------+-------------------+---------------+----------------+--------------------+---------------------
 (0 rows)
 
 /***-- pg_stat_statements is installed --***/
 CREATE EXTENSION
- snapid | database |  role  |             query              | plans | total_plan_time | calls | total_exec_time | rows | shared_blks_hit | shared_blks_read | shared_blks_dirtied | shared_blks_written | local_blks_hit | local_blks_read | local_blks_dirtied | local_blks_written | temp_blks_read | temp_blks_written | blk_read_time | blk_write_time 
---------+----------+--------+--------------------------------+-------+-----------------+-------+-----------------+------+-----------------+------------------+---------------------+---------------------+----------------+-----------------+--------------------+--------------------+----------------+-------------------+---------------+----------------
-      8 | db01     | user01 | SELECT schema01.func01($1, $2) |     0 | xxx             |   200 | xxx             | xxx  | xxx             | xxx              | xxx                 | xxx                 | xxx            | xxx             | xxx                | xxx                | xxx            | xxx               | xxx           | xxx
+ snapid | database |  role  |             query              | plans | total_plan_time | calls | total_exec_time | rows | shared_blks_hit | shared_blks_read | shared_blks_dirtied | shared_blks_written | local_blks_hit | local_blks_read | local_blks_dirtied | local_blks_written | temp_blks_read | temp_blks_written | blk_read_time | blk_write_time | temp_blk_read_time | temp_blk_write_time 
+--------+----------+--------+--------------------------------+-------+-----------------+-------+-----------------+------+-----------------+------------------+---------------------+---------------------+----------------+-----------------+--------------------+--------------------+----------------+-------------------+---------------+----------------+--------------------+---------------------
+      8 | db01     | user01 | SELECT schema01.func01($1, $2) |     0 | xxx             |   200 | xxx             | xxx  | xxx             | xxx              | xxx                 | xxx                 | xxx            | xxx             | xxx                | xxx                | xxx            | xxx               | xxx           | xxx            | xxx                | xxx
 (1 row)
 
 /**--- Statistics of BGWriter ---**/

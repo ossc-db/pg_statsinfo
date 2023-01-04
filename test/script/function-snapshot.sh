@@ -594,7 +594,9 @@ SELECT
 	CASE WHEN s.temp_blks_read IS NOT NULL THEN 'xxx' END AS temp_blks_read,
 	CASE WHEN s.temp_blks_written IS NOT NULL THEN 'xxx' END AS temp_blks_written,
 	CASE WHEN s.blk_read_time IS NOT NULL THEN 'xxx' END AS blk_read_time,
-	CASE WHEN s.blk_write_time IS NOT NULL THEN 'xxx' END AS blk_write_time
+	CASE WHEN s.blk_write_time IS NOT NULL THEN 'xxx' END AS blk_write_time,
+	CASE WHEN s.temp_blk_read_time IS NOT NULL THEN 'xxx' END AS temp_blk_read_time,
+	CASE WHEN s.temp_blk_write_time IS NOT NULL THEN 'xxx' END AS temp_blk_write_time
 FROM
 	statsrepo.statement s,
 	statsrepo.database d,

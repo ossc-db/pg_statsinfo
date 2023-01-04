@@ -1740,44 +1740,46 @@ STATSINFO Report (host: statsinfo, port: 5432)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                        Count  Index Scanned  Index Skipped  Removed Rows   Remain Rows   Remain Dead  Scan Pages  Scan Pages Ratio  Removed Lp     Dead Lp  Index Scans      Duration  Duration(Max)  Cancels
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3              3              0     50000.000     55532.333         0.000     424.667            50.027   66574.667       0.000        1.000       0.067 s        0.080 s        0
-template1.pg_catalog.pg_statistic                1              1              0       116.000       406.000         0.000      16.000            57.140     212.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.pg_catalog.pg_statistic                 1              1              0        56.000       441.000         0.000      17.000            56.670     206.000       0.000        1.000       0.000 s        0.000 s        0
-si_db_01.pg_catalog.pg_statistic                 1              1              0        52.000       411.000         0.000      16.000            55.170     204.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.statsrepo.column_20210618               1              0              1         0.000      1069.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        0
-postgres.public.pgbench_branches                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        2
-postgres.public.pgbench_accounts                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        1
+                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
+postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
+postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
+postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
+postgres.statsrepo.column_20221219              1        0        1       0.0     1225.0        0.0      0.0      0.0     22.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           810              
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                                       Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate   Read Duration  Write Duration
 ---------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                 3239.667       1.000       1.000    0.093 MiB/s    0.093 MiB/s         0.013 s         0.000 s
-postgres.pg_catalog.pg_statistic             110.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-template1.pg_catalog.pg_statistic            105.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-si_db_01.pg_catalog.pg_statistic              90.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-postgres.statsrepo.column_20210618            82.000       2.000       3.000   34.041 MiB/s   51.062 MiB/s         0.018 s         0.000 s
+postgres.pg_catalog.pg_attribute             145.000      14.000       0.000  122.070 MiB/s    0.000 MiB/s         0.118 s         0.000 s
+postgres.public.pgbench_history              145.000       2.000       4.000    8.351 MiB/s   16.702 MiB/s         0.012 s         0.000 s
+postgres.pg_catalog.pg_statistic             105.500       1.500       3.000    9.405 MiB/s   18.810 MiB/s         0.043 s         0.000 s
+postgres.statsrepo.column_20221219            76.000       2.000       3.000   54.825 MiB/s   82.237 MiB/s         0.012 s         0.000 s
+template1.pg_catalog.pg_statistic             63.000      39.000      37.000   64.910 MiB/s   61.581 MiB/s         0.214 s         0.000 s
+postgres.public.pgbench_branches              22.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
 
 /** Vacuum WAL Statistics (Average) **/
 -----------------------------------
 Table                                        Count WAL Records    WAL FPIs   WAL bytes
 -----------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3    2055.000       0.000  612186.000
-template1.pg_catalog.pg_statistic                1      94.000       0.000   11401.000
-postgres.statsrepo.column_20210618               1      20.000       1.000    9506.000
-postgres.pg_catalog.pg_statistic                 1      62.000       0.000    4690.000
-si_db_01.pg_catalog.pg_statistic                 1      62.000       0.000    4665.000
+template1.pg_catalog.pg_statistic                1      92.000      34.000  185836.000
+postgres.pg_catalog.pg_statistic                 2      57.500       7.500   37157.500
+postgres.public.pgbench_history                  1      71.000       1.000   12515.000
+postgres.pg_catalog.pg_attribute                 1      44.000       1.000   11696.000
+postgres.statsrepo.column_20221219               1      23.000       1.000    9683.000
+postgres.public.pgbench_branches                 1       3.000       0.000     608.000
 
 /** Vacuum Index Statistics (Average) **/
 -----------------------------------
 Table                                     Index                                Count     Page Total   Page New Del  Page Curr Del     Page Reuse
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_1                          3        275.000          0.000          0.000          0.000
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_2                          3        256.667         96.333        201.000        104.667
-postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
-si_db_01.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnam_index          1         22.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnum_index          1         15.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         2          5.000          0.000          0.000          0.000
 template1.pg_catalog.pg_statistic         pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
 
 /** Analyze Statistics **/
@@ -1799,44 +1801,46 @@ STATSINFO Report (host: statsinfo, port: 5433)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                        Count  Index Scanned  Index Skipped  Removed Rows   Remain Rows   Remain Dead  Scan Pages  Scan Pages Ratio  Removed Lp     Dead Lp  Index Scans      Duration  Duration(Max)  Cancels
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3              3              0     50000.000     55532.333         0.000     424.667            50.027   66574.667       0.000        1.000       0.067 s        0.080 s        0
-template1.pg_catalog.pg_statistic                1              1              0       116.000       406.000         0.000      16.000            57.140     212.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.pg_catalog.pg_statistic                 1              1              0        56.000       441.000         0.000      17.000            56.670     206.000       0.000        1.000       0.000 s        0.000 s        0
-si_db_01.pg_catalog.pg_statistic                 1              1              0        52.000       411.000         0.000      16.000            55.170     204.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.statsrepo.column_20210618               1              0              1         0.000      1069.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        0
-postgres.public.pgbench_branches                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        2
-postgres.public.pgbench_accounts                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        1
+                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
+postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
+postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
+postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
+postgres.statsrepo.column_20221219              1        0        1       0.0     1225.0        0.0      0.0      0.0     22.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           810              
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                                       Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate   Read Duration  Write Duration
 ---------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                 3239.667       1.000       1.000    0.093 MiB/s    0.093 MiB/s         0.013 s         0.000 s
-postgres.pg_catalog.pg_statistic             110.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-template1.pg_catalog.pg_statistic            105.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-si_db_01.pg_catalog.pg_statistic              90.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-postgres.statsrepo.column_20210618            82.000       2.000       3.000   34.041 MiB/s   51.062 MiB/s         0.018 s         0.000 s
+postgres.pg_catalog.pg_attribute             145.000      14.000       0.000  122.070 MiB/s    0.000 MiB/s         0.118 s         0.000 s
+postgres.public.pgbench_history              145.000       2.000       4.000    8.351 MiB/s   16.702 MiB/s         0.012 s         0.000 s
+postgres.pg_catalog.pg_statistic             105.500       1.500       3.000    9.405 MiB/s   18.810 MiB/s         0.043 s         0.000 s
+postgres.statsrepo.column_20221219            76.000       2.000       3.000   54.825 MiB/s   82.237 MiB/s         0.012 s         0.000 s
+template1.pg_catalog.pg_statistic             63.000      39.000      37.000   64.910 MiB/s   61.581 MiB/s         0.214 s         0.000 s
+postgres.public.pgbench_branches              22.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
 
 /** Vacuum WAL Statistics (Average) **/
 -----------------------------------
 Table                                        Count WAL Records    WAL FPIs   WAL bytes
 -----------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3    2055.000       0.000  612186.000
-template1.pg_catalog.pg_statistic                1      94.000       0.000   11401.000
-postgres.statsrepo.column_20210618               1      20.000       1.000    9506.000
-postgres.pg_catalog.pg_statistic                 1      62.000       0.000    4690.000
-si_db_01.pg_catalog.pg_statistic                 1      62.000       0.000    4665.000
+template1.pg_catalog.pg_statistic                1      92.000      34.000  185836.000
+postgres.pg_catalog.pg_statistic                 2      57.500       7.500   37157.500
+postgres.public.pgbench_history                  1      71.000       1.000   12515.000
+postgres.pg_catalog.pg_attribute                 1      44.000       1.000   11696.000
+postgres.statsrepo.column_20221219               1      23.000       1.000    9683.000
+postgres.public.pgbench_branches                 1       3.000       0.000     608.000
 
 /** Vacuum Index Statistics (Average) **/
 -----------------------------------
 Table                                     Index                                Count     Page Total   Page New Del  Page Curr Del     Page Reuse
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_1                          3        275.000          0.000          0.000          0.000
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_2                          3        256.667         96.333        201.000        104.667
-postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
-si_db_01.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnam_index          1         22.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnum_index          1         15.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         2          5.000          0.000          0.000          0.000
 template1.pg_catalog.pg_statistic         pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
 
 /** Analyze Statistics **/
@@ -1858,44 +1862,46 @@ STATSINFO Report (host: statsinfo, port: 5434)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                        Count  Index Scanned  Index Skipped  Removed Rows   Remain Rows   Remain Dead  Scan Pages  Scan Pages Ratio  Removed Lp     Dead Lp  Index Scans      Duration  Duration(Max)  Cancels
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3              3              0     50000.000     55532.333         0.000     424.667            50.027   66574.667       0.000        1.000       0.067 s        0.080 s        0
-template1.pg_catalog.pg_statistic                1              1              0       116.000       406.000         0.000      16.000            57.140     212.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.pg_catalog.pg_statistic                 1              1              0        56.000       441.000         0.000      17.000            56.670     206.000       0.000        1.000       0.000 s        0.000 s        0
-si_db_01.pg_catalog.pg_statistic                 1              1              0        52.000       411.000         0.000      16.000            55.170     204.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.statsrepo.column_20210618               1              0              1         0.000      1069.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        0
-postgres.public.pgbench_branches                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        2
-postgres.public.pgbench_accounts                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        1
+                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
+postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
+postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
+postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
+postgres.statsrepo.column_20221219              1        0        1       0.0     1225.0        0.0      0.0      0.0     22.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           810              
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                                       Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate   Read Duration  Write Duration
 ---------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                 3239.667       1.000       1.000    0.093 MiB/s    0.093 MiB/s         0.013 s         0.000 s
-postgres.pg_catalog.pg_statistic             110.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-template1.pg_catalog.pg_statistic            105.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-si_db_01.pg_catalog.pg_statistic              90.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-postgres.statsrepo.column_20210618            82.000       2.000       3.000   34.041 MiB/s   51.062 MiB/s         0.018 s         0.000 s
+postgres.pg_catalog.pg_attribute             145.000      14.000       0.000  122.070 MiB/s    0.000 MiB/s         0.118 s         0.000 s
+postgres.public.pgbench_history              145.000       2.000       4.000    8.351 MiB/s   16.702 MiB/s         0.012 s         0.000 s
+postgres.pg_catalog.pg_statistic             105.500       1.500       3.000    9.405 MiB/s   18.810 MiB/s         0.043 s         0.000 s
+postgres.statsrepo.column_20221219            76.000       2.000       3.000   54.825 MiB/s   82.237 MiB/s         0.012 s         0.000 s
+template1.pg_catalog.pg_statistic             63.000      39.000      37.000   64.910 MiB/s   61.581 MiB/s         0.214 s         0.000 s
+postgres.public.pgbench_branches              22.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
 
 /** Vacuum WAL Statistics (Average) **/
 -----------------------------------
 Table                                        Count WAL Records    WAL FPIs   WAL bytes
 -----------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3    2055.000       0.000  612186.000
-template1.pg_catalog.pg_statistic                1      94.000       0.000   11401.000
-postgres.statsrepo.column_20210618               1      20.000       1.000    9506.000
-postgres.pg_catalog.pg_statistic                 1      62.000       0.000    4690.000
-si_db_01.pg_catalog.pg_statistic                 1      62.000       0.000    4665.000
+template1.pg_catalog.pg_statistic                1      92.000      34.000  185836.000
+postgres.pg_catalog.pg_statistic                 2      57.500       7.500   37157.500
+postgres.public.pgbench_history                  1      71.000       1.000   12515.000
+postgres.pg_catalog.pg_attribute                 1      44.000       1.000   11696.000
+postgres.statsrepo.column_20221219               1      23.000       1.000    9683.000
+postgres.public.pgbench_branches                 1       3.000       0.000     608.000
 
 /** Vacuum Index Statistics (Average) **/
 -----------------------------------
 Table                                     Index                                Count     Page Total   Page New Del  Page Curr Del     Page Reuse
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_1                          3        275.000          0.000          0.000          0.000
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_2                          3        256.667         96.333        201.000        104.667
-postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
-si_db_01.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnam_index          1         22.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnum_index          1         15.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         2          5.000          0.000          0.000          0.000
 template1.pg_catalog.pg_statistic         pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
 
 /** Analyze Statistics **/
@@ -1917,44 +1923,46 @@ STATSINFO Report (host: statsinfo, port: 5435)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                        Count  Index Scanned  Index Skipped  Removed Rows   Remain Rows   Remain Dead  Scan Pages  Scan Pages Ratio  Removed Lp     Dead Lp  Index Scans      Duration  Duration(Max)  Cancels
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3              3              0     50000.000     55532.333         0.000     424.667            50.027   66574.667       0.000        1.000       0.067 s        0.080 s        0
-template1.pg_catalog.pg_statistic                1              1              0       116.000       406.000         0.000      16.000            57.140     212.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.pg_catalog.pg_statistic                 1              1              0        56.000       441.000         0.000      17.000            56.670     206.000       0.000        1.000       0.000 s        0.000 s        0
-si_db_01.pg_catalog.pg_statistic                 1              1              0        52.000       411.000         0.000      16.000            55.170     204.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.statsrepo.column_20210618               1              0              1         0.000      1069.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        0
-postgres.public.pgbench_branches                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        2
-postgres.public.pgbench_accounts                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        1
+                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
+postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
+postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
+postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
+postgres.statsrepo.column_20221219              1        0        1       0.0     1225.0        0.0      0.0      0.0     22.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           810              
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                                       Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate   Read Duration  Write Duration
 ---------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                 3239.667       1.000       1.000    0.093 MiB/s    0.093 MiB/s         0.013 s         0.000 s
-postgres.pg_catalog.pg_statistic             110.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-template1.pg_catalog.pg_statistic            105.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-si_db_01.pg_catalog.pg_statistic              90.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-postgres.statsrepo.column_20210618            82.000       2.000       3.000   34.041 MiB/s   51.062 MiB/s         0.018 s         0.000 s
+postgres.pg_catalog.pg_attribute             145.000      14.000       0.000  122.070 MiB/s    0.000 MiB/s         0.118 s         0.000 s
+postgres.public.pgbench_history              145.000       2.000       4.000    8.351 MiB/s   16.702 MiB/s         0.012 s         0.000 s
+postgres.pg_catalog.pg_statistic             105.500       1.500       3.000    9.405 MiB/s   18.810 MiB/s         0.043 s         0.000 s
+postgres.statsrepo.column_20221219            76.000       2.000       3.000   54.825 MiB/s   82.237 MiB/s         0.012 s         0.000 s
+template1.pg_catalog.pg_statistic             63.000      39.000      37.000   64.910 MiB/s   61.581 MiB/s         0.214 s         0.000 s
+postgres.public.pgbench_branches              22.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
 
 /** Vacuum WAL Statistics (Average) **/
 -----------------------------------
 Table                                        Count WAL Records    WAL FPIs   WAL bytes
 -----------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3    2055.000       0.000  612186.000
-template1.pg_catalog.pg_statistic                1      94.000       0.000   11401.000
-postgres.statsrepo.column_20210618               1      20.000       1.000    9506.000
-postgres.pg_catalog.pg_statistic                 1      62.000       0.000    4690.000
-si_db_01.pg_catalog.pg_statistic                 1      62.000       0.000    4665.000
+template1.pg_catalog.pg_statistic                1      92.000      34.000  185836.000
+postgres.pg_catalog.pg_statistic                 2      57.500       7.500   37157.500
+postgres.public.pgbench_history                  1      71.000       1.000   12515.000
+postgres.pg_catalog.pg_attribute                 1      44.000       1.000   11696.000
+postgres.statsrepo.column_20221219               1      23.000       1.000    9683.000
+postgres.public.pgbench_branches                 1       3.000       0.000     608.000
 
 /** Vacuum Index Statistics (Average) **/
 -----------------------------------
 Table                                     Index                                Count     Page Total   Page New Del  Page Curr Del     Page Reuse
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_1                          3        275.000          0.000          0.000          0.000
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_2                          3        256.667         96.333        201.000        104.667
-postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
-si_db_01.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnam_index          1         22.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnum_index          1         15.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         2          5.000          0.000          0.000          0.000
 template1.pg_catalog.pg_statistic         pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
 
 /** Analyze Statistics **/
@@ -1976,44 +1984,46 @@ STATSINFO Report (host: statsinfo, port: 5436)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                        Count  Index Scanned  Index Skipped  Removed Rows   Remain Rows   Remain Dead  Scan Pages  Scan Pages Ratio  Removed Lp     Dead Lp  Index Scans      Duration  Duration(Max)  Cancels
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3              3              0     50000.000     55532.333         0.000     424.667            50.027   66574.667       0.000        1.000       0.067 s        0.080 s        0
-template1.pg_catalog.pg_statistic                1              1              0       116.000       406.000         0.000      16.000            57.140     212.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.pg_catalog.pg_statistic                 1              1              0        56.000       441.000         0.000      17.000            56.670     206.000       0.000        1.000       0.000 s        0.000 s        0
-si_db_01.pg_catalog.pg_statistic                 1              1              0        52.000       411.000         0.000      16.000            55.170     204.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.statsrepo.column_20210618               1              0              1         0.000      1069.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        0
-postgres.public.pgbench_branches                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        2
-postgres.public.pgbench_accounts                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        1
+                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
+postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
+postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
+postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
+postgres.statsrepo.column_20221219              1        0        1       0.0     1225.0        0.0      0.0      0.0     22.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           810              
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                                       Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate   Read Duration  Write Duration
 ---------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                 3239.667       1.000       1.000    0.093 MiB/s    0.093 MiB/s         0.013 s         0.000 s
-postgres.pg_catalog.pg_statistic             110.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-template1.pg_catalog.pg_statistic            105.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-si_db_01.pg_catalog.pg_statistic              90.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-postgres.statsrepo.column_20210618            82.000       2.000       3.000   34.041 MiB/s   51.062 MiB/s         0.018 s         0.000 s
+postgres.pg_catalog.pg_attribute             145.000      14.000       0.000  122.070 MiB/s    0.000 MiB/s         0.118 s         0.000 s
+postgres.public.pgbench_history              145.000       2.000       4.000    8.351 MiB/s   16.702 MiB/s         0.012 s         0.000 s
+postgres.pg_catalog.pg_statistic             105.500       1.500       3.000    9.405 MiB/s   18.810 MiB/s         0.043 s         0.000 s
+postgres.statsrepo.column_20221219            76.000       2.000       3.000   54.825 MiB/s   82.237 MiB/s         0.012 s         0.000 s
+template1.pg_catalog.pg_statistic             63.000      39.000      37.000   64.910 MiB/s   61.581 MiB/s         0.214 s         0.000 s
+postgres.public.pgbench_branches              22.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
 
 /** Vacuum WAL Statistics (Average) **/
 -----------------------------------
 Table                                        Count WAL Records    WAL FPIs   WAL bytes
 -----------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3    2055.000       0.000  612186.000
-template1.pg_catalog.pg_statistic                1      94.000       0.000   11401.000
-postgres.statsrepo.column_20210618               1      20.000       1.000    9506.000
-postgres.pg_catalog.pg_statistic                 1      62.000       0.000    4690.000
-si_db_01.pg_catalog.pg_statistic                 1      62.000       0.000    4665.000
+template1.pg_catalog.pg_statistic                1      92.000      34.000  185836.000
+postgres.pg_catalog.pg_statistic                 2      57.500       7.500   37157.500
+postgres.public.pgbench_history                  1      71.000       1.000   12515.000
+postgres.pg_catalog.pg_attribute                 1      44.000       1.000   11696.000
+postgres.statsrepo.column_20221219               1      23.000       1.000    9683.000
+postgres.public.pgbench_branches                 1       3.000       0.000     608.000
 
 /** Vacuum Index Statistics (Average) **/
 -----------------------------------
 Table                                     Index                                Count     Page Total   Page New Del  Page Curr Del     Page Reuse
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_1                          3        275.000          0.000          0.000          0.000
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_2                          3        256.667         96.333        201.000        104.667
-postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
-si_db_01.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnam_index          1         22.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnum_index          1         15.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         2          5.000          0.000          0.000          0.000
 template1.pg_catalog.pg_statistic         pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
 
 /** Analyze Statistics **/
@@ -2035,44 +2045,46 @@ STATSINFO Report (host: statsinfo, port: 5437)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                        Count  Index Scanned  Index Skipped  Removed Rows   Remain Rows   Remain Dead  Scan Pages  Scan Pages Ratio  Removed Lp     Dead Lp  Index Scans      Duration  Duration(Max)  Cancels
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3              3              0     50000.000     55532.333         0.000     424.667            50.027   66574.667       0.000        1.000       0.067 s        0.080 s        0
-template1.pg_catalog.pg_statistic                1              1              0       116.000       406.000         0.000      16.000            57.140     212.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.pg_catalog.pg_statistic                 1              1              0        56.000       441.000         0.000      17.000            56.670     206.000       0.000        1.000       0.000 s        0.000 s        0
-si_db_01.pg_catalog.pg_statistic                 1              1              0        52.000       411.000         0.000      16.000            55.170     204.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.statsrepo.column_20210618               1              0              1         0.000      1069.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        0
-postgres.public.pgbench_branches                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        2
-postgres.public.pgbench_accounts                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        1
+                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
+postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
+postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
+postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
+postgres.statsrepo.column_20221219              1        0        1       0.0     1225.0        0.0      0.0      0.0     22.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           810              
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                                       Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate   Read Duration  Write Duration
 ---------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                 3239.667       1.000       1.000    0.093 MiB/s    0.093 MiB/s         0.013 s         0.000 s
-postgres.pg_catalog.pg_statistic             110.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-template1.pg_catalog.pg_statistic            105.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-si_db_01.pg_catalog.pg_statistic              90.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-postgres.statsrepo.column_20210618            82.000       2.000       3.000   34.041 MiB/s   51.062 MiB/s         0.018 s         0.000 s
+postgres.pg_catalog.pg_attribute             145.000      14.000       0.000  122.070 MiB/s    0.000 MiB/s         0.118 s         0.000 s
+postgres.public.pgbench_history              145.000       2.000       4.000    8.351 MiB/s   16.702 MiB/s         0.012 s         0.000 s
+postgres.pg_catalog.pg_statistic             105.500       1.500       3.000    9.405 MiB/s   18.810 MiB/s         0.043 s         0.000 s
+postgres.statsrepo.column_20221219            76.000       2.000       3.000   54.825 MiB/s   82.237 MiB/s         0.012 s         0.000 s
+template1.pg_catalog.pg_statistic             63.000      39.000      37.000   64.910 MiB/s   61.581 MiB/s         0.214 s         0.000 s
+postgres.public.pgbench_branches              22.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
 
 /** Vacuum WAL Statistics (Average) **/
 -----------------------------------
 Table                                        Count WAL Records    WAL FPIs   WAL bytes
 -----------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3    2055.000       0.000  612186.000
-template1.pg_catalog.pg_statistic                1      94.000       0.000   11401.000
-postgres.statsrepo.column_20210618               1      20.000       1.000    9506.000
-postgres.pg_catalog.pg_statistic                 1      62.000       0.000    4690.000
-si_db_01.pg_catalog.pg_statistic                 1      62.000       0.000    4665.000
+template1.pg_catalog.pg_statistic                1      92.000      34.000  185836.000
+postgres.pg_catalog.pg_statistic                 2      57.500       7.500   37157.500
+postgres.public.pgbench_history                  1      71.000       1.000   12515.000
+postgres.pg_catalog.pg_attribute                 1      44.000       1.000   11696.000
+postgres.statsrepo.column_20221219               1      23.000       1.000    9683.000
+postgres.public.pgbench_branches                 1       3.000       0.000     608.000
 
 /** Vacuum Index Statistics (Average) **/
 -----------------------------------
 Table                                     Index                                Count     Page Total   Page New Del  Page Curr Del     Page Reuse
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_1                          3        275.000          0.000          0.000          0.000
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_2                          3        256.667         96.333        201.000        104.667
-postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
-si_db_01.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnam_index          1         22.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnum_index          1         15.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         2          5.000          0.000          0.000          0.000
 template1.pg_catalog.pg_statistic         pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
 
 /** Analyze Statistics **/
@@ -2103,11 +2115,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time  Query
-------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                                   Block        Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -2119,11 +2132,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
------------------------------------------------------------------------------------------------------------------------------------------
- 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
-1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
-1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+                                                                                                                      Block         Block    Temp Block    Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -2159,11 +2173,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time  Query
-------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                                   Block        Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -2175,11 +2190,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
------------------------------------------------------------------------------------------------------------------------------------------
- 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
-1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
-1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+                                                                                                                      Block         Block    Temp Block    Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -2215,11 +2231,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time  Query
-------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                                   Block        Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -2231,11 +2248,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
------------------------------------------------------------------------------------------------------------------------------------------
- 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
-1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
-1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+                                                                                                                      Block         Block    Temp Block    Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -2271,11 +2289,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time  Query
-------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                                   Block        Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -2287,11 +2306,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
------------------------------------------------------------------------------------------------------------------------------------------
- 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
-1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
-1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+                                                                                                                      Block         Block    Temp Block    Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -2327,11 +2347,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time  Query
-------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                                   Block        Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -2343,11 +2364,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
------------------------------------------------------------------------------------------------------------------------------------------
- 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
-1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
-1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+                                                                                                                      Block         Block    Temp Block    Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -2383,11 +2405,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time  Query
-------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                                   Block        Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -2399,11 +2422,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
------------------------------------------------------------------------------------------------------------------------------------------
- 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
-1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
-1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+                                                                                                                      Block         Block    Temp Block    Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -3545,44 +3569,46 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                        Count  Index Scanned  Index Skipped  Removed Rows   Remain Rows   Remain Dead  Scan Pages  Scan Pages Ratio  Removed Lp     Dead Lp  Index Scans      Duration  Duration(Max)  Cancels
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3              3              0     50000.000     55532.333         0.000     424.667            50.027   66574.667       0.000        1.000       0.067 s        0.080 s        0
-template1.pg_catalog.pg_statistic                1              1              0       116.000       406.000         0.000      16.000            57.140     212.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.pg_catalog.pg_statistic                 1              1              0        56.000       441.000         0.000      17.000            56.670     206.000       0.000        1.000       0.000 s        0.000 s        0
-si_db_01.pg_catalog.pg_statistic                 1              1              0        52.000       411.000         0.000      16.000            55.170     204.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.statsrepo.column_20210618               1              0              1         0.000      1069.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        0
-postgres.public.pgbench_branches                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        2
-postgres.public.pgbench_accounts                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        1
+                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
+postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
+postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
+postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
+postgres.statsrepo.column_20221219              1        0        1       0.0     1225.0        0.0      0.0      0.0     22.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           810              
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                                       Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate   Read Duration  Write Duration
 ---------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                 3239.667       1.000       1.000    0.093 MiB/s    0.093 MiB/s         0.013 s         0.000 s
-postgres.pg_catalog.pg_statistic             110.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-template1.pg_catalog.pg_statistic            105.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-si_db_01.pg_catalog.pg_statistic              90.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-postgres.statsrepo.column_20210618            82.000       2.000       3.000   34.041 MiB/s   51.062 MiB/s         0.018 s         0.000 s
+postgres.pg_catalog.pg_attribute             145.000      14.000       0.000  122.070 MiB/s    0.000 MiB/s         0.118 s         0.000 s
+postgres.public.pgbench_history              145.000       2.000       4.000    8.351 MiB/s   16.702 MiB/s         0.012 s         0.000 s
+postgres.pg_catalog.pg_statistic             105.500       1.500       3.000    9.405 MiB/s   18.810 MiB/s         0.043 s         0.000 s
+postgres.statsrepo.column_20221219            76.000       2.000       3.000   54.825 MiB/s   82.237 MiB/s         0.012 s         0.000 s
+template1.pg_catalog.pg_statistic             63.000      39.000      37.000   64.910 MiB/s   61.581 MiB/s         0.214 s         0.000 s
+postgres.public.pgbench_branches              22.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
 
 /** Vacuum WAL Statistics (Average) **/
 -----------------------------------
 Table                                        Count WAL Records    WAL FPIs   WAL bytes
 -----------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3    2055.000       0.000  612186.000
-template1.pg_catalog.pg_statistic                1      94.000       0.000   11401.000
-postgres.statsrepo.column_20210618               1      20.000       1.000    9506.000
-postgres.pg_catalog.pg_statistic                 1      62.000       0.000    4690.000
-si_db_01.pg_catalog.pg_statistic                 1      62.000       0.000    4665.000
+template1.pg_catalog.pg_statistic                1      92.000      34.000  185836.000
+postgres.pg_catalog.pg_statistic                 2      57.500       7.500   37157.500
+postgres.public.pgbench_history                  1      71.000       1.000   12515.000
+postgres.pg_catalog.pg_attribute                 1      44.000       1.000   11696.000
+postgres.statsrepo.column_20221219               1      23.000       1.000    9683.000
+postgres.public.pgbench_branches                 1       3.000       0.000     608.000
 
 /** Vacuum Index Statistics (Average) **/
 -----------------------------------
 Table                                     Index                                Count     Page Total   Page New Del  Page Curr Del     Page Reuse
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_1                          3        275.000          0.000          0.000          0.000
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_2                          3        256.667         96.333        201.000        104.667
-postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
-si_db_01.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnam_index          1         22.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnum_index          1         15.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         2          5.000          0.000          0.000          0.000
 template1.pg_catalog.pg_statistic         pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
 
 /** Analyze Statistics **/
@@ -3606,11 +3632,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time  Query
-------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                                   Block        Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -3622,11 +3649,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
------------------------------------------------------------------------------------------------------------------------------------------
- 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
-1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
-1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+                                                                                                                      Block         Block    Temp Block    Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -4017,44 +4045,46 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                        Count  Index Scanned  Index Skipped  Removed Rows   Remain Rows   Remain Dead  Scan Pages  Scan Pages Ratio  Removed Lp     Dead Lp  Index Scans      Duration  Duration(Max)  Cancels
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3              3              0     50000.000     55532.333         0.000     424.667            50.027   66574.667       0.000        1.000       0.067 s        0.080 s        0
-template1.pg_catalog.pg_statistic                1              1              0       116.000       406.000         0.000      16.000            57.140     212.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.pg_catalog.pg_statistic                 1              1              0        56.000       441.000         0.000      17.000            56.670     206.000       0.000        1.000       0.000 s        0.000 s        0
-si_db_01.pg_catalog.pg_statistic                 1              1              0        52.000       411.000         0.000      16.000            55.170     204.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.statsrepo.column_20210618               1              0              1         0.000      1069.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        0
-postgres.public.pgbench_branches                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        2
-postgres.public.pgbench_accounts                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        1
+                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
+postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
+postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
+postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
+postgres.statsrepo.column_20221219              1        0        1       0.0     1225.0        0.0      0.0      0.0     22.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           810              
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                                       Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate   Read Duration  Write Duration
 ---------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                 3239.667       1.000       1.000    0.093 MiB/s    0.093 MiB/s         0.013 s         0.000 s
-postgres.pg_catalog.pg_statistic             110.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-template1.pg_catalog.pg_statistic            105.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-si_db_01.pg_catalog.pg_statistic              90.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-postgres.statsrepo.column_20210618            82.000       2.000       3.000   34.041 MiB/s   51.062 MiB/s         0.018 s         0.000 s
+postgres.pg_catalog.pg_attribute             145.000      14.000       0.000  122.070 MiB/s    0.000 MiB/s         0.118 s         0.000 s
+postgres.public.pgbench_history              145.000       2.000       4.000    8.351 MiB/s   16.702 MiB/s         0.012 s         0.000 s
+postgres.pg_catalog.pg_statistic             105.500       1.500       3.000    9.405 MiB/s   18.810 MiB/s         0.043 s         0.000 s
+postgres.statsrepo.column_20221219            76.000       2.000       3.000   54.825 MiB/s   82.237 MiB/s         0.012 s         0.000 s
+template1.pg_catalog.pg_statistic             63.000      39.000      37.000   64.910 MiB/s   61.581 MiB/s         0.214 s         0.000 s
+postgres.public.pgbench_branches              22.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
 
 /** Vacuum WAL Statistics (Average) **/
 -----------------------------------
 Table                                        Count WAL Records    WAL FPIs   WAL bytes
 -----------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3    2055.000       0.000  612186.000
-template1.pg_catalog.pg_statistic                1      94.000       0.000   11401.000
-postgres.statsrepo.column_20210618               1      20.000       1.000    9506.000
-postgres.pg_catalog.pg_statistic                 1      62.000       0.000    4690.000
-si_db_01.pg_catalog.pg_statistic                 1      62.000       0.000    4665.000
+template1.pg_catalog.pg_statistic                1      92.000      34.000  185836.000
+postgres.pg_catalog.pg_statistic                 2      57.500       7.500   37157.500
+postgres.public.pgbench_history                  1      71.000       1.000   12515.000
+postgres.pg_catalog.pg_attribute                 1      44.000       1.000   11696.000
+postgres.statsrepo.column_20221219               1      23.000       1.000    9683.000
+postgres.public.pgbench_branches                 1       3.000       0.000     608.000
 
 /** Vacuum Index Statistics (Average) **/
 -----------------------------------
 Table                                     Index                                Count     Page Total   Page New Del  Page Curr Del     Page Reuse
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_1                          3        275.000          0.000          0.000          0.000
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_2                          3        256.667         96.333        201.000        104.667
-postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
-si_db_01.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnam_index          1         22.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnum_index          1         15.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         2          5.000          0.000          0.000          0.000
 template1.pg_catalog.pg_statistic         pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
 
 /** Analyze Statistics **/
@@ -4078,11 +4108,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time  Query
-------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                                   Block        Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -4094,11 +4125,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
------------------------------------------------------------------------------------------------------------------------------------------
- 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
-1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
-1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+                                                                                                                      Block         Block    Temp Block    Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -4489,44 +4521,46 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                        Count  Index Scanned  Index Skipped  Removed Rows   Remain Rows   Remain Dead  Scan Pages  Scan Pages Ratio  Removed Lp     Dead Lp  Index Scans      Duration  Duration(Max)  Cancels
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3              3              0     50000.000     55532.333         0.000     424.667            50.027   66574.667       0.000        1.000       0.067 s        0.080 s        0
-template1.pg_catalog.pg_statistic                1              1              0       116.000       406.000         0.000      16.000            57.140     212.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.pg_catalog.pg_statistic                 1              1              0        56.000       441.000         0.000      17.000            56.670     206.000       0.000        1.000       0.000 s        0.000 s        0
-si_db_01.pg_catalog.pg_statistic                 1              1              0        52.000       411.000         0.000      16.000            55.170     204.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.statsrepo.column_20210618               1              0              1         0.000      1069.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        0
-postgres.public.pgbench_branches                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        2
-postgres.public.pgbench_accounts                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        1
+                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
+postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
+postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
+postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
+postgres.statsrepo.column_20221219              1        0        1       0.0     1225.0        0.0      0.0      0.0     22.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           810              
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                                       Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate   Read Duration  Write Duration
 ---------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                 3239.667       1.000       1.000    0.093 MiB/s    0.093 MiB/s         0.013 s         0.000 s
-postgres.pg_catalog.pg_statistic             110.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-template1.pg_catalog.pg_statistic            105.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-si_db_01.pg_catalog.pg_statistic              90.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-postgres.statsrepo.column_20210618            82.000       2.000       3.000   34.041 MiB/s   51.062 MiB/s         0.018 s         0.000 s
+postgres.pg_catalog.pg_attribute             145.000      14.000       0.000  122.070 MiB/s    0.000 MiB/s         0.118 s         0.000 s
+postgres.public.pgbench_history              145.000       2.000       4.000    8.351 MiB/s   16.702 MiB/s         0.012 s         0.000 s
+postgres.pg_catalog.pg_statistic             105.500       1.500       3.000    9.405 MiB/s   18.810 MiB/s         0.043 s         0.000 s
+postgres.statsrepo.column_20221219            76.000       2.000       3.000   54.825 MiB/s   82.237 MiB/s         0.012 s         0.000 s
+template1.pg_catalog.pg_statistic             63.000      39.000      37.000   64.910 MiB/s   61.581 MiB/s         0.214 s         0.000 s
+postgres.public.pgbench_branches              22.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
 
 /** Vacuum WAL Statistics (Average) **/
 -----------------------------------
 Table                                        Count WAL Records    WAL FPIs   WAL bytes
 -----------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3    2055.000       0.000  612186.000
-template1.pg_catalog.pg_statistic                1      94.000       0.000   11401.000
-postgres.statsrepo.column_20210618               1      20.000       1.000    9506.000
-postgres.pg_catalog.pg_statistic                 1      62.000       0.000    4690.000
-si_db_01.pg_catalog.pg_statistic                 1      62.000       0.000    4665.000
+template1.pg_catalog.pg_statistic                1      92.000      34.000  185836.000
+postgres.pg_catalog.pg_statistic                 2      57.500       7.500   37157.500
+postgres.public.pgbench_history                  1      71.000       1.000   12515.000
+postgres.pg_catalog.pg_attribute                 1      44.000       1.000   11696.000
+postgres.statsrepo.column_20221219               1      23.000       1.000    9683.000
+postgres.public.pgbench_branches                 1       3.000       0.000     608.000
 
 /** Vacuum Index Statistics (Average) **/
 -----------------------------------
 Table                                     Index                                Count     Page Total   Page New Del  Page Curr Del     Page Reuse
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_1                          3        275.000          0.000          0.000          0.000
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_2                          3        256.667         96.333        201.000        104.667
-postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
-si_db_01.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnam_index          1         22.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnum_index          1         15.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         2          5.000          0.000          0.000          0.000
 template1.pg_catalog.pg_statistic         pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
 
 /** Analyze Statistics **/
@@ -4550,11 +4584,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time  Query
-------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                                   Block        Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -4566,11 +4601,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
------------------------------------------------------------------------------------------------------------------------------------------
- 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
-1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
-1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+                                                                                                                      Block         Block    Temp Block    Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -4961,44 +4997,46 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                        Count  Index Scanned  Index Skipped  Removed Rows   Remain Rows   Remain Dead  Scan Pages  Scan Pages Ratio  Removed Lp     Dead Lp  Index Scans      Duration  Duration(Max)  Cancels
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3              3              0     50000.000     55532.333         0.000     424.667            50.027   66574.667       0.000        1.000       0.067 s        0.080 s        0
-template1.pg_catalog.pg_statistic                1              1              0       116.000       406.000         0.000      16.000            57.140     212.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.pg_catalog.pg_statistic                 1              1              0        56.000       441.000         0.000      17.000            56.670     206.000       0.000        1.000       0.000 s        0.000 s        0
-si_db_01.pg_catalog.pg_statistic                 1              1              0        52.000       411.000         0.000      16.000            55.170     204.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.statsrepo.column_20210618               1              0              1         0.000      1069.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        0
-postgres.public.pgbench_branches                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        2
-postgres.public.pgbench_accounts                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        1
+                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
+postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
+postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
+postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
+postgres.statsrepo.column_20221219              1        0        1       0.0     1225.0        0.0      0.0      0.0     22.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           810              
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                                       Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate   Read Duration  Write Duration
 ---------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                 3239.667       1.000       1.000    0.093 MiB/s    0.093 MiB/s         0.013 s         0.000 s
-postgres.pg_catalog.pg_statistic             110.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-template1.pg_catalog.pg_statistic            105.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-si_db_01.pg_catalog.pg_statistic              90.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-postgres.statsrepo.column_20210618            82.000       2.000       3.000   34.041 MiB/s   51.062 MiB/s         0.018 s         0.000 s
+postgres.pg_catalog.pg_attribute             145.000      14.000       0.000  122.070 MiB/s    0.000 MiB/s         0.118 s         0.000 s
+postgres.public.pgbench_history              145.000       2.000       4.000    8.351 MiB/s   16.702 MiB/s         0.012 s         0.000 s
+postgres.pg_catalog.pg_statistic             105.500       1.500       3.000    9.405 MiB/s   18.810 MiB/s         0.043 s         0.000 s
+postgres.statsrepo.column_20221219            76.000       2.000       3.000   54.825 MiB/s   82.237 MiB/s         0.012 s         0.000 s
+template1.pg_catalog.pg_statistic             63.000      39.000      37.000   64.910 MiB/s   61.581 MiB/s         0.214 s         0.000 s
+postgres.public.pgbench_branches              22.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
 
 /** Vacuum WAL Statistics (Average) **/
 -----------------------------------
 Table                                        Count WAL Records    WAL FPIs   WAL bytes
 -----------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3    2055.000       0.000  612186.000
-template1.pg_catalog.pg_statistic                1      94.000       0.000   11401.000
-postgres.statsrepo.column_20210618               1      20.000       1.000    9506.000
-postgres.pg_catalog.pg_statistic                 1      62.000       0.000    4690.000
-si_db_01.pg_catalog.pg_statistic                 1      62.000       0.000    4665.000
+template1.pg_catalog.pg_statistic                1      92.000      34.000  185836.000
+postgres.pg_catalog.pg_statistic                 2      57.500       7.500   37157.500
+postgres.public.pgbench_history                  1      71.000       1.000   12515.000
+postgres.pg_catalog.pg_attribute                 1      44.000       1.000   11696.000
+postgres.statsrepo.column_20221219               1      23.000       1.000    9683.000
+postgres.public.pgbench_branches                 1       3.000       0.000     608.000
 
 /** Vacuum Index Statistics (Average) **/
 -----------------------------------
 Table                                     Index                                Count     Page Total   Page New Del  Page Curr Del     Page Reuse
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_1                          3        275.000          0.000          0.000          0.000
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_2                          3        256.667         96.333        201.000        104.667
-postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
-si_db_01.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnam_index          1         22.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnum_index          1         15.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         2          5.000          0.000          0.000          0.000
 template1.pg_catalog.pg_statistic         pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
 
 /** Analyze Statistics **/
@@ -5022,11 +5060,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time  Query
-------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                                   Block        Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -5038,11 +5077,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
------------------------------------------------------------------------------------------------------------------------------------------
- 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
-1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
-1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+                                                                                                                      Block         Block    Temp Block    Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -5433,44 +5473,46 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                        Count  Index Scanned  Index Skipped  Removed Rows   Remain Rows   Remain Dead  Scan Pages  Scan Pages Ratio  Removed Lp     Dead Lp  Index Scans      Duration  Duration(Max)  Cancels
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3              3              0     50000.000     55532.333         0.000     424.667            50.027   66574.667       0.000        1.000       0.067 s        0.080 s        0
-template1.pg_catalog.pg_statistic                1              1              0       116.000       406.000         0.000      16.000            57.140     212.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.pg_catalog.pg_statistic                 1              1              0        56.000       441.000         0.000      17.000            56.670     206.000       0.000        1.000       0.000 s        0.000 s        0
-si_db_01.pg_catalog.pg_statistic                 1              1              0        52.000       411.000         0.000      16.000            55.170     204.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.statsrepo.column_20210618               1              0              1         0.000      1069.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        0
-postgres.public.pgbench_branches                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        2
-postgres.public.pgbench_accounts                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        1
+                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
+postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
+postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
+postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
+postgres.statsrepo.column_20221219              1        0        1       0.0     1225.0        0.0      0.0      0.0     22.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           810              
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                                       Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate   Read Duration  Write Duration
 ---------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                 3239.667       1.000       1.000    0.093 MiB/s    0.093 MiB/s         0.013 s         0.000 s
-postgres.pg_catalog.pg_statistic             110.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-template1.pg_catalog.pg_statistic            105.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-si_db_01.pg_catalog.pg_statistic              90.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-postgres.statsrepo.column_20210618            82.000       2.000       3.000   34.041 MiB/s   51.062 MiB/s         0.018 s         0.000 s
+postgres.pg_catalog.pg_attribute             145.000      14.000       0.000  122.070 MiB/s    0.000 MiB/s         0.118 s         0.000 s
+postgres.public.pgbench_history              145.000       2.000       4.000    8.351 MiB/s   16.702 MiB/s         0.012 s         0.000 s
+postgres.pg_catalog.pg_statistic             105.500       1.500       3.000    9.405 MiB/s   18.810 MiB/s         0.043 s         0.000 s
+postgres.statsrepo.column_20221219            76.000       2.000       3.000   54.825 MiB/s   82.237 MiB/s         0.012 s         0.000 s
+template1.pg_catalog.pg_statistic             63.000      39.000      37.000   64.910 MiB/s   61.581 MiB/s         0.214 s         0.000 s
+postgres.public.pgbench_branches              22.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
 
 /** Vacuum WAL Statistics (Average) **/
 -----------------------------------
 Table                                        Count WAL Records    WAL FPIs   WAL bytes
 -----------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3    2055.000       0.000  612186.000
-template1.pg_catalog.pg_statistic                1      94.000       0.000   11401.000
-postgres.statsrepo.column_20210618               1      20.000       1.000    9506.000
-postgres.pg_catalog.pg_statistic                 1      62.000       0.000    4690.000
-si_db_01.pg_catalog.pg_statistic                 1      62.000       0.000    4665.000
+template1.pg_catalog.pg_statistic                1      92.000      34.000  185836.000
+postgres.pg_catalog.pg_statistic                 2      57.500       7.500   37157.500
+postgres.public.pgbench_history                  1      71.000       1.000   12515.000
+postgres.pg_catalog.pg_attribute                 1      44.000       1.000   11696.000
+postgres.statsrepo.column_20221219               1      23.000       1.000    9683.000
+postgres.public.pgbench_branches                 1       3.000       0.000     608.000
 
 /** Vacuum Index Statistics (Average) **/
 -----------------------------------
 Table                                     Index                                Count     Page Total   Page New Del  Page Curr Del     Page Reuse
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_1                          3        275.000          0.000          0.000          0.000
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_2                          3        256.667         96.333        201.000        104.667
-postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
-si_db_01.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnam_index          1         22.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnum_index          1         15.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         2          5.000          0.000          0.000          0.000
 template1.pg_catalog.pg_statistic         pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
 
 /** Analyze Statistics **/
@@ -5494,11 +5536,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time  Query
-------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                                   Block        Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -5510,11 +5553,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
------------------------------------------------------------------------------------------------------------------------------------------
- 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
-1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
-1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+                                                                                                                      Block         Block    Temp Block    Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -5905,44 +5949,46 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                        Count  Index Scanned  Index Skipped  Removed Rows   Remain Rows   Remain Dead  Scan Pages  Scan Pages Ratio  Removed Lp     Dead Lp  Index Scans      Duration  Duration(Max)  Cancels
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3              3              0     50000.000     55532.333         0.000     424.667            50.027   66574.667       0.000        1.000       0.067 s        0.080 s        0
-template1.pg_catalog.pg_statistic                1              1              0       116.000       406.000         0.000      16.000            57.140     212.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.pg_catalog.pg_statistic                 1              1              0        56.000       441.000         0.000      17.000            56.670     206.000       0.000        1.000       0.000 s        0.000 s        0
-si_db_01.pg_catalog.pg_statistic                 1              1              0        52.000       411.000         0.000      16.000            55.170     204.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.statsrepo.column_20210618               1              0              1         0.000      1069.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        0
-postgres.public.pgbench_branches                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        2
-postgres.public.pgbench_accounts                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        1
+                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
+postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
+postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
+postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
+postgres.statsrepo.column_20221219              1        0        1       0.0     1225.0        0.0      0.0      0.0     22.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           810              
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                                       Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate   Read Duration  Write Duration
 ---------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                 3239.667       1.000       1.000    0.093 MiB/s    0.093 MiB/s         0.013 s         0.000 s
-postgres.pg_catalog.pg_statistic             110.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-template1.pg_catalog.pg_statistic            105.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-si_db_01.pg_catalog.pg_statistic              90.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-postgres.statsrepo.column_20210618            82.000       2.000       3.000   34.041 MiB/s   51.062 MiB/s         0.018 s         0.000 s
+postgres.pg_catalog.pg_attribute             145.000      14.000       0.000  122.070 MiB/s    0.000 MiB/s         0.118 s         0.000 s
+postgres.public.pgbench_history              145.000       2.000       4.000    8.351 MiB/s   16.702 MiB/s         0.012 s         0.000 s
+postgres.pg_catalog.pg_statistic             105.500       1.500       3.000    9.405 MiB/s   18.810 MiB/s         0.043 s         0.000 s
+postgres.statsrepo.column_20221219            76.000       2.000       3.000   54.825 MiB/s   82.237 MiB/s         0.012 s         0.000 s
+template1.pg_catalog.pg_statistic             63.000      39.000      37.000   64.910 MiB/s   61.581 MiB/s         0.214 s         0.000 s
+postgres.public.pgbench_branches              22.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
 
 /** Vacuum WAL Statistics (Average) **/
 -----------------------------------
 Table                                        Count WAL Records    WAL FPIs   WAL bytes
 -----------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3    2055.000       0.000  612186.000
-template1.pg_catalog.pg_statistic                1      94.000       0.000   11401.000
-postgres.statsrepo.column_20210618               1      20.000       1.000    9506.000
-postgres.pg_catalog.pg_statistic                 1      62.000       0.000    4690.000
-si_db_01.pg_catalog.pg_statistic                 1      62.000       0.000    4665.000
+template1.pg_catalog.pg_statistic                1      92.000      34.000  185836.000
+postgres.pg_catalog.pg_statistic                 2      57.500       7.500   37157.500
+postgres.public.pgbench_history                  1      71.000       1.000   12515.000
+postgres.pg_catalog.pg_attribute                 1      44.000       1.000   11696.000
+postgres.statsrepo.column_20221219               1      23.000       1.000    9683.000
+postgres.public.pgbench_branches                 1       3.000       0.000     608.000
 
 /** Vacuum Index Statistics (Average) **/
 -----------------------------------
 Table                                     Index                                Count     Page Total   Page New Del  Page Curr Del     Page Reuse
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_1                          3        275.000          0.000          0.000          0.000
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_2                          3        256.667         96.333        201.000        104.667
-postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
-si_db_01.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnam_index          1         22.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnum_index          1         15.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         2          5.000          0.000          0.000          0.000
 template1.pg_catalog.pg_statistic         pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
 
 /** Analyze Statistics **/
@@ -5966,11 +6012,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time  Query
-------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                                   Block        Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -5982,11 +6029,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
------------------------------------------------------------------------------------------------------------------------------------------
- 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
-1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
-1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+                                                                                                                      Block         Block    Temp Block    Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -6574,44 +6622,46 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-Table                                        Count  Index Scanned  Index Skipped  Removed Rows   Remain Rows   Remain Dead  Scan Pages  Scan Pages Ratio  Removed Lp     Dead Lp  Index Scans      Duration  Duration(Max)  Cancels
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3              3              0     50000.000     55532.333         0.000     424.667            50.027   66574.667       0.000        1.000       0.067 s        0.080 s        0
-template1.pg_catalog.pg_statistic                1              1              0       116.000       406.000         0.000      16.000            57.140     212.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.pg_catalog.pg_statistic                 1              1              0        56.000       441.000         0.000      17.000            56.670     206.000       0.000        1.000       0.000 s        0.000 s        0
-si_db_01.pg_catalog.pg_statistic                 1              1              0        52.000       411.000         0.000      16.000            55.170     204.000       0.000        1.000       0.000 s        0.000 s        0
-postgres.statsrepo.column_20210618               1              0              1         0.000      1069.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        0
-postgres.public.pgbench_branches                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        2
-postgres.public.pgbench_accounts                 0              0              0         0.000         0.000         0.000       0.000             0.000       0.000       0.000        0.000       0.000 s        0.000 s        1
+                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
+postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
+postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
+postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
+postgres.statsrepo.column_20221219              1        0        1       0.0     1225.0        0.0      0.0      0.0     22.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           810              
 
 /** Vacuum I/O Statistics (Average) **/
 -----------------------------------
 Table                                       Page Hit   Page Miss  Page Dirty      Read Rate     Write Rate   Read Duration  Write Duration
 ---------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                 3239.667       1.000       1.000    0.093 MiB/s    0.093 MiB/s         0.013 s         0.000 s
-postgres.pg_catalog.pg_statistic             110.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-template1.pg_catalog.pg_statistic            105.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-si_db_01.pg_catalog.pg_statistic              90.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
-postgres.statsrepo.column_20210618            82.000       2.000       3.000   34.041 MiB/s   51.062 MiB/s         0.018 s         0.000 s
+postgres.pg_catalog.pg_attribute             145.000      14.000       0.000  122.070 MiB/s    0.000 MiB/s         0.118 s         0.000 s
+postgres.public.pgbench_history              145.000       2.000       4.000    8.351 MiB/s   16.702 MiB/s         0.012 s         0.000 s
+postgres.pg_catalog.pg_statistic             105.500       1.500       3.000    9.405 MiB/s   18.810 MiB/s         0.043 s         0.000 s
+postgres.statsrepo.column_20221219            76.000       2.000       3.000   54.825 MiB/s   82.237 MiB/s         0.012 s         0.000 s
+template1.pg_catalog.pg_statistic             63.000      39.000      37.000   64.910 MiB/s   61.581 MiB/s         0.214 s         0.000 s
+postgres.public.pgbench_branches              22.000       0.000       0.000    0.000 MiB/s    0.000 MiB/s         0.000 s         0.000 s
 
 /** Vacuum WAL Statistics (Average) **/
 -----------------------------------
 Table                                        Count WAL Records    WAL FPIs   WAL bytes
 -----------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01                      3    2055.000       0.000  612186.000
-template1.pg_catalog.pg_statistic                1      94.000       0.000   11401.000
-postgres.statsrepo.column_20210618               1      20.000       1.000    9506.000
-postgres.pg_catalog.pg_statistic                 1      62.000       0.000    4690.000
-si_db_01.pg_catalog.pg_statistic                 1      62.000       0.000    4665.000
+template1.pg_catalog.pg_statistic                1      92.000      34.000  185836.000
+postgres.pg_catalog.pg_statistic                 2      57.500       7.500   37157.500
+postgres.public.pgbench_history                  1      71.000       1.000   12515.000
+postgres.pg_catalog.pg_attribute                 1      44.000       1.000   11696.000
+postgres.statsrepo.column_20221219               1      23.000       1.000    9683.000
+postgres.public.pgbench_branches                 1       3.000       0.000     608.000
 
 /** Vacuum Index Statistics (Average) **/
 -----------------------------------
 Table                                     Index                                Count     Page Total   Page New Del  Page Curr Del     Page Reuse
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_1                          3        275.000          0.000          0.000          0.000
-si_db_01.si_sc_01.si_tbl_01               si_tbl_01_idx_2                          3        256.667         96.333        201.000        104.667
-postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
-si_db_01.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnam_index          1         22.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_attribute          pg_attribute_relid_attnum_index          1         15.000          0.000          0.000          0.000
+postgres.pg_catalog.pg_statistic          pg_statistic_relid_att_inh_index         2          5.000          0.000          0.000          0.000
 template1.pg_catalog.pg_statistic         pg_statistic_relid_att_inh_index         1          5.000          0.000          0.000          0.000
 
 /** Analyze Statistics **/
@@ -6635,11 +6685,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time  Query
-------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec         0.000 ms          0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec         0.000 ms          0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec         0.026 ms          0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                                   Block        Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
+-----------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -6651,11 +6702,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-Query ID    Plan ID     User              Database             Calls      Total Time      Time/Call  Block Read Time  Block Write Time
------------------------------------------------------------------------------------------------------------------------------------------
- 847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec         0.213 ms          0.000 ms
-1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec         0.000 ms          0.000 ms
-1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec         0.000 ms          0.000 ms
+                                                                                                                      Block         Block    Temp Block    Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------

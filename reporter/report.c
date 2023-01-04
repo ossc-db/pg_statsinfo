@@ -1069,18 +1069,18 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Vacuum Basic Statistics (Average) **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-40s  %8s  %8s  %8s  %9s  %9s  %9s |%18s |%34s |%8s  %8s  %8s  %8s  %8s  %8s  %10s  %10s  %8s\n",
+	fprintf(out, "%-40s|%8s|%8s|%8s|%9s|%10s|%10s|%17s|%33s|%8s|%8s|%8s|%8s|%8s|%8s|%13s|%13s|%13s\n",
 		"", "", "Index", "Index", "Removed", "Remain", "Remain", "Missed Dead", "Scan Pages(Ratio)", 
 		"Removed", "Dead", "Index", "", "Duration", "", "Removable", "New Rel", "New Rel");
-	fprintf(out, "%-40s  %8s  %8s  %8s  %9s  %9s  %9s |%8s |%8s |%16s |%16s |%8s  %8s  %8s  %8s  %8s  %8s  %10s  %10s  %8s\n",
+	fprintf(out, "%-40s|%8s|%8s|%8s|%9s|%10s|%10s|%8s|%8s|%16s|%16s|%8s|%8s|%8s|%8s|%8s|%8s|%13s|%13s|%13s\n",
 		"Table", "Count", "Scanned", "Skipped", "Rows", "Rows", "Dead", "Rows", "Pages", "Table", "Index",
 		"Lp", "Lp", "Scans", "Duration", "(Max)", "Cancels", "CutOff Xid", "Frozen Xid", "Min Mxid");
-	fprintf(out, "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_ACTIVITY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-40s  %8s  %8s  %8s  %9s  %9s  %9s  %8s  %8s  %8s(%5s%%)  %8s(%5s%%)  %8s  %8s  %8s  %6s s  %6s s  %8s  %10s  %10s  %8s\n",
+		fprintf(out, "%-40s %8s %8s %8s %9s %10s %10s %8s %8s %8s(%5s%%) %8s(%5s%%) %8s %8s %8s %6s s %6s s %8s %13s %13s %13s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),

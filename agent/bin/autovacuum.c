@@ -552,8 +552,8 @@ Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 	params[5] = list_nth(av->params, 5);	/* index_scans */
 	params[6] = list_nth(av->params, 6);	/* page_removed */
 	params[7] = list_nth(av->params, 7);	/* page_remain */
-	params[8] = list_nth(av->params, 8);	/* tbL_scan_page */
-	params[9] = list_nth(av->params, 9);	/* tbL_scan_page_ratio */
+	params[8] = list_nth(av->params, 8);	/* tbl_scan_page */
+	params[9] = list_nth(av->params, 9);	/* tbl_scan_page_ratio */
 	params[10] = list_nth(av->params, 10);	/* tup_removed */
 	params[11] = list_nth(av->params, 11);	/* tup_remain */
 	params[12] = list_nth(av->params, 12);	/* tup_dead */
