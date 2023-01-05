@@ -154,7 +154,7 @@ parse_autovacuum(const char *message, const char *timestamp)
 		char *index_names;
 		char *index_pages_total;
 		char *index_pages_new_del;
-		char *index_pgaes_current_del;
+		char *index_pages_current_del;
 		char *index_pages_reusable;
 		bool bfirst_index = true;
 
@@ -191,12 +191,12 @@ parse_autovacuum(const char *message, const char *timestamp)
 			index_names             = pgut_malloc( 3 );
 			index_pages_total       = pgut_malloc( 3 );
 			index_pages_new_del     = pgut_malloc( 3 );
-			index_pgaes_current_del = pgut_malloc( 3 );
+			index_pages_current_del = pgut_malloc( 3 );
 			index_pages_reusable    = pgut_malloc( 3 );
 			strcpy(index_names,            "{}");
 			strcpy(index_pages_total,      "{}");
 			strcpy(index_pages_new_del,    "{}");
-			strcpy(index_pgaes_current_del,"{}");
+			strcpy(index_pages_current_del,"{}");
 			strcpy(index_pages_reusable,   "{}");
 
 		}
@@ -276,12 +276,12 @@ parse_autovacuum(const char *message, const char *timestamp)
 			index_names             = pgut_malloc( buf_len );
 			index_pages_total       = pgut_malloc( buf_len );
 			index_pages_new_del     = pgut_malloc( buf_len );
-			index_pgaes_current_del = pgut_malloc( buf_len );
+			index_pages_current_del = pgut_malloc( buf_len );
 			index_pages_reusable    = pgut_malloc( buf_len );
 			strcpy(index_names,            "{");
 			strcpy(index_pages_total,      "{");
 			strcpy(index_pages_new_del,    "{");
-			strcpy(index_pgaes_current_del,"{");
+			strcpy(index_pages_current_del,"{");
 			strcpy(index_pages_reusable,   "{");
 
 			while( tok )
@@ -295,13 +295,13 @@ parse_autovacuum(const char *message, const char *timestamp)
 							strcat( index_names,             "," );
 							strcat( index_pages_total,       "," );
 							strcat( index_pages_new_del,     "," );
-							strcat( index_pgaes_current_del, "," );
+							strcat( index_pages_current_del, "," );
 							strcat( index_pages_reusable,    "," );
 						}
 						strcat( index_names,             (char*)list_nth(Indexes_params,0) );
 						strcat( index_pages_total,       (char*)list_nth(Indexes_params,1) );
 						strcat( index_pages_new_del,     (char*)list_nth(Indexes_params,2) );
-						strcat( index_pgaes_current_del, (char*)list_nth(Indexes_params,3) );
+						strcat( index_pages_current_del, (char*)list_nth(Indexes_params,3) );
 						strcat( index_pages_reusable,    (char*)list_nth(Indexes_params,4) );
 					} else {
 						break;
@@ -313,7 +313,7 @@ parse_autovacuum(const char *message, const char *timestamp)
 			strcat( index_names,             "}" );
 			strcat( index_pages_total,       "}" );
 			strcat( index_pages_new_del,     "}" );
-			strcat( index_pgaes_current_del, "}" );
+			strcat( index_pages_current_del, "}" );
 			strcat( index_pages_reusable,    "}" );
 		
 			/* Re-parse I/O timings output separatedly. */
@@ -344,13 +344,13 @@ parse_autovacuum(const char *message, const char *timestamp)
 		indexes = lappend( indexes, strdup(index_names) );
 		indexes = lappend( indexes, strdup(index_pages_total) );
 		indexes = lappend( indexes, strdup(index_pages_new_del) );
-		indexes = lappend( indexes, strdup(index_pgaes_current_del) );
+		indexes = lappend( indexes, strdup(index_pages_current_del) );
 		indexes = lappend( indexes, strdup(index_pages_reusable) );
 
 		free(index_names);
 		free(index_pages_total);
 		free(index_pages_new_del);
-		free(index_pgaes_current_del);
+		free(index_pages_current_del);
 		free(index_pages_reusable);
 	}
 	else if ((params = capture(message, msg_autoanalyze, NUM_AUTOANALYZE)) != NIL)
@@ -596,7 +596,7 @@ Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 	params[31] = list_nth(av->params, idx_offset + 0);	/* index_names */
 	params[32] = list_nth(av->params, idx_offset + 1);	/* index_pages_total */
 	params[33] = list_nth(av->params, idx_offset + 2);	/* index_pages_new_del */
-	params[34] = list_nth(av->params, idx_offset + 3);	/* index_pgaes_current_del */
+	params[34] = list_nth(av->params, idx_offset + 3);	/* index_pages_current_del */
 	params[35] = list_nth(av->params, idx_offset + 4);	/* index_pages_reusable */
 
 	/* Index offset in params : I/O timings */

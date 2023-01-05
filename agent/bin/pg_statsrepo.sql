@@ -378,7 +378,7 @@ CREATE TABLE statsrepo.autovacuum
 	index_names             text[],
 	index_pages_total       bigint[],
 	index_pages_new_del     bigint[],
-	index_pgaes_current_del bigint[],
+	index_pages_current_del bigint[],
 	index_pages_reusable    bigint[],
 	io_timings_read			double precision,
 	io_timings_write		double precision,
@@ -2729,7 +2729,7 @@ $$
 			pg_catalog.unnest(v.index_names)             AS index,
 			pg_catalog.unnest(v.index_pages_total)       AS total,
 			pg_catalog.unnest(v.index_pages_new_del)     AS new_del,
-			pg_catalog.unnest(v.index_pgaes_current_del) AS cur_del,
+			pg_catalog.unnest(v.index_pages_current_del) AS cur_del,
 			pg_catalog.unnest(v.index_pages_reusable)    AS reuse
 		FROM
 			statsrepo.autovacuum v,
