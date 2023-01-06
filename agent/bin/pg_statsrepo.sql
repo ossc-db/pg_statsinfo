@@ -3009,53 +3009,6 @@ LANGUAGE sql;
 
 -- generate information that corresponds to 'Query Activity (Statements)'
 CREATE FUNCTION statsrepo.get_query_activity_statements(
-	IN snapid_begin		bigint,
-	IN snapid_end		bigint,
-	OUT rolname			text,
-	OUT datname			name,
-	OUT query			text,
-	OUT plans			bigint,
-	OUT total_plan_time	numeric,
-	OUT time_per_plan	numeric,
-	OUT calls			bigint,
-	OUT total_exec_time	numeric,
-	OUT time_per_call	numeric,
-	OUT blk_read_time	numeric,
-	OUT blk_write_time	numeric,
-	OUT tmp_blk_read_time	numeric,
-	OUT tmp_blk_write_time	numeric,
-	OUT dbid	oid,
-	OUT userid	oid,
-	OUT queryid	bigint,
-	OUT last	bigint
-) RETURNS SETOF record AS
-$$
-DECLARE
-	pg_version_num	integer;
-	vmaj			integer;
-	vmin			integer;
-	vrev			integer;
-BEGIN
-	-- TODO: needs version info?
-	SELECT
-		coalesce(pg_catalog.substring(pg_catalog.split_part(pg_version, '.', 1), '^\d+')::integer, 0),
-		coalesce(pg_catalog.substring(pg_catalog.split_part(pg_version, '.', 2), '^\d+')::integer, 0),
-		coalesce(pg_catalog.substring(pg_catalog.split_part(pg_version, '.', 3), '^\d+')::integer, 0)
-	INTO vmaj, vmin, vrev FROM statsrepo.instance
-	WHERE instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $1);
-
-	IF vmaj >= 10 THEN
-		pg_version_num := 100 * 100 * vmaj + vmin;
-	ELSE
-		pg_version_num := (100 * vmaj + vmin) * 100 + vrev;
-	END IF;
-
-	RETURN QUERY SELECT * FROM statsrepo.get_query_activity_statemets_body($1, $2);
-END;
-$$ LANGUAGE plpgsql;
-
--- internal function for get_query_activity_statements()
-CREATE FUNCTION statsrepo.get_query_activity_statemets_body(
 	IN snapid_begin			bigint,
 	IN snapid_end			bigint,
 	OUT rolname				text,
