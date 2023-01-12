@@ -1,16 +1,16 @@
 # SPEC file for pg_statsinfo
-# Copyright (c) 2009-2022, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+# Copyright (c) 2009-2023, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
 
 # Original declaration for pg_statsinfo rpmbuild #
 
-%define _pgdir   /usr/pgsql-14
+%define _pgdir   /usr/pgsql-15
 %define _bindir  %{_pgdir}/bin
 %define _libdir  %{_pgdir}/lib
 %define _datadir %{_pgdir}/share
 
 ## Set general information for pg_statsinfo.
 Name:       pg_statsinfo
-Version:    14.0
+Version:    15.0
 Release:    1%{?dist}
 Summary:    Performance monitoring tool for PostgreSQL
 Group:      Applications/Databases
@@ -20,7 +20,7 @@ Source0:    %{name}-%{version}.tar.gz
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 
 ## We use postgresql-devel package
-BuildRequires:  postgresql14-devel
+BuildRequires:  postgresql15-devel
 %if %{rhel} == 7
 BuildRequires:  llvm-toolset-7 llvm5.0
 %endif
@@ -33,7 +33,7 @@ pg_statsinfo monitors an instance of PostgreSQL server and gather
 the statistics and activities of the server as snapshots.
 
 %package llvmjit
-Requires: postgresql14-llvmjit
+Requires: postgresql15-llvmjit
 Requires: pg_statsinfo = %{version}
 Summary:  Just-in-time compilation support for pg_statsinfo
 
@@ -121,8 +121,10 @@ EOF
 	fi
 fi
 
-# History of pg_statsinfo-v14 RPM.
+# History of pg_statsinfo-v15 RPM.
 %changelog
+* Wed Feb  1 2023 - NTT OSS Center 15.0-1
+- pg_statsinfo 15.0 released
 * Tue Feb  1 2022 - NTT OSS Center 14.0-1
 - pg_statsinfo 14.0 released
 * Mon Dec  14 2020 - NTT OSS Center 13.0-1

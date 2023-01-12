@@ -1433,7 +1433,7 @@ pg_statsinfo](https://www.pgcon.org/2010/schedule/events/216.en.html)
 
 <div>
 
-Copyright (c) 2009-2022, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+Copyright (c) 2009-2023, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
 
 </div>
 
