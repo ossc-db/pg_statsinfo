@@ -587,8 +587,8 @@ Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 	/* Index offset in params : index scan */
 	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID + NUM_MINMXID;
 	params[27] = list_nth(av->params, idx_offset + 0);	/* index_scan_ptn */
-	params[28] = list_nth(av->params, idx_offset + 1);	/* index_scan_pages */
-	params[29] = list_nth(av->params, idx_offset + 2);	/* index_scan_pages_ratio */
+	params[28] = list_nth(av->params, idx_offset + 1);	/* dead_lp_pages */
+	params[29] = list_nth(av->params, idx_offset + 2);	/* dead_lp_pages_ratio */
 	params[30] = list_nth(av->params, idx_offset + 4);	/* dead_lp */
 
 	/* Index offset in params : indexes */

@@ -372,8 +372,8 @@ CREATE TABLE statsrepo.autovacuum
 	new_relfrozenxid		xid8,
 	new_relminmxid			xid8,
 	index_scan_ptn			integer,
-	index_scan_pages		bigint,
-	index_scan_pages_ratio	double precision,
+	dead_lp_pages			bigint,
+	dead_lp_pages_ratio		double precision,
 	dead_lp					bigint,
 	index_names             text[],
 	index_pages_total       bigint[],
@@ -2410,11 +2410,11 @@ CREATE FUNCTION statsrepo.get_autovacuum_activity(
 	OUT avg_tup_miss_dead_pages	numeric,
 	OUT tbl_scan_pages			numeric,
 	OUT tbl_scan_pages_ratio	numeric,
-	OUT index_scan_pages		numeric,
-	OUT index_scan_pages_ratio	numeric,
+	OUT dead_lp_pages			numeric,
+	OUT dead_lp_pages_ratio		numeric,
 	OUT removed_lp				numeric,
 	OUT dead_lp					numeric,
-	OUT avg_index_scans			numeric,
+	OUT sum_index_scans			numeric,
 	OUT avg_duration			numeric,
 	OUT max_duration			numeric,
 	OUT cancel					bigint,
@@ -2443,8 +2443,8 @@ $$
 			v.index_scan_ptn,
 			v.tbl_scan_pages,
 			v.tbl_scan_pages_ratio,
-			v.index_scan_pages,
-			v.index_scan_pages_ratio,
+			v.dead_lp_pages,
+			v.dead_lp_pages_ratio,
 			v.dead_lp,
 			v.removable_cutoff::text::numeric,
 			v.new_relfrozenxid::text::numeric,
@@ -2486,7 +2486,7 @@ $$
 			pg_catalog.avg(v.tup_miss_dead_pages) AS avg_tup_miss_dead_pages,
 			pg_catalog.avg(v.tbl_scan_pages) AS tbl_scan_pages,
 			pg_catalog.avg(v.tbl_scan_pages_ratio) AS tbl_scan_pages_ratio,
-			pg_catalog.avg(v.index_scans) AS avg_index_scans,
+			pg_catalog.sum(v.index_scans) AS sum_index_scans,
 			pg_catalog.avg(v.duration) AS avg_duration,
 			pg_catalog.max(v.duration) AS max_duration,
 			pg_catalog.max(v.removable_cutoff) AS max_cutoff_xid,
@@ -2504,8 +2504,8 @@ $$
 			v.schema,
 			v.table,
 			pg_catalog.count(*) AS index_scan,
-			pg_catalog.avg(v.index_scan_pages)       AS index_scan_pages,
-			pg_catalog.avg(v.index_scan_pages_ratio) AS index_scan_pages_ratio,
+			pg_catalog.avg(v.dead_lp_pages)       AS dead_lp_pages,
+			pg_catalog.avg(v.dead_lp_pages_ratio) AS dead_lp_pages_ratio,
 			pg_catalog.avg(v.dead_lp) AS removed_lp
 		FROM
 			vall v
@@ -2515,7 +2515,7 @@ $$
 			v.database, v.schema, v.table
 	),
 	vb AS (
-		-- Aggregate data that was not index-scanned
+		-- Aggregate data with index-scan bypassed by failsafes
 		SELECT
 			v.database,
 			v.schema,
@@ -2525,7 +2525,7 @@ $$
 		FROM
 			vall v
 		WHERE
-			v.index_scan_ptn in (1,3,4)
+			v.index_scan_ptn in (4)
 		GROUP BY
 			v.database, v.schema, v.table
 	)
@@ -2543,11 +2543,11 @@ $$
 		pg_catalog.round(COALESCE(tv.avg_tup_miss_dead_pages, 0)::numeric, 1),
 		pg_catalog.round(COALESCE(tv.tbl_scan_pages,          0)::numeric, 1),
 		pg_catalog.round(COALESCE(tv.tbl_scan_pages_ratio,    0)::numeric, 1),
-		pg_catalog.round(COALESCE(va.index_scan_pages,        0)::numeric, 1),
-		pg_catalog.round(COALESCE(va.index_scan_pages_ratio,  0)::numeric, 1),
+		pg_catalog.round(COALESCE(va.dead_lp_pages,           0)::numeric, 1),
+		pg_catalog.round(COALESCE(va.dead_lp_pages_ratio,     0)::numeric, 1),
 		pg_catalog.round(COALESCE(va.removed_lp,              0)::numeric, 1),
 		pg_catalog.round(COALESCE(vb.dead_lp,                 0)::numeric, 1),
-		pg_catalog.round(COALESCE(tv.avg_index_scans,         0)::numeric, 1),
+		pg_catalog.round(COALESCE(tv.sum_index_scans,         0)::numeric, 1),
 		pg_catalog.round(COALESCE(tv.avg_duration,            0)::numeric, 1),
 		pg_catalog.round(COALESCE(tv.max_duration,            0)::numeric, 1),
 		COALESCE(tc.count, 0),

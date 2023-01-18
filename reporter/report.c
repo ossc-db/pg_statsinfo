@@ -90,11 +90,11 @@ SELECT \
 	avg_tup_miss_dead_pages, \
 	tbl_scan_pages, \
 	tbl_scan_pages_ratio, \
-	index_scan_pages, \
-	index_scan_pages_ratio, \
+	dead_lp_pages, \
+	dead_lp_pages_ratio, \
 	removed_lp, \
 	dead_lp, \
-	avg_index_scans, \
+	sum_index_scans, \
 	avg_duration, \
 	max_duration, \
 	cancel, \
@@ -1069,13 +1069,13 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Vacuum Basic Statistics (Average) **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-40s|%8s|%8s|%8s|%9s|%10s|%10s|%17s|%33s|%8s|%8s|%8s|%8s|%8s|%8s|%13s|%13s|%13s\n",
-		"", "", "Index", "Index", "Removed", "Remain", "Remain", "Missed Dead", "Scan Pages(Ratio)", 
-		"Removed", "Dead", "Index", "", "Duration", "", "Removable", "New Rel", "New Rel");
+	fprintf(out, "%-40s|%8s|%8s|%8s|%9s|%10s|%10s|%17s|%16s|%16s|%8s|%8s|%8s|%8s|%8s|%8s|%13s|%13s|%13s\n",
+		"", "", "#Index", "#Index", "Removed", "Remain", "Remain", "Missed Dead", "Table Scan", "Dead Tuple", 
+		"Removed", "Dead", "#Index", "", "Duration", "", "Removable", "New Rel", "New Rel");
 	fprintf(out, "%-40s|%8s|%8s|%8s|%9s|%10s|%10s|%8s|%8s|%16s|%16s|%8s|%8s|%8s|%8s|%8s|%8s|%13s|%13s|%13s\n",
-		"Table", "Count", "Scanned", "Skipped", "Rows", "Rows", "Dead", "Rows", "Pages", "Table", "Index",
-		"Lp", "Lp", "Scans", "Duration", "(Max)", "Cancels", "CutOff Xid", "Frozen Xid", "Min Mxid");
-	fprintf(out, "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+		"Table", "#Count", "Scanned", "Skipped", "Rows", "Rows", "Dead", "Rows", "Pages", "Pages(Ratio)", " Pages(Ratio)",
+		"Lp", "Lp", "Scans", "Duration", "(Max)", "#Cancels", "CutOff Xid", "Frozen Xid", "Min Mxid");
+	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_ACTIVITY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)

@@ -1740,12 +1740,12 @@ STATSINFO Report (host: statsinfo, port: 5432)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
-Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                        |        |  #Index|  #Index|  Removed|    Remain|    Remain|      Missed Dead|      Table Scan|      Dead Tuple| Removed|    Dead|  #Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |  #Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|    Pages(Ratio)|    Pages(Ratio)|      Lp|      Lp|   Scans|Duration|   (Max)|#Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
 postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
-postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      2.0    0.0 s    0.0 s        0         27293                            
 postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
 postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
 postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
@@ -1801,12 +1801,12 @@ STATSINFO Report (host: statsinfo, port: 5433)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
-Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                        |        |  #Index|  #Index|  Removed|    Remain|    Remain|      Missed Dead|      Table Scan|      Dead Tuple| Removed|    Dead|  #Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |  #Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|    Pages(Ratio)|    Pages(Ratio)|      Lp|      Lp|   Scans|Duration|   (Max)|#Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
 postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
-postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      2.0    0.0 s    0.0 s        0         27293                            
 postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
 postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
 postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
@@ -1862,12 +1862,12 @@ STATSINFO Report (host: statsinfo, port: 5434)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
-Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                        |        |  #Index|  #Index|  Removed|    Remain|    Remain|      Missed Dead|      Table Scan|      Dead Tuple| Removed|    Dead|  #Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |  #Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|    Pages(Ratio)|    Pages(Ratio)|      Lp|      Lp|   Scans|Duration|   (Max)|#Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
 postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
-postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      2.0    0.0 s    0.0 s        0         27293                            
 postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
 postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
 postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
@@ -1923,12 +1923,12 @@ STATSINFO Report (host: statsinfo, port: 5435)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
-Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                        |        |  #Index|  #Index|  Removed|    Remain|    Remain|      Missed Dead|      Table Scan|      Dead Tuple| Removed|    Dead|  #Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |  #Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|    Pages(Ratio)|    Pages(Ratio)|      Lp|      Lp|   Scans|Duration|   (Max)|#Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
 postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
-postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      2.0    0.0 s    0.0 s        0         27293                            
 postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
 postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
 postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
@@ -1984,12 +1984,12 @@ STATSINFO Report (host: statsinfo, port: 5436)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
-Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                        |        |  #Index|  #Index|  Removed|    Remain|    Remain|      Missed Dead|      Table Scan|      Dead Tuple| Removed|    Dead|  #Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |  #Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|    Pages(Ratio)|    Pages(Ratio)|      Lp|      Lp|   Scans|Duration|   (Max)|#Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
 postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
-postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      2.0    0.0 s    0.0 s        0         27293                            
 postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
 postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
 postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
@@ -2045,12 +2045,12 @@ STATSINFO Report (host: statsinfo, port: 5437)
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
-Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                        |        |  #Index|  #Index|  Removed|    Remain|    Remain|      Missed Dead|      Table Scan|      Dead Tuple| Removed|    Dead|  #Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |  #Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|    Pages(Ratio)|    Pages(Ratio)|      Lp|      Lp|   Scans|Duration|   (Max)|#Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
 postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
-postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      2.0    0.0 s    0.0 s        0         27293                            
 postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
 postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
 postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
@@ -3569,12 +3569,12 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
-Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                        |        |  #Index|  #Index|  Removed|    Remain|    Remain|      Missed Dead|      Table Scan|      Dead Tuple| Removed|    Dead|  #Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |  #Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|    Pages(Ratio)|    Pages(Ratio)|      Lp|      Lp|   Scans|Duration|   (Max)|#Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
 postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
-postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      2.0    0.0 s    0.0 s        0         27293                            
 postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
 postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
 postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
@@ -4045,12 +4045,12 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
-Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                        |        |  #Index|  #Index|  Removed|    Remain|    Remain|      Missed Dead|      Table Scan|      Dead Tuple| Removed|    Dead|  #Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |  #Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|    Pages(Ratio)|    Pages(Ratio)|      Lp|      Lp|   Scans|Duration|   (Max)|#Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
 postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
-postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      2.0    0.0 s    0.0 s        0         27293                            
 postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
 postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
 postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
@@ -4521,12 +4521,12 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
-Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                        |        |  #Index|  #Index|  Removed|    Remain|    Remain|      Missed Dead|      Table Scan|      Dead Tuple| Removed|    Dead|  #Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |  #Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|    Pages(Ratio)|    Pages(Ratio)|      Lp|      Lp|   Scans|Duration|   (Max)|#Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
 postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
-postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      2.0    0.0 s    0.0 s        0         27293                            
 postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
 postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
 postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
@@ -4997,12 +4997,12 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
-Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                        |        |  #Index|  #Index|  Removed|    Remain|    Remain|      Missed Dead|      Table Scan|      Dead Tuple| Removed|    Dead|  #Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |  #Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|    Pages(Ratio)|    Pages(Ratio)|      Lp|      Lp|   Scans|Duration|   (Max)|#Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
 postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
-postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      2.0    0.0 s    0.0 s        0         27293                            
 postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
 postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
 postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
@@ -5473,12 +5473,12 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
-Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                        |        |  #Index|  #Index|  Removed|    Remain|    Remain|      Missed Dead|      Table Scan|      Dead Tuple| Removed|    Dead|  #Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |  #Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|    Pages(Ratio)|    Pages(Ratio)|      Lp|      Lp|   Scans|Duration|   (Max)|#Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
 postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
-postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      2.0    0.0 s    0.0 s        0         27293                            
 postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
 postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
 postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
@@ -5949,12 +5949,12 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
-Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                        |        |  #Index|  #Index|  Removed|    Remain|    Remain|      Missed Dead|      Table Scan|      Dead Tuple| Removed|    Dead|  #Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |  #Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|    Pages(Ratio)|    Pages(Ratio)|      Lp|      Lp|   Scans|Duration|   (Max)|#Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
 postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
-postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      2.0    0.0 s    0.0 s        0         27293                            
 postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
 postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
 postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
@@ -6622,12 +6622,12 @@ Write Duration Maximum   : 49.193 sec
 
 /** Vacuum Basic Statistics (Average) **/
 -----------------------------------
-                                        |        |   Index|   Index|  Removed|    Remain|    Remain|      Missed Dead|                Scan Pages(Ratio)| Removed|    Dead|   Index|        |Duration|        |    Removable|      New Rel|      New Rel
-Table                                   |   Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|           Table|           Index|      Lp|      Lp|   Scans|Duration|   (Max)| Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                        |        |  #Index|  #Index|  Removed|    Remain|    Remain|      Missed Dead|      Table Scan|      Dead Tuple| Removed|    Dead|  #Index|        |Duration|        |    Removable|      New Rel|      New Rel
+Table                                   |  #Count| Scanned| Skipped|     Rows|      Rows|      Dead|    Rows|   Pages|    Pages(Ratio)|    Pages(Ratio)|      Lp|      Lp|   Scans|Duration|   (Max)|#Cancels|   CutOff Xid|   Frozen Xid|     Min Mxid
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 template1.pg_catalog.pg_statistic               1        1        0     129.0      404.0        0.0      0.0      0.0     28.0(100.0%)     16.0( 57.1%)    178.0      0.0      1.0    0.0 s    0.0 s        0           811           811              
 postgres.public.pgbench_branches                1        0        1     113.0       10.0        0.0      0.0      0.0      1.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        2         11768         11744              
-postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      1.0    0.0 s    0.0 s        0         27293                            
+postgres.pg_catalog.pg_statistic                2        2        0      41.5      499.0        0.0      0.0      0.0     30.5(100.0%)     16.0( 52.8%)    158.0      0.0      2.0    0.0 s    0.0 s        0         27293                            
 postgres.pg_catalog.pg_attribute                1        1        0       2.0     4678.0        0.0      0.0      0.0     51.0( 58.0%)      3.0(  3.4%)     88.0      0.0      1.0    0.0 s    0.0 s        0           825           800              
 postgres.public.pgbench_accounts                0        0        0       0.0        0.0        0.0      0.0      0.0      0.0(  0.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        1                                          
 postgres.public.pgbench_history                 1        0        1       0.0    10920.0        0.0      0.0      0.0     70.0(100.0%)      0.0(  0.0%)      0.0      0.0      0.0    0.0 s    0.0 s        0         11768           845              
