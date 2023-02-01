@@ -1,7 +1,7 @@
 /*
  * writer_sql.h
  *
- * Copyright (c) 2009-2022, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2009-2023, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 #ifndef WRITER_SQL_H
@@ -33,13 +33,13 @@ INSERT INTO statsrepo.xact VALUES \
 
 #define SQL_INSERT_STATEMENT "\
 INSERT INTO statsrepo.statement \
-  SELECT (($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)::statsrepo.statement).* \
+  SELECT (($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)::statsrepo.statement).* \
     FROM statsrepo.database d \
    WHERE d.snapid = $1 AND d.dbid = $2"
 
 #define SQL_INSERT_PLAN "\
 INSERT INTO statsrepo.plan \
-  SELECT (($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)::statsrepo.plan).* \
+  SELECT (($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)::statsrepo.plan).* \
     FROM statsrepo.database d \
    WHERE d.snapid = $1 AND d.dbid = $2"
 

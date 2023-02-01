@@ -2,7 +2,7 @@
  * lib/last_xact_activity.c
  *	 Track statement execution in current/last transaction.
  *
- * Copyright (c) 2009-2022, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2009-2023, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 #include "postgres.h"
@@ -219,6 +219,7 @@ static bool free_localdata_on_execend = false;
 static bool immediate_exit_xact = false;
 
 /* Module callbacks */
+void        request_last_xact_activity(void);
 void		init_last_xact_activity(void);
 void		fini_last_xact_activity(void);
 Datum		statsinfo_last_xact_activity(PG_FUNCTION_ARGS);
@@ -355,12 +356,8 @@ init_last_xact_activity(void)
 							 NULL,
 							 NULL);
 	
-	RequestAddinShmemSpace(buffer_size(MaxBackends));
-
 
 	ru_check_stat_statements();
-	RequestAddinShmemSpace(ru_memsize());
-	RequestNamedLWLockTranche("pg_statsinfo_rusage", 2);
 
 	TAKE_HOOK1(shmem_startup);
 	TAKE_HOOK2(planner, myPlanner);
@@ -385,6 +382,23 @@ fini_last_xact_activity(void)
 	RESTORE_HOOK(ExecutorFinish);
 	RESTORE_HOOK(ExecutorEnd);
 	RESTORE_HOOK(ProcessUtility);
+}
+
+/*
+ * request_last_xact_activity() - 
+ *
+ * Request allocate or attach shared memory
+ */
+void
+request_last_xact_activity(void)
+{
+
+	RequestAddinShmemSpace(buffer_size(MaxBackends));
+
+	RequestAddinShmemSpace(ru_memsize());
+	RequestNamedLWLockTranche("pg_statsinfo_rusage", 2);
+
+	return;
 }
 
 /*

@@ -8,4 +8,4 @@ PostgreSQL サーバの利用統計情報を定期的に収集・蓄積するこ
 [English version here](/doc/pg_statsinfo.md)
 
 -----
-Copyright (c) 2009-2022, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+Copyright (c) 2009-2023, NIPPON TELEGRAPH AND TELEPHONE CORPORATION

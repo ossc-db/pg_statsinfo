@@ -1,16 +1,16 @@
 /*
  * autovacuum.c : parse auto-vacuum and auto-analyze messages
  *
- * Copyright (c) 2009-2022, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2009-2023, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 #include "pg_statsinfod.h"
 
 #define SQL_INSERT_AUTOVACUUM "\
 INSERT INTO statsrepo.autovacuum VALUES \
-($1, $2::timestamptz - interval '1sec' * $21, \
+($1, $2::timestamptz - interval '1sec' * $23, \
  $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, \
- $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32)" 
+ $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38)" 
 
 #define SQL_INSERT_AUTOANALYZE "\
 INSERT INTO statsrepo.autoanalyze VALUES \
@@ -27,6 +27,18 @@ INSERT INTO statsrepo.autoanalyze_cancel VALUES \
 /* pg_rusage (rusage is not localized) */
 #define MSG_RUSAGE \
 	"CPU: user: %f s, system: %f s, elapsed: %f s"
+
+/* tuples_missed (tuples_missed is not localized) */
+#define MSG_TUPLES_MISS \
+	"tuples missed: %lld dead from %u pages not removed due to cleanup lock contention\n"
+
+/* frozen_xid (frozen_xid is not localized) */
+#define MSG_FROZENXID \
+	"new relfrozenxid: %u, which is %d XIDs ahead of previous value"
+
+/* relmin_mxid (relmin_mxid is not localized) */
+#define MSG_MINMXID \
+	"new relminmxid: %u, which is %d MXIDs ahead of previous value"
 
 /* index scan (index scan is not localized) */
 #define MSG_INDEX_SCAN \
@@ -53,15 +65,19 @@ INSERT INTO statsrepo.autoanalyze_cancel VALUES \
 #define MSG_AUTOVACUUM_CANCEL \
 	"canceling autovacuum task"
 
-#define NUM_AUTOVACUUM				25
-#define IDX_AUTOVACUUM_RUSAGE		24
-#define IDX_AUTOVACUUM_OPTIONAL		13
+#define NUM_AUTOVACUUM				28
+#define IDX_AUTOVACUUM_TUPLES_MISS	13
+#define IDX_AUTOVACUUM_OPTIONAL		16
+#define IDX_AUTOVACUUM_RUSAGE		27
 #define NUM_AUTOANALYZE				12
 #define IDX_AUTOANALYZE_RUSAGE		11
 #define IDX_AUTOANALYZE_OPTIONAL	3
 
-#define NUM_INDEXES					5
+#define NUM_TUPLES_MISS				2
+#define NUM_FROZENXID				2
+#define NUM_MINMXID					2
 #define NUM_INDEX_SCAN				6
+#define NUM_INDEXES					5
 #define NUM_IO_TIMING				2
 #define NUM_RUSAGE					3
 #define NUM_AUTOVACUUM_CANCEL		5
@@ -122,6 +138,9 @@ parse_autovacuum(const char *message, const char *timestamp)
 	AutovacuumLog  *av;
 	List		   *params;
 	List		   *usage;
+	List		   *tuples_miss = NIL;
+	List		   *frozen_xid  = NIL;
+	List		   *relmin_mxid = NIL;
 	List		   *index_scan = NIL;
 	List		   *indexes    = NIL;
 	List		   *io_timing  = NIL;
@@ -135,35 +154,51 @@ parse_autovacuum(const char *message, const char *timestamp)
 		char *index_names;
 		char *index_pages_total;
 		char *index_pages_new_del;
-		char *index_pgaes_current_del;
+		char *index_pages_current_del;
 		char *index_pages_reusable;
 		bool bfirst_index = true;
 
 		exec = (QueueItemExec) Autovacuum_exec;
 		idx_rusage = IDX_AUTOVACUUM_RUSAGE;
 
+		/* Re-parse "tuples missed" in autovacuum messages. */
+		str_optional = (char*)list_nth( params, IDX_AUTOVACUUM_TUPLES_MISS );
+		if( strlen(str_optional) > 0 )
+		{
+			tuples_miss = capture( str_optional, MSG_TUPLES_MISS, NUM_TUPLES_MISS );
+		}
+		if ( tuples_miss == NIL ) {
+			/* Empty list with the same number of elements. */
+			for( int i=0; i<NUM_TUPLES_MISS; i++)
+				tuples_miss = lappend( tuples_miss, NULL );
+		}
+
+		/* Re-parse optional statements in autovacuum messages. */
 		str_optional = (char*)list_nth( params, IDX_AUTOVACUUM_OPTIONAL );
 		if ( strlen(str_optional) == 0 )
 		{
-			/* Empty list of number of elements NUM_INDEX_SCAN. */
+			/* Empty list with the same number of elements. */
+			for( int i=0; i<NUM_FROZENXID; i++)
+				frozen_xid = lappend( frozen_xid, NULL );
+			for( int i=0; i<NUM_MINMXID; i++)
+				relmin_mxid = lappend( relmin_mxid, NULL );
 			for( int i=0; i<NUM_INDEX_SCAN; i++)
 				index_scan = lappend( index_scan, NULL );
+			for( int i=0; i<NUM_IO_TIMING; i++)
+				io_timing = lappend( io_timing, NULL );
 
 			/* Empty Index information. */
 			index_names             = pgut_malloc( 3 );
 			index_pages_total       = pgut_malloc( 3 );
 			index_pages_new_del     = pgut_malloc( 3 );
-			index_pgaes_current_del = pgut_malloc( 3 );
+			index_pages_current_del = pgut_malloc( 3 );
 			index_pages_reusable    = pgut_malloc( 3 );
 			strcpy(index_names,            "{}");
 			strcpy(index_pages_total,      "{}");
 			strcpy(index_pages_new_del,    "{}");
-			strcpy(index_pgaes_current_del,"{}");
+			strcpy(index_pages_current_del,"{}");
 			strcpy(index_pages_reusable,   "{}");
 
-			/* Empty I/O timing Information. */
-			for( int i=0; i<NUM_IO_TIMING; i++)
-				io_timing = lappend( io_timing, NULL );
 		}
 		else
 		{
@@ -175,10 +210,36 @@ parse_autovacuum(const char *message, const char *timestamp)
 			long buf_len = strlen(str_optional);
 
 			char *tok = strtok(str_optional, "\n");
-			char *str_index_scan_ptn;
+
+			/* Re-parse frozen xid output separatedly. */
+			if ( tok && ((frozen_xid = capture( tok, MSG_FROZENXID, NUM_FROZENXID)) != NIL)){
+				/* Get autovacuum message for next line. */
+				tok = strtok(NULL, "\n");
+			}
+			else
+			{
+				/* Empty  frozen_xid Information. */
+				for( int i=0; i<NUM_FROZENXID; i++)
+					frozen_xid = lappend( frozen_xid, NULL );
+			}
+
+			/* Re-parse relmin_mxid output separatedly. */
+			if ( tok && ((relmin_mxid = capture( tok, MSG_MINMXID, NUM_MINMXID)) != NIL)){
+				/* Get autovacuum message for next line. */
+				tok = strtok(NULL, "\n");
+			}
+			else
+			{
+				/* Empty relmin_mxid. */
+				for( int i=0; i<NUM_MINMXID; i++)
+					relmin_mxid = lappend( relmin_mxid, NULL );
+			}
 			
 			/* Re-parse index scan output separatedly. */
-			if ((index_scan = capture( tok, MSG_INDEX_SCAN, NUM_INDEX_SCAN)) != NIL){
+			if ( tok && ((index_scan = capture( tok, MSG_INDEX_SCAN, NUM_INDEX_SCAN)) != NIL)){
+
+				char *str_index_scan_ptn;
+
 				str_index_scan_ptn = (char*)list_nth( index_scan, 0 );
 				if ( strcmp( str_index_scan_ptn, MSG_INDEX_SCAN_PTN_1) == 0 ){
 					strcpy( str_index_scan_ptn, "1" );
@@ -198,7 +259,7 @@ parse_autovacuum(const char *message, const char *timestamp)
 					elog(WARNING, "cannot parse index ptn of autovacuum: %s", str_index_scan_ptn);
 					return false;	/* should not happen */
 				}
-				/* get next token. */
+				/* Get autovacuum message for next line. */
 				tok = strtok(NULL, "\n");
 			} else {
 				/* Empty list of number of elements NUM_INDEX_SCAN. */
@@ -215,12 +276,12 @@ parse_autovacuum(const char *message, const char *timestamp)
 			index_names             = pgut_malloc( buf_len );
 			index_pages_total       = pgut_malloc( buf_len );
 			index_pages_new_del     = pgut_malloc( buf_len );
-			index_pgaes_current_del = pgut_malloc( buf_len );
+			index_pages_current_del = pgut_malloc( buf_len );
 			index_pages_reusable    = pgut_malloc( buf_len );
 			strcpy(index_names,            "{");
 			strcpy(index_pages_total,      "{");
 			strcpy(index_pages_new_del,    "{");
-			strcpy(index_pgaes_current_del,"{");
+			strcpy(index_pages_current_del,"{");
 			strcpy(index_pages_reusable,   "{");
 
 			while( tok )
@@ -234,25 +295,25 @@ parse_autovacuum(const char *message, const char *timestamp)
 							strcat( index_names,             "," );
 							strcat( index_pages_total,       "," );
 							strcat( index_pages_new_del,     "," );
-							strcat( index_pgaes_current_del, "," );
+							strcat( index_pages_current_del, "," );
 							strcat( index_pages_reusable,    "," );
 						}
 						strcat( index_names,             (char*)list_nth(Indexes_params,0) );
 						strcat( index_pages_total,       (char*)list_nth(Indexes_params,1) );
 						strcat( index_pages_new_del,     (char*)list_nth(Indexes_params,2) );
-						strcat( index_pgaes_current_del, (char*)list_nth(Indexes_params,3) );
+						strcat( index_pages_current_del, (char*)list_nth(Indexes_params,3) );
 						strcat( index_pages_reusable,    (char*)list_nth(Indexes_params,4) );
 					} else {
 						break;
 					}
 				}
-				/* get next token. */
+				/* Get autovacuum message for next line. */
 				tok = strtok(NULL, "\n");
 			}
 			strcat( index_names,             "}" );
 			strcat( index_pages_total,       "}" );
 			strcat( index_pages_new_del,     "}" );
-			strcat( index_pgaes_current_del, "}" );
+			strcat( index_pages_current_del, "}" );
 			strcat( index_pages_reusable,    "}" );
 		
 			/* Re-parse I/O timings output separatedly. */
@@ -283,13 +344,13 @@ parse_autovacuum(const char *message, const char *timestamp)
 		indexes = lappend( indexes, strdup(index_names) );
 		indexes = lappend( indexes, strdup(index_pages_total) );
 		indexes = lappend( indexes, strdup(index_pages_new_del) );
-		indexes = lappend( indexes, strdup(index_pgaes_current_del) );
+		indexes = lappend( indexes, strdup(index_pages_current_del) );
 		indexes = lappend( indexes, strdup(index_pages_reusable) );
 
 		free(index_names);
 		free(index_pages_total);
 		free(index_pages_new_del);
-		free(index_pgaes_current_del);
+		free(index_pages_current_del);
 		free(index_pages_reusable);
 	}
 	else if ((params = capture(message, msg_autoanalyze, NUM_AUTOANALYZE)) != NIL)
@@ -345,6 +406,9 @@ parse_autovacuum(const char *message, const char *timestamp)
 	av->base.exec = exec;
 	strlcpy(av->finish, timestamp, lengthof(av->finish));
 	av->params = list_concat(params, usage);
+	av->params = list_concat(params, tuples_miss);
+	av->params = list_concat(params, frozen_xid);
+	av->params = list_concat(params, relmin_mxid);
 	av->params = list_concat(params, index_scan);
 	av->params = list_concat(params, indexes);
 	av->params = list_concat(params, io_timing);
@@ -471,51 +535,74 @@ Autovacuum_free(AutovacuumLog *av)
 static bool
 Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 {
-	const char	   *params[32];
+	const char	   *params[38];
+	int				idx_offset = 0;
 
 	elog(DEBUG2, "write (autovacuum)");
-	Assert(list_length(av->params) == NUM_AUTOVACUUM + NUM_RUSAGE + NUM_INDEX_SCAN + NUM_INDEXES + NUM_IO_TIMING);
+	Assert(list_length(av->params) == NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + 
+	                                  NUM_FROZENXID + NUM_MINMXID + NUM_INDEX_SCAN + NUM_INDEXES + NUM_IO_TIMING);
 
 	memset(params, 0, sizeof(params));
 
-	/*
-	 * Note: In PostgreSQL14, the output order of the automatic vacuum log
-	 * has changed and it no longer matches the column order of the
-	 * repository, so the values of the second argument of list_nth()
-	 * are not in order.
-	 */
 	params[0] = instid;
 	params[1] = av->finish;					/* finish */
-	params[2] = list_nth(av->params, 1);	/* database */
-	params[3] = list_nth(av->params, 2);	/* schema */
-	params[4] = list_nth(av->params, 3);	/* table */
-	params[5] = list_nth(av->params, 4);	/* index_scans */
-	params[6] = list_nth(av->params, 5);	/* page_removed */
-	params[7] = list_nth(av->params, 6);	/* page_remain */
-	params[8] = list_nth(av->params, 8);	/* frozen_skipped_pages */
-	params[9] = list_nth(av->params, 9);	/* tup_removed */
-	params[10] = list_nth(av->params, 10);	/* tup_remain */
-	params[11] = list_nth(av->params, 11);	/* tup_dead */
-	params[12] = list_nth(av->params, 18);	/* page_hit */
-	params[13] = list_nth(av->params, 19);	/* page_miss */
-	params[14] = list_nth(av->params, 20);	/* page_dirty */
-	params[15] = list_nth(av->params, 14);	/* read_rate */
-	params[16] = list_nth(av->params, 16);	/* write_rate */
-	params[17] = list_nth(av->params, 21);	/* wal_records */  
-	params[18] = list_nth(av->params, 22);	/* wal_page_images */ 
-	params[19] = list_nth(av->params, 23);	/* wal_bytes */
-	params[20] = list_nth(av->params, NUM_AUTOVACUUM + 2);	/* duration */
-	params[21] = list_nth(av->params, NUM_AUTOVACUUM + NUM_RUSAGE + 0);	/* index_scan_ptn */
-	params[22] = list_nth(av->params, NUM_AUTOVACUUM + NUM_RUSAGE + 1);	/* tbl_scan_pages */
-	params[23] = list_nth(av->params, NUM_AUTOVACUUM + NUM_RUSAGE + 2);	/* tbl_scan_pages_ratio */
-	params[24] = list_nth(av->params, NUM_AUTOVACUUM + NUM_RUSAGE + 4);	/* dead_lp */
-	params[25] = list_nth(av->params, NUM_AUTOVACUUM + NUM_RUSAGE + NUM_INDEX_SCAN + 0);	/* index_names */
-	params[26] = list_nth(av->params, NUM_AUTOVACUUM + NUM_RUSAGE + NUM_INDEX_SCAN + 1);	/* index_pages_total */
-	params[27] = list_nth(av->params, NUM_AUTOVACUUM + NUM_RUSAGE + NUM_INDEX_SCAN + 2);	/* index_pages_new_del */
-	params[28] = list_nth(av->params, NUM_AUTOVACUUM + NUM_RUSAGE + NUM_INDEX_SCAN + 3);	/* index_pgaes_current_del */
-	params[29] = list_nth(av->params, NUM_AUTOVACUUM + NUM_RUSAGE + NUM_INDEX_SCAN + 4);	/* index_pages_reusable */
-	params[30] = list_nth(av->params, NUM_AUTOVACUUM + NUM_RUSAGE + NUM_INDEX_SCAN + NUM_INDEXES + 0);	/* io_timings_read */
-	params[31] = list_nth(av->params, NUM_AUTOVACUUM + NUM_RUSAGE + NUM_INDEX_SCAN + NUM_INDEXES + 1);	/* io_timings_write */
+	params[2] = list_nth(av->params, 2);	/* database */
+	params[3] = list_nth(av->params, 3);	/* schema */
+	params[4] = list_nth(av->params, 4);	/* table */
+	params[5] = list_nth(av->params, 5);	/* index_scans */
+	params[6] = list_nth(av->params, 6);	/* page_removed */
+	params[7] = list_nth(av->params, 7);	/* page_remain */
+	params[8] = list_nth(av->params, 8);	/* tbl_scan_page */
+	params[9] = list_nth(av->params, 9);	/* tbl_scan_page_ratio */
+	params[10] = list_nth(av->params, 10);	/* tup_removed */
+	params[11] = list_nth(av->params, 11);	/* tup_remain */
+	params[12] = list_nth(av->params, 12);	/* tup_dead */
+	params[13] = list_nth(av->params, 14);	/* removable_cutoff */
+	params[14] = list_nth(av->params, 17);	/* read_rate */
+	params[15] = list_nth(av->params, 19);	/* write_rate */
+	params[16] = list_nth(av->params, 21);	/* page_hit */
+	params[17] = list_nth(av->params, 22);	/* page_miss */
+	params[18] = list_nth(av->params, 23);	/* page_dirty */
+	params[19] = list_nth(av->params, 24);	/* wal_records */
+	params[20] = list_nth(av->params, 25);	/* wal_page_images */
+	params[21] = list_nth(av->params, 26);	/* wal_bytes */
+
+	/* Index offset in params : rusage */
+	idx_offset = NUM_AUTOVACUUM;
+	params[22] = list_nth(av->params, idx_offset + 2);	/* duration */
+
+	/* Index offset in params : tuples missed */
+	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE;
+	params[23] = list_nth(av->params, idx_offset + 0);	/* tup_miss_dead */
+	params[24] = list_nth(av->params, idx_offset + 1);	/* tup_miss_dead_pages */
+
+	/* Index offset in params : relfrozenxid */
+	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS;
+	params[25] = list_nth(av->params, idx_offset + 0);	/* new_relfrozenxid */
+
+	/* Index offset in params : relminmxid */
+	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID;
+	params[26] = list_nth(av->params, idx_offset + 1);	/* new_relminmxid */
+
+	/* Index offset in params : index scan */
+	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID + NUM_MINMXID;
+	params[27] = list_nth(av->params, idx_offset + 0);	/* index_scan_ptn */
+	params[28] = list_nth(av->params, idx_offset + 1);	/* dead_lp_pages */
+	params[29] = list_nth(av->params, idx_offset + 2);	/* dead_lp_pages_ratio */
+	params[30] = list_nth(av->params, idx_offset + 4);	/* dead_lp */
+
+	/* Index offset in params : indexes */
+	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID + NUM_MINMXID + NUM_INDEX_SCAN;
+	params[31] = list_nth(av->params, idx_offset + 0);	/* index_names */
+	params[32] = list_nth(av->params, idx_offset + 1);	/* index_pages_total */
+	params[33] = list_nth(av->params, idx_offset + 2);	/* index_pages_new_del */
+	params[34] = list_nth(av->params, idx_offset + 3);	/* index_pages_current_del */
+	params[35] = list_nth(av->params, idx_offset + 4);	/* index_pages_reusable */
+
+	/* Index offset in params : I/O timings */
+	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID + NUM_MINMXID + NUM_INDEX_SCAN + NUM_INDEXES;
+	params[36] = list_nth(av->params, idx_offset + 0);	/* io_timings_read */
+	params[37] = list_nth(av->params, idx_offset + 1);	/* io_timings_write */
 
 	return pgut_command(conn, SQL_INSERT_AUTOVACUUM,
 						lengthof(params), params) == PGRES_COMMAND_OK;

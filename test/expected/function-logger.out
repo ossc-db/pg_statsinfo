@@ -68,16 +68,18 @@ DELETE 4001
 (1 row)
 
 /**--- Collect the AUTOVACUUM information ---**/
- instid | database | schema | table | start | index_scans | page_removed | page_remain | tup_removed | tup_remain | tup_dead | page_hit | page_miss | page_dirty | read_rate | write_rate | duration 
---------+----------+--------+-------+-------+-------------+--------------+-------------+-------------+------------+----------+----------+-----------+------------+-----------+------------+----------
-      1 | postgres | public | tbl01 | xxx   | xxx         | xxx          | xxx         | xxx         | xxx        | xxx      | xxx      | xxx       | xxx        | xxx       | xxx        | xxx
-(1 row)
+ instid | database  |   schema   |   table   | start | index_scans | page_removed | page_remain | tup_removed | tup_remain | tup_dead | page_hit | page_miss | page_dirty | read_rate | write_rate | duration 
+--------+-----------+------------+-----------+-------+-------------+--------------+-------------+-------------+------------+----------+----------+-----------+------------+-----------+------------+----------
+      1 | postgres  | public     | tbl01     | xxx   | xxx         | xxx          | xxx         | xxx         | xxx        | xxx      | xxx      | xxx       | xxx        | xxx       | xxx        | xxx
+      1 | template1 | pg_catalog | pg_depend | xxx   | xxx         | xxx          | xxx         | xxx         | xxx        | xxx      | xxx      | xxx       | xxx        | xxx       | xxx        | xxx
+(2 rows)
 
 /**--- Collect the cancelled AUTOVACUUM information ---**/
 server signaled
 TRUNCATE TABLE
 INSERT 0 100000
 DELETE 100000
+BEGIN
 LOCK TABLE
  instid | timestamp | database | schema | table |          query          
 --------+-----------+----------+--------+-------+-------------------------

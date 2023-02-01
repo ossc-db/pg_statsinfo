@@ -1,7 +1,7 @@
 /*
  * report.c
  *
- * Copyright (c) 2009-2022, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2009-2023, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 #include "pg_statsinfo.h"
@@ -86,14 +86,21 @@ SELECT \
 	avg_tup_removed, \
 	avg_tup_remain, \
 	avg_tup_dead, \
-	scan_pages, \
-	scan_pages_ratio, \
+	avg_tup_miss_dead, \
+	avg_tup_miss_dead_pages, \
+	tbl_scan_pages, \
+	tbl_scan_pages_ratio, \
+	dead_lp_pages, \
+	dead_lp_pages_ratio, \
 	removed_lp, \
 	dead_lp, \
-	avg_index_scans, \
+	sum_index_scans, \
 	avg_duration, \
 	max_duration, \
-	cancel \
+	cancel, \
+	max_cutoff_xid, \
+	max_frozen_xid, \
+	max_relmin_mxid \
 FROM \
 	statsrepo.get_autovacuum_activity($1, $2)"
 #define SQL_SELECT_AUTOVACUUM_ACTIVITY2 "\
@@ -1062,16 +1069,18 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Vacuum Basic Statistics (Average) **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-40s  %8s  %13s  %13s  %12s  %12s  %12s  %10s  %16s  %10s  %10s %12s  %12s  %13s  %7s\n",
-		"Table", "Count", "Index Scanned", "Index Skipped", "Removed Rows", "Remain Rows", "Remain Dead",
-		"Scan Pages", "Scan Pages Ratio", "Removed Lp", "Dead Lp",
-		"Index Scans", "Duration", "Duration(Max)", "Cancels");
-	fprintf(out, "--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+	fprintf(out, "%-40s|%8s|%8s|%8s|%9s|%10s|%10s|%17s|%16s|%16s|%8s|%8s|%8s|%8s|%8s|%8s|%13s|%13s|%13s\n",
+		"", "", "#Index", "#Index", "Removed", "Remain", "Remain", "Missed Dead", "Table Scan", "Dead Tuple", 
+		"Removed", "Dead", "#Index", "", "Duration", "", "Removable", "New Rel", "New Rel");
+	fprintf(out, "%-40s|%8s|%8s|%8s|%9s|%10s|%10s|%8s|%8s|%16s|%16s|%8s|%8s|%8s|%8s|%8s|%8s|%13s|%13s|%13s\n",
+		"Table", "#Count", "Scanned", "Skipped", "Rows", "Rows", "Dead", "Rows", "Pages", "Pages(Ratio)", " Pages(Ratio)",
+		"Lp", "Lp", "Scans", "Duration", "(Max)", "#Cancels", "CutOff Xid", "Frozen Xid", "Min Mxid");
+	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_AUTOVACUUM_ACTIVITY, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%-40s  %8s  %13s  %13s  %12s  %12s  %12s  %10s  %16s  %10s  %10s %12s  %10s s  %11s s  %7s\n",
+		fprintf(out, "%-40s %8s %8s %8s %9s %10s %10s %8s %8s %8s(%5s%%) %8s(%5s%%) %8s %8s %8s %6s s %6s s %8s %13s %13s %13s\n",
 			PQgetvalue(res, i, 0),
 			PQgetvalue(res, i, 1),
 			PQgetvalue(res, i, 2),
@@ -1086,7 +1095,14 @@ report_autovacuum_activity(PGconn *conn, ReportScope *scope, FILE *out)
 			PQgetvalue(res, i, 11),
 			PQgetvalue(res, i, 12),
 			PQgetvalue(res, i, 13),
-			PQgetvalue(res, i, 14));
+			PQgetvalue(res, i, 14),
+			PQgetvalue(res, i, 15),
+			PQgetvalue(res, i, 16),
+			PQgetvalue(res, i, 17),
+			PQgetvalue(res, i, 18),
+			PQgetvalue(res, i, 19),
+			PQgetvalue(res, i, 20),
+			PQgetvalue(res, i, 21));
 	}
 	fprintf(out, "\n");
 	PQclear(res);
@@ -1217,10 +1233,12 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Statements **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %8s  %14s  %13s  %15s  %16s  %-s\n",
+	fprintf(out, "%-16s  %-16s  %8s  %14s  %13s  %11s  %11s  %11s  %11s  %-s\n",
+		"", "", "", "", "", "Block", "Block", "Temp Block", "Temp Block", "");
+	fprintf(out, "%-16s  %-16s  %8s  %14s  %13s  %11s  %11s  %11s  %11s  %-s\n",
 		"User", "Database", "Calls", "Total Time", "Time/Call",
-		"Block Read Time", "Block Write Time", "Query");
-	fprintf(out, "------------------------------------------------------------------------------------------------------------------------\n");
+		"Read Time", "Write Time", "Read Time", "Write Time", "Query");
+	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_QUERY_ACTIVITY_STATEMENTS, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
@@ -1230,8 +1248,10 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 		fprintf(out, "%8s  ", PQgetvalue(res, i, 6));
 		fprintf(out, "%10s sec  ", PQgetvalue(res, i, 7));
 		fprintf(out, "%9s sec  ", PQgetvalue(res, i, 8));
-		fprintf(out, "%12s ms  ", PQgetvalue(res, i, 9));
-		fprintf(out, "%13s ms  ", PQgetvalue(res, i, 10));
+		fprintf(out, "%8s ms  ", PQgetvalue(res, i, 9));
+		fprintf(out, "%8s ms  ", PQgetvalue(res, i, 10));
+		fprintf(out, "%8s ms  ", PQgetvalue(res, i, 11));
+		fprintf(out, "%8s ms  ", PQgetvalue(res, i, 12));
 		fprintf(out, "%-s\n", PQgetvalue(res, i, 2));
 	}
 	fprintf(out, "\n");
@@ -1266,23 +1286,28 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Plans **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-10s  %-10s  %-16s  %-16s  %8s  %14s  %13s  %15s  %16s\n",
+	fprintf(out, "%20s  %10s  %-16s  %-16s  %8s  %14s  %13s  %12s  %12s  %12s  %12s\n",
+		"", "", "", "", "", "",
+		"", "Block", "Block", "Temp Block", "Temp Block");
+	fprintf(out, "%20s  %10s  %-16s  %-16s  %8s  %14s  %13s  %12s  %12s  %12s  %12s\n",
 		"Query ID", "Plan ID", "User", "Database", "Calls", "Total Time",
-		"Time/Call", "Block Read Time", "Block Write Time");
-	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------------\n");
+		"Time/Call", "Read Time", "Write Time", "Read Time", "Write Time");
+	fprintf(out, "------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_QUERY_ACTIVITY_PLANS, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
 	{
-		fprintf(out, "%10s  ", PQgetvalue(res, i, 0));
+		fprintf(out, "%20s  ", PQgetvalue(res, i, 0));
 		fprintf(out, "%10s  ", PQgetvalue(res, i, 1));
 		fprintf(out, "%-16s  ", PQgetvalue(res, i, 2));
 		fprintf(out, "%-16s  ", PQgetvalue(res, i, 3));
 		fprintf(out, "%8s  ", PQgetvalue(res, i, 4));
 		fprintf(out, "%10s sec  ", PQgetvalue(res, i, 5));
 		fprintf(out, "%9s sec  ", PQgetvalue(res, i, 6));
-		fprintf(out, "%12s ms  ", PQgetvalue(res, i, 7));
-		fprintf(out, "%13s ms\n", PQgetvalue(res, i, 8));
+		fprintf(out, "%9s ms  ", PQgetvalue(res, i, 7));
+		fprintf(out, "%9s ms  ", PQgetvalue(res, i, 8));
+		fprintf(out, "%9s ms  ", PQgetvalue(res, i, 9));
+		fprintf(out, "%9s ms\n", PQgetvalue(res, i, 10));
 	}
 	fprintf(out, "\n");
 	PQclear(res);

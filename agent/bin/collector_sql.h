@@ -1,7 +1,7 @@
 /*
  * collector_sql.h
  *
- * Copyright (c) 2009-2022, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2009-2023, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 #ifndef COLLECTOR_SQL_H
@@ -102,7 +102,9 @@ SELECT \
 	s.temp_blks_read, \
 	s.temp_blks_written, \
 	s.blk_read_time, \
-	s.blk_write_time \
+	s.blk_write_time, \
+	s.temp_blk_read_time, \
+	s.temp_blk_write_time \
 FROM \
 	pg_stat_statements s \
 	LEFT JOIN pg_roles r ON r.oid = s.userid \
@@ -134,6 +136,8 @@ SELECT \
 	p.temp_blks_written, \
 	p.blk_read_time, \
 	p.blk_write_time, \
+	p.temp_blk_read_time, \
+	p.temp_blk_write_time, \
 	p.first_call, \
 	p.last_call \
 FROM \
