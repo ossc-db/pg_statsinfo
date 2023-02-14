@@ -805,6 +805,20 @@ enable_alert カラムで行います。デフォルト値はpg_statsinfo.enable
 
   
 
+#### 関数からコマンドライン機能を実行
+
+    $ psql -d postgres -c "SELECT statsinfo.cli_exec('[commandline-options]')"
+
+PostgreSQL のサーバに pg_statsinfo がインストールされている場合、 コマンドライン機能を関数から実行できます。
+関数の引数に対して、コマンドライン機能への引数を渡します。
+以下にコマンド例を示します。  
+以下のコマンド例では、ホスト名 localhost 上のポート 5432 で稼動している PostgreSQL のサーバに対して、postgres
+データベースに、postgres ユーザで接続し、レポート生成のコマンドライン機能を実行します。
+
+    $ psql -d postgres -c "SELECT statsinfo.cli_exec('-r All -h localhost -d postgres -p 5432 -U postgres')"
+
+
+
 ### 自動メンテナンス機能の使い方
 
 自動メンテナンス機能を使用することで以下の操作を1日1回任意の時刻に行うことができます。

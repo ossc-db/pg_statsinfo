@@ -871,6 +871,21 @@ monitored database when the command tells to do something to the agent.
 
   
 
+#### Command line operation by function.
+
+    $ psql -d postgres -c "SELECT statsinfo.cli_exec('[commandline-options]')"
+
+If pg_statsinfo is installed on the PostgreSQL server, command line 
+operation can be run from a function.Pass the arguments of command 
+line operations as function arguments.
+The following example is the command to tell pg_statsinfo agent to
+start by connecting the PostgreSQL server via the database 'postgres'
+of the user 'postgres' at localhost:5432.
+
+    $ psql -d postgres -c "SELECT statsinfo.cli_exec('-r All -h localhost -d postgres -p 5432 -U postgres')"
+
+
+
 ### Automatic maintenance
 
 Repository database will piled high with snapshots and log directory

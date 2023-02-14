@@ -58,6 +58,8 @@
 #define STOP_WAIT_MIN		(10)
 #define STOP_WAIT_MAX		(300)
 
+#define MAX_REPORT_SIZE		1048576
+
 /* also adjust non-critial setting parameters? */
 /* #define ADJUST_NON_CRITICAL_SETTINGS */
 
@@ -66,6 +68,8 @@
 #else
 #define PROGRAM_NAME		"pg_statsinfo.exe"
 #endif
+
+#define CL_PROGRAM_NAME		"pg_statsinfo"
 
 #define TAKE_HOOK(func, replace) \
 	prev_##func##_hook = func##_hook; \
@@ -326,6 +330,7 @@ PG_FUNCTION_INFO_V1(statsinfo_memory);
 PG_FUNCTION_INFO_V1(statsinfo_profile);
 PG_FUNCTION_INFO_V1(statsinfo_cpuinfo);
 PG_FUNCTION_INFO_V1(statsinfo_meminfo);
+PG_FUNCTION_INFO_V1(statsinfo_cli_exec);
 
 extern Datum PGUT_EXPORT statsinfo_sample(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_sample_wait_sampling(PG_FUNCTION_ARGS);
@@ -347,6 +352,7 @@ extern Datum PGUT_EXPORT statsinfo_memory(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_profile(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_cpuinfo(PG_FUNCTION_ARGS);
 extern Datum PGUT_EXPORT statsinfo_meminfo(PG_FUNCTION_ARGS);
+extern Datum PGUT_EXPORT statsinfo_cli_exec(PG_FUNCTION_ARGS);
 
 extern PGUT_EXPORT void	_PG_init(void);
 extern PGUT_EXPORT void	_PG_fini(void);
@@ -2798,6 +2804,53 @@ statsinfo_meminfo(PG_FUNCTION_ARGS)
 	fclose(fp);
 
 	PG_RETURN_INT64(mem_total);
+}
+
+/*
+ * statsinfo_cli_exec - CLI executer
+ */
+Datum
+statsinfo_cli_exec(PG_FUNCTION_ARGS)
+{
+	char			bin_path[MAXPGPATH];
+	char			command[MAXPGPATH];
+	FILE			*fp;
+	char		    result[PIPE_CHUNK_SIZE];
+	char			report[MAX_REPORT_SIZE];
+	char 			*params;
+
+	/* Get function Params */
+	params = text_to_cstring(PG_GETARG_TEXT_PP(0));
+
+	/* $PGHOME/bin */
+	strlcpy(bin_path, my_exec_path, MAXPGPATH);
+	get_parent_directory(bin_path);
+
+	/* Generate the command, and include stderr in stdout. */
+	snprintf(command, sizeof(command), "%s/%s %s 2>&1", bin_path, CL_PROGRAM_NAME, params);
+
+	memset(result, 0, sizeof(result));
+	memset(report, 0, sizeof(report));
+
+	/* Execute the command with pipe and read the standard output. */
+	if ((fp = popen(command, "r")) == NULL)
+	{
+		ereport(ERROR,
+			(errmsg("%s: could not launch shell command", command)));
+		return false;
+	}
+	while(fgets(result, sizeof(result), fp))
+	{
+		snprintf(report, sizeof(report), "%s%s", report, result);
+	}
+	if (pclose(fp) < 0)
+	{
+		ereport(ERROR,
+			(errmsg("%s: could not close shell command", command)));
+		return false;
+	}
+
+	PG_RETURN_CSTRING(report);
 }
 
 static bool
