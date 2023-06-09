@@ -929,7 +929,7 @@ pg_statsinfo を利用するために必須のパラメータは以下です。 
 | log_filename              | 'postgresql-%Y-%m-%d_%H%M%S.log'        | CSVログおよびテキストログのファイル名。デフォルトから変更する場合でも、%Y, %m, %d, %H, %M, %S がこの順に全て表れる形式でなければなりません。                                                                                          |
 | track_counts              | on                                       | データベースの活動に関する統計情報の収集設定。                                                                                                                                                      |
 | track_activities          | on                                       | セッションで実行中のコマンドに関する情報の収集設定。                                                                                                                                                   |
-| log_min_messages         | debug5 ~ log                             | ログへ出力するメッセージレベル。 'log', pg_statsinfo.syslog_min_messages, pg_statsinfo.textlog_min_messages, pg_statsinfo.repolog_min_messages のいずれの設定よりも、より多くを出力するレベルを設定する必要があります。 |
+| log_min_messages         | debug5 ~ log                             | ログへ出力するメッセージレベル。左の値のいずれかを推奨します。<br>但し pg_statsinfo.syslog_min_messages, pg_statsinfo.textlog_min_messages, pg_statsinfo.repolog_min_messages それぞれのレベル以下とする必要があります。 |
 | log_destination           | 'csvlog' 必須 / 'syslog', 'eventlog' を追加可能 | 他の値であっても、エージェント起動時に強制的に 'csvlog' が追加され、'stderr' は除去されます。                                                                                                                     |
 | logging_collector         | on                                       | 他の値であっても、エージェント起動時に強制的にこの値に設定されます。                                                                                                                                           |
 
@@ -1183,8 +1183,10 @@ pg_statsinfo を使用する際には、以下の使用上の注意と制約が�
          2014-01-01 14:00:00+08
         (1 row)
 
-  - AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリの収集に関する制限  
-    AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリはlog_min_messagesをdebug1~debug5に設定した場合のみ収集されます。
+  - 情報収集におけるlog_min_messagesの注意点  
+       - pg_pg_statsinfoで統計情報を収集するためには、log_min_messagesの値をlog以下に設定します。
+       - AUTOVACUUM/AUTOANALYZEのキャンセル原因クエリを収集するためには、log_min_messagesの値をdebug1~debug5に設定します。
+       
   - shared_preload_librariesでのモジュール指定順序
     pg_statsinfoとpg_stat_statementsを併用する場合、shared_preload_libraries = 'pg_stat_statements, pg_statsinfo'のように先に(左側に)pg_stat_statementsを記述するようにしてください。そのような指定がされない場合、以下の様なWARININGログが出力され、rusage_track_utilityは強制的にoffに設定されます。
      ```
