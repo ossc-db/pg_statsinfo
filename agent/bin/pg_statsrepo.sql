@@ -3833,7 +3833,7 @@ $$
 						AND wb.event = we.event
 						AND wb.snapid = $1
 					WHERE
-						statsrepo.sub(we.count, wb.count) <> 0
+						statsrepo.sub(we.count, wb.count) > 0
 						AND we.snapid = $2
 					WINDOW w AS (PARTITION BY we.queryid, we.dbid, we.userid, we.backend_type) -- don't use order by to work partial summation properly
 					) t
