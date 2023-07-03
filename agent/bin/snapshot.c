@@ -864,7 +864,7 @@ do_put_copy(PGconn *conn,
 			break;
 		default:
 			elog(WARNING, "Failed Copy and/or sent CopyDone Msg:%s:%s",
-							copy_errormsg, PQerrorMessage(conn) );
+							copy_errormsg ? copy_errormsg : "(null)", PQerrorMessage(conn) );
 			PQclear(res);
 			return false;
 	}
