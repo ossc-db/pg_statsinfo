@@ -231,8 +231,9 @@ pg_statsinfo
   - PostgreSQL  
     バージョン 15
   - 動作検証済みOS  
-    RHEL 7.x (x86_64), CentOS 7.x (x86_64)
-    RHEL 8.x (x86_64), Rocky Linux 8.x (x86_64)
+    RHEL 7.x (x86_64), CentOS 7.x (x86_64)  
+    RHEL 8.x (x86_64), Rocky Linux 8.x (x86_64)  
+    RHEL 9.x (x86_64), Rocky Linux 9.x (x86_64)  
 
 ### インストール手順
 
@@ -240,17 +241,20 @@ pg_statsinfo
 
 ##### RHEL 7
 
-以下はPostgreSQL15のRHEL7のx86\64用のrpmをインストールする例です。
+以下はPostgreSQL15のRHEL7のx86_64用のrpmをインストールする例です。
 
     $ su
     # yum install pg_statsinfo-15.0-1.pg15.rhel7.x86_64.rpm
 
-##### RHEL 8
+
+##### RHEL 8, RHEL 9
 
 以下はPostgreSQL15のRHEL8のx86_64用のrpmをインストールする例です。
 
     $ su
     # dnf install pg_statsinfo-15.0-1.pg15.rhel8.x86_64.rpm
+
+    ※ OSのバージョン部分は適宜読み替えてください
 
 #### source
 
