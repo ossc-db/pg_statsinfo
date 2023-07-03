@@ -457,7 +457,6 @@ static void must_be_superuser(void);
 static int get_devinfo(const char *path, Datum values[], bool nulls[]);
 static char *get_archive_path(void);
 static void adjust_log_destination(GucContext context, GucSource source);
-static int get_log_min_messages(void);
 static pid_t get_postmaster_pid(void);
 static bool verify_log_filename(const char *filename);
 static bool verify_timestr(const char *timestr);
@@ -1758,11 +1757,6 @@ _PG_init(void)
 	/*
 	 * Check supported parameters combinations.
 	 */
-	if (get_log_min_messages() >= FATAL)
-		ereport(FATAL,
-			(errmsg(LOG_PREFIX "unsupported log_min_messages: %s",
-					GetConfigOption("log_min_messages", false)),
-			 errhint("must be same or more verbose than 'log'")));
 	if (!verify_log_filename(Log_filename))
 		ereport(FATAL,
 			(errmsg(LOG_PREFIX "unsupported log_filename: %s",
@@ -3499,22 +3493,6 @@ adjust_log_destination(GucContext context, GucSource source)
 
 	SetConfigOption("log_destination", buf.data, context, source);
 	pfree(buf.data);
-}
-
-static int
-get_log_min_messages(void)
-{
-#ifndef WIN32
-	return log_min_messages;
-#else
-	/*
-	 * log_min_messages is not available on Windows because the variable is
-	 * not dllexport'ed. Instead, reparse config option text.
-	 */
-	return str_to_elevel("log_min_messages",
-						 GetConfigOption("log_min_messages", false),
-						 server_message_level_options);
-#endif
 }
 
 static pid_t
