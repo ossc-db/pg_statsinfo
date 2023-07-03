@@ -936,6 +936,8 @@ pg_statsinfo を利用するために確認が推奨されるパラメータは�
 | syslog_facility                              | 'LOCAL0'                                   | syslog の facility 指定。                                                                                                                                                                           |
 | syslog_ident                                 | 'postgres'                                 | syslog の indent文字列指定。                                                                                                                                                                           |
 | pg_stat_statements.track_planning            | off                                        | クエリの統計情報で"実行計画生成時間"を取得する場合は on を設定します。                                                                                                                                                          |
+| pg_stat_statements.save                      | on                                         | クエリの実行時の統計情報をPostgreSQLの停止・起動をまたがって記録しておくかを設定します。|
+| pg_store_plans.save                          | on                                         | 実行計画の統計情報をPostgreSQLの停止・起動をまたがって記録しておくかを設定します。|
 | pg_statsinfo.textlog_min_messages            | warning                                    | テキストログへ出力する最小メッセージレベル [(*1)](#1_設定ファイル_メッセージレベル)                                                                                                                                                                     |
 | pg_statsinfo.syslog_min_messages             | disable                                    | syslog へ出力する最小メッセージレベル [(*1)](#1_設定ファイル_メッセージレベル)                                                                                                                                                                    |
 | pg_statsinfo.textlog_filename                | 'pg_statsinfo.log'                         | テキストログファイル名。空文字はエラー。                                                                                                                                                                            |
@@ -1175,7 +1177,24 @@ pg_statsinfo を使用する際には、以下の使用上の注意と制約が�
     HINT:  pg_statsinfo must be loaded after pg_stat_statements when enable rusage_track_utility .
     ```
 
+  - 統計情報の保存に関する注意点  
+    以下のパラメータに関連する統計情報はメモリ上に保持されており、
+    PostgreSQLの終了時にストレージに保存されます。そのため設定値を
+    onにすることを推奨します。
+      - pg_statsinfo.rusage_save
+      - pg_statsinfo.wait_sampling_save
+      - pg_stat_statements.save
+      - pg_store_plans.save
+    
+    以下の事象があった期間を含んだレポートにおいては、それらの
+    統計情報が保存されないため、関連する値は正しく出力されません。
+      - サーバクラッシュ
+      - PostgreSQLをimmediateモードで終了
+      - killなどによるPostgreSQLやpg_statsinfodプロセスの強制終了
+      - 上記のパラメータをoffにした状態でのPostgreSQLの再起動
   
+
+
 
 ## よくあるQ\&A
 
