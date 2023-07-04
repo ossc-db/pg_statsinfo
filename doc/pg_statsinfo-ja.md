@@ -1160,7 +1160,7 @@ pg_statsinfo を使用する際には、以下の使用上の注意と制約が�
     CST は3つの時間帯に関連付けられておりデフォルトではUS/Central(CST-6)
     となっているため、この関連付けの設定を変更せずに運用するとlog_timezone
     を
-    中国(PRC=CST+8)に設定したサーバーからのログの時刻がリポジトリDBでは14時間進んで解釈されることになります。リポジトリDBで以下のように入力と異なる時刻が表示された場合には設定が必要です。設定方法は[こちら](https://www.postgresql.jp/document/14/html/datetime-config-files.html)を参照してください。
+    中国(PRC=CST+8)に設定したサーバからのログの時刻がリポジトリDBでは14時間進んで解釈されることになります。リポジトリDBで以下のように入力と異なる時刻が表示された場合には設定が必要です。設定方法は[こちら](https://www.postgresql.jp/document/14/html/datetime-config-files.html)を参照してください。
     
         repository=$ SET TIME ZONE 'PRC'; select '2014/1/1 0:0:0 CST'::timestamptz;
               timestamptz       
@@ -1194,7 +1194,7 @@ pg_statsinfo を使用する際には、以下の使用上の注意と制約が�
       - 上記のパラメータをoffにした状態でのPostgreSQLの再起動
   
 
-
+  
 
 ## よくあるQ\&A
 
