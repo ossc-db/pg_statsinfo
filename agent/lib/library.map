@@ -19,7 +19,7 @@
     statsinfo_meminfo;
     statsinfo_rusage;
     statsinfo_rusage_reset;
-	statsinfo_rusage_info;
+	  statsinfo_rusage_info;
     statsinfo_sample;
     statsinfo_sample_wait_sampling;
     statsinfo_sample_wait_sampling_reset;
@@ -30,5 +30,6 @@
     statsinfo_tablespaces;
     statsinfo_wait_sampling_profile;
     statsinfo_wait_sampling_reset_profile;
+    statsinfo_cli_exec;
   local: *;
 };

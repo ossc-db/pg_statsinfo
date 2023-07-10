@@ -336,4 +336,11 @@ CREATE FUNCTION statsinfo.meminfo
 AS 'MODULE_PATHNAME', 'statsinfo_meminfo'
 LANGUAGE C STRICT;
 
+--
+-- statsinfo.cli_exec()
+--
+CREATE FUNCTION statsinfo.cli_exec(params text) RETURNS cstring
+AS '$libdir/pg_statsinfo', 'statsinfo_cli_exec'
+LANGUAGE C;
+
 COMMIT;
