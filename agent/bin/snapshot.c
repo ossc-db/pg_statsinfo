@@ -10,6 +10,9 @@
 #include "collector_sql.h"
 #include "writer_sql.h"
 
+/* Definition of typeid */
+#include "catalog/pg_type_d.h"
+
 /* printf format specifiers for 64-bit integer */
 #ifdef HAVE_LONG_INT_64
 #ifndef HAVE_INT64
@@ -739,6 +742,8 @@ do_put_copy(PGconn *conn,
 			const char *snap_date)
 {
 	char buffer[4096];
+	char   *field_buffer = NULL;
+	size_t	field_buffer_size = 0;
 	int		rows, cols;
 	int		r, c;
 	int		shift;
@@ -801,6 +806,8 @@ do_put_copy(PGconn *conn,
 		{
 			const char *field;
 			const char *p;
+			int			field_len;
+			int			esc_cnt;
 
 			/* insert date info for partition key if reaches the corresponding position */
 			if (c == PART_KEY_POSITION && has_snap_date)
@@ -816,8 +823,101 @@ do_put_copy(PGconn *conn,
 			else
 				field = PQgetvalue(src, r, c);
 
-			n = strlen(field);
-			p = field;
+			/*
+			 * If the column is a string or name type, characters are escaped
+			 * in the same way as CopyAttributeOutText.
+			 */
+			if (PQftype(src, c) == TEXTOID || PQftype(src, c) == NAMEOID)
+			{
+				/* Check size of field after escaping */
+				esc_cnt = 0;
+				for (p = field; *p != '\0'; p++)
+				{
+					switch (*p)
+					{
+						case '\b':
+						case '\f':
+						case '\n':
+						case '\r':
+						case '\t':
+						case '\v':
+						case '\\':
+							esc_cnt++;
+							break;
+						default:
+							break;
+					}
+				}
+
+				if (esc_cnt == 0){
+					/* No characters require escape */
+					n = strlen(field);
+					p = field;
+				}
+				else
+				{
+					field_len = strlen(field) + esc_cnt;
+					/* Add 1 byte for null terminator. */
+					field_len++;
+
+					/* Reallocate memory if buffer size is insufficient. */
+					if (field_buffer_size < field_len)
+					{
+						if (field_buffer_size == 0)
+							field_buffer_size = 64;
+						while (field_buffer_size < field_len)
+							field_buffer_size *= 2;
+
+						field_buffer = pgut_realloc(field_buffer, field_buffer_size);
+					}
+
+					n = 0;
+					for (p = field; *p != '\0'; p++)
+					{
+						switch (*p)
+						{
+							case '\b':
+								field_buffer[n++] = '\\';
+								field_buffer[n++] = 'b';
+								break;
+							case '\f':
+								field_buffer[n++] = '\\';
+								field_buffer[n++] = 'f';
+								break;
+							case '\n':
+								field_buffer[n++] = '\\';
+								field_buffer[n++] = 'n';
+								break;
+							case '\r':
+								field_buffer[n++] = '\\';
+								field_buffer[n++] = 'r';
+								break;
+							case '\t':
+								/* contains delimiter (COPY_DELIMITER) */
+								field_buffer[n++] = '\\';
+								field_buffer[n++] = 't';
+								break;
+							case '\v':
+								field_buffer[n++] = '\\';
+								field_buffer[n++] = 'v';
+								break;
+							case '\\':
+								field_buffer[n++] = '\\';
+								field_buffer[n++] = '\\';
+								break;
+							default:
+								field_buffer[n++] = *p;
+						}
+					}
+					field_buffer[n] = '\0';
+					n = strlen(field_buffer);
+					p = field_buffer;
+				}
+			} else {
+				n = strlen(field);
+				p = field;
+			}
+
 			/*
 			 * If there are huge column values, split them into "buffer" sizes and
 			 * call PQputCopyData individually.
@@ -858,6 +958,12 @@ do_put_copy(PGconn *conn,
 		
 	}
 
+	if (field_buffer)
+	{
+		free(field_buffer);
+		field_buffer = NULL;
+	}
+
 	switch (PQputCopyEnd(conn, copy_errormsg))
 	{
 		case 1:
@@ -874,6 +980,12 @@ do_put_copy(PGconn *conn,
 
 FAILED_COPY_DATA:
 	PQclear(res);
+	if (field_buffer)
+	{
+		free(field_buffer);
+		field_buffer = NULL;
+	}
+
 	elog(WARNING, "PQputCopyData was failed. return code %d", copy_res);
 	return false;
 
