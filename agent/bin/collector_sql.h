@@ -356,7 +356,7 @@ SELECT \
 	c.reltablespace, \
 	c.relname, \
 	c.reltoastrelid, \
-	x.indexrelid AS reltoastidxid, \
+	pg_catalog.max(x.indexrelid) AS reltoastidxid,  /*should be only one non-null indexrelid.*/ \
 	c.relkind, \
 	c.relpages, \
 	c.reltuples, \
@@ -380,12 +380,12 @@ SELECT \
 	pg_catalog.sum(pg_catalog.pg_stat_get_blocks_fetched(i.indexrelid) - \
 		pg_catalog.pg_stat_get_blocks_hit(i.indexrelid))::bigint AS idx_blks_read, \
 	pg_catalog.sum(pg_catalog.pg_stat_get_blocks_hit(i.indexrelid))::bigint AS idx_blks_hit, \
-	pg_catalog.pg_stat_get_blocks_fetched(t.oid) - \
-		pg_catalog.pg_stat_get_blocks_hit(t.oid) AS toast_blks_read, \
-	pg_catalog.pg_stat_get_blocks_hit(t.oid) AS toast_blks_hit, \
-	pg_catalog.pg_stat_get_blocks_fetched(x.indexrelid) - \
-		pg_catalog.pg_stat_get_blocks_hit(x.indexrelid) AS tidx_blks_read, \
-	pg_catalog.pg_stat_get_blocks_hit(x.indexrelid) AS tidx_blks_hit, \
+	pg_catalog.pg_stat_get_blocks_fetched( pg_catalog.max(t.oid) ) - \
+		pg_catalog.pg_stat_get_blocks_hit( pg_catalog.max(t.oid) ) AS toast_blks_read,       /* should be only one non-null oid */ \
+	pg_catalog.pg_stat_get_blocks_hit( pg_catalog.max(t.oid) ) AS toast_blks_hit,            /* should be only one non-null oid */ \
+	pg_catalog.pg_stat_get_blocks_fetched( pg_catalog.max(x.indexrelid) ) - \
+		pg_catalog.pg_stat_get_blocks_hit( pg_catalog.max(x.indexrelid) ) AS tidx_blks_read, /* should be only one non-null indexrelid. */ \
+	pg_catalog.pg_stat_get_blocks_hit(pg_catalog.max( x.indexrelid )) AS tidx_blks_hit,      /* should be only one non-null indexrelid. */ \
 	pg_catalog.pg_stat_get_last_vacuum_time(c.oid) as last_vacuum, \
 	pg_catalog.pg_stat_get_last_autovacuum_time(c.oid) as last_autovacuum, \
 	pg_catalog.pg_stat_get_last_analyze_time(c.oid) as last_analyze, \
@@ -398,19 +398,11 @@ FROM \
 	pg_namespace n ON c.relnamespace = n.oid \
 WHERE \
 	c.relkind IN ('r', 't') AND \
-	n.nspname <> ALL (('{' || $1 || '}')::text[]) \
+	n.nspname <> ALL (('{' || $1 || '}')::text[]) AND \
+	(i.indisvalid = true OR i.indisvalid IS NULL) AND \
+	(x.indisvalid = true OR x.indisvalid IS NULL) \
 GROUP BY \
-	c.oid, \
-	c.relnamespace, \
-	c.reltablespace, \
-	c.relname, \
-	c.reltoastrelid, \
-	c.relkind, \
-	c.relpages, \
-	c.reltuples, \
-	c.reloptions, \
-	t.oid, \
-	x.indexrelid"
+	c.oid"
 
 /* column */
 
