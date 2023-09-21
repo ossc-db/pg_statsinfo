@@ -243,6 +243,8 @@ SELECT
 	CASE WHEN duration IS NOT NULL THEN 'xxx' END AS duration
 FROM
 	statsrepo.autovacuum
+WHERE
+	schema = 'public'
 ORDER BY
 	database, schema, "table";
 EOF
