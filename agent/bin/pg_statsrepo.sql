@@ -840,7 +840,7 @@ LANGUAGE sql;
 
 -- get_version() - version of statsrepo schema
 CREATE FUNCTION statsrepo.get_version() RETURNS text AS
-'SELECT CAST(''140200'' AS TEXT)'
+'SELECT CAST(''140300'' AS TEXT)'
 LANGUAGE sql IMMUTABLE;
 
 -- tps() - transaction per seconds
