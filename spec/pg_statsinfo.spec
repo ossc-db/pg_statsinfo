@@ -8,9 +8,12 @@
 %define _libdir  %{_pgdir}/lib
 %define _datadir %{_pgdir}/share
 
+%global packageversion 15
+%global tmpfilesconf spec/pg_statsinfo-tmpfiles.d.conf
+
 ## Set general information for pg_statsinfo.
 Name:       pg_statsinfo
-Version:    15.2
+Version:    %{packageversion}.3
 Release:    1%{?dist}
 Summary:    Performance monitoring tool for PostgreSQL
 Group:      Applications/Databases
@@ -55,6 +58,9 @@ USE_PGXS=1 make %{?_smp_mflags}
 %install
 rm -rf %{buildroot}
 USE_PGXS=1 make DESTDIR=%{buildroot} install
+%{__install} -d -m 755 %{buildroot}/%{_rundir}/%{name}
+%{__mkdir} -p %{buildroot}/%{_tmpfilesdir}
+%{__install} -m 0644 %{tmpfilesconf} %{buildroot}/%{_tmpfilesdir}/%{name}-%{packageversion}.conf
 
 %clean
 rm -rf %{buildroot}
@@ -71,6 +77,8 @@ rm -rf %{buildroot}
 %{_datadir}/contrib/uninstall_pg_statsrepo.sql
 %{_datadir}/contrib/pg_statsinfo.sql
 %{_datadir}/contrib/uninstall_pg_statsinfo.sql
+%{_tmpfilesdir}/%{name}-%{packageversion}.conf
+%attr(755,postgres,postgres) %dir %{_rundir}/%{name}
 
 %files llvmjit
 %defattr(-,root,root)
