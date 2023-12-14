@@ -1837,6 +1837,7 @@ statsinfo_start(PG_FUNCTION_ARGS)
 {
 	int32	timeout;
 	char	pid_file[MAXPGPATH];
+	char	buffer[64];
 	pid_t	pid;
 	int		cnt;
 	int		save_client_min_messages = client_min_messages;
@@ -1865,7 +1866,8 @@ statsinfo_start(PG_FUNCTION_ARGS)
 
 	Assert(sil_state && sil_state->pid != INVALID_PID);
 
-	join_path_components(pid_file, DataDir, STATSINFO_LOCK_FILE);
+	sprintf(buffer, "%s.pid", GetConfigOption("port", false));
+	join_path_components(pid_file, TEMP_DIR, buffer);
 
 	if ((pid = get_statsinfo_pid(pid_file)) != 0)	/* pid file exists */
 	{
@@ -1919,6 +1921,7 @@ statsinfo_stop(PG_FUNCTION_ARGS)
 {
 	int32	timeout;
 	char	pid_file[MAXPGPATH];
+	char	buffer[64];
 	pid_t	pid;
 	int		cnt;
 	int		save_client_min_messages = client_min_messages;
@@ -1947,7 +1950,8 @@ statsinfo_stop(PG_FUNCTION_ARGS)
 
 	Assert(sil_state && sil_state->pid != INVALID_PID);
 
-	join_path_components(pid_file, DataDir, STATSINFO_LOCK_FILE);
+	sprintf(buffer, "%s.pid", GetConfigOption("port", false));
+	join_path_components(pid_file, TEMP_DIR, buffer);
 
 	if ((pid = get_statsinfo_pid(pid_file)) == 0)	/* no pid file */
 	{

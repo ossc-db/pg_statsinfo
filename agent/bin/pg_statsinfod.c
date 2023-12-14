@@ -1153,7 +1153,8 @@ create_lock_file(void)
 
 	my_pid = getpid();
 
-	join_path_components(lockfile, data_directory, STATSINFO_LOCK_FILE);
+	sprintf(buffer, "%s.pid", postmaster_port);
+	join_path_components(lockfile, TEMP_DIR, buffer);
 
 	/* create the lock file */
 	fd = open(lockfile, O_WRONLY | O_CREAT | O_EXCL, 0600);
@@ -1231,8 +1232,10 @@ static void
 unlink_lock_file(void)
 {
 	char	lockfile[MAXPGPATH];
+	char	buffer[64];
 
-	join_path_components(lockfile, data_directory, STATSINFO_LOCK_FILE);
+	sprintf(buffer, "%s.pid", postmaster_port);
+	join_path_components(lockfile, TEMP_DIR, buffer);
 
 	if (unlink(lockfile) != 0)
 	{
