@@ -527,7 +527,7 @@ list_length(const List *l)
 
 /* list_walk - apply walker for each item */
 void
-list_walk(List *list, void (*walker)())
+list_walk(List *list, void (*walker)(void *))
 {
 	ListCell *cell;
 
@@ -541,7 +541,7 @@ list_walk(List *list, void (*walker)())
  * Free all storage in a list, and optionally the pointed-to elements
  */
 void
-list_destroy(List *list, void (*walker)())
+list_destroy(List *list, void (*walker)(void *))
 {
 	ListCell   *cell;
 

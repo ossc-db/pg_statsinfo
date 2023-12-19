@@ -34,7 +34,7 @@
 #endif
 
 #ifndef HAVE_GETRUSAGE
-#include "rusagestub.h"
+#include "utils/pg_rusage.h"
 #endif
 
 #include "access/hash.h"
