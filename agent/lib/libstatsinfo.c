@@ -304,8 +304,8 @@ static bool		collect_index = true;
 int		rusage_max = 0;
 bool	rusage_save = true;
 int		rusage_track = STATSINFO_RUSAGE_TRACK_TOP;
-bool	rusage_track_planning = true;
-bool	rusage_track_utility = true;
+bool	rusage_track_planning = false;
+bool	rusage_track_utility = false;
 /*---- Function declarations ----*/
 
 PG_FUNCTION_INFO_V1(statsinfo_sample);
@@ -443,7 +443,7 @@ typedef struct silSharedState
 } silSharedState;
 
 static void StartStatsinfoLauncher(void);
-void StatsinfoLauncherMain(Datum main_arg);
+PGDLLEXPORT void StatsinfoLauncherMain(Datum main_arg);
 static void StatsinfoLauncherMainLoop(void);
 static void sil_sigusr1_handler(SIGNAL_ARGS);
 static void sil_sigusr2_handler(SIGNAL_ARGS);
@@ -660,7 +660,7 @@ sample_activity(void)
 		LongXactEntry	   *entry;
 		int					procpid;
 
-		be = pgstat_fetch_stat_beentry(i);
+		be = pgstat_get_beentry_by_backend_id(i);
 		if (!be)
 			continue;
 
@@ -1130,7 +1130,7 @@ statsinfo_wait_sampling_profile(PG_FUNCTION_ARGS)
 			values[i++] = Int32GetDatum(entry->key.userid);
 
 			if (wait_sampling_queries)
-				values[i++] = Int64GetDatumFast(entry->key.queryid);
+				values[i++] = Int64GetDatumFast((int64)entry->key.queryid);
 			else
 				values[i++] = (Datum) 0;
 
@@ -1149,7 +1149,7 @@ statsinfo_wait_sampling_profile(PG_FUNCTION_ARGS)
 			else
 				nulls[i++] = true;
 
-			values[i++] = Int64GetDatumFast(entry->counters.count);
+			values[i++] = Int64GetDatumFast((int64)entry->counters.count);
 
 			Assert(i == lengthof(values));
 			tuplestore_putvalues(tupstore, tupdesc, values, nulls);
@@ -1731,7 +1731,7 @@ _PG_init(void)
 							"Enable tracking rusage info for Utility Statements.",
 							NULL,
 							&rusage_track_utility,
-							true,
+							false,
 							PGC_SUSET,
 							0,
 							NULL,
@@ -4612,7 +4612,7 @@ probe_waits(void)
 		PGPROC			*proc;
 		int				procpid;
 
-		be = pgstat_fetch_stat_beentry(i);
+		be = pgstat_get_beentry_by_backend_id(i);
 		if (!be)
 			continue;
 
