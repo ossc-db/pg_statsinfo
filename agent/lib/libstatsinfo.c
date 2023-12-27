@@ -124,7 +124,7 @@
 	"%d WAL file(s) added, %d removed, %d recycled; " \
 	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
 	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s; " \
-	"distance=%d kB, estimate=%d kB"
+	"distance=%d kB, estimate=%d kB; lsn=%X/%X, redo lsn=%X/%X"
 
 /* log_restartpoint: complete */
 #define MSG_RESTARTPOINT_COMPLETE \
@@ -132,7 +132,7 @@
 	"%d WAL file(s) added, %d removed, %d recycled; " \
 	"write=%ld.%03d s, sync=%ld.%03d s, total=%ld.%03d s; " \
 	"sync files=%d, longest=%ld.%03d s, average=%ld.%03d s; " \
-	"distance=%d kB, estimate=%d kB"
+	"distance=%d kB, estimate=%d kB; lsn=%X/%X, redo lsn=%X/%X"
 
 PG_MODULE_MAGIC;
 
