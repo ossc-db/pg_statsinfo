@@ -10,7 +10,7 @@
 INSERT INTO statsrepo.autovacuum VALUES \
 ($1, $2::timestamptz - interval '1sec' * $23, \
  $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, \
- $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38)" 
+ $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41)"
 
 #define SQL_INSERT_AUTOANALYZE "\
 INSERT INTO statsrepo.autoanalyze VALUES \
@@ -39,6 +39,10 @@ INSERT INTO statsrepo.autoanalyze_cancel VALUES \
 /* relmin_mxid (relmin_mxid is not localized) */
 #define MSG_MINMXID \
 	"new relminmxid: %u, which is %d MXIDs ahead of previous value"
+
+/* frozen_page (frozen_page is not localized) */
+#define MSG_FROZENPAGE \
+	"frozen: %u pages from table (%.2f%% of total) had %lld tuples frozen"
 
 /* index scan (index scan is not localized) */
 #define MSG_INDEX_SCAN \
@@ -76,6 +80,7 @@ INSERT INTO statsrepo.autoanalyze_cancel VALUES \
 #define NUM_TUPLES_MISS				2
 #define NUM_FROZENXID				2
 #define NUM_MINMXID					2
+#define NUM_FROZENPAGE				3
 #define NUM_INDEX_SCAN				6
 #define NUM_INDEXES					5
 #define NUM_IO_TIMING				2
@@ -141,6 +146,7 @@ parse_autovacuum(const char *message, const char *timestamp)
 	List		   *tuples_miss = NIL;
 	List		   *frozen_xid  = NIL;
 	List		   *relmin_mxid = NIL;
+	List		   *frozen_page = NIL;
 	List		   *index_scan = NIL;
 	List		   *indexes    = NIL;
 	List		   *io_timing  = NIL;
@@ -235,6 +241,17 @@ parse_autovacuum(const char *message, const char *timestamp)
 					relmin_mxid = lappend( relmin_mxid, NULL );
 			}
 			
+			/* Re-parse frozen pages output separatedly. */
+			if (tok && ((frozen_page = capture( tok, MSG_FROZENPAGE, NUM_FROZENPAGE)) != NIL)){
+				/* Get autovacuum message for next line. */
+				tok = strtok(NULL, "\n");
+			}
+			else
+			{
+				for( int i=0; i<NUM_FROZENPAGE; i++ )
+					frozen_page = lappend( frozen_page, NULL );
+			}
+
 			/* Re-parse index scan output separatedly. */
 			if ( tok && ((index_scan = capture( tok, MSG_INDEX_SCAN, NUM_INDEX_SCAN)) != NIL)){
 
@@ -394,8 +411,14 @@ parse_autovacuum(const char *message, const char *timestamp)
 	{
 		elog(WARNING, "cannot parse rusage: %s", str_usage);
 		list_free_deep(params);
+		
+		list_free_deep(tuples_miss);
+		list_free_deep(frozen_xid);
+		list_free_deep(relmin_mxid);
+		list_free_deep(frozen_page);
 		list_free_deep(index_scan);
 		list_free_deep(indexes);
+		list_free_deep(io_timing);
 		return false;	/* should not happen */
 	}
 
@@ -409,6 +432,7 @@ parse_autovacuum(const char *message, const char *timestamp)
 	av->params = list_concat(params, tuples_miss);
 	av->params = list_concat(params, frozen_xid);
 	av->params = list_concat(params, relmin_mxid);
+	av->params = list_concat(params, frozen_page);
 	av->params = list_concat(params, index_scan);
 	av->params = list_concat(params, indexes);
 	av->params = list_concat(params, io_timing);
@@ -535,12 +559,13 @@ Autovacuum_free(AutovacuumLog *av)
 static bool
 Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 {
-	const char	   *params[38];
+	const char	   *params[41];
 	int				idx_offset = 0;
 
 	elog(DEBUG2, "write (autovacuum)");
 	Assert(list_length(av->params) == NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + 
-	                                  NUM_FROZENXID + NUM_MINMXID + NUM_INDEX_SCAN + NUM_INDEXES + NUM_IO_TIMING);
+	                                  NUM_FROZENXID + NUM_MINMXID + NUM_FROZENPAGE  + 
+									  NUM_INDEX_SCAN + NUM_INDEXES + NUM_IO_TIMING);
 
 	memset(params, 0, sizeof(params));
 
@@ -584,25 +609,31 @@ Autovacuum_exec(AutovacuumLog *av, PGconn *conn, const char *instid)
 	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID;
 	params[26] = list_nth(av->params, idx_offset + 1);	/* new_relminmxid */
 
-	/* Index offset in params : index scan */
+	/* Index offset in params : frozen pates */
 	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID + NUM_MINMXID;
-	params[27] = list_nth(av->params, idx_offset + 0);	/* index_scan_ptn */
-	params[28] = list_nth(av->params, idx_offset + 1);	/* dead_lp_pages */
-	params[29] = list_nth(av->params, idx_offset + 2);	/* dead_lp_pages_ratio */
-	params[30] = list_nth(av->params, idx_offset + 4);	/* dead_lp */
+	params[27] = list_nth(av->params, idx_offset + 0); /* frozen_pages */
+	params[28] = list_nth(av->params, idx_offset + 1); /* frozen_pages_ratio */
+	params[29] = list_nth(av->params, idx_offset + 2); /* frozen_tuples */
+
+	/* Index offset in params : index scan */
+	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID + NUM_MINMXID + NUM_FROZENPAGE;
+	params[30] = list_nth(av->params, idx_offset + 0);	/* index_scan_ptn */
+	params[31] = list_nth(av->params, idx_offset + 1);	/* dead_lp_pages */
+	params[32] = list_nth(av->params, idx_offset + 2);	/* dead_lp_pages_ratio */
+	params[33] = list_nth(av->params, idx_offset + 4);	/* dead_lp */
 
 	/* Index offset in params : indexes */
-	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID + NUM_MINMXID + NUM_INDEX_SCAN;
-	params[31] = list_nth(av->params, idx_offset + 0);	/* index_names */
-	params[32] = list_nth(av->params, idx_offset + 1);	/* index_pages_total */
-	params[33] = list_nth(av->params, idx_offset + 2);	/* index_pages_new_del */
-	params[34] = list_nth(av->params, idx_offset + 3);	/* index_pages_current_del */
-	params[35] = list_nth(av->params, idx_offset + 4);	/* index_pages_reusable */
+	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID + NUM_MINMXID + NUM_FROZENPAGE + NUM_INDEX_SCAN;
+	params[34] = list_nth(av->params, idx_offset + 0);	/* index_names */
+	params[35] = list_nth(av->params, idx_offset + 1);	/* index_pages_total */
+	params[36] = list_nth(av->params, idx_offset + 2);	/* index_pages_new_del */
+	params[37] = list_nth(av->params, idx_offset + 3);	/* index_pages_current_del */
+	params[38] = list_nth(av->params, idx_offset + 4);	/* index_pages_reusable */
 
 	/* Index offset in params : I/O timings */
-	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID + NUM_MINMXID + NUM_INDEX_SCAN + NUM_INDEXES;
-	params[36] = list_nth(av->params, idx_offset + 0);	/* io_timings_read */
-	params[37] = list_nth(av->params, idx_offset + 1);	/* io_timings_write */
+	idx_offset = NUM_AUTOVACUUM + NUM_RUSAGE + NUM_TUPLES_MISS + NUM_FROZENXID + NUM_MINMXID + NUM_FROZENPAGE + NUM_INDEX_SCAN + NUM_INDEXES;
+	params[39] = list_nth(av->params, idx_offset + 0);	/* io_timings_read */
+	params[40] = list_nth(av->params, idx_offset + 1);	/* io_timings_write */
 
 	return pgut_command(conn, SQL_INSERT_AUTOVACUUM,
 						lengthof(params), params) == PGRES_COMMAND_OK;
