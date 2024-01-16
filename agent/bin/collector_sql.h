@@ -276,6 +276,30 @@ SELECT \
 FROM \
 	pg_stat_replication_slots"
 
+/* stat io */
+#define SQL_SELECT_STAT_IO "\
+SELECT \
+	backend_type, \
+	object, \
+	context, \
+	reads, \
+	read_time, \
+	writes, \
+	write_time, \
+	writebacks, \
+	writeback_time, \
+	extends, \
+	extend_time, \
+	op_bytes, \
+	hits, \
+	evictions, \
+	reuses, \
+	fsyncs, \
+	fsync_time, \
+	stats_reset \
+FROM \
+	pg_stat_io"
+
 /* stat wal */
 #define SQL_SELECT_STAT_WAL "\
 SELECT \

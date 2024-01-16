@@ -61,6 +61,10 @@ INSERT INTO statsrepo.replication_slots VALUES \
 INSERT INTO statsrepo.stat_replication_slots VALUES \
 ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"
 
+#define SQL_INSERT_STAT_IO "\
+INSERT INTO statsrepo.stat_io VALUES \
+($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)"
+
 #define SQL_INSERT_STAT_WAL "\
 INSERT INTO statsrepo.stat_wal VALUES \
 ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"

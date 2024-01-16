@@ -625,6 +625,30 @@ CREATE TABLE statsrepo.stat_replication_slots
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
+CREATE TABLE statsrepo.stat_io
+(
+	snapid					bigint,
+	backend_type			text,
+	object					text,
+	context					text,
+	reads					bigint,
+	read_time				double precision,
+	writes					bigint,
+	write_time				double precision,
+	writebacks				bigint,
+	writeback_time			double precision,
+	extends					bigint,
+	extend_time				double precision,
+	op_bytes				bigint,
+	hits					bigint,
+	evictions				bigint,
+	reuses					bigint,
+	fsyncs					bigint,
+	fsync_time				double precision,
+	stats_reset				timestamp with time zone,
+	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
+);
+
 CREATE TABLE statsrepo.stat_wal
 (
 	snapid					bigint,
@@ -1699,6 +1723,64 @@ $$
 		 	statsrepo.stat_wal
 		 WHERE
 		 	snapid = $2) a;
+$$
+LANGUAGE sql;
+
+-- generate information that corresponds to 'I/O Statistics' for pg_stats_reporter
+CREATE FUNCTION statsrepo.get_stat_io(
+	IN snapid_begin			bigint,
+	IN snapid_end			bigint,
+	OUT "time"				text,
+	OUT backend_type		text,
+	OUT object				text,
+	OUT context				text,
+	OUT reads				bigint,
+	OUT read_time			double precision,
+	OUT writes				bigint,
+	OUT write_time			double precision,
+	OUT writebacks			bigint,
+	OUT writeback_time		double precision,
+	OUT extends				bigint,
+	OUT extend_time			double precision,
+	OUT op_bytes			bigint,
+	OUT hits				bigint,
+	OUT evictions			bigint,
+	OUT reuses				bigint,
+	OUT fsyncs				bigint,
+	OUT fsync_time			double precision,
+	OUT stats_reset			text
+) RETURNS SETOF record AS
+$$
+	SELECT
+		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
+		io.backend_type,
+		io.object,
+		io.context,
+		(io.reads - COALESCE(pg_catalog.lag(io.reads) OVER w, 0) ),
+		(io.read_time - COALESCE(pg_catalog.lag(io.read_time) OVER w, 0) )::numeric(30,3),
+		(io.writes - COALESCE(pg_catalog.lag(io.writes) OVER w, 0) ),
+		(io.write_time - COALESCE(pg_catalog.lag(io.write_time) OVER w, 0) )::numeric(30,3),
+		(io.writebacks - COALESCE(pg_catalog.lag(io.writebacks) OVER w, 0) ),
+		(io.writeback_time - COALESCE(pg_catalog.lag(io.writeback_time) OVER w, 0) )::numeric(30,3),
+		(io.extends - COALESCE(pg_catalog.lag(io.extends) OVER w, 0) ),
+		(io.extend_time - COALESCE(pg_catalog.lag(io.extend_time) OVER w, 0) )::numeric(30,3),
+		op_bytes,
+		(io.hits - COALESCE(pg_catalog.lag(io.hits) OVER w, 0) ),
+		(io.evictions - COALESCE(pg_catalog.lag(io.evictions) OVER w, 0) ),
+		(io.reuses - COALESCE(pg_catalog.lag(io.reuses) OVER w, 0) ),
+		(io.fsyncs - COALESCE(pg_catalog.lag(io.fsyncs) OVER w, 0) ),
+		(io.fsync_time - COALESCE(pg_catalog.lag(io.fsync_time) OVER w, 0) )::numeric(30,3),
+		stats_reset
+	FROM
+		statsrepo.stat_io io
+		LEFT JOIN statsrepo.snapshot s ON io.snapid = s.snapid
+	WHERE
+		io.snapid BETWEEN $1 AND $2
+		AND s.instid = (SELECT instid from statsrepo.snapshot WHERE snapid = $2)
+	WINDOW
+		w AS (PARTITION BY io.backend_type, io.object, io.context ORDER BY io.snapid)
+	ORDER BY
+		io.snapid;
 $$
 LANGUAGE sql;
 
