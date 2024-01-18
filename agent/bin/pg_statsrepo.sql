@@ -877,7 +877,7 @@ LANGUAGE sql;
 
 -- get_version() - version of statsrepo schema
 CREATE FUNCTION statsrepo.get_version() RETURNS text AS
-'SELECT CAST(''150200'' AS TEXT)'
+'SELECT CAST(''160000'' AS TEXT)'
 LANGUAGE sql IMMUTABLE;
 
 -- tps() - transaction per seconds
@@ -2648,7 +2648,7 @@ $$
 	FULL JOIN
 		tc ON tv.database = tc.database AND tv.schema = tc.schema AND tv.table = tc.table
 	ORDER BY
-		7 DESC;
+		7 DESC, 1 ASC, 2 ASC, 3 ASC;
 $$
 LANGUAGE sql;
 
