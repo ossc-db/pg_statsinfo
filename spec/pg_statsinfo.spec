@@ -3,12 +3,12 @@
 
 # Original declaration for pg_statsinfo rpmbuild #
 
-%define _pgdir   /usr/pgsql-15
+%define _pgdir   /usr/pgsql-16
 %define _bindir  %{_pgdir}/bin
 %define _libdir  %{_pgdir}/lib
 %define _datadir %{_pgdir}/share
 
-%global packageversion 15
+%global packageversion 16
 %global tmpfilesconf spec/pg_statsinfo-tmpfiles.d.conf
 
 ## Set general information for pg_statsinfo.
@@ -23,7 +23,7 @@ Source0:    %{name}-%{version}.tar.gz
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 
 ## We use postgresql-devel package
-BuildRequires:  postgresql15-devel
+BuildRequires:  postgresql16-devel
 %if %{rhel} == 7
 BuildRequires:  llvm-toolset-7 llvm5.0
 %endif
@@ -39,7 +39,7 @@ pg_statsinfo monitors an instance of PostgreSQL server and gather
 the statistics and activities of the server as snapshots.
 
 %package llvmjit
-Requires: postgresql15-llvmjit
+Requires: postgresql16-llvmjit
 Requires: pg_statsinfo = %{version}
 Summary:  Just-in-time compilation support for pg_statsinfo
 

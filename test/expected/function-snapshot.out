@@ -103,23 +103,25 @@ vacuumdb: vacuuming database "template1"
 (5 rows)
 
 /**--- Role information ---**/
- snapid |           role            | userid 
---------+---------------------------+--------
-      1 | pg_checkpoint             | xxx
-      1 | pg_database_owner         | xxx
-      1 | pg_execute_server_program | xxx
-      1 | pg_monitor                | xxx
-      1 | pg_read_all_data          | xxx
-      1 | pg_read_all_settings      | xxx
-      1 | pg_read_all_stats         | xxx
-      1 | pg_read_server_files      | xxx
-      1 | pg_signal_backend         | xxx
-      1 | pg_stat_scan_tables       | xxx
-      1 | pg_write_all_data         | xxx
-      1 | pg_write_server_files     | xxx
-      1 | postgres                  | xxx
-      1 | user01                    | xxx
-(14 rows)
+ snapid |            role             | userid 
+--------+-----------------------------+--------
+      1 | pg_checkpoint               | xxx
+      1 | pg_create_subscription      | xxx
+      1 | pg_database_owner           | xxx
+      1 | pg_execute_server_program   | xxx
+      1 | pg_monitor                  | xxx
+      1 | pg_read_all_data            | xxx
+      1 | pg_read_all_settings        | xxx
+      1 | pg_read_all_stats           | xxx
+      1 | pg_read_server_files        | xxx
+      1 | pg_signal_backend           | xxx
+      1 | pg_stat_scan_tables         | xxx
+      1 | pg_use_reserved_connections | xxx
+      1 | pg_write_all_data           | xxx
+      1 | pg_write_server_files       | xxx
+      1 | postgres                    | xxx
+      1 | user01                      | xxx
+(16 rows)
 
 /**--- GUC setting ---**/
  snapid |       name        | setting | unit |       source       
