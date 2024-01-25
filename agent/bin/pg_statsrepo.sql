@@ -882,12 +882,12 @@ LANGUAGE sql IMMUTABLE;
 
 -- tps() - transaction per seconds
 CREATE FUNCTION statsrepo.tps(numeric, interval) RETURNS numeric AS
-'SELECT (CASE WHEN extract(epoch FROM $2) > 0 THEN $1 / extract(epoch FROM $2) ELSE 0 END)::numeric(1000, 3)'
+'SELECT (CASE WHEN extract(epoch FROM $2) > 0 THEN $1 / extract(epoch FROM $2) ELSE 0 END)::numeric(30, 3)'
 LANGUAGE sql IMMUTABLE STRICT;
 
 -- div() - NULL-safe operator /
 CREATE FUNCTION statsrepo.div(numeric, numeric) RETURNS numeric AS
-'SELECT (CASE WHEN $2 > 0 THEN $1 / $2 ELSE 0 END)::numeric(1000, 3)'
+'SELECT (CASE WHEN $2 > 0 THEN $1 / $2 ELSE 0 END)::numeric(30, 3)'
 LANGUAGE sql IMMUTABLE STRICT;
 
 -- sub() - NULL-safe operator -
@@ -1226,7 +1226,7 @@ $$
 		(statsrepo.div(
 			statsrepo.sub(ed.blks_hit, sd.blks_hit),
 			statsrepo.sub(ed.blks_read, sd.blks_read) +
-			statsrepo.sub(ed.blks_hit, sd.blks_hit)) * 100)::numeric(1000, 1),
+			statsrepo.sub(ed.blks_hit, sd.blks_hit)) * 100)::numeric(30, 1),
 		statsrepo.tps(
 			statsrepo.sub(ed.blks_read, sd.blks_read) +
 			statsrepo.sub(ed.blks_hit, sd.blks_hit),
@@ -1241,8 +1241,8 @@ $$
 		statsrepo.sub(ed.temp_files, sd.temp_files),
 		statsrepo.sub(ed.temp_bytes, sd.temp_bytes) / 1024 / 1024,
 		statsrepo.sub(ed.deadlocks, sd.deadlocks),
-		statsrepo.sub(ed.blk_read_time, sd.blk_read_time)::numeric(1000, 3),
-		statsrepo.sub(ed.blk_write_time, sd.blk_write_time)::numeric(1000, 3)
+		statsrepo.sub(ed.blk_read_time, sd.blk_read_time)::numeric(30, 3),
+		statsrepo.sub(ed.blk_write_time, sd.blk_write_time)::numeric(30, 3)
 	FROM
 		statsrepo.snapshot ss,
 		statsrepo.snapshot es,
@@ -1268,8 +1268,8 @@ $$
 	SELECT
 		pg_catalog.to_char(time, 'YYYY-MM-DD HH24:MI'),
 		name,
-		coalesce(statsrepo.tps(xact_commit, duration), 0)::numeric(1000,3),
-		coalesce(statsrepo.tps(xact_rollback, duration), 0)::numeric(1000,3)
+		coalesce(statsrepo.tps(xact_commit, duration), 0)::numeric(30,3),
+		coalesce(statsrepo.tps(xact_rollback, duration), 0)::numeric(30,3)
 	FROM
 		(SELECT
 			snapid,
@@ -1324,7 +1324,7 @@ $$
 	SELECT
 		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
 		d.name,
-		(pg_catalog.sum(size) / 1024 / 1024)::numeric(1000, 3)
+		(pg_catalog.sum(size) / 1024 / 1024)::numeric(30, 3)
 	FROM
 		statsrepo.database d,
 		statsrepo.snapshot s
@@ -1358,12 +1358,12 @@ $$
 		d.name,
 		sum(plan_reads) as plan_reads,
  		sum(plan_writes) as plan_writes,
-		sum(plan_user_time)::numeric(12,6) as plan_user_time,
-		sum(plan_system_time)::numeric(12,6) as plan_system_time,
+		sum(plan_user_time)::numeric(15,6) as plan_user_time,
+		sum(plan_system_time)::numeric(15,6) as plan_system_time,
 		sum(exec_reads) as exec_reads,
 		sum(exec_writes) as exec_writes,
-		sum(exec_user_time)::numeric(12,6) as exec_user_time,
-		sum(exec_system_time)::numeric(12,6) as exec_system_time
+		sum(exec_user_time)::numeric(15,6) as exec_user_time,
+		sum(exec_system_time)::numeric(15,6) as exec_system_time
 	FROM
 		(SELECT dbid, name FROM statsrepo.database WHERE snapid = $2) d
 		LEFT JOIN
@@ -1511,13 +1511,13 @@ CREATE FUNCTION statsrepo.get_proc_ratio(
 $$
 	SELECT
 		CASE WHEN pg_catalog.sum(total)::float4 = 0 THEN 0
-			ELSE (100 * pg_catalog.sum(idle)::float / pg_catalog.sum(total)::float4)::numeric(5,1) END,
+			ELSE (100 * pg_catalog.sum(idle)::float / pg_catalog.sum(total)::float4)::numeric(10,1) END,
 		CASE WHEN pg_catalog.sum(total)::float4 = 0 THEN 0
-			ELSE (100 * pg_catalog.sum(idle_in_xact)::float / pg_catalog.sum(total)::float4)::numeric(5,1) END,
+			ELSE (100 * pg_catalog.sum(idle_in_xact)::float / pg_catalog.sum(total)::float4)::numeric(10,1) END,
 		CASE WHEN pg_catalog.sum(total)::float4 = 0 THEN 0
-			ELSE (100 * pg_catalog.sum(waiting)::float / pg_catalog.sum(total)::float4)::numeric(5,1) END,
+			ELSE (100 * pg_catalog.sum(waiting)::float / pg_catalog.sum(total)::float4)::numeric(10,1) END,
 		CASE WHEN pg_catalog.sum(total)::float4 = 0 THEN 0
-			ELSE (100 * pg_catalog.sum(running)::float / pg_catalog.sum(total)::float4)::numeric(5,1) END
+			ELSE (100 * pg_catalog.sum(running)::float / pg_catalog.sum(total)::float4)::numeric(10,1) END
 	FROM 
 		(SELECT
 			snapid,
@@ -1554,16 +1554,16 @@ SELECT
 	pg_catalog.to_char(time, 'YYYY-MM-DD HH24:MI'),
 	CASE WHEN (lag / interval) = 0 THEN idle ELSE idle / (lag / interval) END AS idle,
 	CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-		ELSE (100.0 * idle / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS idle_per,
+		ELSE (100.0 * idle / (idle + idle_in_xact + waiting + running))::numeric(10,1) END AS idle_per,
 	CASE WHEN (lag / interval) = 0 THEN idle_in_xact ELSE idle_in_xact / (lag / interval) END AS idle_in_xact,
 	CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-		ELSE (100.0 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS idle_in_xact_per,
+		ELSE (100.0 * idle_in_xact / (idle + idle_in_xact + waiting + running))::numeric(10,1) END AS idle_in_xact_per,
 	CASE WHEN (lag / interval) = 0 THEN waiting ELSE waiting / (lag / interval) END AS waiting,
 	CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-		ELSE (100.0 * waiting / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS waiting_per,
+		ELSE (100.0 * waiting / (idle + idle_in_xact + waiting + running))::numeric(10,1) END AS waiting_per,
 	CASE WHEN (lag / interval) = 0 THEN running ELSE running / (lag / interval) END AS running,
 	CASE WHEN (idle + idle_in_xact + waiting + running) = 0 THEN 0
-		ELSE (100.0 * running / (idle + idle_in_xact + waiting + running))::numeric(5,1) END AS running_per
+		ELSE (100.0 * running / (idle + idle_in_xact + waiting + running))::numeric(10,1) END AS running_per
 FROM
 (
 	SELECT
@@ -1575,6 +1575,7 @@ FROM
 		JOIN
 		(SELECT snapid, instid, time,  EXTRACT(EPOCH FROM ((time - lag(time, 1) OVER (ORDER BY snapid))))::int as lag_t
 			FROM statsrepo.snapshot WHERE snapid BETWEEN $1 - 1 AND $2
+			AND instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 		) s
 		ON a.snapid = s.snapid
 		LEFT JOIN
@@ -1610,8 +1611,8 @@ $$
 		pg_catalog.to_char(time, 'YYYY-MM-DD HH24:MI'),
 		location,
 		xlogfile,
-		(write_size / 1024 / 1024)::numeric(1000, 3),
-		(statsrepo.tps(write_size, duration) / 1024 / 1024)::numeric(1000, 3),
+		(write_size / 1024 / 1024)::numeric(30, 3),
+		(statsrepo.tps(write_size, duration) / 1024 / 1024)::numeric(30, 3),
 		last_archived_wal,
 		archive_count,
 		archive_failed
@@ -1659,8 +1660,8 @@ CREATE FUNCTION statsrepo.get_wal_stats(
 ) RETURNS SETOF record AS
 $$
 	SELECT
-		pg_catalog.sum(write_size)::numeric(1000, 3),
-		pg_catalog.avg(write_size_per_sec)::numeric(1000, 3),
+		pg_catalog.sum(write_size)::numeric(30, 3),
+		pg_catalog.avg(write_size_per_sec)::numeric(30, 3),
 		pg_catalog.sum(archive_count),
 		pg_catalog.sum(archive_failed),
 		pg_catalog.max(walfile),
@@ -1862,10 +1863,10 @@ CREATE FUNCTION statsrepo.get_cpu_usage_tendency(
 $$
 	SELECT
 		t.snapid,
-		(100 * statsrepo.div(t.user, t.total))::numeric(5,1),
-		(100 * statsrepo.div(t.system, t.total))::numeric(5,1),
-		(100 * statsrepo.div(t.idle, t.total))::numeric(5,1),
-		(100 * statsrepo.div(t.iowait, t.total))::numeric(5,1)
+		(100 * statsrepo.div(t.user, t.total))::numeric(10,1),
+		(100 * statsrepo.div(t.system, t.total))::numeric(10,1),
+		(100 * statsrepo.div(t.idle, t.total))::numeric(10,1),
+		(100 * statsrepo.div(t.iowait, t.total))::numeric(10,1)
 	FROM
 	(
 		SELECT
@@ -1908,10 +1909,10 @@ CREATE FUNCTION statsrepo.get_cpu_usage_tendency_report(
 $$
 	SELECT
 		pg_catalog.to_char(t.time, 'YYYY-MM-DD HH24:MI'),
-		(100 * statsrepo.div(t.user, t.total))::numeric(5,1),
-		(100 * statsrepo.div(t.system, t.total))::numeric(5,1),
-		(100 * statsrepo.div(t.idle, t.total))::numeric(5,1),
-		(100 * statsrepo.div(t.iowait, t.total))::numeric(5,1)
+		(100 * statsrepo.div(t.user, t.total))::numeric(10,1),
+		(100 * statsrepo.div(t.system, t.total))::numeric(10,1),
+		(100 * statsrepo.div(t.idle, t.total))::numeric(10,1),
+		(100 * statsrepo.div(t.iowait, t.total))::numeric(10,1)
 	FROM
 	(
 		SELECT
@@ -1962,9 +1963,9 @@ $$
 		c.system,
 		c.idle,
 		c.iowait,
-		l.loadavg1::numeric(6,3),
-		l.loadavg5::numeric(6,3),
-		l.loadavg15::numeric(6,3)
+		l.loadavg1::numeric(10,3),
+		l.loadavg5::numeric(10,3),
+		l.loadavg15::numeric(10,3)
 	FROM
 		statsrepo.get_cpu_usage_tendency($1, $2) c,
 		statsrepo.loadavg l,
@@ -2000,10 +2001,10 @@ $$
 		coalesce(pg_catalog.sum(write_sector) / 2 / 1024, 0)::bigint,
 		coalesce(pg_catalog.sum(read_time), 0)::bigint,
 		coalesce(pg_catalog.sum(write_time), 0)::bigint,
-		pg_catalog.avg(device_ioqueue)::numeric(1000,3),
+		pg_catalog.avg(device_ioqueue)::numeric(30,3),
 		coalesce(pg_catalog.sum(io_time), 0)::bigint,
-		(pg_catalog.max(device_rsps_max) / 2)::numeric(1000,2),
-		(pg_catalog.max(device_wsps_max) / 2)::numeric(1000,2)
+		(pg_catalog.max(device_rsps_max) / 2)::numeric(30,2),
+		(pg_catalog.max(device_wsps_max) / 2)::numeric(30,2)
 	FROM
 	(
 		SELECT
@@ -2056,12 +2057,12 @@ $$
 	SELECT
 		pg_catalog.to_char(time, 'YYYY-MM-DD HH24:MI'),
 		device_name,
-		coalesce(statsrepo.tps(read_size, duration) / 2, 0)::numeric(1000,2),
-		coalesce(statsrepo.tps(write_size, duration) / 2, 0)::numeric(1000,2),
-		coalesce(statsrepo.tps(read_time, duration) / 10, 0)::numeric(1000,1),
-		coalesce(statsrepo.tps(write_time, duration) / 10, 0)::numeric(1000,1),
-		(rsps_peak / 2)::numeric(1000,2),
-		(wsps_peak / 2)::numeric(1000,2)
+		coalesce(statsrepo.tps(read_size, duration) / 2, 0)::numeric(30,2),
+		coalesce(statsrepo.tps(write_size, duration) / 2, 0)::numeric(30,2),
+		coalesce(statsrepo.tps(read_time, duration) / 10, 0)::numeric(30,1),
+		coalesce(statsrepo.tps(write_time, duration) / 10, 0)::numeric(30,1),
+		(rsps_peak / 2)::numeric(30,2),
+		(wsps_peak / 2)::numeric(30,2)
 	FROM
 	(
 		SELECT
@@ -2121,9 +2122,9 @@ CREATE FUNCTION statsrepo.get_loadavg_tendency(
 $$
 	SELECT
 		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
-		l.loadavg1::numeric(6,3),
-		l.loadavg5::numeric(6,3),
-		l.loadavg15::numeric(6,3)
+		l.loadavg1::numeric(10,3),
+		l.loadavg5::numeric(10,3),
+		l.loadavg15::numeric(10,3)
 	FROM
 		statsrepo.loadavg l,
 		statsrepo.snapshot s
@@ -2150,11 +2151,11 @@ CREATE FUNCTION statsrepo.get_memory_tendency(
 $$
 	SELECT
 		pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI'),
-		(m.memfree::float / 1024)::numeric(1000, 2),
-		(m.buffers::float / 1024)::numeric(1000, 2),
-		(m.cached::float / 1024)::numeric(1000, 2),
-		(m.swap::float / 1024)::numeric(1000, 2),
-		(m.dirty::float / 1024)::numeric(1000, 2)
+		(m.memfree::float / 1024)::numeric(30, 2),
+		(m.buffers::float / 1024)::numeric(30, 2),
+		(m.cached::float / 1024)::numeric(30, 2),
+		(m.swap::float / 1024)::numeric(30, 2),
+		(m.dirty::float / 1024)::numeric(30, 2)
 	FROM
 		statsrepo.memory m,
 		statsrepo.snapshot s
@@ -2185,7 +2186,7 @@ $$
 		device,
 		(total - avail) / 1024 / 1024,
 		avail / 1024 / 1024,
-		(100.0 * avail / total)::numeric(1000,1)
+		(100.0 * avail / total)::numeric(30,1)
 	FROM
 		statsrepo.tablespace
 	WHERE
@@ -2245,7 +2246,7 @@ $$
 		x.pid,
 		x.client,
 		x.start::timestamp(0),
-		pg_catalog.max(x.duration)::numeric(1000, 3) AS duration,
+		pg_catalog.max(x.duration)::numeric(30, 3) AS duration,
 		(SELECT query FROM statsrepo.xact WHERE snapid = pg_catalog.max(x.snapid) AND pid = x.pid AND start = x.start)
 	FROM
 		statsrepo.xact x,
@@ -2290,7 +2291,7 @@ $$
 			statsrepo.sub(e.n_tup_del, b.n_tup_del),
 		(statsrepo.div(
 			statsrepo.sub(e.n_tup_hot_upd, b.n_tup_hot_upd),
-			statsrepo.sub(e.n_tup_upd, b.n_tup_upd)) * 100)::numeric(1000,1)
+			statsrepo.sub(e.n_tup_upd, b.n_tup_upd)) * 100)::numeric(30,1)
 	FROM
 		statsrepo.tables e LEFT JOIN statsrepo.table b
 			ON e.tbl = b.tbl AND e.nsp = b.nsp AND e.dbid = b.dbid AND b.snapid = $1
@@ -2338,7 +2339,7 @@ $$
 			statsrepo.sub(e.heap_blks_read, b.heap_blks_read) +
 			statsrepo.sub(e.idx_blks_read, b.idx_blks_read) +
 			statsrepo.sub(e.toast_blks_read, b.toast_blks_read) +
-			statsrepo.sub(e.tidx_blks_read, b.tidx_blks_read)) * 100)::numeric(1000,1)
+			statsrepo.sub(e.tidx_blks_read, b.tidx_blks_read)) * 100)::numeric(30,1)
 	FROM
 		statsrepo.tables e LEFT JOIN statsrepo.table b
 			ON e.tbl = b.tbl AND e.nsp = b.nsp AND e.dbid = b.dbid AND b.snapid = $1
@@ -2372,7 +2373,7 @@ $$
 		logical_pages,
 		physical_pages,
 		CASE physical_pages
-			WHEN 0 THEN NULL ELSE (logical_pages * 100.0 / physical_pages)::numeric(1000,1) END AS tratio
+			WHEN 0 THEN NULL ELSE (logical_pages * 100.0 / physical_pages)::numeric(30,1) END AS tratio
 	FROM
 	(
 		SELECT
@@ -2431,7 +2432,7 @@ $$
 		i.schema,
 		i.table,
 		c.name,
-		c.correlation::numeric(4,3)
+		c.correlation::numeric(5,3)
 	FROM
 		statsrepo.indexes i,
 		statsrepo.column c
@@ -3068,8 +3069,8 @@ $$
 		s.name,
 		fe.funcname,
 		statsrepo.sub(fe.calls, fb.calls),
-		statsrepo.sub(fe.total_time, fb.total_time)::numeric(1000, 3),
-		statsrepo.sub(fe.self_time, fb.self_time)::numeric(1000, 3),
+		statsrepo.sub(fe.total_time, fb.total_time)::numeric(30, 3),
+		statsrepo.sub(fe.self_time, fb.self_time)::numeric(30, 3),
 		statsrepo.div(
 			statsrepo.sub(fe.total_time, fb.total_time)::numeric,
 			statsrepo.sub(fe.calls, fb.calls))
@@ -3120,17 +3121,17 @@ $$
 		t1.dbname::name,
 		t1.query,
 		t1.plans,
-		t1.total_plan_time::numeric(1000,3),
+		t1.total_plan_time::numeric(30,3),
 		CASE t1.plans
-			WHEN 0 THEN 0 ELSE (t1.total_plan_time / t1.plans)::numeric(1000, 3) END,
+			WHEN 0 THEN 0 ELSE (t1.total_plan_time / t1.plans)::numeric(30, 3) END,
 		t1.calls,
-		t1.total_exec_time::numeric(1000, 3),
+		t1.total_exec_time::numeric(30, 3),
 		CASE t1.calls
-			WHEN 0 THEN 0 ELSE (t1.total_exec_time / t1.calls)::numeric(1000, 3) END,
-		t1.blk_read_time::numeric(1000, 3),
-		t1.blk_write_time::numeric(1000, 3),
-		t1.tmp_blk_read_time::numeric(1000, 3),
-		t1.tmp_blk_write_time::numeric(1000, 3),
+			WHEN 0 THEN 0 ELSE (t1.total_exec_time / t1.calls)::numeric(30, 3) END,
+		t1.blk_read_time::numeric(30, 3),
+		t1.blk_write_time::numeric(30, 3),
+		t1.tmp_blk_read_time::numeric(30, 3),
+		t1.tmp_blk_write_time::numeric(30, 3),
 		t1.dbid,
 		t1.userid,
 		t1.queryid,
@@ -3213,12 +3214,12 @@ $$
 		reg.query,
 		statsrepo.sub(e.plan_reads, b.plan_reads),
 		statsrepo.sub(e.plan_writes, b.plan_writes),
-		statsrepo.sub(e.plan_user_time, b.plan_user_time)::numeric(12,6),
-		statsrepo.sub(e.plan_system_time, b.plan_system_time)::numeric(12,6),
+		statsrepo.sub(e.plan_user_time, b.plan_user_time)::numeric(15,6),
+		statsrepo.sub(e.plan_system_time, b.plan_system_time)::numeric(15,6),
 		statsrepo.sub(e.exec_reads, b.exec_reads),
 		statsrepo.sub(e.exec_writes, b.exec_writes),
-		statsrepo.sub(e.exec_user_time, b.exec_user_time)::numeric(12,6),
-		statsrepo.sub(e.exec_system_time, b.exec_system_time)::numeric(12,6)
+		statsrepo.sub(e.exec_user_time, b.exec_user_time)::numeric(15,6),
+		statsrepo.sub(e.exec_system_time, b.exec_system_time)::numeric(15,6)
 	FROM
 		-- Use get_query_activity_statements, it's already have an organized query list of things.
 		(SELECT * FROM statsrepo.get_query_activity_statements($1, $2)) reg
@@ -3257,12 +3258,12 @@ $$
 		t1.rolname::text,
 		t1.datname::name,
 		t1.calls,
-		t1.total_time::Numeric(1000, 3),
-		(t1.total_time / t1.calls)::numeric(1000, 3),
-		t1.blk_read_time::numeric(1000, 3),
-		t1.blk_write_time::numeric(1000, 3),
-		t1.temp_blk_read_time::numeric(1000, 3),
-		t1.temp_blk_write_time::numeric(1000, 3)
+		t1.total_time::Numeric(30, 3),
+		(t1.total_time / t1.calls)::numeric(30, 3),
+		t1.blk_read_time::numeric(30, 3),
+		t1.blk_write_time::numeric(30, 3),
+		t1.temp_blk_read_time::numeric(30, 3),
+		t1.temp_blk_write_time::numeric(30, 3)
 	FROM
 		(SELECT
 			reg.queryid,
@@ -3345,12 +3346,12 @@ $$
 		t1.rolname::text,
 		t1.datname::name,
 		t1.calls,
-		t1.total_time::Numeric(1000, 3),
-		(t1.total_time / t1.calls)::numeric(1000, 3),
-		t1.blk_read_time::numeric(1000, 3),
-		t1.blk_write_time::numeric(1000, 3),
-		t1.temp_blk_read_time::numeric(1000, 3),
-		t1.temp_blk_write_time::numeric(1000, 3),
+		t1.total_time::Numeric(30, 3),
+		(t1.total_time / t1.calls)::numeric(30, 3),
+		t1.blk_read_time::numeric(30, 3),
+		t1.blk_write_time::numeric(30, 3),
+		t1.temp_blk_read_time::numeric(30, 3),
+		t1.temp_blk_write_time::numeric(30, 3),
 		t1.first_call::timestamp(0),
 		t1.last_call::timestamp(0),
 		t1.query,
@@ -3895,7 +3896,7 @@ $$
 					event_type,
 					event,
 					cnt,
-					ratio::numeric(6,3) AS ratio,
+					ratio::numeric(10,3) AS ratio,
 					ROW_NUMBER() OVER ww
 				FROM
 					(SELECT
@@ -3957,7 +3958,7 @@ FROM
 		event_type,
 		event,
 		cnt,
-		ratio::numeric(6,3),
+		ratio::numeric(10,3),
 		ROW_NUMBER() OVER ww
 	FROM
 		(SELECT
@@ -4013,7 +4014,7 @@ FROM
 		event_type,
 		event,
 		cnt,
-		ratio::numeric(6,3),
+		ratio::numeric(10,3),
 		ROW_NUMBER() OVER ww
 	FROM
 		(SELECT
