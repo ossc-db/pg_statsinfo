@@ -27,7 +27,7 @@ SELECT \
 	i.hostname, \
 	i.port, \
 	pg_catalog.count(*), \
-	pg_catalog.sum(s.snapshot_increase_size)::numeric(1000), \
+	pg_catalog.sum(s.snapshot_increase_size), \
 	pg_catalog.max(s.snapid), \
 	pg_catalog.max(s.time)::timestamp(0) \
 FROM \
