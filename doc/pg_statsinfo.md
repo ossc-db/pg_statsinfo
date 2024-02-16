@@ -24,7 +24,7 @@
 5.  [Uninstallation](#Uninstallation)
 6.  [Restrictions](#restrictions)
 7.  [Q&A](#qa)
-8.  [Changes From pg_statsinfo14](#changes-from-pg_statsinfo14)
+8.  [Changes From pg_statsinfo15](#changes-from-pg_statsinfo15)
 9.  [Detailed Information](#Detailed-Information)
     1.  [Sharing Repository Database](#Sharing-Repository-Database)
     2.  [Fall-Back Mode](#Fall-Back-Mode)
@@ -34,7 +34,7 @@
 
 </div>
 
-# pg_statsinfo 15
+# pg_statsinfo 16
 
 ## What is pg_statsinfo
 
@@ -43,7 +43,7 @@ of PostgreSQL server in the form of time series of snapshots. You can
 examine the snapshots on graphical representations by using
 [pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter).
 
-pg_statsinfo 14 and later are available on GitHub. pg_statsinfo 13 and earlier can be found at [SourceForge](http://pgstatsinfo.sourceforge.net/index.html).
+pg_statsinfo 14 and later are available on GitHub. pg_statsinfo 13 and earlier can be found at [SourceForge](https://pgstatsinfo.sourceforge.net/index.html).
 
 ## Description
 
@@ -98,7 +98,7 @@ manually.
 Every snapshots holds the following information:
 
   - All of the information collected by [the statistics
-    collector](http://www.postgresql.org/docs/15/static/monitoring-stats.html).
+    collector](https://www.postgresql.org/docs/16/static/monitoring-stats.html).
     For example, numbers of INSERT/UPDATE/DELETEs and buffer access
     counters.
   - Disk usage per tablespace, WAL, and archive log directory.
@@ -127,7 +127,7 @@ monitored database is roughly estimated to be 120 - 150MB.
 
 You can see the structure of the tables in pg_statsinfo's repository
 database in
-[this](/doc/files/pg_statsinfo_v15_report_infomation.xls)
+[this](/doc/files/pg_statsinfo_v16_repository_infomation.xls)
 document. (MS Excel document in Japanese).
 
 ### Server Log Filter
@@ -185,7 +185,7 @@ are the tables having clustering index.
 
 The contents of alert message of each alert item is shown in ["report
 item list of pg_statsinfo
-v15".](/doc/files/pg_statsinfo_v15_report_infomation.xls)
+v16".](/doc/files/pg_statsinfo_v16_report_infomation.xls)
 (.xls in Japanese).
 
 You can see setup instructions [here](#Alert-Function).
@@ -206,7 +206,7 @@ format. Following kinds of information are available.
 
 The comprehensive list of report items is shown in ["report item list of
 pg_statsinfo
-v15".](/doc/files/pg_statsinfo_v15_report_infomation.xls)
+v16".](/doc/files/pg_statsinfo_v16_report_infomation.xls)
 (.xls in Japanese)  
 Report items are equivalent with
 [pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter).  
@@ -249,28 +249,21 @@ Setup reference of this feature is [here](#Automatic-Maintenance).
 ### Requirement
 
   - PostgreSQL versions  
-    PostgreSQL 15
+    PostgreSQL 16
   - OS  
-    RHEL 7.x (x86_64), CentOS 7.x (x86_64)
     RHEL 8.x (x86_64), Rocky Linux 8.x (x86_64)
+    RHEL 9.x (x86_64), Rocky Linux 9.x (x86_64)
 
 ### Installation
 
 #### Installing using RPM
 
-##### RHEL 7
+##### RHEL 8, RHEL 9
 
 The following steps install pg_statsinfo using rpm.
 
     $ su
-    # yum install pg_statsinfo-15.0-1.pg15.rhel7.x86_64.rpm
-
-##### RHEL 8
-
-The following steps install pg_statsinfo using rpm.
-
-    $ su
-    # dnf install pg_statsinfo-15.0-1.pg15.rhel8.x86_64.rpm
+    # dnf install pg_statsinfo-16.0-1.rhel8.x86_64.rpm
 
 #### Installing from source
 
@@ -279,8 +272,8 @@ Setting up of repository database will be done automatically at first
 run.
 
     $ cd pg_statsinfo
-    $ tar xzvf pg_statsinfo-15.0.tar.gz 
-    $ cd pg_statsinfo-15.0
+    $ tar xzvf pg_statsinfo-16.0.tar.gz 
+    $ cd pg_statsinfo-16.0
     $ make USE_PGXS=1
     $ su
     # make USE_PGXS=1 install
@@ -332,7 +325,7 @@ Setup to allow the owner of the PostgreSQL process to log in the
 PostgreSQL server from localhost without password. "ident" is
 recommended method for authentication. In order to do that, add the
 following line to
-[pg_hba.conf](http://www.postgresql.org/docs/15/static/auth-pg-hba-conf.html)
+[pg_hba.conf](https://www.postgresql.org/docs/16/static/auth-pg-hba-conf.html)
 when "OS-user = DB-superuser = postgres" which is the most common case.
 Note that only the first line that matches the condition will be in
 effect. The "ident" authentication method with TYPE=local would be
@@ -345,7 +338,7 @@ convenient on
 #### Configuration for involving query statistics
 
 You can have snapshots involving query statistics using
-[pg_stat_statements](http://www.postgresql.org/docs/15/static/pgstatstatements.html).
+[pg_stat_statements](https://www.postgresql.org/docs/16/static/pgstatstatements.html).
 pg_statsinfo automatically detects pg_stat_statements and use it.
 Installation of pg_stat_statements would be done in the following
 steps after adding it to shared_preload_libraries in postgresql.conf.
@@ -473,7 +466,7 @@ filtering is described below.
     CSV log file is the source of the PostgreSQL log messages
     pg_statsinfo processes. (Detailed explanation for CSV log file is
     seen
-    [Here](http://www.postgresql.org/docs/15/static/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG))
+    [Here](https://www.postgresql.org/docs/16/static/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG))
 
   - Text log files (specifically that with the name of
     "pg_statsinfo.log")  
@@ -710,7 +703,7 @@ Available options are described below,
     Generates a report of the type specified by REPORTID.
     The following REPORTID are available.
     More details are shown in [Items of a report in pg_statsinfo
-    v15](/doc/files/pg_statsinfo_v15_report_infomation.xls)(Both
+    v16](/doc/files/pg_statsinfo_v16_report_infomation.xls)(Both
     filename and contents are only in Japanese).
       - Summary
       - Alert
@@ -1061,13 +1054,13 @@ optional parameters
     with the specified level or more severe level are recorded in the
     logs. "disable" discards all log entries. Severity order is the same
     as
-    [log_min_messages](http://www.postgresql.org/docs/15/static/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-WHEN)
+    [log_min_messages](https://www.postgresql.org/docs/16/static/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-WHEN)
     except additional levels "disable", "alert" and "debug". That is,
     disable \> alert \> panic \> fatal \> log \> error \> warning \>
     notice \> info \> debug
   - ##### 2_Config:Prefix Format  
     Same format with configuration parameter
-    [log_line_prefix](http://www.postgresql.org/docs/15/static/runtime-config-logging.html#GUC-LOG-LINE-PREFIX).
+    [log_line_prefix](https://www.postgresql.org/docs/16/static/runtime-config-logging.html#GUC-LOG-LINE-PREFIX).
     Note that log_line_prefix itself is ignored when pg_statsinfo is
     enabled.
   - ##### 3_Config:Time Format  
@@ -1078,17 +1071,17 @@ optional parameters
     A keyword/value style connection string. For example,
     'hostaddr=127.0.0.1 port=5432 dbname=mydb user=postgres'. See also
     PQconnectdb in "[Database Connection Control
-    Functions](http://www.postgresql.org/docs/15/static/libpq-connect.html)"
+    Functions](https://www.postgresql.org/docs/16/static/libpq-connect.html)"
     for details. [environment
-    variables](http://www.postgresql.org/docs/15/static/libpq-envars.html)
+    variables](https://www.postgresql.org/docs/16/static/libpq-envars.html)
     describes the effect of environment variables.
     Password prompt should be avoided on connecting to the repository.
     Use
-    [.pgpass](http://www.postgresql.org/docs/15/static/libpq-pgpass.html)
+    [.pgpass](https://www.postgresql.org/docs/16/static/libpq-pgpass.html)
     file for providing passwords if needed. Note that hostaddr is taken
     as a host name when host is omitted in a connection string. See
     ["Parameter
-    Keywords"](https://www.postgresql.org/docs/15/static/libpq-connect.html#LIBPQ-PARAMKEYWORDS)
+    Keywords"](https://www.postgresql.org/docs/16/static/libpq-connect.html#LIBPQ-PARAMKEYWORDS)
     for the details.
   - ##### 5_Config:SQLSTATE  
     An SQLSTATE is a five-digit code looks like '42P01' defined in the
@@ -1237,7 +1230,7 @@ There are still some restrictions and limitations in pg_statsinfo.
     China(PRC = CST+8) are wrongly advanced by 14 hours on a repository
     where no additional setup is made about time zone abbreviations. You
     need [additional
-    setup](http://www.postgresql.org/docs/15/static/datetime-config-files.html)
+    setup](https://www.postgresql.org/docs/16/static/datetime-config-files.html)
     if you get a wrong result as follows on repository database for the
     time zone on your system.
 
@@ -1276,9 +1269,7 @@ but it needs too much labor for most cases. You can use pg_statsinfo's
 command line reporting feature to see them as simple reports in text
 format. For those who wants to see them in graphical interface,
 [pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter)
-provides sortable tables with pager and manipulative graphs. An operable
-sample is available
-[here](http://pgstatsinfo.sourceforge.net/documents/reporter15/html/files/report_sample.html).
+provides sortable tables with pager and manipulative graphs. 
 
 #### Q3. Auto maintenance seems not cleaning up snapshots.
 
@@ -1350,7 +1341,7 @@ restrictions.
   - Schema Information  
     Make sure the settings so that all target instances can be connected
     without prompting for password. See
-    [here](http://www.postgresql.org/docs/15/static/client-authentication.html)
+    [here](https://www.postgresql.org/docs/16/static/client-authentication.html)
     for details.
     And make sure that pg_statsinfo.collect_column, pg_statsinfo.collect_index
     are not disabled if some portion of the information (Column of Tables, Indexes)
@@ -1387,18 +1378,13 @@ Currently there is no available means of preventing this occurring.
 
   
 
-## Changes from pg_statsinfo14
+## Changes from pg_statsinfo15
 
-Following changes have been made after pg_statsinfo 14.
+Following changes have been made after pg_statsinfo 15.
 
-  - Supports PostgreSQL 15 (pg_statsinfo 15 supports only PostgreSQL 15).
+  - Supports PostgreSQL 16 (pg_statsinfo 16 supports only PostgreSQL 16).
   - More performance information
-    - Collect detailed information about cleanup lock contention from autovacuum log information. Reports the number of rows and pages not reclaimed due to cleanup lock contention during VACUUM.
-    - Collect detailed information about scanned indexes from autovacuum log information. Reports the average number and percentage of pages scanned during VACUUM.
-    - Collect the transaction IDs involved in VACUUM from the autovacuum log information. Reports cutoff transaction IDs, frozen transaction IDs, and minimum multi-transaction IDs during VACUUM.
-    - Collect block IO information for temporary files from pg_stat_statements. Reports IO(read,write) time per query.
-    - Collect block IO information for temporary files from pg_store_plans. Reports IO(read,write) time per execution plan.
-
+    - Collect I/O statistics for the entire database cluster from pg_stat_io. It does not support simple reports. Please use pg_stats_reporter for reference.
 
 ## Detailed information
 
@@ -1508,14 +1494,14 @@ this from occurring for this case.
 
 ## See Also
 
-[pg_ctl](http://www.postgresql.org/docs/15/static/app-pg-ctl.html),
-[psql](http://www.postgresql.org/docs/15/static/app-psql.html), [Server
-Configuration](http://www.postgresql.org/docs/15/static/runtime-config.html),
+[pg_ctl](https://www.postgresql.org/docs/16/static/app-pg-ctl.html),
+[psql](https://www.postgresql.org/docs/16/static/app-psql.html), [Server
+Configuration](https://www.postgresql.org/docs/16/static/runtime-config.html),
 [The Statistics
-Collector](http://www.postgresql.org/docs/15/static/monitoring-stats.html),
+Collector](https://www.postgresql.org/docs/16/static/monitoring-stats.html),
 [System
-Catalogs](http://www.postgresql.org/docs/15/static/catalogs.html),
-[pg_stat_statements](http://www.postgresql.org/docs/15/static/pgstatstatements.html),
+Catalogs](https://www.postgresql.org/docs/16/static/catalogs.html),
+[pg_stat_statements](https://www.postgresql.org/docs/16/static/pgstatstatements.html),
 [pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter)
 
 -----
