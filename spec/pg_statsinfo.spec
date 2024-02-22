@@ -134,6 +134,8 @@ fi
 
 # History of pg_statsinfo-v15 RPM.
 %changelog
+* Thu Feb 29 2024 - NTT OSS Center 16.0-1
+- pg_stats_reporter 16.0 released
 * Wed Oct 18 2023 - NTT OSS Center 15.2-1
 - pg_statsinfo 15.2 released
 * Fri Jun 30 2023 - NTT OSS Center 15.1-1
