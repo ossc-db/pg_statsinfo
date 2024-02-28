@@ -278,7 +278,7 @@ contrib/pg_statsinfo.sql、contrib/pg_statsrepo.sqlは自動的にインスト�
 
 OS再起動時に/run/pg_statsinfoを作成させるために、/usr/lib/tmpfiles.dにファイルを作成します。
 
-    # cat << EOF > /usr/lib/tmpfiles.d/pg_statsinfo-15.conf
+    # cat << EOF > /usr/lib/tmpfiles.d/pg_statsinfo-16.conf
     d /run/pg_statsinfo 0755 postgres postgres -
     EOF
 

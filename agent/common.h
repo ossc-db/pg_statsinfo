@@ -52,7 +52,7 @@
 #define STATSINFO_EXIT_FAILED		0xff
 
 /* lock file path */
-#define TEMP_DIR					"/var/run/pg_statsinfo"
+#define TEMP_DIR					"/run/pg_statsinfo"
 
 /* CRC calculation */
 #include "port/pg_crc32c.h"
