@@ -160,6 +160,7 @@ UPDATE statsrepo.alert SET disk_remain_percent = default;
 UPDATE statsrepo.alert SET (loadavg_1min, loadavg_5min, loadavg_15min) = (default, default, default);
 UPDATE statsrepo.alert SET swap_size = default;
 UPDATE statsrepo.tablespace SET (avail, total) = (1.9*1024^3, 10*1024^3) WHERE name = 'pg_default' AND snapid = 2;
+UPDATE statsrepo.tablespace SET (avail, total) = (9.0*1024^3, 10*1024^3) WHERE name = 'pg_global' AND snapid = 2;
 UPDATE statsrepo.loadavg SET (loadavg1, loadavg5, loadavg15) = (7.1, 6.1, 5.1) WHERE snapid = 2;
 UPDATE statsrepo.memory SET swap = 1000001 WHERE snapid = 2;
 EOF
