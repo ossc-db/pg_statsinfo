@@ -302,8 +302,8 @@ static bool		collect_index = true;
 int		rusage_max = 0;
 bool	rusage_save = true;
 int		rusage_track = STATSINFO_RUSAGE_TRACK_TOP;
-bool	rusage_track_planning = true;
-bool	rusage_track_utility = true;
+bool	rusage_track_planning = false;
+bool	rusage_track_utility = false;
 /*---- Function declarations ----*/
 
 PG_FUNCTION_INFO_V1(statsinfo_sample);
@@ -1727,7 +1727,7 @@ _PG_init(void)
 							"Enable tracking rusage info for Utility Statements.",
 							NULL,
 							&rusage_track_utility,
-							true,
+							false,
 							PGC_SUSET,
 							0,
 							NULL,
