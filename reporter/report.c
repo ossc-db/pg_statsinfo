@@ -36,14 +36,14 @@ FROM statsrepo.get_proc_tendency_report($1, $2) \
 UNION ALL \
 SELECT \
 	'Average', \
-	pg_catalog.avg(idle)::numeric(5,1), \
-	'(' || pg_catalog.avg(idle_per)::numeric(5,1) || ' %)', \
-	pg_catalog.avg(idle_in_xact)::numeric(5,1), \
-	'(' || pg_catalog.avg(idle_in_xact_per)::numeric(5,1) || ' %)', \
-	pg_catalog.avg(waiting)::numeric(5,1), \
-	'(' || pg_catalog.avg(waiting_per)::numeric(5,1) || ' %)', \
-	pg_catalog.avg(running)::numeric(5,1), \
-	'(' || pg_catalog.avg(running_per)::numeric(5,1) || ' %)' \
+	pg_catalog.avg(idle)::numeric(10,1), \
+	'(' || pg_catalog.avg(idle_per)::numeric(10,1) || ' %)', \
+	pg_catalog.avg(idle_in_xact)::numeric(10,1), \
+	'(' || pg_catalog.avg(idle_in_xact_per)::numeric(10,1) || ' %)', \
+	pg_catalog.avg(waiting)::numeric(10,1), \
+	'(' || pg_catalog.avg(waiting_per)::numeric(10,1) || ' %)', \
+	pg_catalog.avg(running)::numeric(10,1), \
+	'(' || pg_catalog.avg(running_per)::numeric(10,1) || ' %)' \
 FROM \
 	statsrepo.get_proc_tendency_report($1, $2)"
 #define SQL_SELECT_BGWRITER_STATS				"SELECT * FROM statsrepo.get_bgwriter_stats($1, $2)"
@@ -57,13 +57,13 @@ SELECT * FROM statsrepo.get_cpu_loadavg_tendency($1, $2) \
 UNION ALL \
 SELECT \
 	'Average', \
-	pg_catalog.avg(\"user\")::numeric(5,1), \
-	pg_catalog.avg(system)::numeric(5,1), \
-	pg_catalog.avg(idle)::numeric(5,1), \
-	pg_catalog.avg(iowait)::numeric(5,1), \
-	pg_catalog.avg(loadavg1)::numeric(6,3), \
-	pg_catalog.avg(loadavg5)::numeric(6,3), \
-	pg_catalog.avg(loadavg15)::numeric(6,3) \
+	pg_catalog.avg(\"user\")::numeric(10,1), \
+	pg_catalog.avg(system)::numeric(10,1), \
+	pg_catalog.avg(idle)::numeric(10,1), \
+	pg_catalog.avg(iowait)::numeric(10,1), \
+	pg_catalog.avg(loadavg1)::numeric(10,3), \
+	pg_catalog.avg(loadavg5)::numeric(10,3), \
+	pg_catalog.avg(loadavg15)::numeric(10,3) \
 FROM \
 	statsrepo.get_cpu_loadavg_tendency($1, $2)"
 #define SQL_SELECT_MEMORY_TENDENCY				"SELECT * FROM statsrepo.get_memory_tendency($1, $2)"
