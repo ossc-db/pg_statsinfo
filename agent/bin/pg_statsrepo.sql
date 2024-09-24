@@ -859,9 +859,24 @@ CREATE FUNCTION statsrepo.tps(numeric, interval) RETURNS numeric AS
 LANGUAGE sql IMMUTABLE STRICT;
 
 -- div() - NULL-safe operator /
-CREATE FUNCTION statsrepo.div(numeric, numeric) RETURNS numeric AS
-'SELECT (CASE WHEN $2 > 0 THEN $1 / $2 ELSE 0 END)::numeric(30, 3)'
-LANGUAGE sql IMMUTABLE STRICT;
+CREATE FUNCTION statsrepo.div(numeric, numeric)
+RETURNS numeric AS
+$$
+DECLARE
+	buf		numeric(30,3);
+BEGIN
+	IF $1 = 0 THEN
+		buf := 0;
+	ELSIF $2 > 0 THEN
+		buf := $1 / $2;
+	ELSE
+		RAISE WARNING 'Division by a number less than or equal to 0. ( % / % )', $1, $2;
+		buf := 0;
+	END IF;
+	RETURN buf;
+END;
+$$
+LANGUAGE plpgsql IMMUTABLE STRICT;
 
 -- sub() - NULL-safe operator -
 CREATE FUNCTION statsrepo.sub(anyelement, anyelement) RETURNS anyelement AS
@@ -2101,7 +2116,7 @@ $$
 		device,
 		(total - avail) / 1024 / 1024,
 		avail / 1024 / 1024,
-		(100.0 * avail / total)::numeric(30,1)
+		statsrepo.div(100.0 * avail, total)::numeric(30,1)
 	FROM
 		statsrepo.tablespace
 	WHERE
@@ -2296,9 +2311,13 @@ $$
 			t.schema, 
 	 		t.table, 
 			t.n_live_tup,
-			pg_catalog.ceil(t.n_live_tup::real / ((i.page_size - i.page_header_size) * statsrepo.pg_fillfactor(t.reloptions, 0) / 100 /
-				(width + i.htup_header_size + i.item_id_size)))::bigint AS logical_pages,
-			(t.size + CASE t.toastrelid WHEN 0 THEN 0 ELSE tt.size END) / i.page_size AS physical_pages
+			pg_catalog.ceil(
+				statsrepo.div(
+					t.n_live_tup::numeric, 
+					pg_catalog.floor(statsrepo.div(
+						(i.page_size - i.page_header_size) * statsrepo.pg_fillfactor(t.reloptions, 0) ,
+						100 * (width + i.htup_header_size + i.item_id_size) ))))::bigint AS logical_pages,
+			statsrepo.div(t.size + CASE t.toastrelid WHEN 0 THEN 0 ELSE tt.size END, i.page_size) AS physical_pages
 		 FROM
 		 	statsrepo.tables t
 		 	LEFT JOIN statsrepo.snapshot s ON t.snapid = s.snapid
@@ -3174,7 +3193,7 @@ $$
 		t1.datname::name,
 		t1.calls,
 		t1.total_time::Numeric(30, 3),
-		(t1.total_time / t1.calls)::numeric(30, 3),
+		statsrepo.div(t1.total_time::numeric, t1.calls::numeric)::numeric(30, 3),
 		t1.blk_read_time::numeric(30, 3),
 		t1.blk_write_time::numeric(30, 3),
 		t1.temp_blk_read_time::numeric(30, 3),
@@ -3262,7 +3281,7 @@ $$
 		t1.datname::name,
 		t1.calls,
 		t1.total_time::Numeric(30, 3),
-		(t1.total_time / t1.calls)::numeric(30, 3),
+		statsrepo.div(t1.total_time::numeric, t1.calls::numeric)::numeric(30, 3),
 		t1.blk_read_time::numeric(30, 3),
 		t1.blk_write_time::numeric(30, 3),
 		t1.temp_blk_read_time::numeric(30, 3),
@@ -3896,7 +3915,7 @@ FROM
 					AND wb.event = we.event
 					AND wb.snapid = $1
 			WHERE
-				statsrepo.sub(we.count, wb.count) <> 0
+				statsrepo.sub(we.count, wb.count) > 0
 				AND we.snapid = $2
 			GROUP BY we.event_type, we.event
 			) t
@@ -3959,7 +3978,7 @@ FROM
 				ON we.dbid = db.dbid
 				AND db.snapid = $1
 			WHERE
-				statsrepo.sub(we.count, wb.count) <> 0
+				statsrepo.sub(we.count, wb.count) > 0
 				AND we.snapid = $2
 			GROUP BY we.dbid, db.name, we.event_type, we.event
 			) t
