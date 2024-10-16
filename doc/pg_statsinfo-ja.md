@@ -1115,9 +1115,6 @@ postgres データベースに対し $PGSHARE/contrib/uninstall_pg_statsinfo.sql
 
 pg_statsinfo を使用する際には、以下の使用上の注意と制約があります。
 
-  - 監視対象インスタンスではエンコーディングの統一が必要  
-    pg_statsinfo は PostgreSQL がサポートするエンコーディングに対応していますが、混在させることはできません。
-
   - log_filename の制限  
     pg_statsinfo では、以下を満たす設定値を期待しています。
     
