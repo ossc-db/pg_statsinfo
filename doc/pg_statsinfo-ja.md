@@ -118,7 +118,7 @@ pg_statsinfo のシステム構成例と動作概要のイメージ図を以下�
 #### リポジトリDBのテーブル構成
 
 リポジトリDBのテーブル構成に関しては、「[pg_statsinfo v14
-リポジトリDB構成](https://github.com/ossc-db/pg_statsinfo/blob/14.0/doc/files/pg_statsinfo_v14_report_infomation.xls)」を参照してください。
+リポジトリDB構成](https://github.com/ossc-db/pg_statsinfo/blob/14.0/doc/files/pg_statsinfo_v14_repository_infomation.xls)」を参照してください。
 
 ### サーバログ分配機能
 
@@ -909,6 +909,7 @@ pg_statsinfo を利用するために必須のパラメータは以下です。 
 | 設定項目                       | 設定値                                      | 説明                                                                                                                                                                           |
 | -------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | shared_preload_libraries | 'pg_statsinfo'                          | 事前読込み用のライブラリの指定。 pg_stat_statements、pg_store_plans を併用する場合は 'pg_stat_statements, pg_store_plans, pg_statsinfo, ' のようにカンマ区切りで指定します。                                    |
+| lc_messages               | C                                        | PostgreSQLが出力するサーバログの言語を指定。pg_statsinfo がサーバログの解析をするために必要な設定です。                                                                                                       |
 | log_filename              | 'postgresql-%Y-%m-%d_%H%M%S.log'        | CSVログおよびテキストログのファイル名。デフォルトから変更する場合でも、%Y, %m, %d, %H, %M, %S がこの順に全て表れる形式でなければなりません。                                                                                          |
 | track_counts              | on                                       | データベースの活動に関する統計情報の収集設定。                                                                                                                                                      |
 | track_activities          | on                                       | セッションで実行中のコマンドに関する情報の収集設定。                                                                                                                                                   |
@@ -1081,11 +1082,6 @@ postgres データベースに対し $PGSHARE/contrib/uninstall_pg_statsinfo.sql
 ## 使用上の注意と制約
 
 pg_statsinfo を使用する際には、以下の使用上の注意と制約があります。
-
-  - 監視対象インスタンスではエンコーディングと lc_messages の統一が必要  
-    pg_statsinfo は PostgreSQL
-    がサポートするエンコーディングやメッセージ・ロケールに対応していますが、混在させることはできません。
-    PostgreSQL が出力するサーバログにログが混在してしまうため、解析に失敗します。
 
   - log_filename の制限  
     pg_statsinfo では、以下を満たす設定値を期待しています。
