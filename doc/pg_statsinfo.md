@@ -972,7 +972,7 @@ pg_statsinfo.
 | Name                       | Setting                                                           | Description                                                                                                                                                                                                                                                                                                     |
 | -------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | shared_preload_libraries | 'pg_statsinfo'                                                   | Preloading libraries. This is a parameter not of pg_statsinfo's own but needed in order to run pg_statsinfo.                                                                                                                                                                                                  |
-| lc_messages               | C                                                               | Specify the language of server logs output by PostgreSQL. This is the setting required for pg_statsinfo to parse server logs.                                                                                                                                                                                 |
+| lc_messages               | C                                                               | Sets the language in which PostgreSQL server log lines are written. This setting is required for pg_statsinfo to parse server logs.                                                                                                                                                                            |
 | log_filename              | 'postgresql-%Y-%m-%d_%H%M%S.log'                                 | This is also a PostgreSQL's parameter and must be set for pg_statsinfo so that it runs properly. Log files must be ordered by creation time using alphabetical comparison of file names, so the variable parts "%Y", "%m", "%d", "%H", "%M" and "%S" are all should occur in this order in this format string. |
 | track_counts              | on                                                                | Enables collection of statistics on database activity. pg_statsinfo depends on the statistics enabled by this parameter.                                                                                                                                                                                       |
 | track_activities          | on                                                                | Enables the collection of information on the currently executing command of each session. pg_statsinfo depends on the information enabled by this parameter.                                                                                                                                                   |
@@ -1142,9 +1142,6 @@ instances are using the same repository
 ## Restrictions
 
 There are still some restrictions and limitations in pg_statsinfo.
-
-  - Monitored instances must be in the same character set (encoding)  
-    pg_statsinfo supports the encodings that PostgreSQL supports, but all databases in an instance must use the same encoding.
 
   - Restrictions for log_filename  
     pg_statsinfo expects log_filename that alphabetical sort makes
