@@ -47,7 +47,7 @@ INSERT INTO statsrepo.plan \
 INSERT INTO statsrepo.lock VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)"
 
 #define SQL_INSERT_BGWRITER "\
-INSERT INTO statsrepo.bgwriter VALUES ($1, $2, $3, $4, $5, $6)"
+INSERT INTO statsrepo.bgwriter VALUES ($1, $2, $3, $4)"
 
 #define SQL_INSERT_REPLICATION "\
 INSERT INTO statsrepo.replication VALUES \

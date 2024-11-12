@@ -541,11 +541,6 @@ Average                   25.5      (36.4 %)          12.8      (18.2 %)        
 -----------------------------------
 Written Buffers By BGWriter (Average) : 20.000 buffers/s
 Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
-Written Buffers By Backend (Average)  : 200.000 buffers/s
-Written Buffers By Backend (Maximum)  : 300.000 buffers/s
-Backend Executed fsync (Average)      : 2.000 sync/s
-Backend Executed fsync (Maximum)      : 3.000 sync/s
-
 /** Transaction Increase Tendency **/
 -----------------------------------
 DateTime          XID Increase
@@ -614,11 +609,6 @@ Average                   25.5      (36.4 %)          12.8      (18.2 %)        
 -----------------------------------
 Written Buffers By BGWriter (Average) : 20.000 buffers/s
 Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
-Written Buffers By Backend (Average)  : 200.000 buffers/s
-Written Buffers By Backend (Maximum)  : 300.000 buffers/s
-Backend Executed fsync (Average)      : 2.000 sync/s
-Backend Executed fsync (Maximum)      : 3.000 sync/s
-
 /** Transaction Increase Tendency **/
 -----------------------------------
 DateTime          XID Increase
@@ -687,11 +677,6 @@ Average                   25.5      (36.4 %)          12.8      (18.2 %)        
 -----------------------------------
 Written Buffers By BGWriter (Average) : 20.000 buffers/s
 Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
-Written Buffers By Backend (Average)  : 200.000 buffers/s
-Written Buffers By Backend (Maximum)  : 300.000 buffers/s
-Backend Executed fsync (Average)      : 2.000 sync/s
-Backend Executed fsync (Maximum)      : 3.000 sync/s
-
 /** Transaction Increase Tendency **/
 -----------------------------------
 DateTime          XID Increase
@@ -760,11 +745,6 @@ Average                   25.5      (36.4 %)          12.8      (18.2 %)        
 -----------------------------------
 Written Buffers By BGWriter (Average) : 20.000 buffers/s
 Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
-Written Buffers By Backend (Average)  : 200.000 buffers/s
-Written Buffers By Backend (Maximum)  : 300.000 buffers/s
-Backend Executed fsync (Average)      : 2.000 sync/s
-Backend Executed fsync (Maximum)      : 3.000 sync/s
-
 /** Transaction Increase Tendency **/
 -----------------------------------
 DateTime          XID Increase
@@ -833,11 +813,6 @@ Average                   25.5      (36.4 %)          12.8      (18.2 %)        
 -----------------------------------
 Written Buffers By BGWriter (Average) : 20.000 buffers/s
 Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
-Written Buffers By Backend (Average)  : 200.000 buffers/s
-Written Buffers By Backend (Maximum)  : 300.000 buffers/s
-Backend Executed fsync (Average)      : 2.000 sync/s
-Backend Executed fsync (Maximum)      : 3.000 sync/s
-
 /** Transaction Increase Tendency **/
 -----------------------------------
 DateTime          XID Increase
@@ -906,11 +881,6 @@ Average                   25.5      (36.4 %)          12.8      (18.2 %)        
 -----------------------------------
 Written Buffers By BGWriter (Average) : 20.000 buffers/s
 Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
-Written Buffers By Backend (Average)  : 200.000 buffers/s
-Written Buffers By Backend (Maximum)  : 300.000 buffers/s
-Backend Executed fsync (Average)      : 2.000 sync/s
-Backend Executed fsync (Maximum)      : 3.000 sync/s
-
 /** Transaction Increase Tendency **/
 -----------------------------------
 DateTime          XID Increase
@@ -3422,11 +3392,6 @@ Average                   25.5      (36.4 %)          12.8      (18.2 %)        
 -----------------------------------
 Written Buffers By BGWriter (Average) : 20.000 buffers/s
 Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
-Written Buffers By Backend (Average)  : 200.000 buffers/s
-Written Buffers By Backend (Maximum)  : 300.000 buffers/s
-Backend Executed fsync (Average)      : 2.000 sync/s
-Backend Executed fsync (Maximum)      : 3.000 sync/s
-
 /** Transaction Increase Tendency **/
 -----------------------------------
 DateTime          XID Increase
@@ -3898,11 +3863,6 @@ Average                   25.5      (36.4 %)          12.8      (18.2 %)        
 -----------------------------------
 Written Buffers By BGWriter (Average) : 20.000 buffers/s
 Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
-Written Buffers By Backend (Average)  : 200.000 buffers/s
-Written Buffers By Backend (Maximum)  : 300.000 buffers/s
-Backend Executed fsync (Average)      : 2.000 sync/s
-Backend Executed fsync (Maximum)      : 3.000 sync/s
-
 /** Transaction Increase Tendency **/
 -----------------------------------
 DateTime          XID Increase
@@ -4374,11 +4334,6 @@ Average                   25.5      (36.4 %)          12.8      (18.2 %)        
 -----------------------------------
 Written Buffers By BGWriter (Average) : 20.000 buffers/s
 Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
-Written Buffers By Backend (Average)  : 200.000 buffers/s
-Written Buffers By Backend (Maximum)  : 300.000 buffers/s
-Backend Executed fsync (Average)      : 2.000 sync/s
-Backend Executed fsync (Maximum)      : 3.000 sync/s
-
 /** Transaction Increase Tendency **/
 -----------------------------------
 DateTime          XID Increase
@@ -4850,11 +4805,6 @@ Average                   25.5      (36.4 %)          12.8      (18.2 %)        
 -----------------------------------
 Written Buffers By BGWriter (Average) : 20.000 buffers/s
 Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
-Written Buffers By Backend (Average)  : 200.000 buffers/s
-Written Buffers By Backend (Maximum)  : 300.000 buffers/s
-Backend Executed fsync (Average)      : 2.000 sync/s
-Backend Executed fsync (Maximum)      : 3.000 sync/s
-
 /** Transaction Increase Tendency **/
 -----------------------------------
 DateTime          XID Increase
@@ -5326,11 +5276,6 @@ Average                   25.5      (36.4 %)          12.8      (18.2 %)        
 -----------------------------------
 Written Buffers By BGWriter (Average) : 20.000 buffers/s
 Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
-Written Buffers By Backend (Average)  : 200.000 buffers/s
-Written Buffers By Backend (Maximum)  : 300.000 buffers/s
-Backend Executed fsync (Average)      : 2.000 sync/s
-Backend Executed fsync (Maximum)      : 3.000 sync/s
-
 /** Transaction Increase Tendency **/
 -----------------------------------
 DateTime          XID Increase
@@ -5802,11 +5747,6 @@ Average                   25.5      (36.4 %)          12.8      (18.2 %)        
 -----------------------------------
 Written Buffers By BGWriter (Average) : 20.000 buffers/s
 Written Buffers By BGWriter (Maximum) : 30.000 buffers/s
-Written Buffers By Backend (Average)  : 200.000 buffers/s
-Written Buffers By Backend (Maximum)  : 300.000 buffers/s
-Backend Executed fsync (Average)      : 2.000 sync/s
-Backend Executed fsync (Maximum)      : 3.000 sync/s
-
 /** Transaction Increase Tendency **/
 -----------------------------------
 DateTime          XID Increase
@@ -6475,11 +6415,6 @@ Average                  300.5      (36.4 %)         150.3      (18.2 %)        
 -----------------------------------
 Written Buffers By BGWriter (Average) : 0.000 buffers/s
 Written Buffers By BGWriter (Maximum) : 0.000 buffers/s
-Written Buffers By Backend (Average)  : 0.000 buffers/s
-Written Buffers By Backend (Maximum)  : 0.000 buffers/s
-Backend Executed fsync (Average)      : 0.000 sync/s
-Backend Executed fsync (Maximum)      : 0.000 sync/s
-
 /** Transaction Increase Tendency **/
 -----------------------------------
 DateTime          XID Increase

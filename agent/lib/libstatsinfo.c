@@ -631,6 +631,7 @@ sample_activity(void)
 	int			waiting = 0;
 	int			running = 0;
 	int			i;
+	int			numbackends = 0;
 
 	if (!long_xacts)
 	{
@@ -648,9 +649,11 @@ sample_activity(void)
 	}
 
 	now = GetCurrentTimestamp();
+	numbackends = pgstat_fetch_stat_numbackends();
 
-	for (i = pgstat_fetch_stat_numbackends(); i > 0; i--)
+	for (i = 1; i <= numbackends; i++)
 	{
+		LocalPgBackendStatus *local_be;
 		PgBackendStatus    *be;
 		long				secs;
 		int					usecs;
@@ -660,7 +663,8 @@ sample_activity(void)
 		LongXactEntry	   *entry;
 		int					procpid;
 
-		be = pgstat_get_beentry_by_backend_id(i);
+		local_be = pgstat_get_local_beentry_by_index(i);
+		be = &local_be->backendStatus;
 		if (!be)
 			continue;
 
@@ -1060,9 +1064,6 @@ statsinfo_long_xact(PG_FUNCTION_ARGS)
 		}
 	}
 
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
-
 	return (Datum) 0;
 }
 
@@ -1155,9 +1156,6 @@ statsinfo_wait_sampling_profile(PG_FUNCTION_ARGS)
 			tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 		}
 	}
-
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
 
 	return (Datum) 0;
 }
@@ -2282,8 +2280,7 @@ statsinfo_devicestats(PG_FUNCTION_ARGS)
 		entry->overflow_dit = 0;
 	}
 		
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
+	/* clean up */
 	SPI_finish();
 
 	return (Datum) 0;
@@ -2593,9 +2590,6 @@ statsinfo_profile(PG_FUNCTION_ARGS)
 	}
 
 	fclose(fp);
-
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
 
 	PG_RETURN_VOID();
 }
@@ -3369,9 +3363,6 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 		Assert(i == TABLESPACES_COLS);
 		tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 	}
-
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
 
 	return (Datum) 0;
 }
@@ -4604,15 +4595,20 @@ static void
 probe_waits(void)
 {
 	int			i;
+	int			numbackends = 0;
 
-	for (i = pgstat_fetch_stat_numbackends(); i > 0; i--)
+	numbackends = pgstat_fetch_stat_numbackends();
+
+	for (i = 1; i <= numbackends; i++)
 	{
+		LocalPgBackendStatus *local_be;
 		PgBackendStatus	*be;
 		wait_samplingEntry		item;
 		PGPROC			*proc;
 		int				procpid;
 
-		be = pgstat_get_beentry_by_backend_id(i);
+		local_be = pgstat_get_local_beentry_by_index(i);
+		be = &local_be->backendStatus;
 		if (!be)
 			continue;
 
