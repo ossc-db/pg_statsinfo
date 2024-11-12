@@ -667,10 +667,6 @@ report_instance_activity(PGconn *conn, ReportScope *scope, FILE *out)
 	res = pgut_execute(conn, SQL_SELECT_BGWRITER_STATS, lengthof(params), params);
 	fprintf(out, "Written Buffers By BGWriter (Average) : %s buffers/s\n", PQgetvalue(res, 0, 0));
 	fprintf(out, "Written Buffers By BGWriter (Maximum) : %s buffers/s\n", PQgetvalue(res, 0, 1));
-	fprintf(out, "Written Buffers By Backend (Average)  : %s buffers/s\n", PQgetvalue(res, 0, 2));
-	fprintf(out, "Written Buffers By Backend (Maximum)  : %s buffers/s\n", PQgetvalue(res, 0, 3));
-	fprintf(out, "Backend Executed fsync (Average)      : %s sync/s\n", PQgetvalue(res, 0, 4));
-	fprintf(out, "Backend Executed fsync (Maximum)      : %s sync/s\n\n", PQgetvalue(res, 0, 5));
 	PQclear(res);
 
 	fprintf(out, "/** Transaction Increase Tendency **/\n");

@@ -548,7 +548,7 @@ error:
 static void
 backend_shutdown_hook(int code, Datum arg)
 {
-	statEntry *entry = get_stat_entry(MyBackendId);
+	statEntry *entry = get_stat_entry(MyProcNumber);
 	if (entry)
 		entry->pid = 0;
 }
@@ -753,7 +753,7 @@ ru_set_queryid(uint64 queryid)
 	Assert(!IsParallelWorker());
 
 	LWLockAcquire(ru_ss->queryids_lock, LW_EXCLUSIVE);
-	ru_ss->queryids[MyBackendId] = queryid;
+	ru_ss->queryids[MyProcNumber] = queryid;
 	LWLockRelease(ru_ss->queryids_lock);
 }
 
@@ -1035,7 +1035,7 @@ myExecutorStart(QueryDesc *queryDesc, int eflags)
 	else
 		standard_ExecutorStart(queryDesc, eflags);
 
-	entry = get_stat_entry(MyBackendId);
+	entry = get_stat_entry(MyProcNumber);
 
 	entry->change_count++;
 
@@ -1044,7 +1044,7 @@ myExecutorStart(QueryDesc *queryDesc, int eflags)
 	 */
 	if (!entry->inxact)
 	{
-		init_entry(MyBackendId, GetSessionUserId());
+		init_entry(MyProcNumber, GetSessionUserId());
 		/*
 		 * Remember to free activity snapshot on ExecutorEnd when we're out of
 		 * transaction here.
@@ -1134,7 +1134,7 @@ myExecutorEnd(QueryDesc * queryDesc)
 		if (IsParallelWorker())
 		{
 			LWLockAcquire(ru_ss->queryids_lock, LW_SHARED);
-			queryId = ru_ss->queryids[ParallelLeaderBackendId];
+			queryId = ru_ss->queryids[ParallelLeaderProcNumber];
 			LWLockRelease(ru_ss->queryids_lock);
 		}
 		else
@@ -1194,7 +1194,7 @@ exit_transaction_if_needed()
 {
 	if (immediate_exit_xact)
 	{
-		statEntry *entry = get_stat_entry(MyBackendId);
+		statEntry *entry = get_stat_entry(MyProcNumber);
 		
 		entry->inxact = false;
 		immediate_exit_xact = false;
@@ -1207,14 +1207,14 @@ myProcessUtility0(Node *parsetree, const char *queryString)
 	statEntry *entry;
 	TransactionStmt *stmt;
 
-	entry = get_stat_entry(MyBackendId);
+	entry = get_stat_entry(MyProcNumber);
 
 	/*
 	 * Initialize stat entry if I find that the PID of this backend has changed
 	 * unexpectedly.
 	 */
 	if (MyProc->pid != 0 && entry->pid != MyProc->pid)
-		init_entry(MyBackendId, GetSessionUserId());
+		init_entry(MyProcNumber, GetSessionUserId());
 
 	switch (nodeTag(parsetree))
 	{
@@ -1227,7 +1227,7 @@ myProcessUtility0(Node *parsetree, const char *queryString)
 			{
 				case TRANS_STMT_BEGIN:
 					entry->change_count++;
-					init_entry(MyBackendId, GetSessionUserId());
+					init_entry(MyProcNumber, GetSessionUserId());
 					entry->inxact = true;
 					break;
 				case TRANS_STMT_COMMIT:
@@ -1265,7 +1265,7 @@ myProcessUtility0(Node *parsetree, const char *queryString)
 			if (!entry->inxact)
 			{
 				immediate_exit_xact = true;
-				init_entry(MyBackendId, GetSessionUserId());
+				init_entry(MyProcNumber, GetSessionUserId());
 				entry->inxact = true;
 			}
 
@@ -1491,9 +1491,6 @@ statsinfo_rusage_internal(FunctionCallInfo fcinfo)
 	}
 
 	LWLockRelease(ru_ss->lock);
-
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
 }
 
 #define RUSAGE_STATS_INFO_COLS 2
@@ -1829,14 +1826,14 @@ buffer_size(int nbackends)
 static char*
 get_query_entry(int beid)
 {
-	if (beid < 1 || beid > stat_buffer->max_id) return NULL;
-	return query_buffer + buffer_size_per_backend * (beid - 1);
+	if (beid < 0 || beid >= stat_buffer->max_id) return NULL;
+	return query_buffer + buffer_size_per_backend * beid;
 }
 
 static statEntry *
 get_stat_entry(int beid) {
-	if (beid < 1 || beid > stat_buffer->max_id) return NULL;
-	return &stat_buffer->entries[beid - 1];
+	if (beid < 0 || beid >= stat_buffer->max_id) return NULL;
+	return &stat_buffer->entries[beid];
 }
 
 static void
@@ -1883,7 +1880,7 @@ attatch_shmem(void)
 		MemSet(stat_buffer, 0, bufsize);
 		query_buffer = (char*)(&stat_buffer->entries[max_backends]);
 		stat_buffer->max_id = max_backends;
-		for (beid = 1 ; beid <= max_backends ; beid++)
+		for (beid = 0 ; beid < max_backends ; beid++)
 			init_entry(beid, 0);
 	}
 }

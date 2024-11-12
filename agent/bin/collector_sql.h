@@ -101,8 +101,8 @@ SELECT \
 	s.local_blks_written, \
 	s.temp_blks_read, \
 	s.temp_blks_written, \
-	s.blk_read_time, \
-	s.blk_write_time, \
+	s.shared_blk_read_time, \
+	s.shared_blk_write_time, \
 	s.temp_blk_read_time, \
 	s.temp_blk_write_time \
 FROM \
@@ -199,8 +199,6 @@ WHERE \
 SELECT \
 	buffers_clean, \
 	maxwritten_clean, \
-	buffers_backend, \
-	buffers_backend_fsync, \
 	buffers_alloc \
 FROM \
 	pg_stat_bgwriter"

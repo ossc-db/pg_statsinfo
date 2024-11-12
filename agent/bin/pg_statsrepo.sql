@@ -285,8 +285,8 @@ CREATE TABLE statsrepo.statement
 	local_blks_written	bigint,
 	temp_blks_read		bigint,
 	temp_blks_written	bigint,
-	blk_read_time		double precision,
-	blk_write_time		double precision,
+	shared_blk_read_time		double precision,
+	shared_blk_write_time		double precision,
 	temp_blk_read_time	double precision,
 	temp_blk_write_time	double precision,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE,
@@ -560,8 +560,6 @@ CREATE TABLE statsrepo.bgwriter
 	snapid					bigint,
 	buffers_clean			bigint,
 	maxwritten_clean		bigint,
-	buffers_backend			bigint,
-	buffers_backend_fsync	bigint,
 	buffers_alloc			bigint,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
@@ -3106,8 +3104,8 @@ CREATE FUNCTION statsrepo.get_query_activity_statements(
 	OUT calls				bigint,
 	OUT total_exec_time		numeric,
 	OUT time_per_call		numeric,
-	OUT blk_read_time		numeric,
-	OUT blk_write_time		numeric,
+	OUT shared_blk_read_time		numeric,
+	OUT shared_blk_write_time		numeric,
 	OUT tmp_blk_read_time	numeric,
 	OUT tmp_blk_write_time	numeric,
 	OUT dbid	oid,
@@ -3128,8 +3126,8 @@ $$
 		t1.total_exec_time::numeric(30, 3),
 		CASE t1.calls
 			WHEN 0 THEN 0 ELSE (t1.total_exec_time / t1.calls)::numeric(30, 3) END,
-		t1.blk_read_time::numeric(30, 3),
-		t1.blk_write_time::numeric(30, 3),
+		t1.shared_blk_read_time::numeric(30, 3),
+		t1.shared_blk_write_time::numeric(30, 3),
 		t1.tmp_blk_read_time::numeric(30, 3),
 		t1.tmp_blk_write_time::numeric(30, 3),
 		t1.dbid,
@@ -3149,8 +3147,8 @@ $$
 			statsrepo.sub(st2.total_plan_time, st1.total_plan_time) AS total_plan_time,
 			statsrepo.sub(st2.calls, st1.calls) AS calls,
 			statsrepo.sub(st2.total_exec_time, st1.total_exec_time) AS total_exec_time,
-			statsrepo.sub(st2.blk_read_time, st1.blk_read_time) AS blk_read_time,
-			statsrepo.sub(st2.blk_write_time, st1.blk_write_time) AS blk_write_time,
+			statsrepo.sub(st2.shared_blk_read_time, st1.shared_blk_read_time) AS shared_blk_read_time,
+			statsrepo.sub(st2.shared_blk_write_time, st1.shared_blk_write_time) AS shared_blk_write_time,
 			statsrepo.sub(st2.temp_blk_read_time, st1.temp_blk_read_time) AS tmp_blk_read_time,
 			statsrepo.sub(st2.temp_blk_write_time, st1.temp_blk_write_time) AS tmp_blk_write_time
 		 FROM
@@ -3508,8 +3506,6 @@ CREATE FUNCTION statsrepo.get_bgwriter_tendency(
 	IN snapid_end				bigint,
 	OUT "timestamp"				text,
 	OUT bgwriter_write_tps		numeric,
-	OUT backend_write_tps		numeric,
-	OUT backend_fsync_tps		numeric,
 	OUT bgwriter_stopscan_tps	numeric,
 	OUT buffer_alloc_tps		numeric
 ) RETURNS SETOF record AS
@@ -3517,8 +3513,6 @@ $$
 	SELECT
 		t.timestamp,
 		statsrepo.tps(t.bgwriter_write, t.duration),
-		statsrepo.tps(t.backend_write, t.duration),
-		statsrepo.tps(t.backend_fsync, t.duration),
 		statsrepo.tps(t.bgwriter_stopscan, t.duration),
 		statsrepo.tps(t.buffer_alloc, t.duration)
 	FROM
@@ -3527,8 +3521,6 @@ $$
 			s.snapid,
 			pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI') AS timestamp,
 			b.buffers_clean - pg_catalog.lag(b.buffers_clean) OVER w AS bgwriter_write,
-			b.buffers_backend - pg_catalog.lag(b.buffers_backend) OVER w AS backend_write,
-			b.buffers_backend_fsync - pg_catalog.lag(b.buffers_backend_fsync) OVER w AS backend_fsync,
 			b.maxwritten_clean - pg_catalog.lag(b.maxwritten_clean) OVER w AS bgwriter_stopscan,
 			b.buffers_alloc - pg_catalog.lag(b.buffers_alloc) OVER w AS buffer_alloc,
 			s.time - pg_catalog.lag(s.time) OVER w AS duration
@@ -3554,10 +3546,6 @@ CREATE OR REPLACE FUNCTION statsrepo.get_bgwriter_stats(
 	IN snapid_end				bigint,
 	OUT bgwriter_write_avg		numeric,
 	OUT bgwriter_write_max		numeric,
-	OUT backend_write_avg		numeric,
-	OUT backend_write_max		numeric,
-	OUT backend_fsync_avg		numeric,
-	OUT backend_fsync_max		numeric,
 	OUT bgwriter_stopscan_avg	numeric,
 	OUT buffer_alloc_avg		numeric
 ) RETURNS SETOF record AS
@@ -3565,10 +3553,6 @@ $$
 	SELECT
 		pg_catalog.round(pg_catalog.avg(bgwriter_write_tps), 3),
 		pg_catalog.round(pg_catalog.max(bgwriter_write_tps), 3),
-		pg_catalog.round(pg_catalog.avg(backend_write_tps), 3),
-		pg_catalog.round(pg_catalog.max(backend_write_tps), 3),
-		pg_catalog.round(pg_catalog.avg(backend_fsync_tps), 3),
-		pg_catalog.round(pg_catalog.max(backend_fsync_tps), 3),
 		pg_catalog.round(pg_catalog.avg(bgwriter_stopscan_tps), 3),
 		pg_catalog.round(pg_catalog.avg(buffer_alloc_tps), 3)
 	FROM
