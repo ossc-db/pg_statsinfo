@@ -1,5 +1,5 @@
 # SPEC file for pg_statsinfo
-# Copyright (c) 2009-2023, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+# Copyright (c) 2009-2024, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
 
 # Original declaration for pg_statsinfo rpmbuild #
 
