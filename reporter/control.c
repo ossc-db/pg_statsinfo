@@ -1,7 +1,7 @@
 /*
  * control.c
  *
- * Copyright (c) 2009-2023, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2009-2024, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 #include "pg_statsinfo.h"
