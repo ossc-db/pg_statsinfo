@@ -251,26 +251,19 @@ Setup reference of this feature is [here](#Automatic-Maintenance).
   - PostgreSQL versions  
     PostgreSQL 15
   - OS  
-    RHEL 7.x (x86_64), CentOS 7.x (x86_64)
-    RHEL 8.x (x86_64), Rocky Linux 8.x (x86_64)
+    RHEL 8.x (x86_64), Rocky Linux 8.x (x86_64)  
+    RHEL 9.x (x86_64), Rocky Linux 9.x (x86_64)  
 
 ### Installation
 
 #### Installing using RPM
 
-##### RHEL 7
+##### RHEL 8, RHEL 9
 
 The following steps install pg_statsinfo using rpm.
 
     $ su
-    # yum install pg_statsinfo-15.0-1.pg15.rhel7.x86_64.rpm
-
-##### RHEL 8
-
-The following steps install pg_statsinfo using rpm.
-
-    $ su
-    # dnf install pg_statsinfo-15.0-1.pg15.rhel8.x86_64.rpm
+    # dnf install pg_statsinfo-15.0-1.rhel8.x86_64.rpm
 
 #### Installing from source
 

@@ -118,7 +118,7 @@ pg_statsinfo のシステム構成例と動作概要のイメージ図を以下�
 #### リポジトリDBのテーブル構成
 
 リポジトリDBのテーブル構成に関しては、「[pg_statsinfo v15
-リポジトリDB構成](https://github.com/ossc-db/pg_statsinfo/blob/15.0/doc/files/pg_statsinfo_v15_repository_infomation.xls)」を参照してください。
+リポジトリDB構成](/doc/files/pg_statsinfo_v15_repository_infomation.xls)」を参照してください。
 
 ### サーバログ分配機能
 
@@ -171,7 +171,7 @@ PostgreSQL が出力するサーバログを収集し、リポジトリDBに蓄�
 レプリケーションの遅延量のチェックでは、スタンバイの停止などでレプリケーションが終了している間、アラートメッセージは出力されなくなります。
 
 各アラート項目のアラートメッセージの内容については「[pg_statsinfo v15
-レポート項目一覧](https://github.com/ossc-db/pg_statsinfo/blob/15.0/doc/files/pg_statsinfo_v15_report_infomation.xls)」をご覧ください。
+レポート項目一覧](/doc/files/pg_statsinfo_v15_report_infomation.xls)」をご覧ください。
 
 アラート機能の設定方法は[こちら](#アラート機能の設定方法)をご覧ください。
 
@@ -190,7 +190,7 @@ PostgreSQL が出力するサーバログを収集し、リポジトリDBに蓄�
 
 
 簡易レポート機能が出力するレポートの項目については「[pg_statsinfo v15
-レポート項目一覧](https://github.com/ossc-db/pg_statsinfo/blob/15.0/doc/files/pg_statsinfo_v15_report_infomation.xls)」をご覧ください。  
+レポート項目一覧](/doc/files/pg_statsinfo_v15_report_infomation.xls)」をご覧ください。  
 なお、簡易レポート機能が出力するレポートの項目は
 [pg_stats_reporter](https://github.com/ossc-db/pg_stats_reporter)
 と同等です。  
@@ -236,7 +236,6 @@ pg_statsinfo
   - PostgreSQL  
     バージョン 15
   - 動作検証済みOS  
-    RHEL 7.x (x86_64), CentOS 7.x (x86_64)  
     RHEL 8.x (x86_64), Rocky Linux 8.x (x86_64)  
     RHEL 9.x (x86_64), Rocky Linux 9.x (x86_64)  
 
@@ -244,20 +243,12 @@ pg_statsinfo
 
 #### RPM
 
-##### RHEL 7
-
-以下はPostgreSQL15のRHEL7のx86_64用のrpmをインストールする例です。
-
-    $ su
-    # yum install pg_statsinfo-15.0-1.pg15.rhel7.x86_64.rpm
-
-
 ##### RHEL 8, RHEL 9
 
 以下はPostgreSQL15のRHEL8のx86_64用のrpmをインストールする例です。
 
     $ su
-    # dnf install pg_statsinfo-15.0-1.pg15.rhel8.x86_64.rpm
+    # dnf install pg_statsinfo-15.0-1.rhel8.x86_64.rpm
 
     ※ OSのバージョン部分は適宜読み替えてください
 
@@ -657,7 +648,7 @@ enable_alert カラムで行います。デフォルト値はpg_statsinfo.enable
     レポート種別IDを指定します。
     レポート種別IDに指定できる値は以下のとおりです。
     レポート種別IDとレポートの内容についての対応は「[pg_statsinfo v15
-    レポート項目一覧](https://github.com/ossc-db/pg_statsinfo/blob/15.0/doc/files/pg_statsinfo_v15_report_infomation.xls)」をご覧ください。
+    レポート項目一覧](/doc/files/pg_statsinfo_v15_report_infomation.xls)」をご覧ください。
       - Summary
       - Alert
       - DatabaseStatistics
