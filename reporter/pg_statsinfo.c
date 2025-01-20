@@ -6,7 +6,7 @@
 
 #include "pg_statsinfo.h"
 
-const char *PROGRAM_VERSION	= "16.0";
+const char *PROGRAM_VERSION	= "17.0";
 const char *PROGRAM_URL		= "https://github.com/ossc-db/pg_statsinfo/";
 const char *PROGRAM_EMAIL   = NULL;
 
