@@ -33,13 +33,13 @@ INSERT INTO statsrepo.xact VALUES \
 
 #define SQL_INSERT_STATEMENT "\
 INSERT INTO statsrepo.statement \
-  SELECT (($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)::statsrepo.statement).* \
+  SELECT (($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)::statsrepo.statement).* \
     FROM statsrepo.database d \
    WHERE d.snapid = $1 AND d.dbid = $2"
 
 #define SQL_INSERT_PLAN "\
 INSERT INTO statsrepo.plan \
-  SELECT (($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)::statsrepo.plan).* \
+  SELECT (($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)::statsrepo.plan).* \
     FROM statsrepo.database d \
    WHERE d.snapid = $1 AND d.dbid = $2"
 
@@ -47,7 +47,7 @@ INSERT INTO statsrepo.plan \
 INSERT INTO statsrepo.lock VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)"
 
 #define SQL_INSERT_BGWRITER "\
-INSERT INTO statsrepo.bgwriter VALUES ($1, $2, $3, $4, $5, $6)"
+INSERT INTO statsrepo.bgwriter VALUES ($1, $2, $3, $4)"
 
 #define SQL_INSERT_REPLICATION "\
 INSERT INTO statsrepo.replication VALUES \
@@ -55,7 +55,7 @@ INSERT INTO statsrepo.replication VALUES \
 
 #define SQL_INSERT_REPLICATION_SLOTS "\
 INSERT INTO statsrepo.replication_slots VALUES \
-($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)"
+($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)"
 
 #define SQL_INSERT_STAT_REPLICATION_SLOTS "\
 INSERT INTO statsrepo.stat_replication_slots VALUES \

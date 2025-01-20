@@ -285,8 +285,10 @@ CREATE TABLE statsrepo.statement
 	local_blks_written	bigint,
 	temp_blks_read		bigint,
 	temp_blks_written	bigint,
-	blk_read_time		double precision,
-	blk_write_time		double precision,
+	shared_blk_read_time	double precision,
+	shared_blk_write_time	double precision,
+	local_blk_read_time		double precision,
+	local_blk_write_time	double precision,
 	temp_blk_read_time	double precision,
 	temp_blk_write_time	double precision,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE,
@@ -315,8 +317,10 @@ CREATE TABLE statsrepo.plan
 	local_blks_written		bigint,
 	temp_blks_read			bigint,
 	temp_blks_written		bigint,
-	blk_read_time			double precision,
-	blk_write_time			double precision,
+	shared_blk_read_time	double precision,
+	shared_blk_write_time	double precision,
+	local_blk_read_time		double precision,
+	local_blk_write_time	double precision,
 	temp_blk_read_time		double precision,
 	temp_blk_write_time		double precision,
 	first_call				timestamptz,
@@ -560,8 +564,6 @@ CREATE TABLE statsrepo.bgwriter
 	snapid					bigint,
 	buffers_clean			bigint,
 	maxwritten_clean		bigint,
-	buffers_backend			bigint,
-	buffers_backend_fsync	bigint,
 	buffers_alloc			bigint,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
@@ -606,6 +608,8 @@ CREATE TABLE statsrepo.replication_slots
 	catalog_xmin			xid,
 	restart_lsn				pg_lsn,
 	confirmed_flush_lsn		pg_lsn,
+	inactive_since			timestamptz,
+	invalidation_reason		text,
 	FOREIGN KEY (snapid) REFERENCES statsrepo.snapshot (snapid) ON DELETE CASCADE
 );
 
@@ -877,7 +881,7 @@ LANGUAGE sql;
 
 -- get_version() - version of statsrepo schema
 CREATE FUNCTION statsrepo.get_version() RETURNS text AS
-'SELECT CAST(''160000'' AS TEXT)'
+'SELECT CAST(''170000'' AS TEXT)'
 LANGUAGE sql IMMUTABLE;
 
 -- tps() - transaction per seconds
@@ -3125,8 +3129,10 @@ CREATE FUNCTION statsrepo.get_query_activity_statements(
 	OUT calls				bigint,
 	OUT total_exec_time		numeric,
 	OUT time_per_call		numeric,
-	OUT blk_read_time		numeric,
-	OUT blk_write_time		numeric,
+	OUT shared_blk_read_time	numeric,
+	OUT shared_blk_write_time	numeric,
+	OUT local_blk_read_time		numeric,
+	OUT local_blk_write_time	numeric,
 	OUT tmp_blk_read_time	numeric,
 	OUT tmp_blk_write_time	numeric,
 	OUT dbid	oid,
@@ -3147,8 +3153,10 @@ $$
 		t1.total_exec_time::numeric(30, 3),
 		CASE t1.calls
 			WHEN 0 THEN 0 ELSE (t1.total_exec_time / t1.calls)::numeric(30, 3) END,
-		t1.blk_read_time::numeric(30, 3),
-		t1.blk_write_time::numeric(30, 3),
+		t1.shared_blk_read_time::numeric(30, 3),
+		t1.shared_blk_write_time::numeric(30, 3),
+		t1.local_blk_read_time::numeric(30, 3),
+		t1.local_blk_write_time::numeric(30, 3),
 		t1.tmp_blk_read_time::numeric(30, 3),
 		t1.tmp_blk_write_time::numeric(30, 3),
 		t1.dbid,
@@ -3168,8 +3176,10 @@ $$
 			statsrepo.sub(st2.total_plan_time, st1.total_plan_time) AS total_plan_time,
 			statsrepo.sub(st2.calls, st1.calls) AS calls,
 			statsrepo.sub(st2.total_exec_time, st1.total_exec_time) AS total_exec_time,
-			statsrepo.sub(st2.blk_read_time, st1.blk_read_time) AS blk_read_time,
-			statsrepo.sub(st2.blk_write_time, st1.blk_write_time) AS blk_write_time,
+			statsrepo.sub(st2.shared_blk_read_time, st1.shared_blk_read_time) AS shared_blk_read_time,
+			statsrepo.sub(st2.shared_blk_write_time, st1.shared_blk_write_time) AS shared_blk_write_time,
+			statsrepo.sub(st2.local_blk_read_time, st1.local_blk_read_time) AS local_blk_read_time,
+			statsrepo.sub(st2.local_blk_write_time, st1.local_blk_write_time) AS local_blk_write_time,
 			statsrepo.sub(st2.temp_blk_read_time, st1.temp_blk_read_time) AS tmp_blk_read_time,
 			statsrepo.sub(st2.temp_blk_write_time, st1.temp_blk_write_time) AS tmp_blk_write_time
 		 FROM
@@ -3265,8 +3275,10 @@ CREATE FUNCTION statsrepo.get_query_activity_plans(
 	OUT calls				bigint,
 	OUT total_time			numeric,
 	OUT time_per_call		numeric,
-	OUT blk_read_time		numeric,
-	OUT blk_write_time		numeric,
+	OUT shared_blk_read_time	numeric,
+	OUT shared_blk_write_time	numeric,
+	OUT local_blk_read_time		numeric,
+	OUT local_blk_write_time	numeric,
 	OUT temp_blk_read_time	numeric,
 	OUT temp_blk_write_time	numeric
 ) RETURNS SETOF record AS
@@ -3279,8 +3291,10 @@ $$
 		t1.calls,
 		t1.total_time::Numeric(30, 3),
 		statsrepo.div(t1.total_time::numeric, t1.calls::numeric)::numeric(30, 3),
-		t1.blk_read_time::numeric(30, 3),
-		t1.blk_write_time::numeric(30, 3),
+		t1.shared_blk_read_time::numeric(30, 3),
+		t1.shared_blk_write_time::numeric(30, 3),
+		t1.local_blk_read_time::numeric(30, 3),
+		t1.local_blk_write_time::numeric(30, 3),
 		t1.temp_blk_read_time::numeric(30, 3),
 		t1.temp_blk_write_time::numeric(30, 3)
 	FROM
@@ -3291,8 +3305,10 @@ $$
 			db.name AS datname,
 			statsrepo.sub(pl2.calls, pl1.calls) AS calls,
 			statsrepo.sub(pl2.total_time, pl1.total_time) AS total_time,
-			statsrepo.sub(pl2.blk_read_time, pl1.blk_read_time) AS blk_read_time,
-			statsrepo.sub(pl2.blk_write_time, pl1.blk_write_time) AS blk_write_time,
+			statsrepo.sub(pl2.shared_blk_read_time, pl1.shared_blk_read_time) AS shared_blk_read_time,
+			statsrepo.sub(pl2.shared_blk_write_time, pl1.shared_blk_write_time) AS shared_blk_write_time,
+			statsrepo.sub(pl2.local_blk_read_time, pl1.local_blk_read_time) AS local_blk_read_time,
+			statsrepo.sub(pl2.local_blk_write_time, pl1.local_blk_write_time) AS local_blk_write_time,
 			statsrepo.sub(pl2.temp_blk_read_time, pl1.temp_blk_read_time) AS temp_blk_read_time,
 			statsrepo.sub(pl2.temp_blk_write_time, pl1.temp_blk_write_time) AS temp_blk_write_time
 		 FROM
@@ -3347,8 +3363,10 @@ CREATE FUNCTION statsrepo.get_query_activity_plans_report(
 	OUT calls				bigint,
 	OUT total_time			numeric,
 	OUT time_per_call		numeric,
-	OUT blk_read_time		numeric,
-	OUT blk_write_time		numeric,
+	OUT shared_blk_read_time	numeric,
+	OUT shared_blk_write_time	numeric,
+	OUT local_blk_read_time		numeric,
+	OUT local_blk_write_time	numeric,
 	OUT temp_blk_read_time	numeric,
 	OUT temp_blk_write_time	numeric,
 	OUT first_call			timestamp,
@@ -3367,8 +3385,10 @@ $$
 		t1.calls,
 		t1.total_time::Numeric(30, 3),
 		statsrepo.div(t1.total_time::numeric, t1.calls::numeric)::numeric(30, 3),
-		t1.blk_read_time::numeric(30, 3),
-		t1.blk_write_time::numeric(30, 3),
+		t1.shared_blk_read_time::numeric(30, 3),
+		t1.shared_blk_write_time::numeric(30, 3),
+		t1.local_blk_read_time::numeric(30, 3),
+		t1.local_blk_write_time::numeric(30, 3),
 		t1.temp_blk_read_time::numeric(30, 3),
 		t1.temp_blk_write_time::numeric(30, 3),
 		t1.first_call::timestamp(0),
@@ -3385,8 +3405,10 @@ $$
 			db.name AS datname,
 			statsrepo.sub(pl2.calls, pl1.calls) AS calls,
 			statsrepo.sub(pl2.total_time, pl1.total_time) AS total_time,
-			statsrepo.sub(pl2.blk_read_time, pl1.blk_read_time) AS blk_read_time,
-			statsrepo.sub(pl2.blk_write_time, pl1.blk_write_time) AS blk_write_time,
+			statsrepo.sub(pl2.shared_blk_read_time, pl1.shared_blk_read_time) AS shared_blk_read_time,
+			statsrepo.sub(pl2.shared_blk_write_time, pl1.shared_blk_write_time) AS shared_blk_write_time,
+			statsrepo.sub(pl2.local_blk_read_time, pl1.local_blk_read_time) AS local_blk_read_time,
+			statsrepo.sub(pl2.local_blk_write_time, pl1.local_blk_write_time) AS local_blk_write_time,
 			statsrepo.sub(pl2.temp_blk_read_time, pl1.temp_blk_read_time) AS temp_blk_read_time,
 			statsrepo.sub(pl2.temp_blk_write_time, pl1.temp_blk_write_time) AS temp_blk_write_time,
 			pl2.first_call,
@@ -3546,17 +3568,29 @@ $$
 			s.snapid,
 			pg_catalog.to_char(s.time, 'YYYY-MM-DD HH24:MI') AS timestamp,
 			b.buffers_clean - pg_catalog.lag(b.buffers_clean) OVER w AS bgwriter_write,
-			b.buffers_backend - pg_catalog.lag(b.buffers_backend) OVER w AS backend_write,
-			b.buffers_backend_fsync - pg_catalog.lag(b.buffers_backend_fsync) OVER w AS backend_fsync,
+			i.writes - pg_catalog.lag(i.writes) OVER w AS backend_write,
+			i.fsyncs - pg_catalog.lag(i.fsyncs) OVER w AS backend_fsync,
 			b.maxwritten_clean - pg_catalog.lag(b.maxwritten_clean) OVER w AS bgwriter_stopscan,
 			b.buffers_alloc - pg_catalog.lag(b.buffers_alloc) OVER w AS buffer_alloc,
 			s.time - pg_catalog.lag(s.time) OVER w AS duration
 		FROM
 			statsrepo.bgwriter b,
-			statsrepo.snapshot s
+			statsrepo.snapshot s,
+			(SELECT
+				snapid,
+				writes,
+				fsyncs
+			FROM
+				statsrepo.stat_io
+			WHERE
+				backend_type = 'client backend'
+				AND object = 'relation'
+				AND context = 'normal'
+			) i
 		WHERE
 			b.snapid BETWEEN $1 AND $2
 			AND b.snapid = s.snapid
+			AND i.snapid = s.snapid
 			AND s.instid = (SELECT instid FROM statsrepo.snapshot WHERE snapid = $2)
 		WINDOW w AS (ORDER BY s.snapid)
 		ORDER BY

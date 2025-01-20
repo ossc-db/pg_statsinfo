@@ -101,8 +101,10 @@ SELECT \
 	s.local_blks_written, \
 	s.temp_blks_read, \
 	s.temp_blks_written, \
-	s.blk_read_time, \
-	s.blk_write_time, \
+	s.shared_blk_read_time, \
+	s.shared_blk_write_time, \
+	s.local_blk_read_time, \
+	s.local_blk_write_time, \
 	s.temp_blk_read_time, \
 	s.temp_blk_write_time \
 FROM \
@@ -134,8 +136,10 @@ SELECT \
 	p.local_blks_written, \
 	p.temp_blks_read, \
 	p.temp_blks_written, \
-	p.blk_read_time, \
-	p.blk_write_time, \
+	p.shared_blk_read_time, \
+	p.shared_blk_write_time, \
+	p.local_blk_read_time, \
+	p.local_blk_write_time, \
 	p.temp_blk_read_time, \
 	p.temp_blk_write_time, \
 	p.first_call, \
@@ -199,8 +203,6 @@ WHERE \
 SELECT \
 	buffers_clean, \
 	maxwritten_clean, \
-	buffers_backend, \
-	buffers_backend_fsync, \
 	buffers_alloc \
 FROM \
 	pg_stat_bgwriter"
@@ -256,7 +258,9 @@ SELECT \
 	xmin, \
 	catalog_xmin, \
 	restart_lsn, \
-	confirmed_flush_lsn \
+	confirmed_flush_lsn, \
+	inactive_since, \
+	invalidation_reason \
 FROM \
 	pg_replication_slots"
 

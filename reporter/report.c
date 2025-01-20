@@ -1233,12 +1233,12 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Statements **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%-16s  %-16s  %8s  %14s  %13s  %11s  %11s  %11s  %11s  %-s\n",
-		"", "", "", "", "", "Block", "Block", "Temp Block", "Temp Block", "");
-	fprintf(out, "%-16s  %-16s  %8s  %14s  %13s  %11s  %11s  %11s  %11s  %-s\n",
+	fprintf(out, "%-16s  %-16s  %8s  %14s  %13s  %12s  %12s  %11s  %11s  %11s  %11s  %-s\n",
+		"", "", "", "", "", "Shared Block", "Shared Block", "Local Block", "Local Block", "Temp Block", "Temp Block", "");
+	fprintf(out, "%-16s  %-16s  %8s  %14s  %13s  %12s  %12s  %11s  %11s  %11s  %11s  %-s\n",
 		"User", "Database", "Calls", "Total Time", "Time/Call",
-		"Read Time", "Write Time", "Read Time", "Write Time", "Query");
-	fprintf(out, "-----------------------------------------------------------------------------------------------------------------------------------------\n");
+		"Read Time", "Write Time", "Read Time", "Write Time", "Read Time", "Write Time", "Query");
+	fprintf(out, "---------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_QUERY_ACTIVITY_STATEMENTS, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
@@ -1248,10 +1248,12 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 		fprintf(out, "%8s  ", PQgetvalue(res, i, 6));
 		fprintf(out, "%10s sec  ", PQgetvalue(res, i, 7));
 		fprintf(out, "%9s sec  ", PQgetvalue(res, i, 8));
-		fprintf(out, "%8s ms  ", PQgetvalue(res, i, 9));
-		fprintf(out, "%8s ms  ", PQgetvalue(res, i, 10));
+		fprintf(out, "%9s ms  ", PQgetvalue(res, i, 9));
+		fprintf(out, "%9s ms  ", PQgetvalue(res, i, 10));
 		fprintf(out, "%8s ms  ", PQgetvalue(res, i, 11));
 		fprintf(out, "%8s ms  ", PQgetvalue(res, i, 12));
+		fprintf(out, "%8s ms  ", PQgetvalue(res, i, 13));
+		fprintf(out, "%8s ms  ", PQgetvalue(res, i, 14));
 		fprintf(out, "%-s\n", PQgetvalue(res, i, 2));
 	}
 	fprintf(out, "\n");
@@ -1286,13 +1288,13 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 
 	fprintf(out, "/** Plans **/\n");
 	fprintf(out, "-----------------------------------\n");
-	fprintf(out, "%20s  %10s  %-16s  %-16s  %8s  %14s  %13s  %12s  %12s  %12s  %12s\n",
+	fprintf(out, "%20s  %10s  %-16s  %-16s  %8s  %14s  %13s  %12s  %12s  %11s  %11s  %11s  %11s\n",
 		"", "", "", "", "", "",
-		"", "Block", "Block", "Temp Block", "Temp Block");
-	fprintf(out, "%20s  %10s  %-16s  %-16s  %8s  %14s  %13s  %12s  %12s  %12s  %12s\n",
+		"", "Shared Block", "Shared Block", "Local Block", "Local Block", "Temp Block", "Temp Block");
+	fprintf(out, "%20s  %10s  %-16s  %-16s  %8s  %14s  %13s  %12s  %12s  %11s  %11s  %11s  %11s\n",
 		"Query ID", "Plan ID", "User", "Database", "Calls", "Total Time",
-		"Time/Call", "Read Time", "Write Time", "Read Time", "Write Time");
-	fprintf(out, "------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+		"Time/Call", "Read Time", "Write Time", "Read Time", "Write Time", "Read Time", "Write Time");
+	fprintf(out, "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 	res = pgut_execute(conn, SQL_SELECT_QUERY_ACTIVITY_PLANS, lengthof(params), params);
 	for(i = 0; i < PQntuples(res); i++)
@@ -1306,8 +1308,10 @@ report_query_activity(PGconn *conn, ReportScope *scope, FILE *out)
 		fprintf(out, "%9s sec  ", PQgetvalue(res, i, 6));
 		fprintf(out, "%9s ms  ", PQgetvalue(res, i, 7));
 		fprintf(out, "%9s ms  ", PQgetvalue(res, i, 8));
-		fprintf(out, "%9s ms  ", PQgetvalue(res, i, 9));
-		fprintf(out, "%9s ms\n", PQgetvalue(res, i, 10));
+		fprintf(out, "%8s ms  ", PQgetvalue(res, i, 9));
+		fprintf(out, "%8s ms  ", PQgetvalue(res, i, 10));
+		fprintf(out, "%8s ms  ", PQgetvalue(res, i, 11));
+		fprintf(out, "%8s ms\n", PQgetvalue(res, i, 12));
 	}
 	fprintf(out, "\n");
 	PQclear(res);

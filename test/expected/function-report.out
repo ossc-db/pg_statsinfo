@@ -2115,12 +2115,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-                                                                                   Block        Block   Temp Block   Temp Block  
-User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
------------------------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                             Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time  Query
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec      0.026 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -2132,12 +2132,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-                                                                                                                      Block         Block    Temp Block    Temp Block
-            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
-          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
-          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+                                                                                                               Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -2173,12 +2173,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-                                                                                   Block        Block   Temp Block   Temp Block  
-User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
------------------------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                             Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time  Query
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec      0.026 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -2190,12 +2190,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-                                                                                                                      Block         Block    Temp Block    Temp Block
-            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
-          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
-          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+                                                                                                               Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -2231,12 +2231,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-                                                                                   Block        Block   Temp Block   Temp Block  
-User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
------------------------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                             Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time  Query
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec      0.026 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -2248,12 +2248,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-                                                                                                                      Block         Block    Temp Block    Temp Block
-            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
-          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
-          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+                                                                                                               Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -2289,12 +2289,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-                                                                                   Block        Block   Temp Block   Temp Block  
-User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
------------------------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                             Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time  Query
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec      0.026 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -2306,12 +2306,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-                                                                                                                      Block         Block    Temp Block    Temp Block
-            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
-          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
-          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+                                                                                                               Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -2347,12 +2347,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-                                                                                   Block        Block   Temp Block   Temp Block  
-User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
------------------------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                             Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time  Query
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec      0.026 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -2364,12 +2364,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-                                                                                                                      Block         Block    Temp Block    Temp Block
-            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
-          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
-          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+                                                                                                               Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -2405,12 +2405,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-                                                                                   Block        Block   Temp Block   Temp Block  
-User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
------------------------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                             Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time  Query
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec      0.026 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -2422,12 +2422,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-                                                                                                                      Block         Block    Temp Block    Temp Block
-            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
-          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
-          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+                                                                                                               Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -3632,12 +3632,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-                                                                                   Block        Block   Temp Block   Temp Block  
-User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
------------------------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                             Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time  Query
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec      0.026 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -3649,12 +3649,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-                                                                                                                      Block         Block    Temp Block    Temp Block
-            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
-          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
-          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+                                                                                                               Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -4108,12 +4108,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-                                                                                   Block        Block   Temp Block   Temp Block  
-User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
------------------------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                             Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time  Query
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec      0.026 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -4125,12 +4125,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-                                                                                                                      Block         Block    Temp Block    Temp Block
-            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
-          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
-          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+                                                                                                               Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -4584,12 +4584,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-                                                                                   Block        Block   Temp Block   Temp Block  
-User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
------------------------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                             Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time  Query
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec      0.026 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -4601,12 +4601,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-                                                                                                                      Block         Block    Temp Block    Temp Block
-            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
-          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
-          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+                                                                                                               Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -5060,12 +5060,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-                                                                                   Block        Block   Temp Block   Temp Block  
-User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
------------------------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                             Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time  Query
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec      0.026 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -5077,12 +5077,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-                                                                                                                      Block         Block    Temp Block    Temp Block
-            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
-          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
-          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+                                                                                                               Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -5536,12 +5536,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-                                                                                   Block        Block   Temp Block   Temp Block  
-User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
------------------------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                             Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time  Query
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec      0.026 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -5553,12 +5553,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-                                                                                                                      Block         Block    Temp Block    Temp Block
-            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
-          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
-          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+                                                                                                               Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -6012,12 +6012,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-                                                                                   Block        Block   Temp Block   Temp Block  
-User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
------------------------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                             Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time  Query
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec      0.026 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -6029,12 +6029,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-                                                                                                                      Block         Block    Temp Block    Temp Block
-            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
-          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
-          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+                                                                                                               Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------
@@ -6685,12 +6685,12 @@ OID       Database          Schema            Function             Calls     Tot
 
 /** Statements **/
 -----------------------------------
-                                                                                   Block        Block   Temp Block   Temp Block  
-User              Database             Calls      Total Time      Time/Call    Read Time   Write Time    Read Time   Write Time  Query
------------------------------------------------------------------------------------------------------------------------------------------
-postgres          postgres             66463     331.375 sec      0.005 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
-postgres          postgres             66463      85.370 sec      0.001 sec     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
-postgres          postgres             66463       5.554 sec      0.000 sec     0.026 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+                                                                             Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block  
+User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time  Query
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+postgres          postgres             66463     331.375 sec      0.005 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+postgres          postgres             66463      85.370 sec      0.001 sec      0.000 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+postgres          postgres             66463       5.554 sec      0.000 sec      0.026 ms      0.000 ms     0.000 ms     0.000 ms     0.000 ms     0.000 ms  UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
 
 /** Statements (rusage) **/
 -----------------------------------
@@ -6702,12 +6702,12 @@ postgres          postgres                     3             3        0.300000  
 
 /** Plans **/
 -----------------------------------
-                                                                                                                      Block         Block    Temp Block    Temp Block
-            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time     Read Time    Write Time
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms      0.000 ms      0.000 ms
-          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
-          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms      0.000 ms      0.000 ms
+                                                                                                               Shared Block  Shared Block  Local Block  Local Block   Temp Block   Temp Block
+            Query ID     Plan ID  User              Database             Calls      Total Time      Time/Call     Read Time    Write Time    Read Time   Write Time    Read Time   Write Time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+           847103580  1970669142  postgres          postgres              1074       0.094 sec      0.000 sec      0.213 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1067368138  4132319976  postgres          postgres              1073       0.061 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
+          1899262118   487339097  postgres          postgres              1074       0.048 sec      0.000 sec      0.000 ms      0.000 ms    30.000 ms    30.000 ms     0.000 ms     0.000 ms
 
 /** Wait Sampling **/
 -----------------------------------

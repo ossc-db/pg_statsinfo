@@ -651,6 +651,7 @@ sample_activity(void)
 
 	for (i = pgstat_fetch_stat_numbackends(); i > 0; i--)
 	{
+		LocalPgBackendStatus *lbe;
 		PgBackendStatus    *be;
 		long				secs;
 		int					usecs;
@@ -660,7 +661,9 @@ sample_activity(void)
 		LongXactEntry	   *entry;
 		int					procpid;
 
-		be = pgstat_get_beentry_by_backend_id(i);
+		lbe = pgstat_get_local_beentry_by_index(i);
+		be = &lbe->backendStatus;
+
 		if (!be)
 			continue;
 
@@ -1060,9 +1063,6 @@ statsinfo_long_xact(PG_FUNCTION_ARGS)
 		}
 	}
 
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
-
 	return (Datum) 0;
 }
 
@@ -1155,9 +1155,6 @@ statsinfo_wait_sampling_profile(PG_FUNCTION_ARGS)
 			tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 		}
 	}
-
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
 
 	return (Datum) 0;
 }
@@ -2282,8 +2279,6 @@ statsinfo_devicestats(PG_FUNCTION_ARGS)
 		entry->overflow_dit = 0;
 	}
 		
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
 	SPI_finish();
 
 	return (Datum) 0;
@@ -2593,9 +2588,6 @@ statsinfo_profile(PG_FUNCTION_ARGS)
 	}
 
 	fclose(fp);
-
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
 
 	PG_RETURN_VOID();
 }
@@ -3369,9 +3361,6 @@ statsinfo_tablespaces(PG_FUNCTION_ARGS)
 		Assert(i == TABLESPACES_COLS);
 		tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 	}
-
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
 
 	return (Datum) 0;
 }
@@ -4607,12 +4596,15 @@ probe_waits(void)
 
 	for (i = pgstat_fetch_stat_numbackends(); i > 0; i--)
 	{
+		LocalPgBackendStatus *lbe;
 		PgBackendStatus	*be;
 		wait_samplingEntry		item;
 		PGPROC			*proc;
 		int				procpid;
 
-		be = pgstat_get_beentry_by_backend_id(i);
+		lbe = pgstat_get_local_beentry_by_index(i);
+		be = &lbe->backendStatus;
+
 		if (!be)
 			continue;
 
