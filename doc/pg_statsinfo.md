@@ -1502,7 +1502,7 @@ this from occurring for this case.
 
 <div>
 
-Copyright (c) 2009-2024, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+Copyright (c) 2009-2025, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
 
 </div>
 
