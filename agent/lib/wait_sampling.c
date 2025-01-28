@@ -2,7 +2,7 @@
  * lib/wait_sampling.c
  *     Collect statistics of wait sample.
  *
- * Copyright (c) 2009-2024, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+ * Copyright (c) 2009-2025, NIPPON TELEGRAPH AND TELEPHONE CORPORATION
  */
 
 #include "postgres.h"
