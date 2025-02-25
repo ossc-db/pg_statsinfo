@@ -3,12 +3,12 @@
 
 # Original declaration for pg_statsinfo rpmbuild #
 
-%define _pgdir   /usr/pgsql-16
+%define _pgdir   /usr/pgsql-17
 %define _bindir  %{_pgdir}/bin
 %define _libdir  %{_pgdir}/lib
 %define _datadir %{_pgdir}/share
 
-%global packageversion 16
+%global packageversion 17
 %global tmpfilesconf spec/pg_statsinfo-tmpfiles.d.conf
 
 ## Set general information for pg_statsinfo.
@@ -23,7 +23,7 @@ Source0:    %{name}-%{version}.tar.gz
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 
 ## We use postgresql-devel package
-BuildRequires:  postgresql16-devel
+BuildRequires:  postgresql17-devel
 %if %{rhel} == 7
 BuildRequires:  llvm-toolset-7 llvm5.0
 %endif
@@ -39,7 +39,7 @@ pg_statsinfo monitors an instance of PostgreSQL server and gather
 the statistics and activities of the server as snapshots.
 
 %package llvmjit
-Requires: postgresql16-llvmjit
+Requires: postgresql17-llvmjit
 Requires: pg_statsinfo = %{version}
 Summary:  Just-in-time compilation support for pg_statsinfo
 
@@ -134,6 +134,8 @@ fi
 
 # History of pg_statsinfo-v15 RPM.
 %changelog
+* Wed Feb 19 2025 - NTT OSS Center 17.0-1
+- pg_stats_reporter 17.0 released
 * Thu Feb 29 2024 - NTT OSS Center 16.0-1
 - pg_stats_reporter 16.0 released
 * Wed Oct 18 2023 - NTT OSS Center 15.2-1
