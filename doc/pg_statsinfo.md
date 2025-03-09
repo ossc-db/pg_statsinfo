@@ -1366,7 +1366,17 @@ pg_controldata shows. Among the triplet, the host name of the master
 will generally be changed by a fail over so this situation happens.
 Currently there is no available means of preventing this occurring.
 
-  
+#### Q11. There's no plan statistics in a textual report although pg_stat_statements has been installed.
+
+pg_stat_statements may be installed in the schema other than "public". You
+will find the following lines in server log for the case.
+
+    ERROR: pg_statsinfo: query failed: ERROR: relation "pg_stat_statements" does not exist
+
+Do DROP EXTENSION, then CREATE EXTENSION again explicitly specifying
+public as installation schema in order to fix this.
+
+    CREATE EXTENSION pg_stat_statements SCHEMA public;
 
 ## Changes from pg_statsinfo16
 

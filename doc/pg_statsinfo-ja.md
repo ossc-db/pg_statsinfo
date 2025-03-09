@@ -1338,7 +1338,16 @@ pg_statsinfo
 は「インスタンスID」でインスタンスを識別します。インスタンスIDは監視対象サーバのホスト名、ポート番号とpg_controldata
 が表示するデータベースシステム識別子から生成されます。この中でマスタのホスト名はフェイルオーバーの際に変わることが普通なためこのようになります。
 
+#### Q11. pg_stat_statements をインストールしているのにレポートでプランの統計情報が出てきません。
   
+pg_stat_statements が public 以外のスキーマにインストールされている可能性があります。
+この場合はログを確認すると繰り返し以下の様なエラーが記録されているはずです。
+
+ERROR: pg_statsinfo: query failed: ERROR:  relation "pg_stat_statements" does not exist
+
+この場合は一旦 DROP EXTENSION したのち、明示的にスキーマを public と指定して CREATE EXTENSION を実行しなおしてください。
+
+CREATE EXTENSION pg_stat_statements SCHEMA public;
 
 ## pg_statsinfo16からの変更点
 
