@@ -128,7 +128,6 @@ typedef struct ruGlobalStats
 typedef struct ruSharedState
 {
 	LWLock	*lock;				/* protects hashtable search/modification */
-	LWLock	*queryids_lock;		/* protects queryids array */
 	slock_t		mutex;			/* protects ruGlobalStats fields: */
 	ruGlobalStats stats;		/* global statistics for rusage */
 	uint64	queryids[FLEXIBLE_ARRAY_MEMBER];	/* queryid info for  parallel leaders */
@@ -396,7 +395,7 @@ request_last_xact_activity(void)
 	RequestAddinShmemSpace(buffer_size(MaxBackends));
 
 	RequestAddinShmemSpace(ru_memsize());
-	RequestNamedLWLockTranche("pg_statsinfo_rusage", 2);
+	RequestNamedLWLockTranche("pg_statsinfo_rusage", 1);
 
 	return;
 }
@@ -436,9 +435,7 @@ shmem_startup(void)
 	if (!found)
 	{
 		/* First time */
-		LWLockPadded *locks = GetNamedLWLockTranche("pg_statsinfo_rusage");
-		ru_ss->lock = &(locks[0]).lock;
-		ru_ss->queryids_lock = &(locks[1]).lock;
+		ru_ss->lock = &(GetNamedLWLockTranche("pg_statsinfo_rusage"))->lock;
 		ru_ss->stats.dealloc = 0;
 		ru_ss->stats.stats_reset = GetCurrentTimestamp();
 	}
@@ -752,9 +749,7 @@ ru_set_queryid(uint64 queryid)
 {
 	Assert(!IsParallelWorker());
 
-	LWLockAcquire(ru_ss->queryids_lock, LW_EXCLUSIVE);
 	ru_ss->queryids[MyProcNumber] = queryid;
-	LWLockRelease(ru_ss->queryids_lock);
 }
 
 
@@ -1132,11 +1127,7 @@ myExecutorEnd(QueryDesc * queryDesc)
 		getrusage(RUSAGE_SELF, &rusage_end);
 
 		if (IsParallelWorker())
-		{
-			LWLockAcquire(ru_ss->queryids_lock, LW_SHARED);
 			queryId = ru_ss->queryids[ParallelLeaderProcNumber];
-			LWLockRelease(ru_ss->queryids_lock);
-		}
 		else
 			queryId = queryDesc->plannedstmt->queryId;
 
