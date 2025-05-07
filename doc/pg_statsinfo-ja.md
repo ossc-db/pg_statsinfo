@@ -678,6 +678,7 @@ enable_alert カラムで行います。デフォルト値はpg_statsinfo.enable
       - SettingParameters
       - SchemaInformation
       - Profiles
+      - HardwareInformation
       - All
     
     レポート種別IDは、頭文字からの最短一致での指定を許容し、大文字と小文字を区別しません。

@@ -717,6 +717,7 @@ Available options are described below,
       - SettingParameters
       - SchemaInformation
       - Profiles
+      - HardwareInformation
       - All
     
     REPORTID will be completed if it matches only one ID by case
