@@ -13,7 +13,7 @@
 
 ## Set general information for pg_statsinfo.
 Name:       pg_statsinfo
-Version:    %{packageversion}.0
+Version:    %{packageversion}.1
 Release:    1%{?dist}
 Summary:    Performance monitoring tool for PostgreSQL
 Group:      Applications/Databases
@@ -132,10 +132,12 @@ EOF
 	fi
 fi
 
-# History of pg_statsinfo-v15 RPM.
+# History of pg_statsinfo-v16 RPM.
 %changelog
+* Mon Jun 2 2025 - NTT OSS Center 16.1-1
+- pg_statsinfo 16.1 released
 * Thu Feb 29 2024 - NTT OSS Center 16.0-1
-- pg_stats_reporter 16.0 released
+- pg_statsinfo 16.0 released
 * Wed Oct 18 2023 - NTT OSS Center 15.2-1
 - pg_statsinfo 15.2 released
 * Fri Jun 30 2023 - NTT OSS Center 15.1-1
