@@ -104,7 +104,6 @@ def check_pg_statsinfo_error(log_dir):
 def check_postgres_running(pg_bin, pg_port):
     pg_isready_path = os.path.join(pg_bin, "pg_isready")
     try:
-        import pdb;pdb.set_trace()
         result = subprocess.run([pg_isready_path, "-p", str(pg_port)], check=True)
         if result.returncode != 0:
             print("❌ PostgreSQL server does not appear to be running:")

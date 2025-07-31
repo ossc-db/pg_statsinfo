@@ -49,6 +49,5 @@ After updating postgresql.conf, restart the PostgreSQL instance for the changes 
 python3 tools/reproduce_partial_write.py \
     --pg-bin /path/to/postgres/bin \
     --log-dir /path/to/pg_log \
-    --sample-log-file ./sample_log_entry.txt \
     --pg-port 5432
 
