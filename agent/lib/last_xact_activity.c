@@ -700,10 +700,10 @@ ru_check_stat_statements(void)
 		/* if rusage_max is smaller than pgss_max, use pgss_max. */
 		if (rusage_max < atoi(pgss_max))
 		{
-			rusage_max = atoi(pgss_max);
 			ereport(LOG,
-					errmsg("pg_statsinfo.rusage.max is changed from %d to %d.",
+					errmsg("pg_statsinfo.rusage_max is changed from %d to %d.",
 						rusage_max, atoi(pgss_max)));
+			rusage_max = atoi(pgss_max);
 		}
 	}
 }
