@@ -56,6 +56,9 @@ typedef struct Logger
 	char   *csv_name;				/* log file name */
 	long	csv_offset;				/* parsed bytes in log file */
 	FILE   *fp;						/* open log file */
+	long    last_log_size;          /* track the last read log file size*/
+	bool    log_incomplete;         /* True if the last read_csv() failed (partial write likely) */
+
 
 	/* Text log file */
 	FILE   *textlog;
@@ -734,9 +737,21 @@ logger_next(Logger *logger, const char *pg_log)
 	struct stat	st;
 	bool		ret;
 
+   /*
+	* Step 1: Check if the file size remains unchanged.
+	*         If logger->last_log_size is the same as the current file size (st.st_size),
+	*         it indicates that no new logs have been written since the last check.
+	*
+	* Step 2: Use logger->log_incomplete to determine if this is due to a read_csv() failure.
+	*         If the previous read_csv() attempt failed, we assume a partial write.
+	*         This helps differentiate between:
+	*         - A fully flushed but stagnant log file (safe to continue reading)
+	*         - An incomplete write (where we should wait before retrying)
+	*/
 	if (logger->fp == NULL ||
 		stat(logger->csv_path, &st) != 0 ||
-		logger->csv_offset >= st.st_size)
+		logger->csv_offset >= st.st_size ||
+                (logger->last_log_size == st.st_size && logger->log_incomplete))
 	{
 		char	csvlog[MAXPGPATH];
 		char	textlog[MAXPGPATH];
@@ -748,8 +763,10 @@ logger_next(Logger *logger, const char *pg_log)
 
 		if (!csvlog[0])
 			return false;	/* logfile not found */
-		if (logger->fp && strcmp(logger->csv_name, csvlog) == 0)
-			return false;	/* no more logs */
+
+		/* If the same file is already being processed and log size is unchanged, wait */
+		if (logger->fp && strcmp(logger->csv_name, csvlog) == 0 && logger->last_log_size == st.st_size)
+		    return false; /* no more logs */
 
 		join_path_components(textlog, pg_log, csvlog);
 		replace_extension(textlog, ".log");
@@ -771,6 +788,14 @@ logger_next(Logger *logger, const char *pg_log)
 		if (!logger_open(logger, csvlog, 0))
 			return false;
 
+		/* Reset tracking variables for the new file */
+		logger->last_log_size = 0;
+		logger->log_incomplete = false;
+
+		/* Refresh file stats for the new log */
+		if (stat(logger->csv_path, &st) != 0)
+		    return false;  /* Failed to get new log size */
+
 		/*
 		 * if writer thread working in fallback mode,
 		 * write in the textlog that agent is working in fallback mode.
@@ -784,14 +809,26 @@ logger_next(Logger *logger, const char *pg_log)
 		elog(DEBUG2, "read csvlog \"%s\"", logger->csv_path);
 	}
 
+	/* Read the next log entry */
 	clearerr(logger->fp);
 	fseek(logger->fp, logger->csv_offset, SEEK_SET);
 	ret = read_csv(logger->fp, &logger->buf, CSV_COLS, logger->fields);
-	logger->csv_offset = ftell(logger->fp);
 
-	if (!ret)
+    /* Update last_log_size AFTER reading, to prevent infinite WARNING loops */
+	logger->last_log_size = st.st_size;
+
+	if (ret)
+	{
+		/* Update offset only if read_csv() was successful */
+		logger->csv_offset = ftell(logger->fp);
+		logger->log_incomplete = false;
+	}
+	else
 	{
 		int		save_errno = errno;
+
+		/* Track partial write if read_csv() fails */
+        logger->log_incomplete = true;
 
 		/* close the file unless EOF; it means an error */
 		if (!feof(logger->fp))
